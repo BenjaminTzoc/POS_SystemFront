@@ -1,0 +1,40 @@
+<div class="w-full h-screen bg-[#2D3250] flex items-center justify-center">
+  <div class="w-[70%] h-[80%] grid grid-cols-2 rounded-4xl overflow-hidden shadow-2xl">
+    <div class="w-full h-full bg-[#424769] p-10 flex items-center">
+      <div class="w-full px-16 text-white">
+        <h1 class="text-4xl font-bold mb-2">Bienvenido de vuelta!</h1>
+        <p>Inicia sesión para continuar.</p>
+        <section class="py-8">
+          <form [formGroup]="loginForm" class="grid gap-4">
+            <p-floatlabel variant="in">
+                <input 
+                  pInputText 
+                  id="email" 
+                  formControlName="email" 
+                  type="email" 
+                  autocomplete="off" 
+                  class="bg-[#676F9D]! text-white! w-full"
+                />
+                <label for="email">Email</label>
+            </p-floatlabel>
+            <p-floatlabel variant="in">
+                <input 
+                  pInputText 
+                  id="password" 
+                  formControlName="password" 
+                  type="password" 
+                  autocomplete="off" 
+                  class="bg-[#676F9D]! text-white w-full"
+                />
+                <label for="password">Contraseña</label>
+            </p-floatlabel>
+            <p-button (onClick)="onLogin()" label="Iniciar Sesión" class="mt-8" styleClass="px-8!" />
+          </form>
+        </section>
+      </div>
+    </div>
+    <div class="w-full h-full">
+      <img src="img/SplashScreen.jpeg" class="object-cover object-center h-full" alt="Enterprise Splashart">
+    </div>
+  </div>
+</div>

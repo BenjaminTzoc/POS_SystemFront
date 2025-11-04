@@ -1,0 +1,18 @@
+.splash-shape {
+  clip-path: polygon(0 0, 100% 0%, 83% 100%, 0% 100%);
+}
+
+@media (max-width: 768px) {
+  .splash-shape {
+    clip-path: polygon(0 0, 100% 0%, 83% 100%, 0% 100%);
+  }
+}
+
+.p-floatlabel label,
+.p-floatlabel:has(input.p-filled) label, .p-floatlabel:has(textarea.p-filled) label, .p-floatlabel:has(.p-inputwrapper-filled) label {
+  color: #FFFFFF;
+}
+
+.p-inputtext {
+  color: #FFFFFF;
+}

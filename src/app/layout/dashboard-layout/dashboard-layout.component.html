@@ -1,0 +1,20 @@
+<div class="h-screen flex">
+  <app-sidebar 
+    [sidebarCollapsed]="isSidebarCollapsed" 
+    (toggleSidebar)="onToggleSidebar($event)"
+    class="flex-shrink-0" 
+  />
+  <div class="flex-1 h-screen">
+    <app-header 
+      [sidebarCollapsed]="isSidebarCollapsed">
+    </app-header>
+    <main 
+      class="flex-1 overflow-auto bg-white transition-all duration-300"
+      [class.ml-23]="isSidebarCollapsed"
+      [class.ml-64]="!isSidebarCollapsed">
+      <div class="px-4 py-6 min-h-[calc(100vh-4rem)] mt-16 bg-gray-50">
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+  </div>
+</div>

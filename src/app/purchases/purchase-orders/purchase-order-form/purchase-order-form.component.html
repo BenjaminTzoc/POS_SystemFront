@@ -1,0 +1,348 @@
+<section class="px-16 py-10">
+  <form class="grid grid-cols-12 gap-6" [formGroup]="orderForm">
+    <div class="col-start-1 col-span-12 flex items-center justify-between py-4">
+      <div class="flex gap-4">
+        <h1 class="text-2xl font-semibold">
+          Orden Estimada: #<span class="font-medium">{{ orderForm.get('invoiceNumber')?.value || 'Generando...' }}</span>
+        </h1>
+        @if (orderForm.get('invoiceNumber')?.value) {
+          <p-tag class="text-xs!" [rounded]="true" icon="pi pi-check" value="EN TIEMPO REAL" severity="success"/>
+        }
+      </div>
+      <p-button label="Regresar" severity="contrast" />
+    </div>
+    <div class="col-start-1 col-span-7 flex flex-col gap-2">
+      <div class="py-5 px-10 rounded-md bg-white shadow-md">
+        <section class="grid grid-cols-2 divide-x divide-gray-200">
+          <div class="pr-6">
+            <h3 class="font-semibold text-lg">Detalles</h3>
+            <hr class="w-full text-gray-200 mt-2 mb-6" />
+            <section class="space-y-2 mb-6">
+              <div class="grid grid-cols-2 items-center">
+                <label class="text-base font-semibold" for="date">Fecha de creación: </label>
+                <span id="date" class="py-2">{{
+                  orderForm.get('date')?.value | date : 'dd/MM/yyyy HH:mm:ss'
+                }}</span>
+              </div>
+              <div class="grid grid-cols-2 items-center">
+                <label class="text-base font-semibold" for="status">Estado: </label>
+                <span id="date" class="py-2">Pendiente</span>
+              </div>
+              <div class="grid grid-cols-2 items-center">
+                <label class="text-base font-semibold" for="date">Fecha de emisión: </label>
+                <p-datepicker
+                  dateFormat="dd/mm/yy"
+                  formControlName="dueDate"
+                  [iconDisplay]="'input'"
+                  [showIcon]="true"
+                  inputId="dueDate"
+                  fluid
+                />
+              </div>
+              <div class="flex flex-col gap-2">
+                <label class="text-base font-semibold" for="notes">Notas: </label>
+                <textarea id="notes" rows="3" pTextarea formControlName="notes"></textarea>
+              </div>
+            </section>
+          </div>
+          <div class="pl-6">
+            <h3 class="font-semibold text-lg">Factura</h3>
+            <hr class="w-full text-gray-200 mt-2 mb-6" />
+            <section class="space-y-2 mb-6">
+              <div class="grid grid-cols-2 items-center">
+                <label class="text-base font-semibold" for="date">Total productos: </label>
+                <span id="date" class="py-2">{{
+                  calculateTotals().subtotal | currency : 'Q ' : 'symbol' : '1.2-2'
+                }}</span>
+              </div>
+              <div class="grid grid-cols-2 items-center">
+                <label class="text-base font-semibold" for="date">Total descuentos: </label>
+                <span id="date" class="py-2">{{
+                  calculateTotals().discountTotal | currency : 'Q ' : 'symbol' : '1.2-2'
+                }}</span>
+              </div>
+              <hr class="w-full text-gray-200 mt-2" />
+              <div class="grid grid-cols-2 items-center">
+                <label class="text-base font-semibold" for="date">Subtotal: </label>
+                <span id="date" class="py-2">{{
+                  calculateTotals().subtotalWithDiscount | currency : 'Q ' : 'symbol' : '1.2-2'
+                }}</span>
+              </div>
+              <div class="grid grid-cols-2 items-center">
+                <label class="text-base font-semibold" for="date">Total impuestos: </label>
+                <span id="date" class="py-2">{{
+                  calculateTotals().taxTotal | currency : 'Q ' : 'symbol' : '1.2-2'
+                }}</span>
+              </div>
+              <hr class="w-full text-gray-200 mt-2" />
+              <div class="grid grid-cols-2 items-center">
+                <label class="text-base font-semibold" for="date">Total: </label>
+                <span id="date" class="py-2">{{
+                  calculateTotals().total | currency : 'Q ' : 'symbol' : '1.2-2'
+                }}</span>
+              </div>
+            </section>
+          </div>
+        </section>
+      </div>
+    </div>
+    <div class="col-span-5 flex flex-col gap-2">
+      <div class="py-5 px-10 rounded-md bg-white shadow-md h-full">
+        <h3 class="font-semibold text-lg">Proveedor</h3>
+        <hr class="w-full text-gray-200 mt-2 mb-6" />
+        <section class="space-y-4 grid grid-cols-2 mb-6">
+          <div class="col-span-2 grid grid-cols-4 items-center">
+            <label class="text-base font-semibold col-span-1" for="date">Empresa: </label>
+            <p-select
+              [options]="suppliers"
+              [checkmark]="true"
+              [showClear]="true"
+              (onChange)="onSupplierChange($event)"
+              formControlName="supplierId"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Seleccionar un proveedor"
+              class="w-full col-span-3"
+            />
+          </div>
+          <div class="grid grid-cols-6 items-center">
+            <label class="text-base font-semibold col-span-2" for="date">NIT: </label>
+            <span id="date" class="py-2 col-span-4">{{
+              purchaseData.supplier?.nit || '-------------------'
+            }}</span>
+          </div>
+          <div class="grid grid-cols-6 items-center">
+            <label class="text-base font-semibold col-span-2" for="date">Email: </label>
+            <span id="date" class="py-2 col-span-4">{{
+              purchaseData.supplier?.email || '-------------------'
+            }}</span>
+          </div>
+          <div class="grid grid-cols-6 items-center">
+            <label class="text-base font-semibold col-span-2" for="date">Contacto: </label>
+            <span id="date" class="py-2 col-span-4">{{
+              purchaseData.supplier?.contactName || '-------------------'
+            }}</span>
+          </div>
+          <div class="grid grid-cols-6 items-center">
+            <label class="text-base font-semibold col-span-2" for="date">Teléfono: </label>
+            <span id="date" class="py-2 col-span-4">{{
+              purchaseData.supplier?.phone || '-------------------'
+            }}</span>
+          </div>
+          <div class="col-span-2 grid grid-cols-12 items-center">
+            <label class="text-base font-semibold col-span-2" for="date">Dirección: </label>
+            <span id="date" class="py-2 col-span-10">{{
+              purchaseData.supplier?.address ||
+                '----------------------------------------------------------'
+            }}</span>
+          </div>
+        </section>
+      </div>
+    </div>
+    <div class="col-start-1 col-span-12">
+      <div class="py-5 px-10 rounded-md bg-white shadow-md">
+        <div class="flex items-center justify-between py-6">
+          <h3 class="font-semibold text-lg">Resumen de productos</h3>
+          <p-button
+            severity="info"
+            icon="pi pi-plus"
+            label="Agregar producto"
+            (onClick)="showDialog()"
+          />
+        </div>
+        <div class="">
+          <p-table
+            #orderDetailsTable
+            [value]="orderDetailsForTable"
+            [paginator]="true" 
+            [rows]="20" 
+            [rowsPerPageOptions]="[10, 15, 20, 25, 50]"
+            [globalFilterFields]="['name', 'sku', 'barcode']"
+            dataKey="id"
+            styleClass="p-datatable-striped p-datatable-sm p-datatable-gridless rounded-md"
+          >
+            <ng-template pTemplate="header">
+              <tr class="h-16">
+                <th class="w-[120px]">Imagen</th>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio</th>
+                <th>Descuento</th>
+                <th>Impuesto</th>
+                <th>Subtotal</th>
+                <th class="w-[120px]">Acciones</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-detail let-i="rowIndex">
+              <tr [pSelectableRow]="detail.data" [pSelectableRowIndex]="detail.data.productId">
+                <td>
+                  <div class="w-14 aspect-square rounded-md border border-gray-200">
+                    <img
+                      [src]="getProductImageUrl(detail.data.product?.imageUrl)"
+                      [alt]="detail.data.product?.name"
+                      class="w-full h-full object-scale-down"
+                    />
+                  </div>
+                </td>
+                <td class="font-semibold">
+                  <div class="flex flex-col">
+                    <small class="text-xs font-medium"
+                      >{{ detail.data.product?.sku }} - {{ detail.data.product?.category?.name }}</small
+                    >
+                    {{ detail.data.product?.name }}
+                  </div>
+                </td>
+                <td>{{ detail.data.quantity }} {{ detail.data.product?.unit?.abbreviation }}</td>
+                <td>{{ detail.data.unitPrice | currency : 'Q' }}</td>
+                <td>{{ detail.data.discount }} %</td>
+                <td>{{ detail.data.taxPercentage }} %</td>
+                <td>{{ detail.lineTotal | currency : 'Q' }}</td>
+                <td>
+                  <div class="flex gap-2">
+                    <button pButton icon="pi pi-pencil" severity="warn"></button>
+                    <button pButton icon="pi pi-trash" severity="danger" (click)="removeDetail(i)"></button>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="8" class="text-center">
+                  <div class="flex justify-center items-center gap-2 py-12">
+                    <i class="pi pi-exclamation-circle"></i>
+                    Aún no hay productos agregados
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
+    </div>
+    <div class="col-start-1 col-span-12">
+      <hr class="w-full text-gray-200 my-6">
+      <div class="flex justify-between">
+        <p-button (onClick)="onCancelProccess()" label="Cancelar" variant="outlined" severity="danger" />
+        <p-button (onClick)="onSaveOrder()" label="Guardar" [raised]="true" severity="success" />
+      </div>
+    </div>
+  </form>
+</section>
+
+<p-dialog
+  header="Agregar Producto"
+  [modal]="true"
+  [(visible)]="dialogVisible"
+  [style]="{ width: '50rem' }"
+>
+  <form [formGroup]="productForm">
+    <div class="grid grid-cols-2 gap-4 mb-20">
+      <div class="flex flex-col">
+        <label class="text-base" for="product">Producto<span class="text-red-700">*</span></label>
+        <p-select
+          formControlName="productId"
+          [options]="products()"
+          [filter]="true"
+          [filterFields]="['name', 'sku']"
+          [showClear]="true"
+          (onChange)="onProductChange($event)"
+          optionLabel="name"
+          optionValue="id"
+          placeholder="Seleccionar un producto"
+          class="w-full"
+        >
+          <ng-template #selectedItem let-selectedOption>
+            <div class="flex items-center gap-4">
+              <div class="w-15 aspect-square rounded-lg bg-gray-400 overflow-hidden">
+                <img
+                  class="h-full object-cover object-top"
+                  [src]="getProductImageUrl(selectedOption.imageUrl)"
+                  alt=""
+                />
+              </div>
+              <div class="flex flex-col">
+                <small class="text-xs">{{ selectedOption.sku }}</small>
+                {{ selectedOption.name }}
+              </div>
+            </div>
+          </ng-template>
+          <ng-template let-product #item>
+            <div class="flex items-center gap-4">
+              <div class="w-15 aspect-square rounded-lg bg-gray-400 overflow-hidden">
+                <img
+                  class="h-full object-cover object-top"
+                  [src]="getProductImageUrl(product.imageUrl)"
+                  alt=""
+                />
+              </div>
+              <div class="flex flex-col">
+                <small class="text-xs">{{ product.sku }}</small>
+                {{ product.name }}
+              </div>
+            </div>
+          </ng-template>
+        </p-select>
+      </div>
+      <div class="flex flex-col">
+        <label class="text-base" for="branch">Cantidad<span class="text-red-700">*</span></label>
+        <p-inputnumber 
+          formControlName="quantity"
+          mode="decimal" 
+          [min]="0"
+          [minFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
+          [maxFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
+          placeholder="Cantidad"
+          [suffix]="'  ' + (selectedProduct?.unit?.abbreviation || '')"
+          fluid 
+        />
+      </div>
+      <div class="flex flex-col">
+        <label class="text-base" for="branch">Precio<span class="text-red-700">*</span></label>
+        <p-inputnumber 
+          formControlName="unitPrice"
+          mode="decimal" 
+          [min]="0"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          placeholder="Precio"
+          [prefix]="'Q '"
+          fluid 
+        />
+      </div>
+      <div class="flex flex-col">
+        <label class="text-base" for="branch">Descuento (Porcentaje)<span class="text-red-700">*</span></label>
+        <p-inputnumber 
+          formControlName="discount"
+          mode="decimal" 
+          [min]="0"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          placeholder="Impuesto"
+          [suffix]="' %'"
+          fluid 
+        />
+      </div>
+      <div class="flex flex-col">
+        <label class="text-base" for="branch">Impuesto (Porcentaje)<span class="text-red-700">*</span></label>
+        <p-inputnumber 
+          formControlName="taxPercentage"
+          mode="decimal" 
+          [min]="0"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          placeholder="Impuesto"
+          [suffix]="' %'"
+          fluid 
+        />
+      </div>
+    </div>
+    <div class="w-full flex justify-end py-6">
+      <p-button
+        severity="success"
+        icon="pi pi-check"
+        label="Agregar"
+        (onClick)="addDetail()"
+      />
+    </div>
+  </form>
+</p-dialog>
