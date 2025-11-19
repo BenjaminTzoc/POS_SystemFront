@@ -1,1 +1,84 @@
-<p>customer-form works!</p>
+<section class="px-16 py-10">
+  <form class="grid grid-cols-12 gap-x-6" [formGroup]="customerForm">
+    <div class="col-start-2 col-span-10 flex justify-between">
+      <h1 class="text-2xl font-semibold mb-8">Nuevo cliente</h1>
+    </div>
+    <div class="col-start-2 col-span-10 flex flex-col gap-2">
+      <div class="py-5 px-10 rounded-md bg-white shadow-md">
+        <section>
+          <h3 class="font-semibold text-lg">General</h3>
+          <hr class="w-full text-gray-200 mt-2 mb-6">
+          <section class="space-y-4 mb-6">
+            <div class="grid grid-cols-2 gap-4">
+              <div class="flex flex-col">
+                <label class="text-base" for="name">Nombre<span class="text-red-700">*</span></label>
+                <input pInputText id="name" formControlName="name" aria-describedby="name-help">
+                @if (customerForm.get('name')?.invalid && customerForm.get('name')?.touched) {
+                  <small class="text-red-700" id="name-help">Ingrese el nombre del proveedor.</small>
+                }
+              </div>
+              <div class="flex flex-col">
+                <label class="text-base" for="name">NIT</label>
+                <input pInputText id="nit" formControlName="nit" aria-describedby="nit-help">
+                @if (customerForm.get('nit')?.invalid && customerForm.get('nit')?.touched) {
+                  <small class="text-red-700" id="nit-help">Ingrese el nit del proveedor.</small>
+                }
+              </div>
+              <div class="flex flex-col">
+                <label class="text-base" for="email">Email</label>
+                <input pInputText id="email" formControlName="email" aria-describedby="email-help">
+                @if (customerForm.get('email')?.invalid && customerForm.get('email')?.touched) {
+                  <small class="text-red-700" id="email-help">Ingrese el email de contacto.</small>
+                } 
+              </div>
+              <div class="flex flex-col">
+                <label class="text-base" for="categoryId">Categoría</label>
+                <p-select
+                  [options]="categories"
+                  [checkmark]="true"
+                  [showClear]="true"
+                  formControlName="categoryId"
+                  optionLabel="name"
+                  optionValue="id"
+                  placeholder="Seleccionar una categoría"
+                  class="w-full col-span-3"
+                />
+                @if (customerForm.get('categoryId')?.invalid && customerForm.get('categoryId')?.touched) {
+                  <small class="text-red-700" id="categoryId-help">Seleccione una categoría para el cliente.</small>
+                } 
+              </div>
+              <div class="col-span-2 flex flex-col">
+                <label class="text-base" for="address">Dirección</label>
+                <input pInputText id="address" formControlName="address" aria-describedby="address-help">
+                @if (customerForm.get('address')?.invalid && customerForm.get('address')?.touched) {
+                  <small class="text-red-700" id="address-help">Ingrese el email de contacto.</small>
+                } 
+              </div>
+              <div class="flex flex-col">
+                <label class="text-base" for="contactName">Nombre de contacto<span class="text-red-700">*</span></label>
+                <input pInputText id="contactName" formControlName="contactName" aria-describedby="contactName-help">
+                @if (customerForm.get('contactName')?.invalid && customerForm.get('contactName')?.touched) {
+                  <small class="text-red-700" id="contactName-help">Ingrese el nombre del contacto.</small>
+                }
+              </div>
+              <div class="flex flex-col">
+                <label class="text-base" for="phone">Teléfono de contacto<span class="text-red-700">*</span></label>
+                <input pInputText id="phone" formControlName="phone" aria-describedby="phone-help">
+                @if (customerForm.get('phone')?.invalid && customerForm.get('phone')?.touched) {
+                  <small class="text-red-700" id="phone-help">Ingrese el número de contacto.</small>
+                }
+              </div>
+            </div>
+          </section>
+        </section>
+      </div>
+    </div>
+    <div class="col-start-2 col-span-10">
+      <hr class="w-full text-gray-200 my-6">
+      <div class="flex justify-between">
+        <p-button (onClick)="onCancelProccess()" label="Cancelar" variant="outlined" severity="danger" />
+        <p-button (onClick)="onSaveCustomer()" label="Guardar" [raised]="true" severity="success" />
+      </div>
+    </div>
+  </form>
+</section>

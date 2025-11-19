@@ -5,10 +5,11 @@ import { ICustomer } from '../interfaces/customer.interface';
 import { CustomersService } from '../services/customers.service';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Router } from '@angular/router';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-customers',
-  imports: [ButtonModule, TableModule],
+  imports: [ButtonModule, TableModule, DatePipe],
   templateUrl: './customers.component.html',
   styleUrl: './customers.component.css'
 })
@@ -19,6 +20,7 @@ export class CustomersComponent implements OnInit {
   private router = inject(Router);
 
   customers = signal<ICustomer[]>([]);
+  selectedCustomers: ICustomer[] = [];
   loading = signal<boolean>(false);
 
   ngOnInit(): void {
@@ -48,6 +50,10 @@ export class CustomersComponent implements OnInit {
 
   createCustomer(): void {
     this.router.navigate(['sales/new-customer']);
+  }
+
+  editCustomer(customerId: string): void {
+    this.router.navigate(['/sales/edit-customer', customerId]);
   }
 
   deleteCustomer(customer: ICustomer): void {

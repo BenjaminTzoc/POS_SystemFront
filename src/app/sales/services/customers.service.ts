@@ -16,6 +16,18 @@ export class CustomersService {
     return this.http.get<ApiResponse<ICustomer[]>>(`${this.API_URL}`);
   }
 
+  getCustomer(customerId: string): Observable<ApiResponse<ICustomer>> {
+    return this.http.get<ApiResponse<ICustomer>>(`${this.API_URL}/${customerId}`);
+  }
+  
+  createCustomer(body: ICustomer): Observable<ApiResponse<ICustomer>> {
+    return this.http.post<ApiResponse<ICustomer>>(`${this.API_URL}`, body);
+  }
+
+  editCustomer(customerId: string, body: ICustomer): Observable<ApiResponse<ICustomer>> {
+    return this.http.put<ApiResponse<ICustomer>>(`${this.API_URL}/${customerId}`, body);
+  }
+
   deleteCustomer(customerId: string): Observable<ApiResponse<null>> {
     return this.http.delete<ApiResponse<null>>(`${this.API_URL}/${customerId}`);
   }

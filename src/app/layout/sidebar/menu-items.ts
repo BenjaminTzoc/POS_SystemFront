@@ -66,9 +66,9 @@ export const MENU_ITEMS: MenuItem[] = [
         permission: '',
       },
       {
-        label: 'Nueva Venta',
-        icon: 'pi pi-plus-circle',
-        route: '/sales/new',
+        label: 'Órdenes de Venta',
+        icon: '',
+        route: '/sales/orders',
         permission: '',
       }
     ]

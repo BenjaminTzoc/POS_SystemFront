@@ -28,6 +28,7 @@
     "@angular/forms": "^20.3.0",
     "@angular/platform-browser": "^20.3.0",
     "@angular/router": "^20.3.0",
+    "@fontsource-variable/montserrat": "^5.2.8",
     "@fontsource-variable/raleway": "^5.2.8",
     "@primeng/themes": "^20.2.0",
     "@primeuix/themes": "^1.2.5",

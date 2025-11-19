@@ -25,6 +25,12 @@ export class ProductsService {
     return this.http.get<ApiResponse<Product>>(`${this.API_URL}/${productId}`);
   }
 
+  searchProducts(query: string): Observable<ApiResponse<Product[]>> {
+    const params = { q: query };
+
+    return this.http.get<ApiResponse<Product[]>>(`${this.API_URL}/search`, { params });
+  }
+
   createProduct(formData: FormData) {
     return this.http.post<ApiResponse<any>>(`${this.API_URL}`, formData, {});
   }
@@ -38,9 +44,7 @@ export class ProductsService {
   }
 
   getCategory(idCategory: string): Observable<ApiResponse<Category>> {
-    return this.http.get<ApiResponse<Category>>(
-      `${this.API_URL}/categories/${idCategory}`
-    );
+    return this.http.get<ApiResponse<Category>>(`${this.API_URL}/categories/${idCategory}`);
   }
 
   createCategory(body: any): Observable<ApiResponse<Category>> {

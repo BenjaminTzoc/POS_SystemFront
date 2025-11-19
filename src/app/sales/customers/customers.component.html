@@ -7,15 +7,18 @@
     #customersDataTable
     [value]="customers()"
     [loading]="loading()"
+    [(selection)]="selectedCustomers"
     [paginator]="true"
     [rows]="20"
     [rowsPerPageOptions]="[10, 15, 20, 25, 50]"
-    [globalFilterFields]="['name', 'sku', 'barcode']"
+    [globalFilterFields]="['name', 'nit', 'phone', 'email']"
+    [scrollable]="true"
     dataKey="id"
-    styleClass="p-datatable-striped p-datatable-sm p-datatable-gridless rounded-md"
+    class="p-datatable-striped p-datatable-sm p-datatable-gridless rounded-md"
   >
     <ng-template pTemplate="header">
       <tr class="h-16">
+        <th style="width: 4rem"><p-tableHeaderCheckbox /></th>
         <th class="w-[400px]" pSortableColumn="name">
           Cliente <p-sortIcon class="ml-2" field="name" />
         </th>
@@ -24,15 +27,21 @@
           Contacto <p-sortIcon class="ml-2" field="branch.name" />
         </th>
         <th class="w-[250px]">Correo</th>
-        <th class="w-[350px]">Dirección</th>
-        <th class="w-[350px]">Teléfono</th>
+        <th class="w-[500px]">Dirección</th>
+        <th class="w-[350px]">Fecha de registro</th>
         <th class="w-[120px]">Acciones</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-customer>
       <tr class="h-16">
         <td>
-          <div class="font-semibold">{{ customer.name }}</div>
+            <p-tableCheckbox [value]="customer" />
+        </td>
+        <td>
+          <div class="flex flex-col font-semibold">
+            <small class="text-xs font-medium"><span class="font-bold mr-1">Categoría:</span>{{ customer.category.name }}</small>
+            {{ customer.name }}
+          </div>
         </td>
         <td>{{ customer.nit }}</td>
         <td>
@@ -43,10 +52,10 @@
         </td>
         <td>{{ customer.email }}</td>
         <td>{{ customer.address }}</td>
-        <td>{{ customer.phone }}</td>
+        <td>{{ customer.createdAt | date: 'dd/mm/yyy hh:mm a' }}</td>
         <td>
           <div class="flex gap-2">
-            <p-button icon="pi pi-pencil" severity="warn" />
+            <p-button icon="pi pi-pencil" severity="warn" (onClick)="editCustomer(customer.id)" />
             <p-button icon="pi pi-trash" severity="danger" (onClick)="deleteCustomer(customer)" />
           </div>
         </td>

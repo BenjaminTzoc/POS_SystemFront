@@ -1,5 +1,12 @@
 import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators, FormArray } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  FormsModule,
+  Validators,
+  FormArray,
+} from '@angular/forms';
 import { Button, ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
@@ -18,7 +25,7 @@ import { DialogModule } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { WebsocketService } from '../../services/websocket.service';
 import { Subject, takeUntil } from 'rxjs';
-import { TagModule } from 'primeng/tag'
+import { TagModule } from 'primeng/tag';
 import { ProductsService } from '../../../inventory/services/products.service';
 import { Product } from '../../../inventory/interfaces/product.interface';
 
@@ -26,18 +33,29 @@ export enum PurchaseStatus {
   PENDING = 'pending',
   PARTIALLY_PAID = 'partially_paid',
   PAID = 'paid',
-  CANCELLED = 'cancelled'
+  CANCELLED = 'cancelled',
 }
 
 @Component({
   selector: 'app-purchase-order-form',
   imports: [
-    ReactiveFormsModule, ButtonModule, InputTextModule, DatePickerModule,
-    TextareaModule, SelectModule, CurrencyPipe, DatePipe, TableModule, DialogModule,
-    FormsModule, InputNumberModule, TagModule, Button
+    ReactiveFormsModule,
+    ButtonModule,
+    InputTextModule,
+    DatePickerModule,
+    TextareaModule,
+    SelectModule,
+    CurrencyPipe,
+    DatePipe,
+    TableModule,
+    DialogModule,
+    FormsModule,
+    InputNumberModule,
+    TagModule,
+    Button,
   ],
   templateUrl: './purchase-order-form.component.html',
-  styleUrl: './purchase-order-form.component.css'
+  styleUrl: './purchase-order-form.component.css',
 })
 export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
@@ -49,12 +67,12 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
   private productsService = inject(ProductsService);
   private websocketService = inject(WebsocketService);
   private destroy$ = new Subject<void>();
-  
+
   statusOptions = [
     { label: 'Pendiente', value: 'pending' },
     { label: 'Parcialmente Pagado', value: 'partially_paid' },
     { label: 'Pagado', value: 'paid' },
-    { label: 'Cancelado', value: 'cancelled' }
+    { label: 'Cancelado', value: 'cancelled' },
   ];
 
   orderForm!: FormGroup;
@@ -82,13 +100,13 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        this.messageService.add({ 
-          severity: 'error', 
-          summary: 'Error', 
-          detail: `Error generando número de orden: ${err.error.message}`
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error generando número de orden: ${err.error.message}`,
         });
         this.router.navigate(['/purchases/orders']);
-      }
+      },
     });
   }
 
@@ -98,35 +116,37 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
   }
 
   setupWebSocketListeners(): void {
-    this.websocketService.onNewPurchaseCreated()
+    this.websocketService
+      .onNewPurchaseCreated()
       .pipe(takeUntil(this.destroy$))
       .subscribe((data) => {
         this.messageService.add({
           severity: 'info',
           summary: 'Nueva orden creada',
           detail: `Otro usuario creó la orden: ${data.data.invoiceNumber}`,
-          life: 5000
+          life: 5000,
         });
 
         this.loadNextInvoiceNumber();
       });
 
-    this.websocketService.onNextInvoiceNumberUpdated()
+    this.websocketService
+      .onNextInvoiceNumberUpdated()
       .pipe(takeUntil(this.destroy$))
       .subscribe((data) => {
         const newNumber = data.data.nextInvoiceNumber;
 
         if (this.orderForm.get('invoiceNumber')?.value !== newNumber) {
           this.orderForm.get('invoiceNumber')?.setValue(newNumber);
-          
+
           this.messageService.add({
             severity: 'success',
             summary: 'Número actualizado',
             detail: `Nuevo número de orden: ${newNumber}`,
-            life: 3000
+            life: 3000,
           });
         }
-      })
+      });
   }
 
   loadNextInvoiceNumber(): void {
@@ -138,8 +158,8 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Error cargando número de orden:', err);
-      }
-    })
+      },
+    });
   }
 
   initializeForm(): void {
@@ -148,8 +168,9 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
       date: [new Date()],
       dueDate: [null],
       notes: [''],
+      status: [''],
       supplierId: ['', [Validators.required]],
-      details: this.fb.array([])
+      details: this.fb.array([]),
     });
 
     this.productForm = this.fb.group({
@@ -162,10 +183,10 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
   }
 
   get orderDetailsForTable(): any[] {
-    return this.orderDetails.controls.map(control => ({
+    return this.orderDetails.controls.map((control) => ({
       formControl: control,
       data: control.value,
-      lineTotal: this.calculateLineTotal(control.value)
+      lineTotal: this.calculateLineTotal(control.value),
     }));
   }
 
@@ -177,14 +198,14 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        this.messageService.add({ 
-          severity: 'error', 
-          summary: 'Error', 
-          detail: `Error obteniendo proveedores: ${err.error.message}`
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error obteniendo proveedores: ${err.error.message}`,
         });
         this.router.navigate(['/purchases/orders']);
-      }
-    })
+      },
+    });
   }
 
   loadProducts(): void {
@@ -195,14 +216,14 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        this.messageService.add({ 
-          severity: 'error', 
-          summary: 'Error', 
-          detail: `Error obteniendo productos: ${err.error.message}`
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error obteniendo productos: ${err.error.message}`,
         });
         this.dialogVisible = false;
-      }
-    })
+      },
+    });
   }
 
   addDetail(): void {
@@ -211,7 +232,7 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'Por favor, completa todos los campos requeridos'
+        detail: 'Por favor, completa todos los campos requeridos',
       });
       return;
     }
@@ -224,7 +245,7 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
       unitPrice: [formValue.unitPrice, [Validators.required, Validators.min(0)]],
       taxPercentage: [formValue.taxPercentage, [Validators.min(0)]],
       discount: [formValue.discount, [Validators.min(0)]],
-      product: [this.selectedProduct]
+      product: [this.selectedProduct],
     });
 
     this.orderDetails.push(detailGroup);
@@ -233,7 +254,7 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
       quantity: 1,
       unitPrice: 0,
       taxPercentage: 0,
-      discount: 0
+      discount: 0,
     });
     this.selectedProduct = undefined;
     this.dialogVisible = false;
@@ -253,21 +274,27 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
     const discountAmount = subtotal * (discount / 100);
     const subtotalAfterDiscount = subtotal - discountAmount;
     const taxAmount = subtotalAfterDiscount * (taxPercentage / 100);
-    
+
     return Number((subtotalAfterDiscount + taxAmount).toFixed(2));
   }
 
-  calculateTotals(): { subtotal: number, discountTotal: number, subtotalWithDiscount: number, taxTotal: number, total: number } {
+  calculateTotals(): {
+    subtotal: number;
+    discountTotal: number;
+    subtotalWithDiscount: number;
+    taxTotal: number;
+    total: number;
+  } {
     let subtotal = 0;
     let discountTotal = 0;
     let taxTotal = 0;
 
-    this.orderDetails.controls.forEach(control => {
+    this.orderDetails.controls.forEach((control) => {
       const detail = control.value;
       const lineSubtotal = detail.quantity * detail.unitPrice;
       const lineDiscount = lineSubtotal * (detail.discount / 100);
       const lineTax = (lineSubtotal - lineDiscount) * (detail.taxPercentage / 100);
-      
+
       subtotal += lineSubtotal;
       discountTotal += lineDiscount;
       taxTotal += lineTax;
@@ -281,7 +308,7 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
       discountTotal: Number(discountTotal.toFixed(2)),
       subtotalWithDiscount: Number(subtotalWithDiscount.toFixed(2)),
       taxTotal: Number(taxTotal.toFixed(2)),
-      total: Number(total.toFixed(2))
+      total: Number(total.toFixed(2)),
     };
   }
 
@@ -295,13 +322,13 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        this.messageService.add({ 
-          severity: 'error', 
-          summary: 'Error', 
-          detail: `Error obteniendo datos del proveedor: ${err.error.message}`
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error obteniendo datos del proveedor: ${err.error.message}`,
         });
-      }
-    })
+      },
+    });
   }
 
   showDialog(): void {
@@ -324,9 +351,13 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
         }
       },
       error: (error) => {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: `Error cargando el producto: ${error.error.message}`});
-      }
-    })
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error cargando el producto: ${error.error.message}`,
+        });
+      },
+    });
   }
 
   onSaveOrder(): void {
@@ -335,7 +366,7 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'Por favor, completa todos los campos requeridos'
+        detail: 'Por favor, completa todos los campos requeridos',
       });
       return;
     }
@@ -344,7 +375,7 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'Debe agregar al menos un producto'
+        detail: 'Debe agregar al menos un producto',
       });
       return;
     }
@@ -352,19 +383,21 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
     const formData: CreatePurchase = {
       invoiceNumber: this.orderForm.get('invoiceNumber')?.value,
       date: new Date(this.orderForm.get('date')?.value),
-      dueDate: this.orderForm.get('dueDate')?.value ? new Date(this.orderForm.get('dueDate')?.value) : undefined,
+      dueDate: this.orderForm.get('dueDate')?.value
+        ? new Date(this.orderForm.get('dueDate')?.value)
+        : undefined,
       supplierId: this.orderForm.get('supplierId')?.value,
       notes: this.orderForm.get('notes')?.value,
-      details: this.orderDetails.controls.map(control => {
+      details: this.orderDetails.controls.map((control) => {
         const detail = control.value;
         return {
           productId: detail.productId,
           quantity: detail.quantity,
           unitPrice: detail.unitPrice,
           discount: detail.discount,
-          taxPercentage: detail.taxPercentage
+          taxPercentage: detail.taxPercentage,
         };
-      })
+      }),
     };
 
     this.ordersService.createPurchase(formData).subscribe({
@@ -373,7 +406,7 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
           this.messageService.add({
             severity: 'success',
             summary: 'Éxito',
-            detail: 'Orden de compra creada correctamente'
+            detail: 'Orden de compra creada correctamente',
           });
           this.router.navigate(['/purchases/orders']);
         }
@@ -382,10 +415,10 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: `Error creando orden: ${err.error.message}`
+          detail: `Error creando orden: ${err.error.message}`,
         });
-      }
-    })
+      },
+    });
   }
 
   onCancelProccess() {
@@ -405,7 +438,7 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
       },
 
       accept: () => {
-        this.router.navigate(['purchases/orders'])
+        this.router.navigate(['purchases/orders']);
       },
     });
   }
@@ -413,7 +446,7 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
   getProductImageUrl(imageUrl: string | null): string {
     if (!imageUrl) return `${environment.baseUrl}/uploads/products/default-product.png`;
     if (imageUrl.startsWith('http')) return imageUrl;
-    
+
     return `${environment.baseUrl}${imageUrl}`;
   }
 }
