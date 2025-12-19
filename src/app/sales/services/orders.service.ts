@@ -16,11 +16,31 @@ export class OrdersService {
     return this.http.get<ApiResponse<ISaleOrderResponse[]>>(`${this.API_URL}`);
   }
 
+  getSale(saleId: string): Observable<ApiResponse<ISaleOrderResponse>> {
+    return this.http.get<ApiResponse<ISaleOrderResponse>>(`${this.API_URL}/${saleId}`);
+  }
+
   getNextInvoiceNumber(): Observable<ApiResponse<{ nextNumber: string }>> {
     return this.http.get<ApiResponse<{ nextNumber: string }>>(`${this.API_URL}/next-number`);
   }
 
   createSale(body: any): Observable<ApiResponse<ISaleOrderResponse>> {
     return this.http.post<ApiResponse<ISaleOrderResponse>>(`${this.API_URL}`, body);
+  }
+
+  confirmSale(saleId: string): Observable<ApiResponse<ISaleOrderResponse>> {
+    return this.http.post<ApiResponse<ISaleOrderResponse>>(`${this.API_URL}/${saleId}/confirm`, {});
+  }
+
+  deliverSale(saleId: string): Observable<ApiResponse<ISaleOrderResponse>> {
+    return this.http.post<ApiResponse<ISaleOrderResponse>>(`${this.API_URL}/${saleId}/deliver`, {});
+  }
+
+  cancelSale(saleId: string): Observable<ApiResponse<ISaleOrderResponse>> {
+    return this.http.post<ApiResponse<ISaleOrderResponse>>(`${this.API_URL}/${saleId}/cancel`, {});
+  }
+
+  updateSale(saleId: string, body: any): Observable<ApiResponse<ISaleOrderResponse>> {
+    return this.http.put<ApiResponse<ISaleOrderResponse>>(`${this.API_URL}/${saleId}`, body);
   }
 }

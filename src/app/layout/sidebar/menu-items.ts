@@ -6,7 +6,47 @@ export interface MenuItem {
   badge?: number;
   badgeSeverity?: 'success' | 'info' | 'warning' | 'danger';
   permission?: string;
+  visible?: boolean;
 }
+
+export const RECURRENT_MENU: MenuItem[] = [
+  {
+    label: 'Inicio',
+    icon: 'pi pi-home',
+    route: '/dashboard',
+    permission: '',
+  },
+  {
+    label: 'Productos',
+    icon: 'pi pi-shopping-bag',
+    route: '/inventory/products',
+    permission: 'products.manage',
+  },
+  {
+    label: 'Inventario',
+    icon: 'pi pi-box',
+    route: '/inventory/inventories',
+    permission: '',
+  },
+  {
+    label: 'Clientes',
+    icon: 'pi pi-users',
+    route: '/sales/customers',
+    permission: '',
+  },
+  {
+    label: 'Ventas',
+    icon: 'pi pi-shopping-cart',
+    route: '/sales/orders',
+    permission: '',
+  },
+  {
+    label: 'Movimientos de inventario',
+    icon: 'pi pi-objects-column',
+    route: '/inventory/inventory-movements',
+    permission: '',
+  },
+];
 
 export const MENU_ITEMS: MenuItem[] = [
   {
@@ -25,33 +65,33 @@ export const MENU_ITEMS: MenuItem[] = [
         label: 'Inventario principal',
         icon: 'pi pi-box',
         route: '/inventory/inventories',
-        permission: ''
+        permission: '',
       },
       {
         label: 'Productos',
         icon: 'pi pi-shopping-bag',
         route: '/inventory/products',
-        permission: ''
+        permission: '',
       },
       {
         label: 'Categorías',
         icon: 'pi pi-tags',
         route: '/inventory/product-categories',
-        permission: ''
+        permission: '',
       },
       {
         label: 'Traslados',
         icon: 'pi pi-arrows-h',
         route: 'inventory/transfers',
-        permission: ''
+        permission: '',
       },
       {
         label: 'Unidades de medida',
         icon: 'pi pi-gauge',
         route: 'inventory/units',
-        permission: ''
-      }
-    ]
+        permission: '',
+      },
+    ],
   },
   {
     label: 'Ventas',
@@ -70,8 +110,8 @@ export const MENU_ITEMS: MenuItem[] = [
         icon: '',
         route: '/sales/orders',
         permission: '',
-      }
-    ]
+      },
+    ],
   },
   {
     label: 'Compras',
@@ -90,7 +130,7 @@ export const MENU_ITEMS: MenuItem[] = [
         icon: 'pi pi-shopping-cart',
         route: '/purchases/orders',
         permission: '',
-      }
-    ]
-  }
-]
+      },
+    ],
+  },
+];

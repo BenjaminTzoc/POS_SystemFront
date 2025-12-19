@@ -6,14 +6,18 @@ import { ApiResponse } from '../../core/models/api-response.model';
 import { Inventory } from '../interfaces/inventory.interface';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class InventoryService {
   private http = inject(HttpClient);
   private readonly API_URL = `${environment.apiUrl}/inventories`;
-  
+
   getInventories(): Observable<ApiResponse<Inventory[]>> {
     return this.http.get<ApiResponse<Inventory[]>>(`${this.API_URL}`);
+  }
+
+  getInventoriesByBranch(branchId: string): Observable<ApiResponse<Inventory[]>> {
+    return this.http.get<ApiResponse<Inventory[]>>(`${this.API_URL}/branch/${branchId}`);
   }
 
   createInventory(body: any): Observable<ApiResponse<any>> {

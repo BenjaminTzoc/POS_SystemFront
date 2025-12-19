@@ -1,29 +1,44 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
-import { InputText } from "primeng/inputtext";
+import {
+  FormBuilder,
+  FormGroup,
+  FormsModule,
+  Validators,
+  ReactiveFormsModule,
+  FormArray,
+} from '@angular/forms';
+import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { TextareaModule } from 'primeng/textarea';
 import { RadioButton } from 'primeng/radiobutton';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { FileUploadModule } from 'primeng/fileupload'
-import { Router } from '@angular/router';
+import { FileUploadModule } from 'primeng/fileupload';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Category } from '../../interfaces/product.interface';
 import { Branch } from '../../interfaces/branch.interface';
 import { UnitMeasure } from '../../interfaces/unit.interface';
 import { ProductsService } from '../../services/products.service';
 import { BranchesService } from '../../services/branches.service';
 import { UnitsService } from '../../services/units.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-product-form',
   imports: [
-    InputText, FormsModule, Select, TextareaModule, InputNumberModule, 
-    RadioButton, ButtonModule, ReactiveFormsModule, FileUploadModule,
+    InputText,
+    FormsModule,
+    Select,
+    TextareaModule,
+    InputNumberModule,
+    RadioButton,
+    ButtonModule,
+    ReactiveFormsModule,
+    FileUploadModule,
   ],
   templateUrl: './product-form.component.html',
-  styleUrl: './product-form.component.css'
+  styleUrl: './product-form.component.css',
 })
 export class ProductFormComponent implements OnInit {
   private branchesService = inject(BranchesService);
@@ -33,6 +48,7 @@ export class ProductFormComponent implements OnInit {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private confirmationService = inject(ConfirmationService);
+  private route = inject(ActivatedRoute);
 
   productForm!: FormGroup;
   categories: Category[] = [];
@@ -42,24 +58,32 @@ export class ProductFormComponent implements OnInit {
   branches = signal<Branch[]>([]);
   uploadedFiles: any[] = [];
   statuses: any[] = [
-        { name: 'Inactivo', key: false },
-        { name: 'Activo', key: true },
-    ];
+    { name: 'Inactivo', key: false },
+    { name: 'Activo', key: true },
+  ];
   visibility: any[] = [
-        { name: 'No visible', key: false },
-        { name: 'Visible', key: true },
-    ];
+    { name: 'No visible', key: false },
+    { name: 'Visible', key: true },
+  ];
   manageStock: any[] = [
-        { name: 'No', key: false },
-        { name: 'Si', key: true },
-    ];
+    { name: 'No', key: false },
+    { name: 'Si', key: true },
+  ];
   stockAvailability: any[] = [
-        { name: 'en stock', key: 'in_stock' },
-        { name: 'sin stock', key: 'out_of_stock' },
-        // { name: 'stock limitado', key: 'limited' },
-    ];
+    { name: 'en stock', key: 'in_stock' },
+    { name: 'sin stock', key: 'out_of_stock' },
+    // { name: 'stock limitado', key: 'limited' },
+  ];
+
+  // -----------EDICION-----------
+  productId: string | null = null;
+  isEditMode: boolean = false;
+  currentImageUrl: string | null = null;
 
   ngOnInit(): void {
+    this.productId = this.route.snapshot.paramMap.get('id');
+    this.isEditMode = !!this.productId;
+
     this.loadCategories();
     this.loadBranches();
     this.loadUnits();
@@ -67,7 +91,55 @@ export class ProductFormComponent implements OnInit {
 
     this.productForm.get('manageStock')!.valueChanges.subscribe((value) => {
       this.onManageStockChange(value);
-    })
+    });
+
+    if (this.isEditMode) {
+      this.loadProduct(this.productId!);
+    }
+  }
+
+  createInitialStockForm(stock: any): FormGroup {
+    return this.fb.group({
+      id: [stock.id, Validators.required],
+      branchId: [{ value: stock.branch.id, disabled: this.isEditMode }, Validators.required],
+      quantity: [
+        { value: stock.stock, disabled: this.isEditMode },
+        [Validators.required, Validators.min(0)],
+      ],
+    });
+  }
+
+  loadProduct(productId: string): void {
+    this.productsService.getProduct(productId).subscribe({
+      next: (response) => {
+        this.productForm.patchValue(response.data);
+
+        this.productForm.get('categoryId')?.setValue(response.data.category.id);
+        this.selectedCategory = response.data.category;
+
+        this.productForm.get('unitId')?.setValue(response.data.unit.id);
+        this.selectedUnit = response.data.unit;
+
+        // Bloquear manageStock en modo edición para mantener consistencia
+        this.productForm.get('manageStock')?.disable();
+
+        this.initialStocks.clear();
+        response.data.inventories?.forEach((inv) => {
+          this.initialStocks.push(this.createInitialStockForm(inv));
+        });
+
+        if (response.data.imageUrl) {
+          this.currentImageUrl = this.getProductImageUrl(response.data.imageUrl);
+        }
+      },
+      error: (error) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error cargando el producto: ${error.error.message}`,
+        });
+      },
+    });
   }
 
   onManageStockChange(value: boolean) {
@@ -90,7 +162,7 @@ export class ProductFormComponent implements OnInit {
       stockAvailability: ['in_stock', Validators.required],
       isActive: [true, Validators.required],
       isVisible: [true, Validators.required],
-      initialStocks: this.fb.array([])
+      initialStocks: this.fb.array([]),
     });
   }
 
@@ -100,9 +172,13 @@ export class ProductFormComponent implements OnInit {
         this.branches.set(response.data);
       },
       error: (error) => {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: `Error cargando las sucursales: ${error.error.message}`});
-      }
-    })
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error cargando las sucursales: ${error.error.message}`,
+        });
+      },
+    });
   }
 
   loadUnits(): void {
@@ -111,9 +187,13 @@ export class ProductFormComponent implements OnInit {
         this.units = response.data;
       },
       error: (error) => {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: `Error cargando las unidades: ${error.error.message}`});
-      }
-    })
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error cargando las unidades: ${error.error.message}`,
+        });
+      },
+    });
   }
 
   loadCategories(): void {
@@ -122,33 +202,67 @@ export class ProductFormComponent implements OnInit {
         this.categories = response.data;
       },
       error: (error) => {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: `Error cargando las categorías: ${error.error.message}`});
-      }
-    })
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error cargando las categorías: ${error.error.message}`,
+        });
+      },
+    });
   }
 
   onSaveProduct(): void {
     this.productForm.markAllAsTouched();
+    console.log(this.productForm.value);
 
     if (this.productForm.invalid) {
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'Por favor, completa todos los campos requeridos'
+        detail: 'Por favor, completa todos los campos requeridos',
       });
       return;
     }
 
     const formData = this.createFormData();
-    this.productsService.createProduct(formData).subscribe({
-      next: (response) => {
-        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: `El producto se ha creado correctamente.`});
-        this.router.navigate(['/inventory/products'])
-      },
-      error: (error) => {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: `Error creando el producto: ${error.error.message}`});
-      }
-    })
+
+    if (this.isEditMode) {
+      this.productsService.updateProduct(this.productId!, formData).subscribe({
+        next: (response) => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: `El producto se ha actualizado correctamente.`,
+          });
+          this.router.navigate(['/inventory/products']);
+        },
+        error: (error) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: `Error actualizando el producto: ${error.error.message}`,
+          });
+        },
+      });
+    } else {
+      this.productsService.createProduct(formData).subscribe({
+        next: (response) => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: `El producto se ha creado correctamente.`,
+          });
+          this.router.navigate(['/inventory/products']);
+        },
+        error: (error) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: `Error creando el producto: ${error.error.message}`,
+          });
+        },
+      });
+    }
   }
 
   private createFormData(): FormData {
@@ -156,12 +270,17 @@ export class ProductFormComponent implements OnInit {
     const formValue = this.productForm.value;
 
     // Agregar CADA CAMPO individualmente al FormData
-    Object.keys(formValue).forEach(key => {
+    Object.keys(formValue).forEach((key) => {
+      // Excluir 'id' e 'initialStocks' cuando es actualización
+      if (this.isEditMode && (key === 'id' || key === 'initialStocks')) {
+        return; // Saltar estos campos en modo edición
+      }
+
       if (key === 'initialStocks') {
         formValue[key].forEach((stock: any, index: number) => {
-        formData.append(`initialStocks[${index}][branchId]`, stock.branchId);
-        formData.append(`initialStocks[${index}][quantity]`, stock.quantity.toString());
-      });
+          formData.append(`initialStocks[${index}][branchId]`, stock.branchId);
+          formData.append(`initialStocks[${index}][quantity]`, stock.quantity.toString());
+        });
       } else {
         formData.append(key, formValue[key]);
       }
@@ -181,17 +300,17 @@ export class ProductFormComponent implements OnInit {
 
   getSelectedBranchIds(): string[] {
     return this.initialStocks.controls
-      .map(control => control.get('branchId')?.value)
-      .filter(branchId => branchId !== null && branchId !== '');
+      .map((control) => control.get('branchId')?.value)
+      .filter((branchId) => branchId !== null && branchId !== '');
   }
 
   getAvailableBranchesForIndex(index: number): Branch[] {
     const currentBranchId = this.initialStocks.at(index)?.get('branchId')?.value;
-    const selectedBranchId = this.getSelectedBranchIds().filter(id => id !== currentBranchId);
+    const selectedBranchId = this.getSelectedBranchIds().filter((id) => id !== currentBranchId);
     const branches = this.branches();
 
-    const filtered = branches.filter(branch => 
-      !selectedBranchId.includes(branch.id) || branch.id === currentBranchId
+    const filtered = branches.filter(
+      (branch) => !selectedBranchId.includes(branch.id) || branch.id === currentBranchId
     );
 
     return filtered;
@@ -199,15 +318,19 @@ export class ProductFormComponent implements OnInit {
 
   addStock() {
     if (!this.selectedUnit) {
-      this.messageService.add({ severity: 'warn', summary: 'Advertencia', detail: `Debe seleccionar una unidad de medida.`});
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Advertencia',
+        detail: `Debe seleccionar una unidad de medida.`,
+      });
       return;
     }
 
     const newStockGroup = this.fb.group({
       id: [this.generateUniqueId()],
       branchId: [null, Validators.required],
-      quantity: [0, [Validators.required, Validators.min(0)]]
-    })
+      quantity: [0, [Validators.required, Validators.min(0)]],
+    });
 
     this.initialStocks.push(newStockGroup);
   }
@@ -228,13 +351,17 @@ export class ProductFormComponent implements OnInit {
         const unitMeasure = response.data.defaultUnit;
 
         if (unitMeasure) {
-          this.productForm.get('unitId')?.setValue(unitMeasure?.id)
-          this.onUnitChange({value: unitMeasure.id})
+          this.productForm.get('unitId')?.setValue(unitMeasure?.id);
+          this.onUnitChange({ value: unitMeasure.id });
         }
       },
       error: (error) => {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: `Error cargando la categoría: ${error.error.message}`});
-      }
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error cargando la categoría: ${error.error.message}`,
+        });
+      },
     });
   }
 
@@ -251,9 +378,13 @@ export class ProductFormComponent implements OnInit {
         this.selectedUnit = response.data;
       },
       error: (error) => {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: `Error cargando la unidad de medida: ${error.error.message}`});
-      }
-    })
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error cargando la unidad de medida: ${error.error.message}`,
+        });
+      },
+    });
   }
 
   onUpload(event: any) {
@@ -262,6 +393,10 @@ export class ProductFormComponent implements OnInit {
 
   onRemoveFile(index: number) {
     this.uploadedFiles.splice(index, 1);
+  }
+
+  changeImage() {
+    this.currentImageUrl = null;
   }
 
   onCancelProccess() {
@@ -281,12 +416,24 @@ export class ProductFormComponent implements OnInit {
       },
 
       accept: () => {
-        this.router.navigate(['inventory/products'])
+        this.router.navigate(['inventory/products']);
       },
     });
   }
 
   generateUniqueId(): string {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  }
+
+  getProductImageUrl(imageUrl: string | null): string {
+    if (!imageUrl) {
+      return `${environment.baseUrl}/uploads/products/default-product.png`;
+    }
+
+    if (imageUrl.startsWith('http')) {
+      return imageUrl;
+    }
+
+    return `${environment.baseUrl}${imageUrl}`;
   }
 }

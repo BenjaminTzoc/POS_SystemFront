@@ -1,15 +1,15 @@
-import { HttpClient } from "@angular/common/http";
-import { inject, Injectable, signal } from "@angular/core";
-import { Router } from "@angular/router";
-import { environment } from "../../environments/environment";
-import { BehaviorSubject, Observable, tap } from "rxjs";
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { environment } from '../../environments/environment';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
-import { ApiResponse } from "../core/models/api-response.model";
-import { User } from "../core/models/user.model";
-import { AuthResponse, LoginRequest } from "../core/models/auth.model";
+import { ApiResponse } from '../core/models/api-response.model';
+import { User } from '../core/models/user.model';
+import { AuthResponse, LoginRequest } from '../core/models/auth.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private http = inject(HttpClient);
@@ -23,17 +23,18 @@ export class AuthService {
     this.checkTokenExpiration();
   }
 
-    login(credentials: LoginRequest): Observable<ApiResponse<AuthResponse>> {
-      return this.http.post<ApiResponse<AuthResponse>>(
-        `http://localhost:3000/api/v1/users/login`, 
-        credentials
-      ).pipe(
-        tap(response => {
-          this.setAuthData(response.data);
-          this.authSubject.next(response.data.user);
+  login(credentials: LoginRequest): Observable<ApiResponse<AuthResponse>> {
+    return this.http
+      .post<ApiResponse<AuthResponse>>(`${this.API_URL}/users/login`, credentials)
+      .pipe(
+        tap((response) => {
+          if (response.statusCode === 200 && response.data?.accessToken) {
+            this.setAuthData(response.data);
+            this.authSubject.next(response.data.user ?? null);
+          }
         })
       );
-    }
+  }
 
   logout(): void {
     localStorage.removeItem('accessToken');
@@ -47,16 +48,14 @@ export class AuthService {
     if (!user) return false;
 
     // Si es superadmin, tiene todos los permisos
-    if (user.role.isSuperAdmin) return true;
+    if (user.roles?.some((r) => r.isSuperAdmin)) return true;
 
     // Buscar permiso en los permisos directos del usuario
-    const hasDirectPermission = user.permissions?.some(
-      perm => perm.name === permissionName
-    );
+    const hasDirectPermission = user.permissions?.some((perm) => perm.name === permissionName);
 
     // Buscar permiso en los permisos del rol
-    const hasRolePermission = user.role.permissions?.some(
-      perm => perm.name === permissionName
+    const hasRolePermission = user.roles?.some((role) =>
+      role.permissions?.some((perm) => perm.name === permissionName)
     );
 
     return hasDirectPermission || hasRolePermission;
@@ -64,7 +63,7 @@ export class AuthService {
 
   hasAnyPermission(permissions: string[]): boolean {
     if (!permissions || permissions.length === 0) return true;
-    return permissions.some(permission => this.hasPermission(permission));
+    return permissions.some((permission) => this.hasPermission(permission));
   }
 
   private setAuthData(authData: AuthResponse): void {
@@ -84,17 +83,17 @@ export class AuthService {
   get isAuthenticated(): boolean {
     const token = this.token;
     if (!token) return false;
-    
+
     try {
       const decodedToken: any = jwtDecode(token);
 
       const currentTime = Date.now() / 1000;
-      
+
       if (decodedToken.exp < currentTime) {
         this.logout();
         return false;
       }
-      
+
       return true;
     } catch (error) {
       console.error('Error decoding token:', error);
@@ -106,7 +105,7 @@ export class AuthService {
   getTokenData(): any {
     const token = this.token;
     if (!token) return null;
-    
+
     try {
       return jwtDecode(token);
     } catch (error) {

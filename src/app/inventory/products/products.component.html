@@ -29,7 +29,8 @@
           <th class="w-[300px]" pSortableColumn="name">Producto <p-sortIcon class="ml-2" field="name"/></th>
           <th pSortableColumn="price">Precio de venta <p-sortIcon class="ml-2" field="price"/></th>
           <th pSortableColumn="barcode">Código Barras <p-sortIcon class="ml-2" field="barcode" /></th>
-          <th>Stock total actual</th>
+          <th pSortableColumn="sku">SKU <p-sortIcon class="ml-2" field="sku" /></th>
+
           <th class="w-[120px]">Acciones</th>
         </tr>
     </ng-template>
@@ -42,16 +43,20 @@
         </td>
         <td class="font-semibold">
           <div class="flex flex-col">
-            <small class="text-xs font-medium">{{ product.sku }} - {{ product.category.name }}</small>
+            <small class="text-xs font-medium">{{ product.category.name }}</small>
             {{ product.name }}
           </div>
         </td>
         <td>{{ product.price | currency: 'Q' }}</td>
         <td>{{ product.barcode }}</td>
-        <td>{{ product.stock }} {{ product.unit.abbreviation }}</td>
+        <td>{{ product.sku }}</td>
         <td>
           <div class="flex gap-2">
-            <p-button icon="pi pi-pencil" severity="warn" />
+            <p-button 
+              icon="pi pi-pencil" 
+              severity="warn" 
+              (onClick)="onEditProduct(product.id)"
+            />
             <p-button 
               icon="pi pi-trash" 
               severity="danger" 

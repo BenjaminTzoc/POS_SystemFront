@@ -7,13 +7,15 @@
       autocomplete="off"
       [(ngModel)]="searchQuery"
       (input)="onSearchProduct()"
-      (focus)="showProductResults = true"
+      (focus)="onFocus()"
+      [disabled]="disabled"
       class="w-full"
     />
     <label for="SearchInput">Búsqueda de productos</label>
   </p-floatLabel>
   @if (showProductResults) {
   <div
+    [@fadeInOut]
     class="absolute top-full z-10 mt-2 rounded-lg border border-gray-300 w-full bg-white shadow-lg overflow-hidden"
   >
     <div class="flex p-1 bg-[#F6F6F6] border-b border-gray-300">
@@ -29,7 +31,19 @@
       </p-button>
     </div>
     <div class="flex flex-col">
-      @if (filteredProducts.length === 0) {
+      @if (isTopSelling && filteredProducts.length > 0) {
+      <div class="px-4 py-2 bg-gray-50 border-b border-gray-200">
+        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          Más vendidos
+        </span>
+      </div>
+      } @else if (!isTopSelling && filteredProducts.length > 0) {
+      <div class="px-4 py-2 bg-gray-50 border-b border-gray-200">
+        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          Resultados de la búsqueda
+        </span>
+      </div>
+      } @if (filteredProducts.length === 0) {
       <div class="flex justify-center items-center gap-2 py-6 text-sm">
         <i class="pi pi-exclamation-circle"></i>
         Sin resultados
@@ -39,7 +53,12 @@
         class="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-[#F9F9F9]"
         (click)="selectProduct(product)"
       >
-        <p>{{ product.name }}</p>
+        <div class="flex items-end gap-2">
+          <p>{{ product.name }}</p>
+          <span class="text-green-700 text-xs"
+            >disponible: ({{ product.stock }}{{ product.unit.abbreviation }})</span
+          >
+        </div>
         <div>
           <p class="text-xs text-gray-400">Código: {{ product.barcode }}</p>
           <p class="text-xs text-gray-400">SKU: {{ product.sku }}</p>

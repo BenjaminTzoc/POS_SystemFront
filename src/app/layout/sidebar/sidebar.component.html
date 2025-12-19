@@ -16,8 +16,12 @@
           [class.w-0]="sidebarCollapsed"
           [class.w-auto]="!sidebarCollapsed"
         >
-          <p class="text-xs font-normal text-gray-500 whitespace-nowrap">ADMINISTRADOR</p>
-          <h3 class="font-semibold text-gray-800 truncate max-w-[160px]">Usuario de prueba</h3>
+          <p class="text-xs font-normal text-gray-500 whitespace-nowrap uppercase">
+            {{ currentUser()?.roles?.[0]?.name || 'Sin rol' }}
+          </p>
+          <h3 class="font-semibold text-gray-800 truncate max-w-[160px]">
+            {{ currentUser()?.name }}
+          </h3>
         </article>
       </div>
       <button
@@ -33,86 +37,126 @@
     </section>
   </div>
   <div class="w-full transition-all duration-300" [class]="!sidebarCollapsed ? 'px-6' : 'px-6'">
-    <section class="text-gray-500 flex flex-col">
-      <small 
+    <section class="text-gray-500 flex flex-col mb-3">
+      <small
         class="font-medium text-xs mb-1.5 text-gray-500 transition-all duration-300"
-        [class]="!sidebarCollapsed ? 'mx-3' : 'mx-1.5'">
-        MAIN
+        [class]="!sidebarCollapsed ? 'mx-3' : 'mx-1.5'"
+      >
+        RECURRENTES
       </small>
       <section class="flex flex-col gap-1">
-        @for(item of filteredMenuItems; track item.label) {
-          @if(item.children && item.children.length > 0) {
-            <div
-              (click)="toggleSubmenu(item)"
-              class="flex items-center justify-between py-2.5 rounded-lg cursor-pointer hover:bg-gray-100 transition-all duration-300 select-none"
-              [class]="!sidebarCollapsed ? 'px-3' : 'px-3'"
-              [class.bg-blue-50]="isSubmenuOpen(item) || isAnyChildActive(item)"
-              [class.text-blue-600]="isSubmenuOpen(item) || isAnyChildActive(item)"
+        @for(item of recurrentItems(); track item.label) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="bg-blue-50 text-blue-600"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="flex items-center justify-between py-2.5 rounded-lg cursor-pointer hover:bg-gray-100 transition-all duration-300"
+          [class]="!sidebarCollapsed ? 'px-3' : 'px-3'"
+        >
+          <div class="flex gap-3 items-center">
+            <i [class]="item.icon" class="scale-105"></i>
+            <span
+              class="text-base/tight m-0"
+              [class.opacity-0]="sidebarCollapsed"
+              [class.opacity-100]="!sidebarCollapsed"
+              [class.w-0]="sidebarCollapsed"
+              [class.w-auto]="!sidebarCollapsed"
             >
-              <div class="flex gap-3 items-center">
-                <i [class]="item.icon" class="scale-105"></i>
-                <span 
-                  class="text-base/tight m-0"
-                  [class.opacity-0]="sidebarCollapsed"
-                  [class.opacity-100]="!sidebarCollapsed"
-                  [class.w-0]="sidebarCollapsed"
-                  [class.w-auto]="!sidebarCollapsed">
-                  {{ item.label }}
-                </span>
-              </div>
-              @if(!sidebarCollapsed) {
-                <i 
-                  class="pi pi-chevron-down text-xs! transition-all duration-300"
-                  [class.rotate-180]="isSubmenuOpen(item)"
-                >
-                </i>
-              }
-            </div>
-          }
-
-          @else {
-            <a
-              [routerLink]="item.route"
-              routerLinkActive="bg-blue-50 text-blue-600"
-              [routerLinkActiveOptions]="{ exact: true }"
-              class="flex items-center justify-between py-2.5 rounded-lg cursor-pointer hover:bg-gray-100 transition-all duration-300"
-              [class]="!sidebarCollapsed ? 'px-3' : 'px-3'"
-            >
-              <div class="flex gap-3 items-center">
-                <i [class]="item.icon" class="scale-105"></i>
-                <span 
-                  class="text-base/tight m-0"
-                  [class.opacity-0]="sidebarCollapsed"
-                  [class.opacity-100]="!sidebarCollapsed"
-                  [class.w-0]="sidebarCollapsed"
-                  [class.w-auto]="!sidebarCollapsed">
-                  {{ item.label }}
-                </span>
-              </div>
-            </a>
-          }
-          
-          @if (item.children && !sidebarCollapsed && isSubmenuOpen(item)) {
-            <div class="w-full rounded-lg bg-blue-100">
-              @for (children of item.children; track children.label) {
-                <a
-                  [routerLink]="children.route"
-                  routerLinkActive="bg-blue-50 text-blue-600"
-                  [routerLinkActiveOptions]="{ exact: true }"
-                  class="flex items-center px-3 justify-between py-2.5 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors duration-300"
-                >
-                  <div class="flex gap-3 items-center">
-                    <i [class]="children.icon" class="scale-105"></i>
-                    <span class="text-base/tight m-0">
-                      {{ children.label }}
-                    </span>
-                  </div>
-                </a>
-              }
-            </div>
-          }
+              {{ item.label }}
+            </span>
+          </div>
+        </a>
         }
       </section>
     </section>
+    <!-- <section class="text-gray-500 flex flex-col">
+      <small
+        class="font-medium text-xs mb-1.5 text-gray-500 transition-all duration-300"
+        [class]="!sidebarCollapsed ? 'mx-3' : 'mx-1.5'"
+      >
+        MAIN
+      </small>
+      <section class="flex flex-col gap-1">
+        @for(item of filteredMenuItems; track item.label) { @if(item.children &&
+        item.children.length > 0) {
+        <div
+          (click)="toggleSubmenu(item)"
+          class="flex items-center justify-between py-2.5 rounded-lg cursor-pointer hover:bg-gray-100 transition-all duration-300 select-none"
+          [class]="!sidebarCollapsed ? 'px-3' : 'px-3'"
+          [class.bg-blue-50]="isSubmenuOpen(item) || isAnyChildActive(item)"
+          [class.text-blue-600]="isSubmenuOpen(item) || isAnyChildActive(item)"
+        >
+          <div class="flex gap-3 items-center">
+            <i [class]="item.icon" class="scale-105"></i>
+            <span
+              class="text-base/tight m-0"
+              [class.opacity-0]="sidebarCollapsed"
+              [class.opacity-100]="!sidebarCollapsed"
+              [class.w-0]="sidebarCollapsed"
+              [class.w-auto]="!sidebarCollapsed"
+            >
+              {{ item.label }}
+            </span>
+          </div>
+          @if(!sidebarCollapsed) {
+          <i
+            class="pi pi-chevron-down text-xs! transition-all duration-300"
+            [class.rotate-180]="isSubmenuOpen(item)"
+          >
+          </i>
+          }
+        </div>
+        } @else {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="bg-blue-50 text-blue-600"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="flex items-center justify-between py-2.5 rounded-lg cursor-pointer hover:bg-gray-100 transition-all duration-300"
+          [class]="!sidebarCollapsed ? 'px-3' : 'px-3'"
+        >
+          <div class="flex gap-3 items-center">
+            <i [class]="item.icon" class="scale-105"></i>
+            <span
+              class="text-base/tight m-0"
+              [class.opacity-0]="sidebarCollapsed"
+              [class.opacity-100]="!sidebarCollapsed"
+              [class.w-0]="sidebarCollapsed"
+              [class.w-auto]="!sidebarCollapsed"
+            >
+              {{ item.label }}
+            </span>
+          </div>
+        </a>
+        } @if (item.children && !sidebarCollapsed && isSubmenuOpen(item)) {
+        <div class="w-full rounded-lg bg-blue-100">
+          @for (children of item.children; track children.label) {
+          <a
+            [routerLink]="children.route"
+            routerLinkActive="bg-blue-50 text-blue-600"
+            [routerLinkActiveOptions]="{ exact: true }"
+            class="flex items-center px-3 justify-between py-2.5 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors duration-300"
+          >
+            <div class="flex gap-3 items-center">
+              <i [class]="children.icon" class="scale-105"></i>
+              <span class="text-base/tight m-0">
+                {{ children.label }}
+              </span>
+            </div>
+          </a>
+          }
+        </div>
+        } }
+      </section>
+    </section> -->
+  </div>
+  <div class="absolute bottom-5 px-5 w-full flex justify-center">
+    <p-button
+      icon="pi pi-sign-out"
+      (click)="confirmLogout()"
+      label="Cerrar Sesión"
+      severity="danger"
+      fluid
+      class="w-full"
+    ></p-button>
   </div>
 </aside>

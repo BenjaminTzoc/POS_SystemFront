@@ -1,9 +1,15 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { RadioButtonModule } from 'primeng/radiobutton';
+import { ToggleButtonModule } from 'primeng/togglebutton';
 import { TableModule } from 'primeng/table';
 import { TextareaModule } from 'primeng/textarea';
 import { DiscountTypePipe } from '../../shared/pipes/discount-type.pipe';
@@ -12,8 +18,9 @@ import { DiscountTypePipe } from '../../shared/pipes/discount-type.pipe';
   selector: 'app-sale-discounts',
   imports: [
     ReactiveFormsModule,
+    FormsModule,
     DialogModule,
-    RadioButtonModule,
+    ToggleButtonModule,
     InputNumberModule,
     TextareaModule,
     ButtonModule,
@@ -26,16 +33,25 @@ import { DiscountTypePipe } from '../../shared/pipes/discount-type.pipe';
 export class SaleDiscountsComponent {
   discountForm!: FormGroup;
 
-  discountTypes: any[] = [
-    { name: 'Porcentaje (%)', value: 'percentage' },
-    { name: 'Monto fijo (Q)', value: 'amount' },
-  ];
+  isFixedAmount: boolean = false;
+
   private _discounts: any[] = [];
 
   @Input() set discounts(value: any[]) {
     this._discounts = value ? [...value] : [];
   }
-  @Input() visible: boolean = false;
+  private _visible: boolean = false;
+
+  @Input()
+  get visible(): boolean {
+    return this._visible;
+  }
+  set visible(value: boolean) {
+    this._visible = value;
+    if (this._visible) {
+      this.resetForm();
+    }
+  }
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() discountsChanged = new EventEmitter<any[]>();
 
@@ -45,16 +61,40 @@ export class SaleDiscountsComponent {
 
   constructor(private fb: FormBuilder) {
     this.discountForm = this.fb.group({
-      type: ['percentage', [Validators.required]],
-      value: [0],
-      reason: [''],
+      type: ['percent', [Validators.required]],
+      value: [0, [Validators.required, Validators.min(0.01), Validators.max(100)]],
+      reason: ['', [Validators.required, Validators.minLength(3)]],
     });
   }
 
+  onToggleType(): void {
+    const type = this.isFixedAmount ? 'amount' : 'percent';
+    this.discountForm.get('type')?.setValue(type);
+
+    const valueControl = this.discountForm.get('value');
+    if (type === 'percent') {
+      valueControl?.setValidators([Validators.required, Validators.min(0.01), Validators.max(100)]);
+    } else {
+      valueControl?.setValidators([Validators.required, Validators.min(0.01)]);
+    }
+    valueControl?.updateValueAndValidity();
+  }
+
   addDiscount(): void {
+    if (this.discountForm.invalid) {
+      this.discountForm.markAllAsTouched();
+      return;
+    }
     this._discounts = [...this._discounts, this.discountForm.value];
     this.discountsChanged.emit([...this._discounts]);
-    this.discountForm.patchValue({
+    this.resetForm();
+  }
+
+  resetForm(): void {
+    const currentType = this.discountForm?.get('type')?.value || 'percent';
+    this.isFixedAmount = currentType === 'amount';
+    this.discountForm?.reset({
+      type: currentType,
       value: 0,
       reason: '',
     });

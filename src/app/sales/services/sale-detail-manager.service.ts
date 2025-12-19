@@ -15,6 +15,17 @@ export class SaleDetailManagerService {
     return this.details;
   }
 
+  setDetails(details: ISaleDetailPayload[]): void {
+    this.details = details.map((d) => {
+      const line = this.calculator.calculateLine(d);
+      return {
+        ...d,
+        lineSubtotal: line.lineSubtotal,
+        lineTotal: line.lineTotal,
+      };
+    });
+  }
+
   clear(): void {
     this.details = [];
   }

@@ -10,24 +10,38 @@
       <div class="mb-4">
         <p class="mb-2 font-medium">Tipo de descuento:</p>
         <div class="flex flex-col ml-6 gap-4">
-          @for (discountType of discountTypes; track $index) {
-          <div class="flex items-center">
-            <p-radiobutton
-              [inputId]="discountType.value"
-              name="customerType"
-              [value]="discountType.value"
-              formControlName="type"
-              size="small"
-            />
-            <label [for]="discountType.value" class="ml-2 text-sm">{{ discountType.name }}</label>
-          </div>
-          }
+          <p-togglebutton
+            [(ngModel)]="isFixedAmount"
+            (onChange)="onToggleType()"
+            [ngModelOptions]="{ standalone: true }"
+            [onLabel]="'Monto (Q)'"
+            [offLabel]="'Porcentaje (%)'"
+            styleClass="w-full"
+          />
         </div>
       </div>
       <div>
         <p class="mb-2 font-medium">Valor del descuento:</p>
-        <div class="flex">
-          <p-inputnumber formControlName="value" class="ml-6" fluid />
+        <div class="ml-6">
+          <div class="flex">
+            <p-inputnumber
+              formControlName="value"
+              mode="decimal"
+              [minFractionDigits]="2"
+              [maxFractionDigits]="2"
+              [prefix]="discountForm.get('type')?.value === 'amount' ? 'Q ' : ''"
+              [suffix]="discountForm.get('type')?.value === 'percent' ? ' %' : ''"
+              fluid
+            />
+          </div>
+          @if (discountForm.get('value')?.invalid && discountForm.get('value')?.touched) {
+          <small class="text-red-500 block mt-1">
+            @if (discountForm.get('value')?.errors?.['required']) { El valor es requerido. } @if
+            (discountForm.get('value')?.errors?.['min']) { El valor debe ser mayor a 0. } @if
+            (discountForm.get('value')?.errors?.['max']) { El porcentaje no puede ser mayor a 100%.
+            }
+          </small>
+          }
         </div>
       </div>
     </section>
@@ -40,6 +54,13 @@
         pTextarea
         class="w-full"
       ></textarea>
+      @if (discountForm.get('reason')?.invalid && discountForm.get('reason')?.touched) {
+      <small class="text-red-500 block mt-1">
+        @if (discountForm.get('reason')?.errors?.['required']) { La razón es requerida. } @if
+        (discountForm.get('reason')?.errors?.['minlength']) { La razón debe tener al menos 3
+        caracteres. }
+      </small>
+      }
     </section>
     <div class="col-span-2 mt-6">
       <div class="flex justify-end gap-2">

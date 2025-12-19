@@ -12,7 +12,7 @@ import { Router } from '@angular/router';
   selector: 'app-sale-orders',
   imports: [ButtonModule, TableModule, DatePipe, SaleStatusPipe, CurrencyPipe],
   templateUrl: './sale-orders.component.html',
-  styleUrl: './sale-orders.component.css'
+  styleUrl: './sale-orders.component.css',
 })
 export class SaleOrdersComponent implements OnInit {
   private ordersService = inject(OrdersService);
@@ -36,19 +36,25 @@ export class SaleOrdersComponent implements OnInit {
         }
       },
       error: (err) => {
-        this.messageService.add({ 
-          severity: 'error', 
-          summary: 'Error', 
-          detail: `Error cargando las órdenes de venta: ${err.error.message}`
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error cargando las órdenes de venta: ${err.error.message}`,
         });
       },
       complete: () => {
         this.loading.set(false);
-      }
-    })
+      },
+    });
   }
-  
+
   createSaleOrder(): void {
     this.router.navigate(['/sales/new-order']);
+  }
+
+  editOrder(orderId: string) {
+    this.router.navigate(['/sales/new-order'], {
+      queryParams: { id: orderId },
+    });
   }
 }

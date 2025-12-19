@@ -4,6 +4,8 @@ import { Injectable } from '@angular/core';
   providedIn: 'root',
 })
 export class SaleCalculatorService {
+  private readonly TAX_RATE = 12;
+
   /**
    * Calculate a single line total (no global discounts applied)
    */
@@ -34,7 +36,12 @@ export class SaleCalculatorService {
    * - details: array of SaleDetailCalc (quantity, unitPrice, discount, taxPercentage)
    * - discounts: global discounts array [{type, value}]
    */
-  calculateTotals(details: SaleDetailCalc[], discounts: DiscountInput = []): SaleTotals {
+  calculateTotals(
+    details: SaleDetailCalc[],
+    discounts: DiscountInput = [],
+    applyTax: boolean = true
+  ): SaleTotals {
+    console.log(details, discounts, applyTax);
     const lines = details.map((d) => this.calculateLine(d));
 
     const subtotal = lines.reduce((s, l) => s + (l.lineSubtotal || 0), 0);
@@ -42,10 +49,16 @@ export class SaleCalculatorService {
 
     const subtotalAfterLineDiscounts = +(subtotal - lineDiscountTotal);
 
+    // ----------------------- DESCUENTOS GLOBALES -----------------------
+    const processedDiscounts = discounts.map((d) => ({
+      ...d,
+      value: Number(d.value), // ← Convertir siempre a número
+    }));
+
     let globalDiscountTotal = 0;
-    for (const d of discounts || []) {
+    for (const d of processedDiscounts || []) {
       if (!d || typeof d.value !== 'number') continue;
-      if (d.type === 'percentage') {
+      if (d.type === 'percent') {
         globalDiscountTotal += +(subtotalAfterLineDiscounts * (d.value / 100));
       } else {
         globalDiscountTotal += +d.value;
@@ -55,18 +68,24 @@ export class SaleCalculatorService {
 
     const subtotalWithDiscount = +(subtotalAfterLineDiscounts - globalDiscountTotal);
 
+    // ----------------------- IMPUESTO GENERAL -----------------------
     let taxTotal = 0;
+    if (applyTax) {
+      taxTotal = +(subtotalWithDiscount * (this.TAX_RATE / 100)).toFixed(2);
+    }
+
+    // ----------------------- CALCULAR LINEAS FINALES -----------------------
     const linesWithGlobal = lines.map((l) => {
       const lineBase = l.subtotalAfterLineDiscount || 0;
       let proportion = 0;
       if (subtotalAfterLineDiscounts > 0) {
         proportion = lineBase / subtotalAfterLineDiscounts;
       }
+
       const lineGlobalDiscountApplied = +(globalDiscountTotal * proportion);
       const baseAfterAllDiscounts = +(lineBase - lineGlobalDiscountApplied);
-      const lineTax = +(baseAfterAllDiscounts * ((l.taxPercentage || 0) / 100));
 
-      taxTotal += lineTax;
+      const lineTax = applyTax ? +(taxTotal * proportion) : 0;
 
       return {
         ...l,
@@ -75,8 +94,6 @@ export class SaleCalculatorService {
         lineTotal: +(baseAfterAllDiscounts + lineTax).toFixed(2),
       };
     });
-
-    taxTotal = +taxTotal.toFixed(2);
 
     const discountTotal = +(lineDiscountTotal + globalDiscountTotal);
     const total = +(subtotalWithDiscount + taxTotal);
@@ -94,7 +111,7 @@ export class SaleCalculatorService {
   }
 }
 
-export type DiscountInput = { type: 'percentage' | 'amount'; value: number }[];
+export type DiscountInput = { type: 'percent' | 'amount'; value: number }[];
 
 export interface SaleDetailCalc {
   productId?: string;

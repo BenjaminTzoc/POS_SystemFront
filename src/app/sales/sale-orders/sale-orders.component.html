@@ -1,25 +1,33 @@
 <section class="px-16 py-10">
   <div class="flex items-center justify-between py-4">
     <h1 class="text-2xl font-semibold">Órdenes de Venta</h1>
-    <p-button label="Nueva orden" severity="info" (onClick)="createSaleOrder()"/>
+    <p-button label="Nueva orden" severity="info" (onClick)="createSaleOrder()" />
   </div>
-  <p-table 
+  <p-table
     #ordersDataTable
-    [value]="saleOrders()" 
-    [loading]="loading()" 
+    [value]="saleOrders()"
+    [loading]="loading()"
     [(selection)]="selectedOrders"
-    [paginator]="true" 
-    [rows]="20" 
+    [paginator]="true"
+    [rows]="20"
     [rowsPerPageOptions]="[10, 15, 20, 25, 50]"
     [globalFilterFields]="['id']"
     [scrollable]="true"
     dataKey="id"
-    class="p-datatable-striped p-datatable-sm p-datatable-gridless rounded-md">
+    class="p-datatable-striped p-datatable-sm p-datatable-gridless rounded-md"
+  >
     <ng-template pTemplate="header">
       <tr class="h-16">
         <th style="width: 4rem"><p-tableHeaderCheckbox /></th>
-        <th class="w-[200px]" pSortableColumn="invoiceNumber">No. Orden <p-sortIcon class="ml-2" field="invoiceNumber"/></th>
-        <th class="w-[250px]" pSortableColumn="date">Fecha <p-sortIcon class="ml-2" field="date"/></th>
+        <th class="w-[200px]" pSortableColumn="invoiceNumber">
+          No. Orden <p-sortIcon class="ml-2" field="invoiceNumber" />
+        </th>
+        <th class="w-[250px]" pSortableColumn="date">
+          Fecha <p-sortIcon class="ml-2" field="date" />
+        </th>
+        <th class="w-[200px]" pSortableColumn="branch.name">
+          Sucursal <p-sortIcon class="ml-2" field="branch.name" />
+        </th>
         <th class="w-[200px]">Estado</th>
         <th class="w-[300px]">Cliente</th>
         <th class="w-[200px]">Monto Total</th>
@@ -32,26 +40,31 @@
       <tr [pSelectableRow]="order" [pSelectableRowIndex]="order.id">
         <td><p-tableCheckbox [value]="order" /></td>
         <td class="font-semibold">{{ order.invoiceNumber }}</td>
-        <td>{{ order.date | date: 'dd/MM/yyyy hh:mm a' }}</td>
-        <td>{{ order.status | saleStatus}}</td>
+        <td>{{ order.date | date : 'dd/MM/yyyy hh:mm a' }}</td>
+        <td>{{ order.branch?.name ?? '---' }}</td>
+        <td>{{ order.status | saleStatus }}</td>
         <td>
           <div class="flex flex-col font-semibold">
             @if (order.customer) {
-              <small class="text-xs font-medium"><span class="font-bold mr-1">Categoría:</span>{{ order.customer.category.name }}</small>
-              {{ order.customer.name }}
-            }
-            @else if (order.guestCustomer) {
-              <small class="text-xs font-medium"><span class="mr-1">Cliente no registrado</span></small>
-              <span>{{ order.guestCustomer.name }}</span>
+            <small class="text-xs font-medium"
+              ><span class="font-bold mr-1">Categoría:</span
+              >{{ order.customer.category.name }}</small
+            >
+            {{ order.customer.name }}
+            } @else if (order.guestCustomer) {
+            <small class="text-xs font-medium"
+              ><span class="mr-1">Cliente no registrado</span></small
+            >
+            <span>{{ order.guestCustomer.name }}</span>
             }
           </div>
         </td>
-        <td>{{ order.total | currency: 'Q ' }}</td>
-        <td>{{ order.pendingAmount | currency: 'Q ' }}</td>
-        <td>{{ order.paidAmount | currency: 'Q ' }}</td>
+        <td>{{ order.total | currency : 'Q ' }}</td>
+        <td>{{ order.pendingAmount | currency : 'Q ' }}</td>
+        <td>{{ order.paidAmount | currency : 'Q ' }}</td>
         <td>
           <div class="flex gap-2">
-            <p-button icon="pi pi-pencil" severity="warn" />
+            <p-button icon="pi pi-pencil" severity="warn" (onClick)="editOrder(order.id)" />
             <p-button icon="pi pi-trash" severity="danger" />
           </div>
         </td>

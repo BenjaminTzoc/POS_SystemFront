@@ -1,0 +1,175 @@
+<section class="px-16 py-10">
+  <form class="grid grid-cols-12 gap-x-6" [formGroup]="movementForm">
+    <div class="col-start-2 col-span-10 flex justify-between">
+      <h1 class="text-2xl font-semibold mb-8">Registro de movimiento</h1>
+    </div>
+    <div class="col-start-2 col-span-10 flex flex-col gap-2">
+      <div class="py-5 px-10 rounded-md bg-white shadow-md">
+        <h3 class="font-semibold text-lg mb-6">General</h3>
+        <section class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex flex-col">
+              <label class="text-base" for="product"
+                >Producto<span class="text-red-700">*</span></label
+              >
+              <p-select
+                [options]="products"
+                [filter]="true"
+                [filterFields]="['name', 'sku']"
+                [showClear]="true"
+                (onChange)="onProductChange($event)"
+                formControlName="productId"
+                optionLabel="name"
+                optionValue="id"
+                placeholder="Seleccionar un producto"
+                class="w-full"
+              >
+                <ng-template #selectedItem let-selectedOption>
+                  @if(selectedOption){
+                  <div class="flex items-center gap-4">
+                    <div class="w-15 aspect-square rounded-lg bg-gray-400 overflow-hidden">
+                      <img
+                        class="h-full object-cover object-top"
+                        [src]="getProductImageUrl(selectedOption.imageUrl)"
+                        alt=""
+                      />
+                    </div>
+                    <div class="flex flex-col">
+                      <small class="text-xs">{{ selectedOption.sku }}</small>
+                      {{ selectedOption.name }}
+                    </div>
+                  </div>
+                  }
+                </ng-template>
+                <ng-template let-product #item>
+                  <div class="flex items-center gap-4">
+                    <div class="w-15 aspect-square rounded-lg bg-gray-400 overflow-hidden">
+                      <img
+                        class="h-full object-cover object-top"
+                        [src]="getProductImageUrl(product.imageUrl)"
+                        alt=""
+                      />
+                    </div>
+                    <div class="flex flex-col">
+                      <small class="text-xs">{{ product.sku }}</small>
+                      {{ product.name }}
+                    </div>
+                  </div>
+                </ng-template>
+              </p-select>
+              @if (movementForm.get('productId')?.invalid && movementForm.get('productId')?.touched)
+              {
+              <small class="text-red-700">Seleccione un producto.</small>
+              }
+            </div>
+
+            <div class="flex flex-col">
+              <label class="text-base" for="branch"
+                >Sucursal<span class="text-red-700">*</span></label
+              >
+              <p-select
+                [options]="availableBranches"
+                [showClear]="true"
+                formControlName="branchId"
+                optionLabel="name"
+                optionValue="id"
+                placeholder="Seleccionar una sucursal"
+                class="w-full"
+              />
+              @if (movementForm.get('branchId')?.invalid && movementForm.get('branchId')?.touched) {
+              <small class="text-red-700">Seleccione una sucursal.</small>
+              }
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-4">
+            <div class="flex flex-col">
+              <label class="text-base" for="quantity"
+                >Cantidad<span class="text-red-700">*</span></label
+              >
+              <p-inputnumber
+                formControlName="quantity"
+                mode="decimal"
+                [min]="0.01"
+                [minFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
+                [maxFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
+                placeholder="Cantidad"
+                [suffix]="'  ' + (selectedProduct?.unit?.abbreviation || '')"
+                class="w-full"
+              />
+              @if (currentStock !== null) {
+              <small class="text-gray-500 mt-1">
+                Stock disponible en sucursal:
+                <span class="font-semibold"
+                  >{{ currentStock }} {{ selectedProduct?.unit?.abbreviation || '' }}</span
+                >
+              </small>
+              } @if (movementForm.get('quantity')?.invalid && movementForm.get('quantity')?.touched)
+              {
+              <small class="text-red-700">Ingrese una cantidad válida.</small>
+              }
+            </div>
+
+            <div class="flex flex-col">
+              <label class="text-base" for="type">Tipo<span class="text-red-700">*</span></label>
+              <p-select
+                [options]="movementTypes"
+                formControlName="type"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Tipo de movimiento"
+                class="w-full"
+              >
+                <ng-template let-option #item>
+                  <div class="flex flex-col">
+                    <span class="font-medium">{{ option.label }}</span>
+                    <small class="text-gray-500">{{ option.description }}</small>
+                  </div>
+                </ng-template>
+              </p-select>
+              @if (movementForm.get('type')?.invalid && movementForm.get('type')?.touched) {
+              <small class="text-red-700">Seleccione un tipo.</small>
+              }
+            </div>
+
+            <div class="flex flex-col">
+              <label class="text-base" for="concept"
+                >Concepto<span class="text-red-700">*</span></label
+              >
+              <p-select
+                [options]="filteredConcepts"
+                formControlName="concept"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Concepto"
+                class="w-full"
+                [disabled]="!movementForm.get('type')?.value"
+              />
+              @if (movementForm.get('concept')?.invalid && movementForm.get('concept')?.touched) {
+              <small class="text-red-700">Seleccione un concepto.</small>
+              }
+            </div>
+          </div>
+
+          <div class="flex flex-col">
+            <label class="text-base" for="notes">Motivo / Notas</label>
+            <textarea
+              pInputText
+              formControlName="notes"
+              rows="3"
+              placeholder="Describa el motivo del movimiento..."
+              class="w-full p-2 border border-gray-300 rounded-md"
+            ></textarea>
+          </div>
+        </section>
+      </div>
+    </div>
+    <div class="col-start-2 col-span-10">
+      <hr class="w-full text-gray-200 my-6" />
+      <div class="flex justify-between">
+        <p-button (onClick)="onCancel()" label="Cancelar" variant="outlined" severity="danger" />
+        <p-button (onClick)="onSave()" label="Guardar" [raised]="true" severity="success" />
+      </div>
+    </div>
+  </form>
+</section>

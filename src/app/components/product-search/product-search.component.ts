@@ -1,5 +1,17 @@
-//prettier-ignore
-import { Component, ElementRef, EventEmitter, HostListener, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  HostListener,
+  Input,
+  OnChanges,
+  OnDestroy,
+  OnInit,
+  Output,
+  SimpleChanges,
+  ViewChild,
+} from '@angular/core';
+import { trigger, transition, style, animate } from '@angular/animations';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { InputTextModule } from 'primeng/inputtext';
@@ -14,8 +26,19 @@ import { ButtonModule } from 'primeng/button';
   imports: [ReactiveFormsModule, FormsModule, FloatLabelModule, InputTextModule, ButtonModule],
   templateUrl: './product-search.component.html',
   styleUrl: './product-search.component.css',
+  animations: [
+    trigger('fadeInOut', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(-10px)' }),
+        animate('200ms ease-out', style({ opacity: 1, transform: 'translateY(0)' })),
+      ]),
+      transition(':leave', [
+        animate('150ms ease-in', style({ opacity: 0, transform: 'translateY(-10px)' })),
+      ]),
+    ]),
+  ],
 })
-export class ProductSearchComponent implements OnInit, OnDestroy {
+export class ProductSearchComponent implements OnInit, OnDestroy, OnChanges {
   private searchSubject = new Subject<string>();
   private searchSubscription?: Subscription;
 
@@ -23,8 +46,12 @@ export class ProductSearchComponent implements OnInit, OnDestroy {
   searchLoading: boolean = false;
   filteredProducts: Product[] = [];
   showProductResults: boolean = false;
+  isTopSelling: boolean = false;
 
   @Output() productSelected = new EventEmitter<Product>();
+  @Input() branchId?: string;
+  @Input() excludedProductIds: string[] = [];
+  @Input() disabled: boolean = false;
 
   constructor(private readonly productsService: ProductsService) {}
 
@@ -53,6 +80,14 @@ export class ProductSearchComponent implements OnInit, OnDestroy {
     this.setupSearchDebounce();
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['branchId'] && !changes['branchId'].firstChange) {
+      this.searchQuery = '';
+      this.filteredProducts = [];
+      this.showProductResults = false;
+    }
+  }
+
   ngOnDestroy(): void {
     this.searchSubscription?.unsubscribe();
   }
@@ -61,8 +96,10 @@ export class ProductSearchComponent implements OnInit, OnDestroy {
     this.searchSubscription = this.searchSubject
       .pipe(
         debounceTime(300),
-        distinctUntilChanged(),
-        tap(() => (this.searchLoading = true)),
+        tap(() => {
+          this.searchLoading = true;
+          this.isTopSelling = false;
+        }),
         switchMap((query) => this.searchProductsApi(query))
       )
       .subscribe({
@@ -79,11 +116,15 @@ export class ProductSearchComponent implements OnInit, OnDestroy {
   }
 
   searchProductsApi(query: string): Observable<Product[]> {
-    return this.productsService.searchProducts(query).pipe(
+    return this.productsService.searchProducts(query, this.branchId).pipe(
       map((response) => {
-        console.log(response);
         if (response.statusCode === 200) {
-          return response.data;
+          const products = response.data;
+          // Filter out already added products
+          if (this.excludedProductIds.length > 0) {
+            return products.filter((product) => !this.excludedProductIds.includes(product.id));
+          }
+          return products;
         }
         return [];
       }),
@@ -98,13 +139,46 @@ export class ProductSearchComponent implements OnInit, OnDestroy {
     const query = this.searchQuery.trim();
 
     if (query.length < 2) {
-      this.filteredProducts = [];
-      this.showProductResults = false;
+      this.loadTopSelling();
       return;
     }
 
     this.showProductResults = true;
     this.searchSubject.next(query);
+  }
+
+  onFocus() {
+    const query = this.searchQuery.trim();
+    if (query.length < 2) {
+      this.loadTopSelling();
+    } else {
+      this.onSearchProduct();
+    }
+  }
+
+  loadTopSelling() {
+    this.searchLoading = true;
+    this.showProductResults = true;
+    this.isTopSelling = true;
+    this.productsService.getTopSelling(this.branchId).subscribe({
+      next: (res) => {
+        if (res.statusCode === 200) {
+          let products = res.data;
+          if (this.excludedProductIds.length > 0) {
+            products = products.filter((product) => !this.excludedProductIds.includes(product.id));
+          }
+          this.filteredProducts = products;
+        } else {
+          this.filteredProducts = [];
+        }
+        this.searchLoading = false;
+      },
+      error: (err) => {
+        console.error('Error loading top selling products', err);
+        this.filteredProducts = [];
+        this.searchLoading = false;
+      },
+    });
   }
 
   onCreateNewProduct(): void {

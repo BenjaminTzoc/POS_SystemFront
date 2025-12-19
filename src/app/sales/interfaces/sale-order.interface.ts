@@ -7,6 +7,7 @@ export interface ISaleOrderResponse {
   updatedAt: Date;
   invoiceNumber: string;
   date: Date;
+  dueDate: Date;
   type: string;
   status: string;
   subtotal: string;
@@ -20,10 +21,14 @@ export interface ISaleOrderResponse {
   loyaltyPointsEarned: number;
   loyaltyPointsRedeemed: number;
   notes: string;
-  customer: ICustomer;
+  customer?: ICustomer;
+  branch?: any;
+  guestCustomer?: any;
   discountCode?: any; // CORREGIR ESTO DESPUÉS
   details?: ISaleDetailResponse[];
   payments?: any[]; // CORREGIR ESTO DESPUÉS
+  discounts?: any[];
+  applyTax?: boolean;
 }
 
 export interface ISaleDetailResponse {

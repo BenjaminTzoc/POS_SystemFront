@@ -25,14 +25,22 @@ export class ProductsService {
     return this.http.get<ApiResponse<Product>>(`${this.API_URL}/${productId}`);
   }
 
-  searchProducts(query: string): Observable<ApiResponse<Product[]>> {
-    const params = { q: query };
+  searchProducts(query: string, branchId?: string): Observable<ApiResponse<Product[]>> {
+    let params = new HttpParams().set('q', query);
+
+    if (branchId) {
+      params = params.set('branchId', branchId);
+    }
 
     return this.http.get<ApiResponse<Product[]>>(`${this.API_URL}/search`, { params });
   }
 
   createProduct(formData: FormData) {
     return this.http.post<ApiResponse<any>>(`${this.API_URL}`, formData, {});
+  }
+
+  updateProduct(id: string, formData: FormData) {
+    return this.http.put<ApiResponse<any>>(`${this.API_URL}/${id}`, formData, {});
   }
 
   deleteProduct(productId: string): Observable<ApiResponse<any>> {
@@ -57,5 +65,15 @@ export class ProductsService {
 
   deleteCategory(idCategory: string): Observable<ApiResponse<null>> {
     return this.http.delete<ApiResponse<null>>(`${this.API_URL}/categories/${idCategory}`);
+  }
+
+  getTopSelling(branchId?: string): Observable<ApiResponse<Product[]>> {
+    let params = new HttpParams();
+
+    if (branchId) {
+      params = params.set('branchId', branchId);
+    }
+
+    return this.http.get<ApiResponse<Product[]>>(`${this.API_URL}/top-selling`, { params });
   }
 }

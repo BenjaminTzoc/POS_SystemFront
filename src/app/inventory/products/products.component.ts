@@ -37,6 +37,7 @@ export class ProductsComponent implements OnInit {
     this.loading = true;
     this.productsService.getProducts(branchId).subscribe({
       next: (response) => {
+        console.log(response);
         this.filteredProducts = response.data;
       },
       error: (error) => {
@@ -61,6 +62,10 @@ export class ProductsComponent implements OnInit {
 
   goToNewProduct() {
     this.router.navigate(['inventory/new-product'])
+  }
+
+  onEditProduct(productId: string) {
+    this.router.navigate(['inventory/edit-product', productId])
   }
 
   onDeleteProduct(product: Product) {

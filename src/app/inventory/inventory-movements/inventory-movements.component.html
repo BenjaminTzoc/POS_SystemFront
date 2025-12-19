@@ -1,0 +1,289 @@
+<section class="px-16 py-10">
+  <div class="flex justify-between">
+    <h1 class="text-2xl font-semibold mb-8">Movimientos de inventario</h1>
+    <div class="">
+      <div class="flex gap-2">
+        <p-button
+          label="Registrar Nuevo Movimiento"
+          severity="success"
+          (onClick)="recordMovement()"
+        />
+      </div>
+    </div>
+  </div>
+  <p-table
+    #inventoryMovementsDataTable
+    [value]="inventoryMovements"
+    [loading]="loading"
+    [paginator]="true"
+    [rows]="10"
+    [rowsPerPageOptions]="[10, 15, 20, 25, 50]"
+    [globalFilterFields]="['name', 'sku', 'barcode']"
+    dataKey="id"
+    styleClass="p-datatable-striped p-datatable-sm p-datatable-gridless rounded-md"
+  >
+    <ng-template pTemplate="header">
+      <tr class="h-16">
+        <th style="width: 5rem"></th>
+        <th>Fecha y hora</th>
+        <th>Usuario</th>
+        <th>Producto</th>
+        <th>Cantidad</th>
+        <th>Sucursal</th>
+        <th>Tipo</th>
+        <th>Concepto</th>
+        <th>Estado</th>
+        <th>Evolución de Stock</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-movement let-expanded="expanded">
+      <tr>
+        <td>
+          <p-button
+            type="button"
+            pRipple
+            [pRowToggler]="movement"
+            [text]="true"
+            severity="secondary"
+            [rounded]="true"
+            [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+          />
+        </td>
+        <td>{{ movement.movementDate | date : 'dd/MM/yyyy HH:mm' }}</td>
+        <td>{{ movement.createdBy?.name ?? 'Sistema' }}</td>
+        <td>{{ movement.product?.name }}</td>
+        <td>{{ movement.quantity }} {{ movement.product?.unit?.abbreviation || '' }}</td>
+        <td>{{ movement.branch?.name }}</td>
+        <td>
+          <p-tag
+            [severity]="getSeverity(movement.type)"
+            [value]="movement.type | inventoryMovementType"
+            [icon]="getIcon(movement.type)"
+          />
+        </td>
+        <td>
+          <p-tag
+            [severity]="getConceptSeverity(movement.concept)"
+            [value]="movement.concept | inventoryMovementConcept"
+            [icon]="getConceptIcon(movement.concept)"
+          />
+        </td>
+        <td>
+          @if (movement.status === 'pending') {
+          <span class="text-gray-500 italic">{{ movement.status | inventoryMovementStatus }}</span>
+          } @else {
+          <p-tag
+            [severity]="getStatusSeverity(movement.status)"
+            [value]="movement.status | inventoryMovementStatus"
+            [icon]="getStatusIcon(movement.status)"
+          />
+          }
+        </td>
+        <td>
+          <div class="flex gap-2 items-center">
+            @if (movement.status === 'pending' || movement.previousStock === null ||
+            movement.newStock === null) {
+            <span class="text-gray-400 font-medium italic">N/A</span>
+            } @else {
+            <span
+              class="line-through text-red-700 font-medium"
+              pTooltip="Stock Inicial (Antes del movimiento)"
+              tooltipPosition="top"
+              >{{ movement.previousStock }} {{ movement.product?.unit?.abbreviation || '' }}</span
+            >
+            <i class="pi pi-arrow-right text-xs!"></i>
+            <span
+              class="font-bold text-gray-900"
+              pTooltip="Stock Final (Después del movimiento)"
+              tooltipPosition="top"
+            >
+              {{ movement.newStock }} {{ movement.product?.unit?.abbreviation || '' }}
+            </span>
+            }
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #expandedrow let-movement>
+      <tr>
+        <td colspan="10">
+          <section class="py-6">
+            <div class="grid grid-cols-12 px-20 gap-10">
+              <div class="col-span-4 flex items-center gap-2">
+                <div class="w-16 aspect-square rounded-md border border-gray-200 overflow-hidden">
+                  <img
+                    [src]="getProductImageUrl(movement.product?.imageUrl)"
+                    [alt]="movement.product?.name"
+                    class="w-full h-full object-cover"
+                  />
+                </div>
+                <div>
+                  <p class="font-semibold">{{ movement.product?.name }}</p>
+                  <p class="text-sm text-gray-500">SKU: {{ movement.product?.sku }}</p>
+                  <p class="text-sm text-gray-500">
+                    Código de barras: {{ movement.product?.barcode }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="col-span-3 flex flex-col justify-center">
+                @if (movement.referenceId && movement.referenceNumber) {
+                <p>
+                  <span class="font-semibold">Referencia: </span>
+                  <a
+                    class="text-blue-600 hover:underline"
+                    href="/sales/new-order?id={{ movement.referenceId }}"
+                  >
+                    {{ movement.referenceNumber }}
+                  </a>
+                </p>
+                }
+                <p>
+                  <span class="font-semibold">Fecha y hora: </span>
+                  {{ movement.movementDate | date : 'dd/MM/yyyy HH:mm' }}
+                </p>
+                <p>
+                  <span class="font-semibold">Usuario: </span>
+                  {{ movement.createdBy?.name ?? 'Sistema' }}
+                </p>
+                <p>
+                  <span class="font-semibold">Sucursal: </span>
+                  {{ movement.branch?.name ?? 'N/A' }}
+                </p>
+                <p>
+                  <span class="font-semibold">Estado: </span>
+                  @if (movement.status === 'pending') {
+                  <span class="text-gray-500 italic">{{
+                    movement.status | inventoryMovementStatus
+                  }}</span>
+                  } @else {
+                  <p-tag
+                    [severity]="getStatusSeverity(movement.status)"
+                    [value]="movement.status | inventoryMovementStatus"
+                    [icon]="getStatusIcon(movement.status)"
+                  />
+                  }
+                </p>
+              </div>
+
+              <div class="col-span-3 flex flex-col justify-center">
+                @if (movement.previousStock !== null && movement.newStock !== null) {
+                <p>
+                  <span class="font-semibold">Stock Inicial:</span>
+                  {{ movement.previousStock }} {{ movement.product?.unit?.abbreviation || '' }}
+                </p>
+                <p>
+                  <span class="font-semibold">Stock Final:</span>
+                  {{ movement.newStock }} {{ movement.product?.unit?.abbreviation || '' }}
+                </p>
+                }
+                <p>
+                  <span class="font-semibold">Concepto:</span>
+                  {{ movement.concept | inventoryMovementConcept }}
+                </p>
+                <p>
+                  <span class="font-semibold">Motivo:</span>
+                  {{ movement.notes || 'Sin descripción' }}
+                </p>
+              </div>
+
+              @if (movement.status === 'cancelled') {
+              <div class="col-span-3 flex flex-col justify-center border-l border-gray-200 pl-8">
+                <span class="font-semibold mb-3 text-red-600">Detalles de Cancelación</span>
+                <p class="text-sm">
+                  <span class="font-semibold">Cancelado por: </span>
+                  {{ movement.cancelledBy?.name ?? 'Sistema' }}
+                </p>
+                <p class="text-sm">
+                  <span class="font-semibold">Fecha: </span>
+                  {{ movement.cancelledAt | date : 'dd/MM/yyyy HH:mm' }}
+                </p>
+                <p class="text-sm">
+                  <span class="font-semibold">Razón: </span>
+                  {{ movement.cancellationReason || 'No especificada' }}
+                </p>
+              </div>
+              }
+            </div>
+            @if (movement.status === 'pending') {
+            <div class="w-full px-20">
+              <hr class="w-full border-gray-200 my-4" />
+              <div class="flex gap-4">
+                <p-button
+                  label="Confirmar Movimiento"
+                  icon="pi pi-check"
+                  severity="success"
+                  [raised]="true"
+                  (onClick)="confirmComplete(movement)"
+                />
+                <p-button
+                  label="Cancelar Movimiento"
+                  icon="pi pi-times"
+                  severity="danger"
+                  variant="outlined"
+                  (onClick)="openCancelDialog(movement)"
+                />
+              </div>
+            </div>
+            }
+          </section>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="10" class="text-center">
+          <div class="flex justify-center items-center gap-2 py-12">
+            <i class="pi pi-exclamation-circle"></i>
+            Aun no hay movimientos registrados
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <p-confirmDialog />
+
+  <p-dialog
+    header="Cancelar Movimiento"
+    [(visible)]="displayCancelDialog"
+    [modal]="true"
+    [style]="{ width: '450px' }"
+    [draggable]="false"
+    [resizable]="false"
+  >
+    <div class="flex flex-col gap-4 py-2 text-justify">
+      <p class="text-sm text-gray-500">
+        Para cancelar este movimiento, es necesario proporcionar el motivo. Esta acción no se puede
+        deshacer.
+      </p>
+      <div class="flex flex-col gap-2">
+        <label for="reason" class="font-semibold">Motivo de cancelación</label>
+        <textarea
+          pTextarea
+          id="reason"
+          [(ngModel)]="cancelReason"
+          rows="4"
+          placeholder="Ej: Error en el conteo, producto dañado no era merma, etc."
+          class="w-full"
+        ></textarea>
+      </div>
+    </div>
+    <ng-template pTemplate="footer">
+      <p-button
+        label="Descartar"
+        severity="secondary"
+        [text]="true"
+        (onClick)="closeCancelDialog()"
+      />
+      <p-button
+        label="Cancelar Movimiento"
+        severity="danger"
+        [raised]="true"
+        [loading]="submittingCancel"
+        (onClick)="executeCancel()"
+      />
+    </ng-template>
+  </p-dialog>
+</section>

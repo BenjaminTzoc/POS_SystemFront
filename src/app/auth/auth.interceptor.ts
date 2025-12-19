@@ -7,7 +7,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
 
   // Excluir endpoints de autenticación
-  if (req.url.includes('/users/login')) {
+  if (req.url.endsWith('/users/login')) {
     return next(req);
   }
 
@@ -16,13 +16,13 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   if (token) {
     authReq = req.clone({
-      headers: req.headers.set('Authorization', `Bearer ${token}`)
+      headers: req.headers.set('Authorization', `Bearer ${token}`),
     });
   }
 
   return next(authReq).pipe(
-    catchError(error => {
-      if (error.status === 401) {
+    catchError((error) => {
+      if (error.status === 401 && !req.url.endsWith('/users/login')) {
         authService.logout();
       }
       return throwError(() => error);
