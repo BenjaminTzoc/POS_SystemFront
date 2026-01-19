@@ -1,0 +1,113 @@
+<div class="p-4">
+  <div class="flex justify-between items-center mb-2">
+    <h1 class="text-2xl font-semibold">Unidades de Medida</h1>
+    <div class="flex gap-3 items-center">
+      <div *ngIf="canViewDeleted" class="flex items-center gap-2">
+        <label for="showDeleted" class="text-sm font-medium">Mostrar eliminados</label>
+        <p-toggleSwitch
+          [(ngModel)]="showDeleted"
+          (onChange)="loadUnits()"
+          inputId="showDeleted"
+        ></p-toggleSwitch>
+      </div>
+      <button
+        pButton
+        label="Nueva Unidad"
+        icon="pi pi-plus"
+        routerLink="/inventory/new-unit"
+        class="p-button-primary"
+      ></button>
+    </div>
+  </div>
+  <p class="text-sm text-gray-600 mb-4">
+    Gestiona las unidades de medida utilizadas en tus productos (ej: Kilogramo, Litro, Unidad, Caja,
+    etc.)
+  </p>
+
+  <p-card>
+    <p-table
+      [value]="units"
+      [loading]="loading"
+      [paginator]="true"
+      [rows]="10"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} unidades"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Estado</th>
+          <th>Nombre</th>
+          <th>Abreviación</th>
+          <th>Permite Decimales</th>
+          <th>Descripción</th>
+          <th style="width: 10rem">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-unit>
+        <tr [ngClass]="{ 'opacity-50': isDeleted(unit) }">
+          <td>
+            <span
+              *ngIf="isDeleted(unit)"
+              class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800"
+            >
+              Eliminado
+            </span>
+            <span
+              *ngIf="!isDeleted(unit)"
+              class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800"
+            >
+              Activo
+            </span>
+          </td>
+          <td>{{ unit.name }}</td>
+          <td>{{ unit.abbreviation }}</td>
+          <td>
+            <i
+              class="pi"
+              [ngClass]="{
+                'pi-check-circle text-green-500': unit.allowsDecimals,
+                'pi-times-circle text-red-500': !unit.allowsDecimals,
+              }"
+            ></i>
+          </td>
+          <td>{{ unit.description }}</td>
+          <td>
+            <div class="flex gap-2">
+              <button
+                *ngIf="!isDeleted(unit)"
+                pButton
+                icon="pi pi-pencil"
+                class="p-button-rounded p-button-text p-button-warning"
+                [routerLink]="['/inventory/edit-unit', unit.id]"
+                pTooltip="Editar"
+              ></button>
+              <button
+                *ngIf="!isDeleted(unit)"
+                pButton
+                icon="pi pi-trash"
+                class="p-button-rounded p-button-text p-button-danger"
+                (click)="deleteUnit(unit.id)"
+                pTooltip="Eliminar"
+              ></button>
+              <button
+                *ngIf="isDeleted(unit)"
+                pButton
+                icon="pi pi-refresh"
+                class="p-button-rounded p-button-text p-button-success"
+                (click)="restoreUnit(unit.id)"
+                pTooltip="Restaurar"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="text-center p-4">No se encontraron unidades de medida.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>

@@ -1,0 +1,104 @@
+<div class="p-4 max-w-2xl mx-auto">
+  <div class="flex items-center gap-2 mb-4">
+    <button
+      pButton
+      icon="pi pi-arrow-left"
+      class="p-button-text p-button-secondary"
+      routerLink="/inventory/units"
+    ></button>
+    <h1 class="text-2xl font-semibold">{{ isEdit ? 'Editar' : 'Nueva' }} Unidad de Medida</h1>
+  </div>
+
+  <p-card>
+    <form [formGroup]="unitForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+      <div class="flex flex-col gap-1">
+        <label for="name" class="font-medium">Nombre</label>
+        <input
+          pInputText
+          id="name"
+          formControlName="name"
+          placeholder="Ej: Kilogramo, Litro, Unidad, Caja, Docena"
+          [ngClass]="{
+            'ng-invalid ng-dirty': unitForm.get('name')?.invalid && unitForm.get('name')?.touched,
+          }"
+        />
+        <small class="text-gray-500">Nombre completo de la unidad de medida</small>
+        <small
+          *ngIf="unitForm.get('name')?.invalid && unitForm.get('name')?.touched"
+          class="text-red-500"
+        >
+          El nombre es requerido y debe tener al menos 2 caracteres.
+        </small>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label for="abbreviation" class="font-medium">Abreviación</label>
+        <input
+          pInputText
+          id="abbreviation"
+          formControlName="abbreviation"
+          placeholder="Ej: kg, L, u, cj, dz"
+          [ngClass]="{
+            'ng-invalid ng-dirty':
+              unitForm.get('abbreviation')?.invalid && unitForm.get('abbreviation')?.touched,
+          }"
+        />
+        <small class="text-gray-500">Símbolo o abreviatura corta</small>
+        <small
+          *ngIf="unitForm.get('abbreviation')?.invalid && unitForm.get('abbreviation')?.touched"
+          class="text-red-500"
+        >
+          La abreviación es requerida.
+        </small>
+      </div>
+
+      <div class="flex flex-col gap-2 mt-2">
+        <div class="flex items-center gap-2">
+          <label for="allowsDecimals" class="font-medium">Permite decimales</label>
+          <p-toggleSwitch
+            formControlName="allowsDecimals"
+            inputId="allowsDecimals"
+          ></p-toggleSwitch>
+        </div>
+        <small class="text-gray-600">
+          <span *ngIf="unitForm.get('allowsDecimals')?.value">
+            ✓ Esta unidad permite valores decimales (Ej: 1.5 kg, 2.75 L)
+          </span>
+          <span *ngIf="!unitForm.get('allowsDecimals')?.value">
+            ✗ Esta unidad solo permite valores enteros (Ej: 1 kg, 2 L)
+          </span>
+        </small>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label for="description" class="font-medium">Descripción</label>
+        <textarea
+          pTextarea
+          id="description"
+          formControlName="description"
+          placeholder="Ej: Unidad de peso del sistema métrico internacional"
+          rows="3"
+        ></textarea>
+        <small class="text-gray-500">Descripción opcional para mayor claridad</small>
+      </div>
+
+      <div class="flex justify-end gap-2 mt-4">
+        <button
+          pButton
+          type="button"
+          label="Cancelar"
+          class="p-button-text p-button-secondary"
+          routerLink="/inventory/units"
+        ></button>
+        <button
+          pButton
+          type="submit"
+          [label]="isEdit ? 'Actualizar' : 'Guardar'"
+          icon="pi pi-save"
+          [loading]="loading"
+          [disabled]="unitForm.invalid"
+        ></button>
+      </div>
+    </form>
+  </p-card>
+</div>

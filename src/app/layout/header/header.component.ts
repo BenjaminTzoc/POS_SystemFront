@@ -2,11 +2,14 @@ import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { AuthService } from '../../auth/auth.service';
 import { Router } from '@angular/router';
 
+import { LowStockAlertsComponent } from '../../shared/notifications/low-stock-alerts/low-stock-alerts.component';
+
 @Component({
   selector: 'app-header',
-  imports: [],
+  standalone: true,
+  imports: [LowStockAlertsComponent],
   templateUrl: './header.component.html',
-  styleUrl: './header.component.css'
+  styleUrl: './header.component.css',
 })
 export class HeaderComponent {
   private authService = inject(AuthService);
@@ -19,21 +22,21 @@ export class HeaderComponent {
     {
       label: 'Perfil',
       icon: '',
-      command: () => this.goToProfile()
+      command: () => this.goToProfile(),
     },
     {
       label: 'Configuración',
       icon: 'pi pi-cog',
-      command: () => this.goToSettings()
+      command: () => this.goToSettings(),
     },
     {
-      separator: true
+      separator: true,
     },
     {
       label: 'Cerrar Sesión',
       icon: 'pi pi-sign-out',
-      command: () => this.logout()
-    }
+      command: () => this.logout(),
+    },
   ];
 
   get currentUser() {

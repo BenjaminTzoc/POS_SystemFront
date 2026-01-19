@@ -6,11 +6,11 @@ export const routes: Routes = [
   {
     path: '',
     redirectTo: 'auth',
-    pathMatch: 'full'
+    pathMatch: 'full',
   },
   {
     path: 'auth',
-    loadChildren: () => import('./auth/auth.routes').then(m => m.AUTH_ROUTES)
+    loadChildren: () => import('./auth/auth.routes').then((m) => m.AUTH_ROUTES),
   },
   {
     path: '',
@@ -19,28 +19,31 @@ export const routes: Routes = [
     children: [
       {
         path: 'dashboard',
-        loadComponent: () => import('./pages/home/home.component').then(c => c.HomeComponent)
+        loadComponent: () =>
+          import('./pages/dashboard/dashboard.component').then((c) => c.DashboardComponent),
       },
       {
         path: 'inventory',
-        loadChildren: () => import('./inventory/inventory.routes').then(m => m.INVENTORY_ROUTES)
+        loadChildren: () => import('./inventory/inventory.routes').then((m) => m.INVENTORY_ROUTES),
       },
       {
         path: 'sales',
-        loadChildren: () => import('./sales/sales.routes').then(m => m.SALES_ROUTES)
+        loadChildren: () => import('./sales/sales.routes').then((m) => m.SALES_ROUTES),
       },
       {
         path: 'purchases',
-        loadChildren: () => import('./purchases/purchases.routes').then(m => m.PURCHASES_ROUTES)
-      }
-    ]
+        loadChildren: () => import('./purchases/purchases.routes').then((m) => m.PURCHASES_ROUTES),
+      },
+    ],
   },
   {
     path: 'unauthorized',
-    loadComponent: () => import('./shared/unauthorized/unauthorized.component').then(c => c.UnauthorizedComponent)
+    loadComponent: () =>
+      import('./shared/unauthorized/unauthorized.component').then((c) => c.UnauthorizedComponent),
   },
   {
     path: '**',
-    loadComponent: () => import('./shared/not-found/not-found.component').then(c => c.NotFoundComponent)
-  }
+    loadComponent: () =>
+      import('./shared/not-found/not-found.component').then((c) => c.NotFoundComponent),
+  },
 ];

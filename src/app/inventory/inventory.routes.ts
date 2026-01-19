@@ -49,4 +49,18 @@ export const INVENTORY_ROUTES: Routes = [
     path: 'new-movement',
     component: MovementFormComponent,
   },
+  {
+    path: 'units',
+    loadComponent: () => import('./units/units.component').then((m) => m.UnitsComponent),
+  },
+  {
+    path: 'new-unit',
+    loadComponent: () =>
+      import('./units/unit-form/unit-form.component').then((m) => m.UnitFormComponent),
+  },
+  {
+    path: 'edit-unit/:id',
+    loadComponent: () =>
+      import('./units/unit-form/unit-form.component').then((m) => m.UnitFormComponent),
+  },
 ];

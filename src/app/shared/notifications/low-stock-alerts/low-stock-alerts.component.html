@@ -1,0 +1,54 @@
+<div class="relative inline-block mt-2">
+  <button
+    pButton
+    icon="pi pi-bell"
+    [rounded]="true"
+    [text]="true"
+    severity="secondary"
+    (click)="op.toggle($event)"
+    class="relative"
+  >
+    <p-badge
+      *ngIf="lowStockCount() > 0"
+      [value]="lowStockCount().toString()"
+      severity="danger"
+      class="absolute -top-1 -right-1"
+    ></p-badge>
+  </button>
+
+  <p-popover #op>
+    <div class="w-64">
+      <div class="flex justify-between items-center mb-2 border-b pb-2">
+        <span class="font-bold text-gray-700">Alertas de Stock</span>
+        <button
+          pButton
+          icon="pi pi-refresh"
+          [text]="true"
+          [rounded]="true"
+          size="small"
+          (click)="refreshAlerts()"
+        ></button>
+      </div>
+
+      <div *ngIf="lowStockCount() === 0" class="text-sm text-center py-4 text-gray-500">
+        No hay stock bajo actualmente.
+      </div>
+
+      <div *ngIf="lowStockCount() > 0" class="flex flex-col gap-3">
+        <div class="text-sm">
+          Hay <span class="font-bold text-red-600">{{ lowStockCount() }}</span> productos con stock
+          bajo el mínimo.
+        </div>
+        <button
+          pButton
+          label="Ver Inventario"
+          icon="pi pi-external-link"
+          size="small"
+          routerLink="/inventory/inventories"
+          (click)="op.hide()"
+          class="w-full"
+        ></button>
+      </div>
+    </div>
+  </p-popover>
+</div>

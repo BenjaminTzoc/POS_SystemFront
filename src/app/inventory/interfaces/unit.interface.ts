@@ -6,4 +6,5 @@ export interface UnitMeasure {
   abbreviation: string;
   allowsDecimals: boolean;
   description: string;
+  deletedAt?: string | null;
 }

@@ -46,6 +46,12 @@ export const RECURRENT_MENU: MenuItem[] = [
     route: '/inventory/inventory-movements',
     permission: '',
   },
+  {
+    label: 'Unidades de medida',
+    icon: 'pi pi-gauge',
+    route: '/inventory/units',
+    permission: '',
+  },
 ];
 
 export const MENU_ITEMS: MenuItem[] = [
@@ -82,13 +88,13 @@ export const MENU_ITEMS: MenuItem[] = [
       {
         label: 'Traslados',
         icon: 'pi pi-arrows-h',
-        route: 'inventory/transfers',
+        route: '/inventory/transfers',
         permission: '',
       },
       {
         label: 'Unidades de medida',
         icon: 'pi pi-gauge',
-        route: 'inventory/units',
+        route: '/inventory/units',
         permission: '',
       },
     ],

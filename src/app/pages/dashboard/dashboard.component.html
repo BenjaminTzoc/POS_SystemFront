@@ -1,0 +1,138 @@
+<div class="p-4 bg-gray-50 min-h-screen">
+  <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-800">Dashboard de Reportes</h1>
+
+    <div class="flex gap-4">
+      <!-- Filtro de Fecha -->
+      <p-datepicker
+        [(ngModel)]="dateRange"
+        selectionMode="range"
+        [readonlyInput]="true"
+        placeholder="Rango de Fechas"
+        (onSelect)="onFilterChange()"
+        [showIcon]="true"
+        styleClass="w-full md:w-64"
+      >
+      </p-datepicker>
+
+      <!-- Filtro de Branch (Opcional, si se tuviera la lista de branches) -->
+      <!-- <p-dropdown ...></p-dropdown> -->
+
+      <!-- Botón de actualización manual -->
+      <p-button icon="pi pi-refresh" (onClick)="loadAllData()"></p-button>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center">
+      <div
+        class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mr-4 text-blue-600"
+      >
+        <i class="pi pi-dollar text-xl"></i>
+      </div>
+      <div>
+        <span class="block text-gray-500 text-sm">Ventas Hoy</span>
+        <span class="block text-2xl font-bold text-gray-800">
+          {{ summary?.totalSalesToday | currency }}
+        </span>
+      </div>
+    </div>
+
+    <div class="card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center">
+      <div
+        class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center mr-4 text-orange-600"
+      >
+        <i class="pi pi-shopping-cart text-xl"></i>
+      </div>
+      <div>
+        <span class="block text-gray-500 text-sm">Órdenes Pendientes</span>
+        <span class="block text-2xl font-bold text-gray-800">
+          {{ summary?.pendingOrdersCount }}
+        </span>
+      </div>
+    </div>
+
+    <div class="card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center">
+      <div
+        class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mr-4 text-green-600"
+      >
+        <i class="pi pi-box text-xl"></i>
+      </div>
+      <div>
+        <span class="block text-gray-500 text-sm">Valor Inventario</span>
+        <span class="block text-2xl font-bold text-gray-800">
+          {{ summary?.inventoryValue | currency }}
+        </span>
+      </div>
+    </div>
+
+    <div class="card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center">
+      <div
+        class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mr-4 text-red-600"
+      >
+        <i class="pi pi-exclamation-circle text-xl"></i>
+      </div>
+      <div>
+        <span class="block text-gray-500 text-sm">Bajo Stock</span>
+        <span class="block text-2xl font-bold text-gray-800">
+          {{ summary?.lowStockProductsCount }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row 1 -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+    <!-- Sales Trends (Wider) -->
+    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <h3 class="text-xl font-semibold mb-4 text-gray-800">Tendencia de Ventas (Últimos 7 días)</h3>
+      <p-chart
+        type="line"
+        [data]="salesTrendData"
+        [options]="salesTrendOptions"
+        height="300px"
+      ></p-chart>
+    </div>
+
+    <!-- Category Distribution -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <h3 class="text-xl font-semibold mb-4 text-gray-800">Por Categoría</h3>
+      <div class="flex justify-center">
+        <p-chart
+          type="doughnut"
+          [data]="categoriesData"
+          [options]="categoriesOptions"
+          height="300px"
+        ></p-chart>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row 2 -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Top Selling Products -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <h3 class="text-xl font-semibold mb-4 text-gray-800">Productos Más Vendidos</h3>
+      <p-chart
+        type="bar"
+        [data]="topProductsData"
+        [options]="topProductsOptions"
+        height="300px"
+      ></p-chart>
+    </div>
+
+    <!-- Payment Methods -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <h3 class="text-xl font-semibold mb-4 text-gray-800">Métodos de Pago</h3>
+      <div class="flex justify-center">
+        <p-chart
+          type="pie"
+          [data]="paymentMethodsData"
+          [options]="paymentMethodsOptions"
+          height="300px"
+        ></p-chart>
+      </div>
+    </div>
+  </div>
+</div>
