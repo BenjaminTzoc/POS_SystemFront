@@ -1,0 +1,93 @@
+<div id="pos-ticket" class="ticket-container">
+  <div class="header">
+    <div class="logo-container" *ngIf="companyInfo.logo">
+      <img [src]="companyInfo.logo" alt="Logo" class="logo" />
+    </div>
+    <h1 class="company-name">{{ companyInfo.name }}</h1>
+    <p class="company-info">{{ companyInfo.address }}</p>
+    <p class="company-info" *ngIf="companyInfo.phone">Tel: {{ companyInfo.phone }}</p>
+    <p class="company-info" *ngIf="companyInfo.nit">NIT: {{ companyInfo.nit }}</p>
+  </div>
+
+  <hr class="divider" />
+
+  <div class="sale-info">
+    <p><strong>Nº Factura:</strong> {{ sale.invoiceNumber }}</p>
+    <p><strong>Fecha:</strong> {{ sale.date | date: 'dd/MM/yyyy HH:mm' }}</p>
+    <p>
+      <strong>Cliente:</strong>
+      {{ sale.customer ? sale.customer.name : 'Consumidor Final' }}
+    </p>
+    <p *ngIf="sale.customer?.nit"><strong>NIT Cliente:</strong> {{ sale.customer?.nit }}</p>
+    <p *ngIf="sale.branch"><strong>Sucursal:</strong> {{ sale.branch.name }}</p>
+  </div>
+
+  <hr class="divider" />
+
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th style="width: 15%">Cant</th>
+        <th style="width: 55%">Producto</th>
+        <th style="width: 30%; text-align: right">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of sale.details">
+        <td>{{ item.quantity }}</td>
+        <td>
+          {{ item.product.name }}
+          <br />
+          <small>{{ item.unitPrice | currency: 'Q' }}</small>
+          <small *ngIf="+item.discountAmount > 0" class="discount-text">
+            <br />Desc: -{{ item.discountAmount | currency: 'Q' }}
+          </small>
+        </td>
+        <td class="text-right">{{ item.lineTotal | currency: 'Q' }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <hr class="divider" />
+
+  <div class="totals">
+    <div class="total-row">
+      <span>Subtotal:</span>
+      <span>{{ sale.subtotal | currency: 'Q' }}</span>
+    </div>
+    <div class="total-row" *ngIf="+sale.discountAmount > 0">
+      <span>Descuento:</span>
+      <span>-{{ sale.discountAmount | currency: 'Q' }}</span>
+    </div>
+    <div class="total-row" *ngIf="+sale.taxAmount > 0">
+      <span>Impuestos:</span>
+      <span>{{ sale.taxAmount | currency: 'Q' }}</span>
+    </div>
+    <div class="total-row grand-total">
+      <span>TOTAL:</span>
+      <span>{{ sale.total | currency: 'Q' }}</span>
+    </div>
+  </div>
+
+  <hr class="divider" *ngIf="sale.payments && sale.payments.length > 0" />
+
+  <div class="payments-info" *ngIf="sale.payments && sale.payments.length > 0">
+    <p><strong>PAGOS:</strong></p>
+    <div class="total-row" *ngFor="let p of sale.payments">
+      <span>{{ p.paymentMethod?.name || 'Pago' }}:</span>
+      <span>{{ p.amount | currency: 'Q' }}</span>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <div class="footer">
+    <p>¡Gracias por su compra!</p>
+    <p>Vuelva pronto</p>
+    <div class="legal-text" *ngIf="sale.invoiceNumber">
+      <small>Sujeto a pagos trimestrales</small>
+      <br />
+      <small>Documento para validación tributaria</small>
+    </div>
+  </div>
+</div>

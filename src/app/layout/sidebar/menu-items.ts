@@ -41,6 +41,12 @@ export const RECURRENT_MENU: MenuItem[] = [
     permission: '',
   },
   {
+    label: 'Historial de Cajas',
+    icon: 'pi pi-history',
+    route: '/sales/cash-history',
+    permission: '',
+  },
+  {
     label: 'Movimientos de inventario',
     icon: 'pi pi-objects-column',
     route: '/inventory/inventory-movements',
@@ -133,6 +139,12 @@ export const MENU_ITEMS: MenuItem[] = [
         label: 'Órdenes de Venta',
         icon: '',
         route: '/sales/orders',
+        permission: '',
+      },
+      {
+        label: 'Historial de Cajas',
+        icon: 'pi pi-history',
+        route: '/sales/cash-history',
         permission: '',
       },
     ],

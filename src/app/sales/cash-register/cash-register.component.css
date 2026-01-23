@@ -1,0 +1,38 @@
+:host ::ng-deep .p-datatable-modern .p-datatable-thead > tr > th {
+  background: transparent !important;
+  border: none !important;
+}
+
+:host ::ng-deep .p-datatable-modern .p-datatable-tbody > tr {
+  background: transparent !important;
+  border-bottom: 1px solid #f9fafb !important;
+}
+
+:host ::ng-deep .p-datatable-modern .p-datatable-tbody > tr > td {
+  border: none !important;
+}
+
+:host ::ng-deep .premium-dialog .p-dialog-header {
+  border-bottom: none !important;
+  padding: 2.5rem 2.5rem 1rem 2.5rem !important;
+  border-radius: 2.5rem 2.5rem 0 0 !important;
+}
+
+:host ::ng-deep .premium-dialog .p-dialog-content {
+  padding: 1rem 2.5rem 2.5rem 2.5rem !important;
+  border-radius: 0 0 2.5rem 2.5rem !important;
+}
+
+:host ::ng-deep .p-select {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.max-w-7xl > div {
+  animation: fadeIn 0.4s ease-out forwards;
+}

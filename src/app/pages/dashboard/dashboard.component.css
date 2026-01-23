@@ -1,0 +1,44 @@
+:host ::ng-deep .p-datepicker {
+  background: transparent !important;
+}
+
+:host ::ng-deep .p-datepicker input {
+  background: transparent !important;
+}
+
+:host ::ng-deep .p-select {
+  background: transparent !important;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.max-w-\[1600px\] > div {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.max-w-\[1600px\] > div:nth-child(2) { animation-delay: 0.1s; }
+.max-w-\[1600px\] > div:nth-child(3) { animation-delay: 0.2s; }
+
+/* Custom Scrollbar for top products list if needed */
+.space-y-6 {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.space-y-6::-webkit-scrollbar {
+  width: 4px;
+}
+
+.space-y-6::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.space-y-6::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+}

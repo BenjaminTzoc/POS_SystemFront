@@ -8,6 +8,12 @@ import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
 import { SelectModule } from 'primeng/select';
 import { ReportsService } from '../../core/services/reports.service';
+import { BranchesService } from '../../inventory/services/branches.service';
+import { Branch } from '../../inventory/interfaces/branch.interface';
+import { AuthService } from '../../auth/auth.service';
+import { CashRegisterService } from '../../inventory/services/cash-register.service';
+import { CashSession } from '../../inventory/interfaces/cash-register.interface';
+import { Router } from '@angular/router';
 import {
   DashboardSummaryDto,
   SalesTrendDto,
@@ -51,7 +57,11 @@ export class DashboardComponent implements OnInit {
 
   // Filters
   dateRange: Date[] | undefined;
-  selectedBranch: string | undefined; // For SuperAdmin
+  branches: Branch[] = [];
+  selectedBranchId: string | undefined;
+
+  // Cash Session Status
+  currentCashSession = signal<CashSession | null>(null);
 
   // Loading states
   isLoadingSummary = false;
@@ -59,13 +69,50 @@ export class DashboardComponent implements OnInit {
   isLoadingTopProducts = false;
   isLoadingCategories = false;
   isLoadingPaymentMethods = false;
+  isLoadingBranches = false;
 
-  constructor(private reportsService: ReportsService) {
+  get canFilterByBranch(): boolean {
+    const user = this.authService.currentUser;
+    return user?.roles?.some((r) => r.isSuperAdmin || r.name === 'Admin') ?? false;
+  }
+
+  constructor(
+    private reportsService: ReportsService,
+    private branchesService: BranchesService,
+    private authService: AuthService,
+    private cashService: CashRegisterService,
+    private router: Router,
+  ) {
     this.initChartOptions();
   }
 
   ngOnInit(): void {
+    if (this.canFilterByBranch) {
+      this.loadBranches();
+    }
     this.loadAllData();
+    this.checkCashStatus();
+  }
+
+  private checkCashStatus() {
+    this.cashService.getStatus().subscribe({
+      next: (res) => this.currentCashSession.set(res.data),
+    });
+  }
+
+  goToCash() {
+    this.router.navigate(['/sales/cash-register']);
+  }
+
+  private loadBranches() {
+    this.isLoadingBranches = true;
+    this.branchesService.getBranches().subscribe({
+      next: (res) => {
+        this.branches = res.data;
+        this.isLoadingBranches = false;
+      },
+      error: () => (this.isLoadingBranches = false),
+    });
   }
 
   loadAllData() {
@@ -93,7 +140,7 @@ export class DashboardComponent implements OnInit {
 
   private loadSummary() {
     this.isLoadingSummary = true;
-    this.reportsService.getDashboardSummary(this.selectedBranch).subscribe({
+    this.reportsService.getDashboardSummary(this.selectedBranchId).subscribe({
       next: (res) => {
         this.summary = res.data;
         this.isLoadingSummary = false;
@@ -107,7 +154,7 @@ export class DashboardComponent implements OnInit {
 
   private loadSalesTrends(startDate?: string, endDate?: string) {
     this.isLoadingTrends = true;
-    this.reportsService.getSalesTrends(7, startDate, endDate, this.selectedBranch).subscribe({
+    this.reportsService.getSalesTrends(7, startDate, endDate, this.selectedBranchId).subscribe({
       next: (res) => {
         this.updateSalesTrendChart(res.data);
         this.isLoadingTrends = false;
@@ -126,15 +173,17 @@ export class DashboardComponent implements OnInit {
         {
           label: 'Ventas ($)',
           data: data.map((d) => d.total),
-          fill: false,
-          borderColor: '#4bc0c0',
+          fill: true,
+          borderColor: '#6366f1',
+          backgroundColor: 'rgba(99, 102, 241, 0.1)',
           tension: 0.4,
         },
         {
           label: 'Ordenes',
           data: data.map((d) => d.orderCount || 0),
           fill: false,
-          borderColor: '#565656',
+          borderColor: '#94a3b8',
+          borderDash: [5, 5],
           tension: 0.4,
           yAxisID: 'y1',
         },
@@ -145,7 +194,7 @@ export class DashboardComponent implements OnInit {
   private loadTopProducts(startDate?: string, endDate?: string) {
     this.isLoadingTopProducts = true;
     this.reportsService
-      .getTopSellingProducts(5, startDate, endDate, this.selectedBranch)
+      .getTopSellingProducts(5, startDate, endDate, this.selectedBranchId)
       .subscribe({
         next: (res) => {
           this.topProducts = res.data;
@@ -161,7 +210,7 @@ export class DashboardComponent implements OnInit {
 
   private loadCategories() {
     this.isLoadingCategories = true;
-    this.reportsService.getCategoriesDistribution(this.selectedBranch).subscribe({
+    this.reportsService.getCategoriesDistribution(this.selectedBranchId).subscribe({
       next: (res) => {
         this.updateCategoriesChart(res.data);
         this.isLoadingCategories = false;
@@ -179,7 +228,8 @@ export class DashboardComponent implements OnInit {
       datasets: [
         {
           data: data.map((d) => d.productCount),
-          backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'],
+          backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'],
+          borderWidth: 0,
         },
       ],
     };
@@ -187,16 +237,18 @@ export class DashboardComponent implements OnInit {
 
   private loadPaymentMethods(startDate?: string, endDate?: string) {
     this.isLoadingPaymentMethods = true;
-    this.reportsService.getPaymentMethodsStats(startDate, endDate, this.selectedBranch).subscribe({
-      next: (res) => {
-        this.updatePaymentMethodsChart(res.data);
-        this.isLoadingPaymentMethods = false;
-      },
-      error: (err) => {
-        console.error('Error loading payment methods', err);
-        this.isLoadingPaymentMethods = false;
-      },
-    });
+    this.reportsService
+      .getPaymentMethodsStats(startDate, endDate, this.selectedBranchId)
+      .subscribe({
+        next: (res) => {
+          this.updatePaymentMethodsChart(res.data);
+          this.isLoadingPaymentMethods = false;
+        },
+        error: (err) => {
+          console.error('Error loading payment methods', err);
+          this.isLoadingPaymentMethods = false;
+        },
+      });
   }
 
   private updatePaymentMethodsChart(data: PaymentMethodStatDto[]) {
@@ -205,7 +257,8 @@ export class DashboardComponent implements OnInit {
       datasets: [
         {
           data: data.map((d) => d.total),
-          backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
+          backgroundColor: ['#6366f1', '#10b981', '#f59e0b'],
+          borderWidth: 0,
         },
       ],
     };
@@ -218,7 +271,8 @@ export class DashboardComponent implements OnInit {
         {
           label: 'Cantidad Vendida',
           data: data.map((d) => d.quantity),
-          backgroundColor: '#42A5F5',
+          backgroundColor: '#6366f1',
+          borderRadius: 8,
         },
       ],
     };

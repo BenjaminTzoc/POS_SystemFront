@@ -1,227 +1,255 @@
 <div class="grid grid-cols-12 gap-6 p-6">
+  <!-- Cash Status Warning -->
+  <div *ngIf="isCashClosed" class="col-span-12">
+    <div
+      class="bg-rose-50 border border-rose-100 rounded-2xl p-4 flex items-center justify-between shadow-sm animate-pulse"
+    >
+      <div class="flex items-center gap-4">
+        <div
+          class="w-10 h-10 bg-rose-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-rose-100"
+        >
+          <i class="pi pi-lock"></i>
+        </div>
+        <div>
+          <h3 class="font-black text-rose-600 text-sm">CAJA CERRADA</h3>
+          <p class="text-xs text-rose-500 font-medium">
+            No puedes procesar pedidos hasta que abras una sesión de caja para esta sucursal.
+          </p>
+        </div>
+      </div>
+      <button
+        pButton
+        label="Abrir Caja Ahora"
+        icon="pi pi-wallet"
+        (click)="goToCash()"
+        class="p-button-danger p-button-sm !rounded-xl !px-6 font-bold"
+      ></button>
+    </div>
+  </div>
+
   <div class="col-span-8 flex flex-col gap-4">
     <div class="bg-white p-10 rounded-2xl shadow-lg">
       <h2 class="text-xl font-semibold">Datos del cliente</h2>
       <hr class="w-full border-gray-300 mt-3 mb-4" />
       @if (isEditMode) {
-      <div class="grid grid-cols-2 px-5">
-        @if (selectedCustomer) {
-        <section class="flex flex-col gap-4">
-          <div class="flex gap-4">
-            <i class="pi pi-user"></i>
-            <p class="text-sm">{{ selectedCustomer.name }}</p>
-          </div>
-          <div class="flex gap-4">
-            <i class="pi pi-envelope"></i>
-            <p class="text-sm">{{ selectedCustomer.email }}</p>
-          </div>
-        </section>
-        <section class="flex flex-col gap-4">
-          <div class="flex gap-4">
-            <i class="pi pi-phone"></i>
-            <p class="text-sm">{{ selectedCustomer.phone }}</p>
-          </div>
-          <div class="flex gap-4">
-            <i class="pi pi-file-edit"></i>
-            <p class="text-sm">{{ selectedCustomer.nit }}</p>
-          </div>
-          <div class="flex gap-4">
-            <i class="pi pi-map-marker"></i>
-            <p class="text-sm">{{ selectedCustomer.address }}</p>
-          </div>
-        </section>
-        } @else if (orderForm.get('guestCustomer')?.value) {
-        <section class="flex flex-col gap-4">
-          <div class="flex gap-4">
-            <i class="pi pi-user"></i>
-            <p class="text-sm">{{ orderForm.get('guestCustomer')?.get('name')?.value }}</p>
-          </div>
-          <div class="flex gap-4">
-            <i class="pi pi-envelope"></i>
-            <p class="text-sm">{{ orderForm.get('guestCustomer')?.get('email')?.value }}</p>
-          </div>
-        </section>
-        <section class="flex flex-col gap-4">
-          <div class="flex gap-4">
-            <i class="pi pi-phone"></i>
-            <p class="text-sm">{{ orderForm.get('guestCustomer')?.get('phone')?.value }}</p>
-          </div>
-          <div class="flex gap-4">
-            <i class="pi pi-file-edit"></i>
-            <p class="text-sm">{{ orderForm.get('guestCustomer')?.get('nit')?.value }}</p>
-          </div>
-          <div class="flex gap-4">
-            <i class="pi pi-map-marker"></i>
-            <p class="text-sm">{{ orderForm.get('guestCustomer')?.get('address')?.value }}</p>
-          </div>
-        </section>
-        }
-      </div>
-      } @else if (isCreateMode) {
-      <div class="grid grid-cols-2 px-5">
-        <section class="flex flex-col gap-6">
-          <div class="flex gap-4 items-center">
-            <i class="pi pi-id-card"></i>
-            <!-- <p class="mb-2 font-medium"><span class="text-red-600">*</span> Tipo de cliente:</p> -->
-            <div class="flex gap-4">
-              @for (customerType of customerTypes; track $index) {
-              <div class="flex items-center">
-                <p-radiobutton
-                  [inputId]="customerType.value"
-                  name="customerType"
-                  [value]="customerType"
-                  [(ngModel)]="selectedCustomerType"
-                  (onClick)="onCustomerTypeChange()"
-                  size="small"
-                />
-                <label [for]="customerType.value" class="ml-2 text-sm">{{
-                  customerType.name
-                }}</label>
+        <div class="grid grid-cols-2 px-5">
+          @if (selectedCustomer) {
+            <section class="flex flex-col gap-4">
+              <div class="flex gap-4">
+                <i class="pi pi-user"></i>
+                <p class="text-sm">{{ selectedCustomer.name }}</p>
               </div>
-              }
+              <div class="flex gap-4">
+                <i class="pi pi-envelope"></i>
+                <p class="text-sm">{{ selectedCustomer.email }}</p>
+              </div>
+            </section>
+            <section class="flex flex-col gap-4">
+              <div class="flex gap-4">
+                <i class="pi pi-phone"></i>
+                <p class="text-sm">{{ selectedCustomer.phone }}</p>
+              </div>
+              <div class="flex gap-4">
+                <i class="pi pi-file-edit"></i>
+                <p class="text-sm">{{ selectedCustomer.nit }}</p>
+              </div>
+              <div class="flex gap-4">
+                <i class="pi pi-map-marker"></i>
+                <p class="text-sm">{{ selectedCustomer.address }}</p>
+              </div>
+            </section>
+          } @else if (orderForm.get('guestCustomer')?.value) {
+            <section class="flex flex-col gap-4">
+              <div class="flex gap-4">
+                <i class="pi pi-user"></i>
+                <p class="text-sm">{{ orderForm.get('guestCustomer')?.get('name')?.value }}</p>
+              </div>
+              <div class="flex gap-4">
+                <i class="pi pi-envelope"></i>
+                <p class="text-sm">{{ orderForm.get('guestCustomer')?.get('email')?.value }}</p>
+              </div>
+            </section>
+            <section class="flex flex-col gap-4">
+              <div class="flex gap-4">
+                <i class="pi pi-phone"></i>
+                <p class="text-sm">{{ orderForm.get('guestCustomer')?.get('phone')?.value }}</p>
+              </div>
+              <div class="flex gap-4">
+                <i class="pi pi-file-edit"></i>
+                <p class="text-sm">{{ orderForm.get('guestCustomer')?.get('nit')?.value }}</p>
+              </div>
+              <div class="flex gap-4">
+                <i class="pi pi-map-marker"></i>
+                <p class="text-sm">{{ orderForm.get('guestCustomer')?.get('address')?.value }}</p>
+              </div>
+            </section>
+          }
+        </div>
+      } @else if (isCreateMode) {
+        <div class="grid grid-cols-2 px-5">
+          <section class="flex flex-col gap-6">
+            <div class="flex gap-4 items-center">
+              <i class="pi pi-id-card"></i>
+              <!-- <p class="mb-2 font-medium"><span class="text-red-600">*</span> Tipo de cliente:</p> -->
+              <div class="flex gap-4">
+                @for (customerType of customerTypes; track $index) {
+                  <div class="flex items-center">
+                    <p-radiobutton
+                      [inputId]="customerType.value"
+                      name="customerType"
+                      [value]="customerType"
+                      [(ngModel)]="selectedCustomerType"
+                      (onClick)="onCustomerTypeChange()"
+                      size="small"
+                    />
+                    <label [for]="customerType.value" class="ml-2 text-sm">{{
+                      customerType.name
+                    }}</label>
+                  </div>
+                }
+              </div>
             </div>
-          </div>
-          <form class="flex flex-col" [formGroup]="orderForm">
-            <div class="flex items-center gap-4 mb-6">
-              <i class="pi pi-user"></i>
-              <div class="flex">
+            <form class="flex flex-col" [formGroup]="orderForm">
+              <div class="flex items-center gap-4 mb-6">
+                <i class="pi pi-user"></i>
+                <div class="flex">
+                  @if (selectedCustomerType.value === 'R') {
+                    <p-select
+                      [options]="customers"
+                      formControlName="customerId"
+                      [invalid]="
+                        orderForm.get('customerId')?.invalid && orderForm.get('customerId')?.touched
+                      "
+                      (onChange)="onCustomerChange($event)"
+                      [showClear]="true"
+                      optionLabel="name"
+                      optionValue="id"
+                      placeholder="Seleccionar un cliente"
+                      class="col-span-3 w-[20rem]"
+                      size="small"
+                    />
+                  } @else {
+                    <section class="w-[20rem]" formGroupName="guestCustomer">
+                      <p-floatlabel variant="on">
+                        <input
+                          pInputText
+                          id="ReferenceName"
+                          formControlName="name"
+                          autocomplete="off"
+                          pSize="small"
+                          fluid
+                        />
+                        <label class="text-sm" for="ReferenceName">Nombre de referencia</label>
+                      </p-floatlabel>
+                    </section>
+                  }
+                </div>
+              </div>
+              <div class="flex items-center gap-4 mb-7">
+                <i class="pi pi-envelope"></i>
                 @if (selectedCustomerType.value === 'R') {
-                <p-select
-                  [options]="customers"
-                  formControlName="customerId"
-                  [invalid]="
-                    orderForm.get('customerId')?.invalid && orderForm.get('customerId')?.touched
-                  "
-                  (onChange)="onCustomerChange($event)"
-                  [showClear]="true"
-                  optionLabel="name"
-                  optionValue="id"
-                  placeholder="Seleccionar un cliente"
-                  class="col-span-3 w-[20rem]"
-                  size="small"
-                />
+                  <p class="text-sm">
+                    {{
+                      selectedCustomer?.email ??
+                        '- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -'
+                    }}
+                  </p>
                 } @else {
+                  <section class="w-[20rem]" formGroupName="guestCustomer">
+                    <p-floatlabel variant="on">
+                      <input
+                        pInputText
+                        id="ReferenceEmail"
+                        formControlName="email"
+                        autocomplete="off"
+                        pSize="small"
+                        fluid
+                      />
+                      <label class="text-sm" for="ReferenceEmail">Correo</label>
+                    </p-floatlabel>
+                  </section>
+                }
+              </div>
+            </form>
+          </section>
+          <form class="flex flex-col gap-8" [formGroup]="orderForm">
+            <div class="flex items-center gap-4">
+              <i class="pi pi-phone"></i>
+              @if (selectedCustomerType.value === 'R') {
+                <p class="text-sm">
+                  {{
+                    selectedCustomer?.phone ??
+                      '- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -'
+                  }}
+                </p>
+              } @else {
                 <section class="w-[20rem]" formGroupName="guestCustomer">
                   <p-floatlabel variant="on">
                     <input
                       pInputText
-                      id="ReferenceName"
-                      formControlName="name"
+                      id="ReferencePhone"
+                      formControlName="phone"
                       autocomplete="off"
                       pSize="small"
                       fluid
                     />
-                    <label class="text-sm" for="ReferenceName">Nombre de referencia</label>
+                    <label class="text-sm" for="ReferencePhone">Teléfono de referencia</label>
                   </p-floatlabel>
                 </section>
-                }
-              </div>
+              }
             </div>
-            <div class="flex items-center gap-4 mb-7">
-              <i class="pi pi-envelope"></i>
+            <div class="flex items-center gap-4">
+              <i class="pi pi-file-edit"></i>
               @if (selectedCustomerType.value === 'R') {
-              <p class="text-sm">
-                {{
-                  selectedCustomer?.email ??
-                    '- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -'
-                }}
-              </p>
+                <p class="text-sm">
+                  {{
+                    selectedCustomer?.nit ??
+                      '- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -'
+                  }}
+                </p>
               } @else {
-              <section class="w-[20rem]" formGroupName="guestCustomer">
-                <p-floatlabel variant="on">
-                  <input
-                    pInputText
-                    id="ReferenceEmail"
-                    formControlName="email"
-                    autocomplete="off"
-                    pSize="small"
-                    fluid
-                  />
-                  <label class="text-sm" for="ReferenceEmail">Correo</label>
-                </p-floatlabel>
-              </section>
+                <section class="w-[20rem]" formGroupName="guestCustomer">
+                  <p-floatlabel variant="on">
+                    <input
+                      pInputText
+                      id="ReferenceNIT"
+                      formControlName="nit"
+                      autocomplete="off"
+                      pSize="small"
+                      fluid
+                    />
+                    <label class="text-sm" for="ReferenceNIT">NIT</label>
+                  </p-floatlabel>
+                </section>
+              }
+            </div>
+            <div class="flex items-center gap-4">
+              <i class="pi pi-map-marker"></i>
+              @if (selectedCustomerType.value === 'R') {
+                <p class="text-sm">
+                  {{
+                    selectedCustomer?.address ??
+                      '- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -'
+                  }}
+                </p>
+              } @else {
+                <section class="w-[20rem]" formGroupName="guestCustomer">
+                  <p-floatlabel variant="on">
+                    <input
+                      pInputText
+                      id="ReferenceAddress"
+                      formControlName="address"
+                      autocomplete="off"
+                      pSize="small"
+                      fluid
+                    />
+                    <label class="text-sm" for="ReferenceAddress">Dirección</label>
+                  </p-floatlabel>
+                </section>
               }
             </div>
           </form>
-        </section>
-        <form class="flex flex-col gap-8" [formGroup]="orderForm">
-          <div class="flex items-center gap-4">
-            <i class="pi pi-phone"></i>
-            @if (selectedCustomerType.value === 'R') {
-            <p class="text-sm">
-              {{
-                selectedCustomer?.phone ??
-                  '- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -'
-              }}
-            </p>
-            } @else {
-            <section class="w-[20rem]" formGroupName="guestCustomer">
-              <p-floatlabel variant="on">
-                <input
-                  pInputText
-                  id="ReferencePhone"
-                  formControlName="phone"
-                  autocomplete="off"
-                  pSize="small"
-                  fluid
-                />
-                <label class="text-sm" for="ReferencePhone">Teléfono de referencia</label>
-              </p-floatlabel>
-            </section>
-            }
-          </div>
-          <div class="flex items-center gap-4">
-            <i class="pi pi-file-edit"></i>
-            @if (selectedCustomerType.value === 'R') {
-            <p class="text-sm">
-              {{
-                selectedCustomer?.nit ??
-                  '- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -'
-              }}
-            </p>
-            } @else {
-            <section class="w-[20rem]" formGroupName="guestCustomer">
-              <p-floatlabel variant="on">
-                <input
-                  pInputText
-                  id="ReferenceNIT"
-                  formControlName="nit"
-                  autocomplete="off"
-                  pSize="small"
-                  fluid
-                />
-                <label class="text-sm" for="ReferenceNIT">NIT</label>
-              </p-floatlabel>
-            </section>
-            }
-          </div>
-          <div class="flex items-center gap-4">
-            <i class="pi pi-map-marker"></i>
-            @if (selectedCustomerType.value === 'R') {
-            <p class="text-sm">
-              {{
-                selectedCustomer?.address ??
-                  '- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -'
-              }}
-            </p>
-            } @else {
-            <section class="w-[20rem]" formGroupName="guestCustomer">
-              <p-floatlabel variant="on">
-                <input
-                  pInputText
-                  id="ReferenceAddress"
-                  formControlName="address"
-                  autocomplete="off"
-                  pSize="small"
-                  fluid
-                />
-                <label class="text-sm" for="ReferenceAddress">Dirección</label>
-              </p-floatlabel>
-            </section>
-            }
-          </div>
-        </form>
-      </div>
+        </div>
       }
     </div>
     <div class="bg-white p-10 rounded-2xl shadow-lg">
@@ -243,179 +271,183 @@
       <section class="grid grid-cols-2 px-6">
         <div class="col-span-2">
           @if (isCreateMode || (isEditMode && orderForm.get('status')?.value === 'pending')) {
-          <div class="py-6">
-            <app-product-search
-              (productSelected)="addProductToDetail($event)"
-              [branchId]="orderForm.get('branchId')?.value"
-              [excludedProductIds]="usedProductIds"
-              [disabled]="!!(isEditing && sale?.status && sale?.status !== 'pending')"
-            >
-            </app-product-search>
-          </div>
+            <div class="py-6">
+              <app-product-search
+                (productSelected)="addProductToDetail($event)"
+                [branchId]="orderForm.get('branchId')?.value"
+                [excludedProductIds]="usedProductIds"
+                [disabled]="!!(isEditing && sale?.status && sale?.status !== 'pending')"
+              >
+              </app-product-search>
+            </div>
           }
           <div>
             @if (isCreateMode || isEditMode) {
-            <p-table
-              #orderDetailsTable
-              [value]="details"
-              dataKey="id"
-              class="w-full p-datatable-striped p-datatable-sm p-datatable-gridless rounded-md"
-            >
-              <ng-template pTemplate="header">
-                <tr class="">
-                  <th><div class="text-left text-sm font-medium">Producto</div></th>
-                  <th class="w-40"><div class="text-left text-sm font-medium">Precio</div></th>
-                  <th class="w-[30px]"></th>
-                  <th class="w-40"><div class="text-left text-sm font-medium">Cantidad</div></th>
-                  <th><div class="text-right text-sm font-medium">Subtotal</div></th>
-                  <th class="w-[150px]">
-                    <div class="text-right text-sm font-medium">Acciones</div>
-                  </th>
-                </tr>
-              </ng-template>
-              <ng-template pTemplate="body" let-detail let-i="rowIndex">
-                <tr>
-                  <td>
-                    <div class="flex items-center gap-2">
+              <p-table
+                #orderDetailsTable
+                [value]="details"
+                dataKey="id"
+                class="w-full p-datatable-striped p-datatable-sm p-datatable-gridless rounded-md"
+              >
+                <ng-template pTemplate="header">
+                  <tr class="">
+                    <th><div class="text-left text-sm font-medium">Producto</div></th>
+                    <th class="w-40"><div class="text-left text-sm font-medium">Precio</div></th>
+                    <th class="w-[30px]"></th>
+                    <th class="w-40"><div class="text-left text-sm font-medium">Cantidad</div></th>
+                    <th><div class="text-right text-sm font-medium">Subtotal</div></th>
+                    <th class="w-[150px]">
+                      <div class="text-right text-sm font-medium">Acciones</div>
+                    </th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-detail let-i="rowIndex">
+                  <tr>
+                    <td>
+                      <div class="flex items-center gap-2">
+                        <div
+                          class="w-14 aspect-square rounded-md border border-gray-200 overflow-hidden"
+                        >
+                          <img
+                            [src]="getProductImageUrl(detail.product?.imageUrl)"
+                            [alt]="detail.product?.name"
+                            class="w-full h-full object-scale-down"
+                          />
+                        </div>
+                        <div class="flex flex-col font-medium">
+                          {{ detail.product?.name }}
+                          <small class="text-xs font-normal">
+                            <span class="font-medium">SKU:</span> {{ detail.product?.sku }}
+                          </small>
+                          <small class="text-xs font-normal">
+                            <span class="font-medium">Stock:</span> {{ detail.product?.stock }}
+                            {{ detail.product?.unit?.abbreviation }}
+                          </small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="w-40">
+                        <p-inputnumber
+                          [(ngModel)]="detail.unitPrice"
+                          mode="decimal"
+                          [min]="0"
+                          [minFractionDigits]="2"
+                          [maxFractionDigits]="2"
+                          [showButtons]="false"
+                          [prefix]="'Q  '"
+                          (onInput)="onUnitPriceChanged(detail, $event)"
+                          [disabled]="!!(isEditing && sale?.status && sale?.status !== 'pending')"
+                          size="small"
+                          fluid
+                        />
+                      </div>
+                    </td>
+                    <td>
+                      <div class="flex items-center"><i class="pi pi-times text-gray-400"></i></div>
+                    </td>
+                    <td>
+                      <div class="w-40">
+                        <p-inputnumber
+                          [(ngModel)]="detail.quantity"
+                          mode="decimal"
+                          [min]="0.001"
+                          [max]="detail.product?.stock"
+                          [minFractionDigits]="detail.product?.unit?.allowsDecimals ? 2 : 0"
+                          [maxFractionDigits]="detail.product?.unit?.allowsDecimals ? 2 : 0"
+                          [showButtons]="true"
+                          [suffix]="'  ' + detail.product?.unit?.abbreviation"
+                          (onInput)="onQuantityChanged(detail, $event)"
+                          [disabled]="!!(isEditing && sale?.status && sale?.status !== 'pending')"
+                          size="small"
+                          fluid
+                        />
+                      </div>
+                    </td>
+                    <td>
+                      <div class="text-right">{{ detail.lineTotal | currency: 'Q' }}</div>
+                    </td>
+                    <td>
+                      <div class="flex justify-end gap-2">
+                        <p-button
+                          icon="pi pi-trash"
+                          [rounded]="true"
+                          [text]="true"
+                          severity="danger"
+                          (click)="removeDetail(i)"
+                          [disabled]="!!(isEditing && sale?.status && sale?.status !== 'pending')"
+                        ></p-button>
+                      </div>
+                    </td>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                  <tr>
+                    <td colspan="8" class="text-center">
+                      <div class="flex justify-center items-center gap-2 py-6 text-sm">
+                        <i class="pi pi-exclamation-circle"></i>
+                        Aún no hay productos agregados
+                      </div>
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            } @else if (isEditMode) {
+              <section class="px-0">
+                <div class="grid grid-cols-12">
+                  <div class="col-span-4 flex">
+                    <p class="text-sm font-semibold">Producto</p>
+                  </div>
+                  <div class="col-span-3 flex justify-end">
+                    <p class="text-sm font-semibold">Precio unitario</p>
+                  </div>
+                  <div class="col-span-3 flex justify-end">
+                    <p class="text-sm font-semibold">Cantidad</p>
+                  </div>
+                  <div class="col-span-2 flex justify-end">
+                    <p class="text-sm font-semibold">Subtotal</p>
+                  </div>
+                </div>
+                <hr class="w-full border-gray-300 mt-3 mb-4" />
+                @for (detail of details; track $index) {
+                  <div class="grid grid-cols-12 mb-5">
+                    <div class="col-span-4 flex">
                       <div
-                        class="w-14 aspect-square rounded-md border border-gray-200 overflow-hidden"
+                        class="w-15 aspect-square rounded-md border border-gray-200 overflow-hidden"
                       >
                         <img
-                          [src]="getProductImageUrl(detail.product?.imageUrl)"
-                          [alt]="detail.product?.name"
+                          [src]="getProductImageUrl(detail?.product?.imageUrl ?? null)"
+                          [alt]="detail?.product?.name"
                           class="w-full h-full object-scale-down"
                         />
                       </div>
-                      <div class="flex flex-col font-medium">
-                        {{ detail.product?.name }}
-                        <small class="text-xs font-normal">
-                          <span class="font-medium">SKU:</span> {{ detail.product?.sku }}
-                        </small>
-                        <small class="text-xs font-normal">
-                          <span class="font-medium">Stock:</span> {{ detail.product?.stock }}
-                          {{ detail.product?.unit?.abbreviation }}
-                        </small>
+                      <div class="ml-2 flex flex-col justify-center">
+                        <p class="font-semibold">{{ detail.product.name }}</p>
+                        <p class="text-xs text-gray-500">Código: {{ detail.product.barcode }}</p>
+                        <p class="text-xs text-gray-500">SKU: {{ detail.product.sku }}</p>
                       </div>
                     </div>
-                  </td>
-                  <td>
-                    <div class="w-40">
-                      <p-inputnumber
-                        [(ngModel)]="detail.unitPrice"
-                        mode="decimal"
-                        [min]="0"
-                        [minFractionDigits]="2"
-                        [maxFractionDigits]="2"
-                        [showButtons]="false"
-                        [prefix]="'Q  '"
-                        (onInput)="onUnitPriceChanged(detail, $event)"
-                        [disabled]="!!(isEditing && sale?.status && sale?.status !== 'pending')"
-                        size="small"
-                        fluid
-                      />
+                    <div class="col-span-3 flex items-center justify-end gap-6">
+                      <p class="font-medium text-green-600">
+                        {{ detail.unitPrice | currency: 'Q ' }}
+                      </p>
                     </div>
-                  </td>
-                  <td>
-                    <div class="flex items-center"><i class="pi pi-times text-gray-400"></i></div>
-                  </td>
-                  <td>
-                    <div class="w-40">
-                      <p-inputnumber
-                        [(ngModel)]="detail.quantity"
-                        mode="decimal"
-                        [min]="0.001"
-                        [max]="detail.product?.stock"
-                        [minFractionDigits]="detail.product?.unit?.allowsDecimals ? 2 : 0"
-                        [maxFractionDigits]="detail.product?.unit?.allowsDecimals ? 2 : 0"
-                        [showButtons]="true"
-                        [suffix]="'  ' + detail.product?.unit?.abbreviation"
-                        (onInput)="onQuantityChanged(detail, $event)"
-                        [disabled]="!!(isEditing && sale?.status && sale?.status !== 'pending')"
-                        size="small"
-                        fluid
-                      />
+                    <div class="col-span-3 flex items-center justify-end gap-6">
+                      <p class="font-medium">
+                        {{
+                          detail.product.unit.allowsDecimals
+                            ? (detail.quantity | number: '1.2-4')
+                            : (detail.quantity | number: '1.0-0')
+                        }}
+                        {{ detail.product.unit.abbreviation }}
+                      </p>
                     </div>
-                  </td>
-                  <td>
-                    <div class="text-right">{{ detail.lineTotal | currency : 'Q' }}</div>
-                  </td>
-                  <td>
-                    <div class="flex justify-end gap-2">
-                      <p-button
-                        icon="pi pi-trash"
-                        [rounded]="true"
-                        [text]="true"
-                        severity="danger"
-                        (click)="removeDetail(i)"
-                        [disabled]="!!(isEditing && sale?.status && sale?.status !== 'pending')"
-                      ></p-button>
+                    <div class="col-span-2 flex items-center justify-end">
+                      <p class="font-medium">{{ detail.lineTotal | currency: 'Q ' }}</p>
                     </div>
-                  </td>
-                </tr>
-              </ng-template>
-              <ng-template pTemplate="emptymessage">
-                <tr>
-                  <td colspan="8" class="text-center">
-                    <div class="flex justify-center items-center gap-2 py-6 text-sm">
-                      <i class="pi pi-exclamation-circle"></i>
-                      Aún no hay productos agregados
-                    </div>
-                  </td>
-                </tr>
-              </ng-template>
-            </p-table>
-            } @else if (isEditMode) {
-            <section class="px-0">
-              <div class="grid grid-cols-12">
-                <div class="col-span-4 flex">
-                  <p class="text-sm font-semibold">Producto</p>
-                </div>
-                <div class="col-span-3 flex justify-end">
-                  <p class="text-sm font-semibold">Precio unitario</p>
-                </div>
-                <div class="col-span-3 flex justify-end">
-                  <p class="text-sm font-semibold">Cantidad</p>
-                </div>
-                <div class="col-span-2 flex justify-end">
-                  <p class="text-sm font-semibold">Subtotal</p>
-                </div>
-              </div>
-              <hr class="w-full border-gray-300 mt-3 mb-4" />
-              @for (detail of details; track $index) {
-              <div class="grid grid-cols-12 mb-5">
-                <div class="col-span-4 flex">
-                  <div class="w-15 aspect-square rounded-md border border-gray-200 overflow-hidden">
-                    <img
-                      [src]="getProductImageUrl(detail?.product?.imageUrl ?? null)"
-                      [alt]="detail?.product?.name"
-                      class="w-full h-full object-scale-down"
-                    />
                   </div>
-                  <div class="ml-2 flex flex-col justify-center">
-                    <p class="font-semibold">{{ detail.product.name }}</p>
-                    <p class="text-xs text-gray-500">Código: {{ detail.product.barcode }}</p>
-                    <p class="text-xs text-gray-500">SKU: {{ detail.product.sku }}</p>
-                  </div>
-                </div>
-                <div class="col-span-3 flex items-center justify-end gap-6">
-                  <p class="font-medium text-green-600">{{ detail.unitPrice | currency : 'Q ' }}</p>
-                </div>
-                <div class="col-span-3 flex items-center justify-end gap-6">
-                  <p class="font-medium">
-                    {{
-                      detail.product.unit.allowsDecimals
-                        ? (detail.quantity | number : '1.2-4')
-                        : (detail.quantity | number : '1.0-0')
-                    }}
-                    {{ detail.product.unit.abbreviation }}
-                  </p>
-                </div>
-                <div class="col-span-2 flex items-center justify-end">
-                  <p class="font-medium">{{ detail.lineTotal | currency : 'Q ' }}</p>
-                </div>
-              </div>
-              }
-            </section>
+                }
+              </section>
             }
           </div>
         </div>
@@ -440,66 +472,68 @@
             <div class="flex justify-between text-sm">
               <p class="font-medium">Subtotal:</p>
               <span>
-                {{ totals.subtotal | currency : 'Q ' : 'symbol' : '1.2-2' }}
+                {{ totals.subtotal | currency: 'Q ' : 'symbol' : '1.2-2' }}
               </span>
             </div>
             <div class="flex justify-between text-sm">
               @if (isCreateMode || orderForm.get('status')?.value === 'pending') {
-              <span
-                class="text-sm text-blue-600 font-medium hover:underline cursor-pointer"
-                (click)="showDiscountDialog = true"
-              >
-                Descuentos (+/-):
-              </span>
+                <span
+                  class="text-sm text-blue-600 font-medium hover:underline cursor-pointer"
+                  (click)="showDiscountDialog = true"
+                >
+                  Descuentos (+/-):
+                </span>
               } @else if (isEditMode) {
-              <span class="text-sm text-blue-600 font-medium"> Descuentos: </span>
+                <span class="text-sm text-blue-600 font-medium"> Descuentos: </span>
               }
               <span class="text-red-700">
-                - {{ totals.discountTotal | currency : 'Q ' : 'symbol' : '1.2-2' }}
+                - {{ totals.discountTotal | currency: 'Q ' : 'symbol' : '1.2-2' }}
               </span>
             </div>
             <div class="flex justify-between text-sm">
               @if (isCreateMode || orderForm.get('status')?.value === 'pending') {
-              <span
-                [class]="`text-sm flex items-center gap-1 ${!applyTax ? 'text-red-700' : 'text-green-700'} font-medium hover:underline cursor-pointer`"
-                (click)="toggleTax()"
-                pTooltip="Se aplica el 12% sobre {{
-                  totals.subtotalWithDiscount | currency : 'Q ' : 'symbol' : '1.2-2'
-                }} (subtotal - descuentos)"
-                tooltipPosition="top"
-                hideDelay="500"
-              >
-                <i [class]="`pi pi-${!applyTax ? 'times-circle' : 'check-circle'} text-sm!`"></i
-                >Impuestos:
-              </span>
+                <span
+                  [class]="
+                    `text-sm flex items-center gap-1 ${!applyTax ? 'text-red-700' : 'text-green-700'} font-medium hover:underline cursor-pointer`
+                  "
+                  (click)="toggleTax()"
+                  pTooltip="Se aplica el 12% sobre {{
+                    totals.subtotalWithDiscount | currency: 'Q ' : 'symbol' : '1.2-2'
+                  }} (subtotal - descuentos)"
+                  tooltipPosition="top"
+                  hideDelay="500"
+                >
+                  <i [class]="`pi pi-${!applyTax ? 'times-circle' : 'check-circle'} text-sm!`"></i
+                  >Impuestos:
+                </span>
               } @else if (isEditMode) {
-              <span class="text-sm text-blue-600 font-medium"> Impuestos: </span>
+                <span class="text-sm text-blue-600 font-medium"> Impuestos: </span>
               }
               <span [class]="`${!applyTax ? 'text-black' : 'text-green-700'}`">
-                + {{ totals.taxTotal | currency : 'Q ' : 'symbol' : '1.2-2' }}
+                + {{ totals.taxTotal | currency: 'Q ' : 'symbol' : '1.2-2' }}
               </span>
             </div>
             <hr class="border-gray-300 border-dashed my-2.5" />
             <div class="flex justify-between text-lg">
               <p class="font-medium">Total:</p>
               <span>
-                {{ totals.total | currency : 'Q ' : 'symbol' : '1.2-2' }}
+                {{ totals.total | currency: 'Q ' : 'symbol' : '1.2-2' }}
               </span>
             </div>
             @if (['confirmed', 'delivered', 'cancelled'].includes(sale?.status || '')) {
-            <hr class="border-gray-300 my-3" />
-            <div class="flex justify-between text-sm">
-              <p class="font-medium">Pagado:</p>
-              <span class="text-green-700">
-                - {{ sale?.paidAmount | currency : 'Q ' : 'symbol' : '1.2-2' }}
-              </span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <p class="font-medium">Saldo pendiente:</p>
-              <span class="text-orange-700">
-                {{ sale?.pendingAmount | currency : 'Q ' : 'symbol' : '1.2-2' }}
-              </span>
-            </div>
+              <hr class="border-gray-300 my-3" />
+              <div class="flex justify-between text-sm">
+                <p class="font-medium">Pagado:</p>
+                <span class="text-green-700">
+                  - {{ sale?.paidAmount | currency: 'Q ' : 'symbol' : '1.2-2' }}
+                </span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <p class="font-medium">Saldo pendiente:</p>
+                <span class="text-orange-700">
+                  {{ sale?.pendingAmount | currency: 'Q ' : 'symbol' : '1.2-2' }}
+                </span>
+              </div>
             }
           </div>
         </div>
@@ -507,69 +541,86 @@
       <hr class="w-full border-gray-300 mt-8 mb-4" />
       <div class="flex gap-4">
         @if (isCreateMode) {
-        <p-button label="Crear pedido" (onClick)="onSaveOrder()" severity="success" size="small" />
-        <p-button
-          label="Regresar"
-          variant="outlined"
-          severity="secondary"
-          size="small"
-          (onClick)="onBack()"
-        />
-        } @else if (isEditMode) { @if (orderForm.get('status')?.value === 'pending') { @if
-        (hasUnsavedChanges) {
-        <p-button
-          (onClick)="onSaveChanges()"
-          label="Guardar cambios"
-          severity="danger"
-          size="small"
-        />
-        <p-button
-          (onClick)="resetChanges()"
-          label="Resetear cambios"
-          variant="outlined"
-          severity="secondary"
-          size="small"
-        />
-        } @else {
-        <p-button
-          (onClick)="onConfirmSale()"
-          label="Confirmar venta"
-          severity="success"
-          size="small"
-        />
+          <p-button
+            label="Crear pedido"
+            (onClick)="onSaveOrder()"
+            severity="success"
+            size="small"
+            [disabled]="isCashClosed"
+            [pTooltip]="isCashClosed ? 'Debe abrir caja para vender' : ''"
+            tooltipPosition="top"
+          />
+          <p-button
+            label="Regresar"
+            variant="outlined"
+            severity="secondary"
+            size="small"
+            (onClick)="onBack()"
+          />
+        } @else if (isEditMode) {
+          @if (orderForm.get('status')?.value === 'pending') {
+            @if (hasUnsavedChanges) {
+              <p-button
+                (onClick)="onSaveChanges()"
+                label="Guardar cambios"
+                severity="danger"
+                size="small"
+                [disabled]="isCashClosed"
+                [pTooltip]="isCashClosed ? 'Debe abrir caja para guardar cambios' : ''"
+                tooltipPosition="top"
+              />
+              <p-button
+                (onClick)="resetChanges()"
+                label="Resetear cambios"
+                variant="outlined"
+                severity="secondary"
+                size="small"
+              />
+            } @else {
+              <p-button
+                (onClick)="onConfirmSale()"
+                label="Confirmar venta"
+                severity="success"
+                size="small"
+                [disabled]="isCashClosed"
+                [pTooltip]="isCashClosed ? 'Debe abrir caja para confirmar' : ''"
+                tooltipPosition="top"
+              />
+            }
+            <p-button
+              label="Regresar"
+              (onClick)="onBack()"
+              variant="outlined"
+              severity="secondary"
+              size="small"
+            />
+          } @else {
+            @if (sale?.status === 'confirmed') {
+              <p-button
+                label="Marcar como entregado"
+                (onClick)="onDeliverSale()"
+                severity="success"
+                size="small"
+                icon="pi pi-check-circle"
+              />
+              <p-button
+                label="Marcar como cancelado"
+                (onClick)="onCancelSale()"
+                severity="danger"
+                variant="outlined"
+                size="small"
+                icon="pi pi-times-circle"
+              />
+            }
+            <p-button
+              label="Regresar"
+              (onClick)="onBack()"
+              variant="outlined"
+              severity="secondary"
+              size="small"
+            />
+          }
         }
-        <p-button
-          label="Regresar"
-          (onClick)="onBack()"
-          variant="outlined"
-          severity="secondary"
-          size="small"
-        />
-        } @else { @if (sale?.status === 'confirmed') {
-        <p-button
-          label="Marcar como entregado"
-          (onClick)="onDeliverSale()"
-          severity="success"
-          size="small"
-          icon="pi pi-check-circle"
-        />
-        <p-button
-          label="Marcar como cancelado"
-          (onClick)="onCancelSale()"
-          severity="danger"
-          variant="outlined"
-          size="small"
-          icon="pi pi-times-circle"
-        />
-        }
-        <p-button
-          label="Regresar"
-          (onClick)="onBack()"
-          variant="outlined"
-          severity="secondary"
-          size="small"
-        />
-        } }
       </div>
     </div>
   </div>
@@ -577,194 +628,207 @@
     <div class="bg-white rounded-2xl shadow-lg p-10">
       <h2 class="text-lg font-semibold mb-4">Registro de Pagos</h2>
       <div class="w-full">
-        @if (showPaymentSection) { @if (sale?.status === 'cancelled') {
-        <div
-          class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700"
-        >
-          <i class="pi pi-times-circle"></i>
-          <span class="font-medium text-sm">Venta cancelada - No se admiten más pagos</span>
-        </div>
-        } @if (payments.length === 0 && !isAddingPayment) {
-        <div
-          class="flex flex-col items-center py-8 border-2 border-dashed border-gray-400 rounded-2xl"
-        >
-          <i class="pi pi-receipt text-5xl! text-gray-400!"></i>
-          <p class="text-gray-400 font-semibold mt-4">Aún no hay pagos registrados</p>
-        </div>
-        } @else {
-        <div class="space-y-4 max-h-74.5 overflow-y-scroll">
-          @if (isAddingPayment) {
-          <div class="p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
-            <form [formGroup]="paymentForm">
-              <div class="flex justify-between items-start">
-                <div class="flex-1">
-                  <div class="flex items-center justify-between gap-2 mb-2">
-                    <label for="PaymentMethod" class="text-sm">Método de pago: </label>
-                    <p-select
-                      id="PaymentMethod"
-                      [options]="paymentMethods"
-                      formControlName="paymentMethodId"
-                      optionLabel="name"
-                      optionValue="id"
-                      class="w-[14rem] text-sm!"
-                      size="small"
-                    />
-                  </div>
-                  <div class="flex items-center justify-between gap-2 mb-2">
-                    <label for="PaymentMethod" class="text-sm">Monto a pagar: </label>
-                    <div class="w-[14rem]">
-                      <p-inputnumber
-                        id="Amount"
-                        formControlName="amount"
-                        mode="decimal"
-                        [min]="0"
-                        [minFractionDigits]="2"
-                        [maxFractionDigits]="2"
-                        [showButtons]="false"
-                        [prefix]="'Q  '"
+        @if (showPaymentSection) {
+          @if (sale?.status === 'cancelled') {
+            <div
+              class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700"
+            >
+              <i class="pi pi-times-circle"></i>
+              <span class="font-medium text-sm">Venta cancelada - No se admiten más pagos</span>
+            </div>
+          }
+          @if (payments.length === 0 && !isAddingPayment) {
+            <div
+              class="flex flex-col items-center py-8 border-2 border-dashed border-gray-400 rounded-2xl"
+            >
+              <i class="pi pi-receipt text-5xl! text-gray-400!"></i>
+              <p class="text-gray-400 font-semibold mt-4">Aún no hay pagos registrados</p>
+            </div>
+          } @else {
+            <div class="space-y-4 max-h-74.5 overflow-y-scroll">
+              @if (isAddingPayment) {
+                <div class="p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
+                  <form [formGroup]="paymentForm">
+                    <div class="flex justify-between items-start">
+                      <div class="flex-1">
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                          <label for="PaymentMethod" class="text-sm">Método de pago: </label>
+                          <p-select
+                            id="PaymentMethod"
+                            [options]="paymentMethods"
+                            formControlName="paymentMethodId"
+                            optionLabel="name"
+                            optionValue="id"
+                            class="w-[14rem] text-sm!"
+                            size="small"
+                          />
+                        </div>
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                          <label for="PaymentMethod" class="text-sm">Monto a pagar: </label>
+                          <div class="w-[14rem]">
+                            <p-inputnumber
+                              id="Amount"
+                              formControlName="amount"
+                              mode="decimal"
+                              [min]="0"
+                              [minFractionDigits]="2"
+                              [maxFractionDigits]="2"
+                              [showButtons]="false"
+                              [prefix]="'Q  '"
+                              size="small"
+                              fluid
+                            />
+                          </div>
+                        </div>
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                          <label for="PaymentDate" class="text-sm">Fecha de pago: </label>
+                          <div class="w-[14rem]">
+                            <p-datepicker
+                              formControlName="date"
+                              [iconDisplay]="'input'"
+                              [showIcon]="true"
+                              inputId="PaymentDate"
+                              class="w-full"
+                              size="small"
+                              fluid
+                            />
+                          </div>
+                        </div>
+                        <div class="flex items-center justify-between gap-2">
+                          <label for="PaymentDate" class="text-sm">Agregar nota: </label>
+                          <div class="w-[14rem]">
+                            <textarea
+                              pTextarea
+                              rows="1"
+                              placeholder="Escribe aqui..."
+                              formControlName="notes"
+                              [autoResize]="true"
+                              pSize="small"
+                              class="w-full"
+                            ></textarea>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <hr class="w-full border-gray-300 my-2.5" />
+                    <div class="grid grid-cols-2 gap-6">
+                      <p-button
+                        label="Registrar Pago"
+                        (onClick)="registerPayment()"
+                        icon="pi pi-check"
+                        severity="success"
                         size="small"
                         fluid
-                      />
-                    </div>
-                  </div>
-                  <div class="flex items-center justify-between gap-2 mb-2">
-                    <label for="PaymentDate" class="text-sm">Fecha de pago: </label>
-                    <div class="w-[14rem]">
-                      <p-datepicker
-                        formControlName="date"
-                        [iconDisplay]="'input'"
-                        [showIcon]="true"
-                        inputId="PaymentDate"
-                        class="w-full"
+                      ></p-button>
+                      <p-button
+                        label="Cancelar"
+                        (onClick)="cancelPayment()"
+                        icon="pi pi-times"
+                        severity="danger"
+                        variant="outlined"
                         size="small"
                         fluid
-                      />
+                      ></p-button>
                     </div>
-                  </div>
-                  <div class="flex items-center justify-between gap-2">
-                    <label for="PaymentDate" class="text-sm">Agregar nota: </label>
-                    <div class="w-[14rem]">
-                      <textarea
-                        pTextarea
-                        rows="1"
-                        placeholder="Escribe aqui..."
-                        formControlName="notes"
-                        [autoResize]="true"
-                        pSize="small"
-                        class="w-full"
-                      ></textarea>
+                  </form>
+                </div>
+              }
+              @for (payment of payments; track payment.id) {
+                <div class="p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
+                  <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2 mb-2">
+                        <span class="font-semibold">{{ payment.paymentMethod.name }}</span>
+                        <span class="text-green-600 font-bold">{{
+                          payment.amount | currency: 'Q '
+                        }}</span>
+                        <span
+                          class="text-xs px-2 py-1 rounded-full"
+                          [ngClass]="{
+                            'bg-green-100 text-green-800': payment.status === 'completed',
+                            'bg-yellow-100 text-yellow-800': payment.status === 'pending',
+                            'bg-red-100 text-red-800': payment.status === 'cancelled',
+                          }"
+                        >
+                          {{ payment.status | paymentStatus }}
+                        </span>
+                      </div>
+
+                      <div class="text-sm text-gray-500 space-y-1">
+                        <p>
+                          <i class="pi pi-calendar"></i> {{ payment.date | date: 'dd/MM/yyyy' }}
+                        </p>
+
+                        @if (payment.referenceNumber) {
+                          <p>
+                            <i class="pi pi-hashtag"></i> Referencia: {{ payment.referenceNumber }}
+                          </p>
+                        }
+                        @if (payment.bankAccount) {
+                          <p><i class="pi pi-building"></i> Cuenta: {{ payment.bankAccount }}</p>
+                        }
+                        @if (payment.externalTransactionId) {
+                          <p>
+                            <i class="pi pi-id-card"></i> Transacción:
+                            {{ payment.externalTransactionId }}
+                          </p>
+                        }
+                        @if (payment.notes) {
+                          <p class="mt-2 italic text-gray-600">
+                            <i class="pi pi-comment"></i> {{ payment.notes }}
+                          </p>
+                        }
+
+                        <p class="text-xs text-gray-400 mt-2">
+                          <i class="pi pi-clock"></i> Registrado:
+                          {{ payment.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+                        </p>
+                      </div>
                     </div>
+
+                    @if (['confirmed', 'delivered'].includes(sale?.status || '')) {
+                      <div class="flex flex-col gap-2">
+                        @if (payment.status === 'pending') {
+                          <button
+                            pButton
+                            icon="pi pi-check"
+                            class="p-button-rounded p-button-text p-button-success"
+                            [title]="'Marcar como completado'"
+                          ></button>
+                        }
+
+                        <button
+                          pButton
+                          icon="pi pi-trash"
+                          class="p-button-rounded p-button-text p-button-danger"
+                          [title]="'Eliminar pago'"
+                        ></button>
+                      </div>
+                    }
                   </div>
                 </div>
-              </div>
-              <hr class="w-full border-gray-300 my-2.5" />
-              <div class="grid grid-cols-2 gap-6">
-                <p-button
-                  label="Registrar Pago"
-                  (onClick)="registerPayment()"
-                  icon="pi pi-check"
-                  severity="success"
-                  size="small"
-                  fluid
-                ></p-button>
-                <p-button
-                  label="Cancelar"
-                  (onClick)="cancelPayment()"
-                  icon="pi pi-times"
-                  severity="danger"
-                  variant="outlined"
-                  size="small"
-                  fluid
-                ></p-button>
-              </div>
-            </form>
-          </div>
-          } @for (payment of payments; track payment.id) {
-          <div class="p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
-            <div class="flex justify-between items-start">
-              <div class="flex-1">
-                <div class="flex items-center gap-2 mb-2">
-                  <span class="font-semibold">{{ payment.paymentMethod.name }}</span>
-                  <span class="text-green-600 font-bold">{{
-                    payment.amount | currency : 'Q '
-                  }}</span>
-                  <span
-                    class="text-xs px-2 py-1 rounded-full"
-                    [ngClass]="{
-                      'bg-green-100 text-green-800': payment.status === 'completed',
-                      'bg-yellow-100 text-yellow-800': payment.status === 'pending',
-                      'bg-red-100 text-red-800': payment.status === 'cancelled'
-                    }"
-                  >
-                    {{ payment.status | paymentStatus }}
-                  </span>
-                </div>
-
-                <div class="text-sm text-gray-500 space-y-1">
-                  <p><i class="pi pi-calendar"></i> {{ payment.date | date : 'dd/MM/yyyy' }}</p>
-
-                  @if (payment.referenceNumber) {
-                  <p><i class="pi pi-hashtag"></i> Referencia: {{ payment.referenceNumber }}</p>
-                  } @if (payment.bankAccount) {
-                  <p><i class="pi pi-building"></i> Cuenta: {{ payment.bankAccount }}</p>
-                  } @if (payment.externalTransactionId) {
-                  <p>
-                    <i class="pi pi-id-card"></i> Transacción: {{ payment.externalTransactionId }}
-                  </p>
-                  } @if (payment.notes) {
-                  <p class="mt-2 italic text-gray-600">
-                    <i class="pi pi-comment"></i> {{ payment.notes }}
-                  </p>
-                  }
-
-                  <p class="text-xs text-gray-400 mt-2">
-                    <i class="pi pi-clock"></i> Registrado:
-                    {{ payment.createdAt | date : 'dd/MM/yyyy HH:mm' }}
-                  </p>
-                </div>
-              </div>
-
-              @if (['confirmed', 'delivered'].includes(sale?.status || '')) {
-              <div class="flex flex-col gap-2">
-                @if (payment.status === 'pending') {
-                <button
-                  pButton
-                  icon="pi pi-check"
-                  class="p-button-rounded p-button-text p-button-success"
-                  [title]="'Marcar como completado'"
-                ></button>
-                }
-
-                <button
-                  pButton
-                  icon="pi pi-trash"
-                  class="p-button-rounded p-button-text p-button-danger"
-                  [title]="'Eliminar pago'"
-                ></button>
-              </div>
               }
             </div>
-          </div>
           }
-        </div>
-        } @if (!isAddingPayment && canRegisterPayments) {
-        <div class="mt-8">
-          <p-button
-            label="Agregar Pago"
-            (onClick)="addPayment()"
-            icon="pi pi-plus"
-            severity="info"
-            size="small"
-            fluid
-          ></p-button>
-        </div>
-        } } @else {
-        <div
-          class="flex flex-col items-center py-8 border-2 border-dashed border-gray-400 text-gray-400 rounded-2xl"
-        >
-          <i class="pi pi-info-circle text-5xl!"></i>
-          <p class="font-medium mt-4">El pedido aún no ha sido confirmado.</p>
-        </div>
+          @if (!isAddingPayment && canRegisterPayments) {
+            <div class="mt-8">
+              <p-button
+                label="Agregar Pago"
+                (onClick)="addPayment()"
+                icon="pi pi-plus"
+                severity="info"
+                size="small"
+                fluid
+              ></p-button>
+            </div>
+          }
+        } @else {
+          <div
+            class="flex flex-col items-center py-8 border-2 border-dashed border-gray-400 text-gray-400 rounded-2xl"
+          >
+            <i class="pi pi-info-circle text-5xl!"></i>
+            <p class="font-medium mt-4">El pedido aún no ha sido confirmado.</p>
+          </div>
         }
       </div>
     </div>
@@ -790,7 +854,7 @@
             />
           </div>
           @if (orderForm.get('branchId')?.invalid && orderForm.get('branchId')?.touched) {
-          <small class="text-red-500 mt-1">La sucursal es requerida.</small>
+            <small class="text-red-500 mt-1">La sucursal es requerida.</small>
           }
         </div>
         <div class="flex flex-col pt-8">
@@ -827,6 +891,9 @@
           pButton
           label="Enviar Recibo"
           size="small"
+          icon="pi pi-envelope"
+          [loading]="isSendingTicketEmail"
+          (click)="onSendTicketEmail()"
           [disabled]="!['confirmed', 'delivered'].includes(sale?.status || '')"
           fluid
         ></button>
@@ -837,6 +904,7 @@
             label="Previsualizar"
             class="bg-gray-200! text-green-700! border-none!"
             size="small"
+            (click)="onPreviewTicket()"
             [disabled]="!['confirmed', 'delivered'].includes(sale?.status || '')"
             fluid
           ></button>
@@ -846,11 +914,20 @@
             label="Descargar"
             class="bg-gray-200! text-green-700! border-none!"
             size="small"
+            [loading]="isGeneratingTicket"
+            (click)="onDownloadTicket()"
             [disabled]="!['confirmed', 'delivered'].includes(sale?.status || '')"
             fluid
           ></button>
         </div>
       </section>
+
+      <!-- Hidden Ticket for download generation -->
+      <div style="position: absolute; left: -9999px; top: 0">
+        <div id="hidden-pos-ticket">
+          <app-ticket-template *ngIf="sale" [sale]="sale"></app-ticket-template>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -862,3 +939,10 @@
 >
 </app-sale-discounts>
 <p-confirmDialog />
+
+<app-ticket-preview
+  *ngIf="confirmedSaleData"
+  [sale]="confirmedSaleData"
+  [(visible)]="showTicketPreview"
+>
+</app-ticket-preview>

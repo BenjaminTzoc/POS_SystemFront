@@ -3,20 +3,43 @@ import { AuthService } from '../../auth/auth.service';
 import { Router } from '@angular/router';
 
 import { LowStockAlertsComponent } from '../../shared/notifications/low-stock-alerts/low-stock-alerts.component';
+import { CashRegisterService } from '../../inventory/services/cash-register.service';
+import { CashSession } from '../../inventory/interfaces/cash-register.interface';
+import { CommonModule } from '@angular/common';
+import { signal } from '@angular/core';
+
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [LowStockAlertsComponent],
+  imports: [LowStockAlertsComponent, CommonModule, TooltipModule],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
 })
 export class HeaderComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private cashService = inject(CashRegisterService);
 
   @Input() sidebarCollapsed = false;
   @Output() toggleSidebar = new EventEmitter<boolean>();
+
+  currentCashSession = signal<CashSession | null>(null);
+
+  ngOnInit() {
+    this.checkCashStatus();
+  }
+
+  checkCashStatus() {
+    this.cashService.getStatus().subscribe({
+      next: (res) => this.currentCashSession.set(res.data),
+    });
+  }
+
+  goToCash() {
+    this.router.navigate(['/sales/cash-register']);
+  }
 
   userMenuItems = [
     {

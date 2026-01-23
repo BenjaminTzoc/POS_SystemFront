@@ -17,14 +17,20 @@ import { AuthService } from '../../auth/auth.service';
 import { User } from '../../core/models/user.model';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { CashRegisterService } from '../../inventory/services/cash-register.service';
+import { CashSession } from '../../inventory/interfaces/cash-register.interface';
+import { CommonModule } from '@angular/common';
+
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-sidebar',
-  imports: [RouterLink, RouterLinkActive, ButtonModule],
+  imports: [RouterLink, RouterLinkActive, ButtonModule, CommonModule, TooltipModule],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.css',
 })
 export class SidebarComponent implements OnInit, OnDestroy {
+  private cashService = inject(CashRegisterService);
   @Input() sidebarCollapsed = false;
   @Output() toggleSidebar = new EventEmitter<boolean>();
 
@@ -41,10 +47,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
     private router: Router,
     private authService: AuthService,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
   ) {}
 
+  currentCashSession = signal<CashSession | null>(null);
+
   ngOnInit(): void {
+    this.checkCashStatus();
     this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe(() => {
       this.keepParentOpenOnChildNavigation();
     });
@@ -61,6 +70,16 @@ export class SidebarComponent implements OnInit, OnDestroy {
         });
       },
     });
+  }
+
+  checkCashStatus() {
+    this.cashService.getStatus().subscribe({
+      next: (res) => this.currentCashSession.set(res.data),
+    });
+  }
+
+  goToCash() {
+    this.router.navigate(['/sales/cash-register']);
   }
 
   private filterMenuItemsByPermission(items: MenuItem[], user: User | null): MenuItem[] {
@@ -145,7 +164,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     const activeParent = this.menuItems.find(
       (item) =>
         item.children &&
-        item.children.some((child: any) => child.route && currentUrl.startsWith(child.route))
+        item.children.some((child: any) => child.route && currentUrl.startsWith(child.route)),
     );
 
     if (activeParent) {

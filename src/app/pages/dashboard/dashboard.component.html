@@ -1,137 +1,336 @@
-<div class="p-4 bg-gray-50 min-h-screen">
-  <div class="flex flex-col md:flex-row justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold text-gray-800">Dashboard de Reportes</h1>
-
-    <div class="flex gap-4">
-      <!-- Filtro de Fecha -->
-      <p-datepicker
-        [(ngModel)]="dateRange"
-        selectionMode="range"
-        [readonlyInput]="true"
-        placeholder="Rango de Fechas"
-        (onSelect)="onFilterChange()"
-        [showIcon]="true"
-        styleClass="w-full md:w-64"
-      >
-      </p-datepicker>
-
-      <!-- Filtro de Branch (Opcional, si se tuviera la lista de branches) -->
-      <!-- <p-dropdown ...></p-dropdown> -->
-
-      <!-- Botón de actualización manual -->
-      <p-button icon="pi pi-refresh" (onClick)="loadAllData()"></p-button>
-    </div>
-  </div>
-
-  <!-- KPI Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-    <div class="card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center">
-      <div
-        class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mr-4 text-blue-600"
-      >
-        <i class="pi pi-dollar text-xl"></i>
+<div class="p-8 bg-gray-50/50 min-h-screen">
+  <!-- Header & Filters Header -->
+  <div class="max-w-[1600px] mx-auto mb-10">
+    <!-- Cash Session Alert -->
+    <div
+      *ngIf="!currentCashSession()"
+      class="mb-8 p-4 bg-rose-50 border border-rose-100 rounded-[2rem] flex items-center justify-between gap-4 animate-bounce"
+    >
+      <div class="flex items-center gap-4 px-4">
+        <div class="w-10 h-10 bg-rose-500 text-white rounded-full flex items-center justify-center">
+          <i class="pi pi-lock"></i>
+        </div>
+        <div>
+          <h4 class="font-black text-rose-600 text-sm">CAJA CERRADA</h4>
+          <p class="text-xs text-rose-500 font-medium">
+            Debes abrir una sesión de caja antes de poder realizar ventas en efectivo.
+          </p>
+        </div>
       </div>
+      <button
+        pButton
+        label="Abrir Caja Ahora"
+        icon="pi pi-wallet"
+        (click)="goToCash()"
+        class="p-button-danger p-button-sm !rounded-2xl !px-6 shadow-lg shadow-rose-100 font-bold"
+      ></button>
+    </div>
+
+    <div
+      *ngIf="currentCashSession()"
+      class="mb-8 p-4 bg-emerald-50 border border-emerald-100 rounded-[2rem] flex items-center justify-between gap-4"
+    >
+      <div class="flex items-center gap-4 px-4">
+        <div
+          class="w-10 h-10 bg-emerald-500 text-white rounded-full flex items-center justify-center"
+        >
+          <i class="pi pi-lock-open"></i>
+        </div>
+        <div>
+          <h4 class="font-black text-emerald-600 text-sm">CAJA ABIERTA</h4>
+          <p class="text-xs text-emerald-500 font-medium">
+            Turno iniciado en {{ currentCashSession()?.branchName }} con
+            {{ currentCashSession()?.openingBalance | currency }}.
+          </p>
+        </div>
+      </div>
+      <button
+        pButton
+        label="Gestionar Caja"
+        icon="pi pi-external-link"
+        (click)="goToCash()"
+        class="p-button-success p-button-text p-button-sm !rounded-2xl !px-6 font-bold"
+      ></button>
+    </div>
+
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
       <div>
-        <span class="block text-gray-500 text-sm">Ventas Hoy</span>
-        <span class="block text-2xl font-bold text-gray-800">
-          {{ summary?.totalSalesToday | currency }}
-        </span>
+        <h1 class="text-4xl font-black text-gray-900 tracking-tight">Panel de Control</h1>
+        <p class="text-gray-500 mt-2 text-lg">
+          Visualiza el rendimiento y estado actual de tu negocio.
+        </p>
       </div>
-    </div>
 
-    <div class="card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center">
       <div
-        class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center mr-4 text-orange-600"
+        class="flex flex-wrap items-center gap-4 bg-white p-3 rounded-3xl shadow-sm border border-gray-100"
       >
-        <i class="pi pi-shopping-cart text-xl"></i>
-      </div>
-      <div>
-        <span class="block text-gray-500 text-sm">Órdenes Pendientes</span>
-        <span class="block text-2xl font-bold text-gray-800">
-          {{ summary?.pendingOrdersCount }}
-        </span>
-      </div>
-    </div>
+        <!-- Branch Selector (Admins Only) -->
+        <div *ngIf="canFilterByBranch" class="flex items-center gap-3 px-3">
+          <i class="pi pi-map-marker text-indigo-500"></i>
+          <p-select
+            [options]="branches"
+            [(ngModel)]="selectedBranchId"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Todas las sucursales"
+            [showClear]="true"
+            (onChange)="onFilterChange()"
+            styleClass="!border-none !shadow-none !bg-transparent w-56 font-semibold"
+          ></p-select>
+        </div>
 
-    <div class="card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center">
-      <div
-        class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mr-4 text-green-600"
-      >
-        <i class="pi pi-box text-xl"></i>
-      </div>
-      <div>
-        <span class="block text-gray-500 text-sm">Valor Inventario</span>
-        <span class="block text-2xl font-bold text-gray-800">
-          {{ summary?.inventoryValue | currency }}
-        </span>
-      </div>
-    </div>
+        <div class="w-px h-8 bg-gray-100 hidden md:block" *ngIf="canFilterByBranch"></div>
 
-    <div class="card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center">
-      <div
-        class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mr-4 text-red-600"
-      >
-        <i class="pi pi-exclamation-circle text-xl"></i>
-      </div>
-      <div>
-        <span class="block text-gray-500 text-sm">Bajo Stock</span>
-        <span class="block text-2xl font-bold text-gray-800">
-          {{ summary?.lowStockProductsCount }}
-        </span>
-      </div>
-    </div>
-  </div>
+        <!-- Date Range Picker -->
+        <div class="flex items-center gap-3 px-3">
+          <i class="pi pi-calendar text-indigo-500"></i>
+          <p-datepicker
+            [(ngModel)]="dateRange"
+            selectionMode="range"
+            [readonlyInput]="true"
+            placeholder="Seleccionar rango"
+            (onSelect)="onFilterChange()"
+            [showIcon]="false"
+            styleClass="!border-none !shadow-none !bg-transparent w-64 font-semibold"
+          ></p-datepicker>
+        </div>
 
-  <!-- Charts Row 1 -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-    <!-- Sales Trends (Wider) -->
-    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-      <h3 class="text-xl font-semibold mb-4 text-gray-800">Tendencia de Ventas (Últimos 7 días)</h3>
-      <p-chart
-        type="line"
-        [data]="salesTrendData"
-        [options]="salesTrendOptions"
-        height="300px"
-      ></p-chart>
-    </div>
-
-    <!-- Category Distribution -->
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-      <h3 class="text-xl font-semibold mb-4 text-gray-800">Por Categoría</h3>
-      <div class="flex justify-center">
-        <p-chart
-          type="doughnut"
-          [data]="categoriesData"
-          [options]="categoriesOptions"
-          height="300px"
-        ></p-chart>
+        <button
+          pButton
+          icon="pi pi-refresh"
+          [loading]="isLoadingSummary"
+          (click)="loadAllData()"
+          class="p-button-rounded p-button-text p-button-secondary hover:!bg-gray-100"
+        ></button>
       </div>
     </div>
   </div>
 
-  <!-- Charts Row 2 -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <!-- Top Selling Products -->
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-      <h3 class="text-xl font-semibold mb-4 text-gray-800">Productos Más Vendidos</h3>
-      <p-chart
-        type="bar"
-        [data]="topProductsData"
-        [options]="topProductsOptions"
-        height="300px"
-      ></p-chart>
+  <div class="max-w-[1600px] mx-auto space-y-10">
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
+      <!-- Total Sales Today -->
+      <div
+        class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-gray-200/40 border border-gray-50 flex items-center gap-6 transition-all hover:scale-[1.02] hover:shadow-2xl"
+      >
+        <div
+          class="w-16 h-16 rounded-[1.25rem] bg-indigo-50 flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all"
+        >
+          <i class="pi pi-dollar text-2xl"></i>
+        </div>
+        <div>
+          <span class="block text-gray-400 font-bold text-xs uppercase tracking-widest mb-1"
+            >Ventas de Hoy</span
+          >
+          <h2 class="text-3xl font-black text-gray-800">
+            <span *ngIf="!isLoadingSummary">{{
+              summary?.totalSalesToday | currency: 'USD' : 'symbol' : '1.2-2'
+            }}</span>
+            <span
+              *ngIf="isLoadingSummary"
+              class="animate-pulse bg-gray-100 rounded block h-8 w-24"
+            ></span>
+          </h2>
+        </div>
+      </div>
+
+      <!-- Pending Orders -->
+      <div
+        class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-gray-200/40 border border-gray-50 flex items-center gap-6 transition-all hover:scale-[1.02] hover:shadow-2xl"
+      >
+        <div
+          class="w-16 h-16 rounded-[1.25rem] bg-amber-50 flex items-center justify-center text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-all"
+        >
+          <i class="pi pi-shopping-cart text-2xl"></i>
+        </div>
+        <div>
+          <span class="block text-gray-400 font-bold text-xs uppercase tracking-widest mb-1"
+            >Órdenes Pendientes</span
+          >
+          <h2 class="text-3xl font-black text-gray-800">
+            <span *ngIf="!isLoadingSummary">{{ summary?.pendingOrdersCount }}</span>
+            <span
+              *ngIf="isLoadingSummary"
+              class="animate-pulse bg-gray-100 rounded block h-8 w-12"
+            ></span>
+          </h2>
+        </div>
+      </div>
+
+      <!-- Inventory Value -->
+      <div
+        class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-gray-200/40 border border-gray-50 flex items-center gap-6 transition-all hover:scale-[1.02] hover:shadow-2xl"
+      >
+        <div
+          class="w-16 h-16 rounded-[1.25rem] bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white transition-all"
+        >
+          <i class="pi pi-box text-2xl"></i>
+        </div>
+        <div>
+          <span class="block text-gray-400 font-bold text-xs uppercase tracking-widest mb-1"
+            >Valor Inventario</span
+          >
+          <h2 class="text-3xl font-black text-gray-800">
+            <span *ngIf="!isLoadingSummary">{{
+              summary?.inventoryValue | currency: 'USD' : 'symbol' : '1.2-0'
+            }}</span>
+            <span
+              *ngIf="isLoadingSummary"
+              class="animate-pulse bg-gray-100 rounded block h-8 w-28"
+            ></span>
+          </h2>
+        </div>
+      </div>
+
+      <!-- Low Stock Alert -->
+      <div
+        class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-gray-200/40 border border-gray-50 flex items-center gap-6 transition-all hover:scale-[1.02] hover:shadow-2xl"
+      >
+        <div
+          class="w-16 h-16 rounded-[1.25rem] bg-rose-50 flex items-center justify-center text-rose-600 group-hover:bg-rose-500 group-hover:text-white transition-all"
+        >
+          <i class="pi pi-exclamation-triangle text-2xl"></i>
+        </div>
+        <div>
+          <span class="block text-gray-400 font-bold text-xs uppercase tracking-widest mb-1"
+            >Bajo Stock</span
+          >
+          <h2 class="text-3xl font-black text-gray-800">
+            <span
+              *ngIf="!isLoadingSummary"
+              [class.text-rose-600]="(summary?.lowStockProductsCount || 0) > 0"
+            >
+              {{ summary?.lowStockProductsCount }}
+            </span>
+            <span
+              *ngIf="isLoadingSummary"
+              class="animate-pulse bg-gray-100 rounded block h-8 w-12"
+            ></span>
+          </h2>
+        </div>
+      </div>
     </div>
 
-    <!-- Payment Methods -->
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-      <h3 class="text-xl font-semibold mb-4 text-gray-800">Métodos de Pago</h3>
-      <div class="flex justify-center">
-        <p-chart
-          type="pie"
-          [data]="paymentMethodsData"
-          [options]="paymentMethodsOptions"
-          height="300px"
-        ></p-chart>
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Sales Trend Chart (Wider) -->
+      <div
+        class="lg:col-span-2 bg-white p-10 rounded-[2.5rem] shadow-xl shadow-gray-200/40 border border-gray-50"
+      >
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <h3 class="text-xl font-black text-gray-800 tracking-tight">Tendencias de Venta</h3>
+            <p class="text-gray-400 text-sm font-medium">
+              Volumen de ventas vs cantidad de órdenes
+            </p>
+          </div>
+          <p-button
+            icon="pi pi-ellipsis-h"
+            class="p-button-text p-button-rounded p-button-secondary"
+          ></p-button>
+        </div>
+        <div class="relative min-h-[400px]">
+          <div
+            *ngIf="isLoadingTrends"
+            class="absolute inset-0 z-10 bg-white/50 backdrop-blur-sm flex items-center justify-center rounded-[2rem]"
+          >
+            <i class="pi pi-spin pi-spinner text-3xl text-indigo-600"></i>
+          </div>
+          <p-chart
+            type="line"
+            [data]="salesTrendData"
+            [options]="salesTrendOptions"
+            height="400px"
+          ></p-chart>
+        </div>
+      </div>
+
+      <!-- Product Distribution by Category -->
+      <div
+        class="bg-white p-10 rounded-[2.5rem] shadow-xl shadow-gray-200/40 border border-gray-50"
+      >
+        <div class="mb-8 font-black text-xl text-gray-800 tracking-tight">
+          Distribución por Categorías
+        </div>
+        <div class="relative min-h-[400px] flex items-center justify-center">
+          <div
+            *ngIf="isLoadingCategories"
+            class="absolute inset-0 z-10 bg-white/50 backdrop-blur-sm flex items-center justify-center rounded-[2rem]"
+          >
+            <i class="pi pi-spin pi-spinner text-3xl text-indigo-600"></i>
+          </div>
+          <p-chart
+            type="doughnut"
+            [data]="categoriesData"
+            [options]="categoriesOptions"
+            height="350px"
+          ></p-chart>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Row Charts -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+      <!-- Top Selling Products Table-like view -->
+      <div
+        class="bg-white p-10 rounded-[2.5rem] shadow-xl shadow-gray-200/40 border border-gray-50"
+      >
+        <div class="flex items-center justify-between mb-8">
+          <h3 class="text-xl font-black text-gray-800 tracking-tight">Productos Estrella</h3>
+          <span
+            class="text-xs font-bold px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full uppercase"
+            >Top 5</span
+          >
+        </div>
+        <div class="space-y-6">
+          <div
+            *ngIf="topProducts.length === 0 && !isLoadingTopProducts"
+            class="text-gray-400 italic text-center py-10"
+          >
+            No hay datos de productos estrella en este periodo.
+          </div>
+          <div
+            *ngFor="let prod of topProducts; let i = index"
+            class="flex items-center gap-4 transition-all hover:translate-x-1"
+          >
+            <div
+              class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center font-black text-gray-400 group-hover:text-indigo-600"
+            >
+              #{{ i + 1 }}
+            </div>
+            <div class="flex-1">
+              <div class="font-bold text-gray-700">{{ prod.productName }}</div>
+              <div class="text-xs text-gray-400">{{ prod.quantity }} unidades vendidas</div>
+            </div>
+            <div class="text-right">
+              <div class="font-black text-indigo-600">{{ prod.revenue | currency }}</div>
+              <div class="text-[10px] text-gray-300 font-bold uppercase tracking-tight">
+                Ingresos
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Methods distribution -->
+      <div
+        class="bg-white p-10 rounded-[2.5rem] shadow-xl shadow-gray-200/40 border border-gray-50"
+      >
+        <div class="mb-8 font-black text-xl text-gray-800 tracking-tight">Preferencia de Pagos</div>
+        <div class="relative min-h-[300px] flex items-center justify-center">
+          <div
+            *ngIf="isLoadingPaymentMethods"
+            class="absolute inset-0 z-10 bg-white/50 backdrop-blur-sm flex items-center justify-center rounded-[2rem]"
+          >
+            <i class="pi pi-spin pi-spinner text-3xl text-indigo-600"></i>
+          </div>
+          <p-chart
+            type="pie"
+            [data]="paymentMethodsData"
+            [options]="paymentMethodsOptions"
+            height="300px"
+          ></p-chart>
+        </div>
       </div>
     </div>
   </div>

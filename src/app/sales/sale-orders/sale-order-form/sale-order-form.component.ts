@@ -39,20 +39,32 @@ import { IPaymentMethod, ISalePayment } from '../../interfaces/sale-payment.inte
 import { PaymentStatusPipe } from '../../../shared/pipes/payment-status.pipe';
 import { AuthService } from '../../../auth/auth.service';
 import { BranchesService } from '../../../inventory/services/branches.service';
+import { CashRegisterService } from '../../../inventory/services/cash-register.service';
+import { CashSession } from '../../../inventory/interfaces/cash-register.interface';
+import { TicketPreviewComponent } from '../ticket-preview/ticket-preview.component';
+import { TicketTemplateComponent } from '../../../shared/components/ticket-template/ticket-template.component';
+import { PrintService } from '../../../shared/services/print.service';
 
 @Component({
   selector: 'app-sale-order-form',
   //prettier-ignore
-  imports: [ReactiveFormsModule, FormsModule, RadioButtonModule, FloatLabelModule, InputTextModule, CurrencyPipe, ButtonModule, DatePickerModule, TableModule, DialogModule, SelectModule, InputNumberModule, TextareaModule, CommonModule, AutoCompleteModule, ProductSearchComponent, SaleDiscountsComponent, SaleStatusPipe, PaymentStatusPipe, TooltipModule, ConfirmDialogModule, TagModule],
+  imports: [ReactiveFormsModule, FormsModule, RadioButtonModule, FloatLabelModule, InputTextModule, CurrencyPipe, ButtonModule, DatePickerModule, TableModule, DialogModule, SelectModule, InputNumberModule, TextareaModule, CommonModule, AutoCompleteModule, ProductSearchComponent, SaleDiscountsComponent, SaleStatusPipe, PaymentStatusPipe, TooltipModule, ConfirmDialogModule, TagModule, TicketPreviewComponent, TicketTemplateComponent],
   templateUrl: './sale-order-form.component.html',
   styleUrl: './sale-order-form.component.css',
   providers: [ConfirmationService],
 })
 export class SaleOrderFormComponent implements OnInit, OnDestroy {
+  // Ticket Preview
+  showTicketPreview = false;
+  confirmedSaleData: ISaleOrderResponse | null = null;
+  isGeneratingTicket = false;
+  isSendingTicketEmail = false;
+
   private saleCalculator = inject(SaleCalculatorService);
   private detailManager = inject(SaleDetailManagerService);
   private ordersService = inject(OrdersService);
   private customersService = inject(CustomersService);
+  private printService = inject(PrintService);
   private paymentMethodsService = inject(PaymentMethodsService);
   private salePaymentsService = inject(SalePaymentsService);
   private saleOrderWs = inject(SaleOrderWsService);
@@ -63,7 +75,12 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   private branchesService = inject(BranchesService);
   private authService = inject(AuthService);
   private confirmationService = inject(ConfirmationService);
+  private cashService = inject(CashRegisterService);
   private destroy$ = new Subject<void>();
+
+  // Cash status
+  currentCashSession: CashSession | null = null;
+  isLoadingCashStatus = false;
 
   selectedCustomerType: any = null;
   customerTypes: any[] = [
@@ -133,6 +150,8 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
       this.saleId = params['id'] ?? null;
       this.isEditing = !!this.saleId;
 
+      this.checkCashStatus(); // Added cash check
+
       // Cargamos catálogos necesarios para ambos modos
       this.loadCustomers();
       this.loadBranches();
@@ -143,6 +162,25 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
         this.initializeForNewOrder();
       }
     });
+  }
+
+  private checkCashStatus() {
+    this.isLoadingCashStatus = true;
+    this.cashService.getStatus().subscribe({
+      next: (res) => {
+        this.currentCashSession = res.data;
+        this.isLoadingCashStatus = false;
+      },
+      error: () => (this.isLoadingCashStatus = false),
+    });
+  }
+
+  get isCashClosed(): boolean {
+    return !this.currentCashSession && !this.isLoadingCashStatus;
+  }
+
+  goToCash() {
+    this.router.navigate(['/sales/cash-register']);
   }
 
   private initializeForNewOrder() {
@@ -669,7 +707,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
     this.totals = this.saleCalculator.calculateTotals(
       this.detailManager.getDetails(),
       this.discounts,
-      this.applyTax
+      this.applyTax,
     );
   }
 
@@ -868,6 +906,8 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
               summary: 'Éxito',
               detail: 'Venta confirmada correctamente.',
             });
+            this.confirmedSaleData = res.data;
+            this.showTicketPreview = true;
             this.loadSale(res.data.id);
           },
           error: (err) => {
@@ -941,7 +981,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   }
 
   getStatusSeverity(
-    status: string
+    status: string,
   ): 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' {
     switch (status) {
       case 'pending':
@@ -963,6 +1003,66 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
 
   onBack(): void {
     this.router.navigate(['/sales/orders']);
+  }
+
+  // -------------------- TICKETS --------------------
+
+  onPreviewTicket() {
+    this.confirmedSaleData = this.sale;
+    this.showTicketPreview = true;
+  }
+
+  async onDownloadTicket() {
+    try {
+      this.isGeneratingTicket = true;
+      // Small delay to ensure hidden template is rendered
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      const blob = await this.printService.generatePDF('hidden-pos-ticket');
+      this.printService.downloadPDF(blob, `ticket-${this.sale?.invoiceNumber}`);
+    } catch (error) {
+      console.error(error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo generar el documento',
+      });
+    } finally {
+      this.isGeneratingTicket = false;
+    }
+  }
+
+  onSendTicketEmail() {
+    if (!this.sale?.id || this.isSendingTicketEmail) return;
+
+    if (!this.sale.customer?.email) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sin Email',
+        detail: 'El cliente no tiene un correo electrónico registrado.',
+      });
+      return;
+    }
+
+    this.isSendingTicketEmail = true;
+    this.ordersService.sendTicketByEmail(this.sale.id).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Enviado',
+          detail: 'Ticket enviado exitosamente por correo.',
+        });
+        this.isSendingTicketEmail = false;
+      },
+      error: (err) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Fallo al enviar el correo.',
+        });
+        this.isSendingTicketEmail = false;
+      },
+    });
   }
 
   ngOnDestroy(): void {

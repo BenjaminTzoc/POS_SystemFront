@@ -1,0 +1,111 @@
+.ticket-container {
+  width: 80mm;
+  padding: 5mm;
+  background-color: white;
+  color: black;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10pt;
+  line-height: 1.2;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 4mm;
+}
+
+.logo-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 3mm;
+}
+
+.logo {
+  max-width: 30mm;
+  height: auto;
+  filter: grayscale(100%); /* Thermal printers are B&W */
+}
+
+.company-name {
+  font-size: 13pt;
+  font-weight: bold;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.company-info {
+  margin: 0;
+  font-size: 9pt;
+}
+
+.divider {
+  border: none;
+  border-top: 1px dashed black;
+  margin: 3mm 0;
+}
+
+.sale-info p {
+  margin: 1mm 0;
+  font-size: 9pt;
+}
+
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9pt;
+}
+
+.items-table th {
+  text-align: left;
+  border-bottom: 1px solid black;
+  padding-bottom: 1mm;
+  text-transform: uppercase;
+}
+
+.items-table td {
+  padding: 2mm 0;
+  vertical-align: top;
+}
+
+.discount-text {
+    font-style: italic;
+    color: #333;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.totals {
+  margin-top: 3mm;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1mm;
+  font-size: 10pt;
+}
+
+.grand-total {
+  font-size: 12pt;
+  font-weight: bold;
+  margin-top: 2mm;
+  border-top: 1px solid black;
+  padding-top: 1mm;
+}
+
+.payments-info {
+    margin-top: 2mm;
+    font-size: 9pt;
+}
+
+.footer {
+  text-align: center;
+  margin-top: 8mm;
+  font-size: 8pt;
+}
+
+.legal-text {
+    margin-top: 4mm;
+    line-height: 1.1;
+}

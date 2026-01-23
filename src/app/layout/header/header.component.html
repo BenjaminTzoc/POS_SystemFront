@@ -1,10 +1,47 @@
 <header
-  class="fixed inset-0 flex items-center w-full h-20 px-6 transition-all duration-300 border-b border-gray-200 bg-white shadow-md shadow-gray-200 z-10"
+  class="fixed inset-0 flex items-center justify-end w-full h-20 px-8 transition-all duration-300 border-b border-gray-100 bg-white/80 backdrop-blur-md z-10"
   [class.ml-20]="sidebarCollapsed"
   [class.ml-64]="!sidebarCollapsed"
 >
-  <div class="flex-1"></div>
-  <div class="flex items-center gap-4">
+  <div class="flex items-center gap-4 mr-16">
+    <!-- Cash Status Indicator -->
+    <div
+      (click)="goToCash()"
+      class="flex items-center gap-4 px-5 py-2.5 rounded-[1.25rem] cursor-pointer transition-all duration-300 hover:shadow-lg border border-transparent group select-none mr-4"
+      [ngClass]="
+        currentCashSession()
+          ? 'bg-emerald-50 hover:bg-emerald-100/50 border-emerald-100/30'
+          : 'bg-rose-50 hover:bg-rose-100/50 border-rose-100/30'
+      "
+      pTooltip="Ver detalle de turno y caja"
+      tooltipPosition="bottom"
+    >
+      <div class="relative flex items-center justify-center">
+        <div
+          class="w-3 h-3 rounded-full transition-all duration-500"
+          [ngClass]="
+            currentCashSession()
+              ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)] animate-pulse'
+              : 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.4)]'
+          "
+        ></div>
+      </div>
+      <div class="flex flex-col">
+        <span
+          class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1 group-hover:text-gray-500 transition-colors"
+          >Estado de Caja</span
+        >
+        <span
+          class="text-xs font-black leading-none uppercase tracking-tight"
+          [ngClass]="currentCashSession() ? 'text-emerald-600' : 'text-rose-600'"
+        >
+          {{ currentCashSession() ? 'Sesión Activa' : 'Turno Cerrado' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="w-px h-10 bg-gray-100 mx-2"></div>
+
     <app-low-stock-alerts></app-low-stock-alerts>
   </div>
 </header>

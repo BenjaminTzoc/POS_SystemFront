@@ -45,27 +45,27 @@
         RECURRENTES
       </small>
       <section class="flex flex-col gap-1">
-        @for(item of recurrentItems(); track item.label) {
-        <a
-          [routerLink]="item.route"
-          routerLinkActive="bg-blue-50 text-blue-600"
-          [routerLinkActiveOptions]="{ exact: true }"
-          class="flex items-center justify-between py-2.5 rounded-lg cursor-pointer hover:bg-gray-100 transition-all duration-300"
-          [class]="!sidebarCollapsed ? 'px-3' : 'px-3'"
-        >
-          <div class="flex gap-3 items-center">
-            <i [class]="item.icon" class="scale-105"></i>
-            <span
-              class="text-base/tight m-0"
-              [class.opacity-0]="sidebarCollapsed"
-              [class.opacity-100]="!sidebarCollapsed"
-              [class.w-0]="sidebarCollapsed"
-              [class.w-auto]="!sidebarCollapsed"
-            >
-              {{ item.label }}
-            </span>
-          </div>
-        </a>
+        @for (item of recurrentItems(); track item.label) {
+          <a
+            [routerLink]="item.route"
+            routerLinkActive="bg-blue-50 text-blue-600"
+            [routerLinkActiveOptions]="{ exact: true }"
+            class="flex items-center justify-between py-2.5 rounded-lg cursor-pointer hover:bg-gray-100 transition-all duration-300"
+            [class]="!sidebarCollapsed ? 'px-3' : 'px-3'"
+          >
+            <div class="flex gap-3 items-center">
+              <i [class]="item.icon" class="scale-105"></i>
+              <span
+                class="text-base/tight m-0"
+                [class.opacity-0]="sidebarCollapsed"
+                [class.opacity-100]="!sidebarCollapsed"
+                [class.w-0]="sidebarCollapsed"
+                [class.w-auto]="!sidebarCollapsed"
+              >
+                {{ item.label }}
+              </span>
+            </div>
+          </a>
         }
       </section>
     </section>
@@ -149,11 +149,11 @@
       </section>
     </section> -->
   </div>
-  <div class="absolute bottom-5 px-5 w-full flex justify-center">
+  <div class="absolute bottom-5 px-5 w-full flex flex-col gap-3">
     <p-button
       icon="pi pi-sign-out"
       (click)="confirmLogout()"
-      label="Cerrar Sesión"
+      [label]="sidebarCollapsed ? '' : 'Cerrar Sesión'"
       severity="danger"
       fluid
       class="w-full"

@@ -1,0 +1,49 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [header]="'Previsualización de Ticket - ' + sale?.invoiceNumber"
+  [style]="{ width: '450px' }"
+  [draggable]="false"
+  [resizable]="false"
+  appendTo="body"
+  (onHide)="onClose()"
+>
+  <div class="preview-content">
+    <!-- The actual ticket template that will be captured -->
+    <div class="ticket-wrapper">
+      <app-ticket-template *ngIf="sale" [sale]="sale"></app-ticket-template>
+    </div>
+
+    <div class="actions-grid mt-4">
+      <p-button
+        label="Imprimir"
+        icon="pi pi-print"
+        severity="primary"
+        [loading]="isGenerating()"
+        (click)="onPrint()"
+        styleClass="w-full"
+      >
+      </p-button>
+
+      <p-button
+        label="Descargar"
+        icon="pi pi-download"
+        severity="secondary"
+        [loading]="isGenerating()"
+        (click)="onDownload()"
+        styleClass="w-full"
+      >
+      </p-button>
+
+      <p-button
+        label="Enviar Email"
+        icon="pi pi-envelope"
+        severity="info"
+        [loading]="isSendingEmail()"
+        (click)="onSendEmail()"
+        styleClass="w-full"
+      >
+      </p-button>
+    </div>
+  </div>
+</p-dialog>
