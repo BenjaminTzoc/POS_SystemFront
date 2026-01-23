@@ -52,6 +52,18 @@ export const RECURRENT_MENU: MenuItem[] = [
     route: '/inventory/units',
     permission: '',
   },
+  {
+    label: 'Categorías',
+    icon: 'pi pi-tags',
+    route: '/inventory/product-categories',
+    permission: '',
+  },
+  {
+    label: 'Sucursales',
+    icon: 'pi pi-map-marker',
+    route: '/inventory/branches',
+    permission: '',
+  },
 ];
 
 export const MENU_ITEMS: MenuItem[] = [
@@ -95,6 +107,12 @@ export const MENU_ITEMS: MenuItem[] = [
         label: 'Unidades de medida',
         icon: 'pi pi-gauge',
         route: '/inventory/units',
+        permission: '',
+      },
+      {
+        label: 'Sucursales',
+        icon: 'pi pi-map-marker',
+        route: '/inventory/branches',
         permission: '',
       },
     ],

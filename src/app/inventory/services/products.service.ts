@@ -47,8 +47,9 @@ export class ProductsService {
     return this.http.delete<ApiResponse<any>>(`${this.API_URL}/${productId}`);
   }
 
-  getCategories(): Observable<ApiResponse<Category[]>> {
-    return this.http.get<ApiResponse<Category[]>>(`${this.API_URL}/categories`);
+  getCategories(showDeleted: boolean = false): Observable<ApiResponse<Category[]>> {
+    let params = new HttpParams().set('includeDeleted', showDeleted.toString());
+    return this.http.get<ApiResponse<Category[]>>(`${this.API_URL}/categories`, { params });
   }
 
   getCategory(idCategory: string): Observable<ApiResponse<Category>> {
@@ -65,6 +66,13 @@ export class ProductsService {
 
   deleteCategory(idCategory: string): Observable<ApiResponse<null>> {
     return this.http.delete<ApiResponse<null>>(`${this.API_URL}/categories/${idCategory}`);
+  }
+
+  restoreCategory(idCategory: string): Observable<ApiResponse<Category>> {
+    return this.http.patch<ApiResponse<Category>>(
+      `${this.API_URL}/categories/${idCategory}/restore`,
+      {},
+    );
   }
 
   getTopSelling(branchId?: string): Observable<ApiResponse<Product[]>> {

@@ -6,131 +6,143 @@
         pButton
         icon="pi pi-arrow-left"
         class="p-button-rounded p-button-text !text-gray-400 hover:!text-indigo-600 hover:!bg-white !shadow-sm !transition-all"
-        routerLink="/inventory/units"
+        (click)="onCancel()"
       ></button>
       <div>
         <h1 class="text-3xl font-bold text-gray-800 tracking-tight">
-          {{ isEdit ? 'Editar' : 'Nueva' }} Unidad
+          {{ isEdit ? 'Editar' : 'Nueva' }} Sucursal
         </h1>
-        <p class="text-gray-500 text-sm">Configura los detalles de tu unidad de medida.</p>
+        <p class="text-gray-500 text-sm">Gestiona la información base y contacto de la sede.</p>
       </div>
     </div>
 
     <!-- Main Form Card -->
     <div
-      class="bg-white rounded-[2rem] shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden"
+      class="bg-white rounded-[2rem] shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden text-left"
     >
       <div class="p-8 md:p-10">
-        <form [formGroup]="unitForm" (ngSubmit)="onSubmit()" class="space-y-8">
+        <form [formGroup]="branchForm" (ngSubmit)="onSubmit()" class="space-y-8">
           <!-- Name Field -->
           <div class="relative group">
             <label
               for="name"
               class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 px-1"
             >
-              Nombre de la Unidad
+              Nombre de la Sucursal
             </label>
             <div class="relative">
               <span
                 class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors"
               >
-                <i class="pi pi-tag"></i>
+                <i class="pi pi-map-marker"></i>
               </span>
               <input
                 pInputText
                 id="name"
                 formControlName="name"
-                placeholder="Ej: Kilogramo, Litro..."
-                class="w-full !pl-12 !py-4 !rounded-2xl !bg-gray-50 !border-transparent focus:!bg-white focus:!border-indigo-200 focus:!ring-4 focus:!ring-indigo-100/50 !transition-all"
+                placeholder="Ej: Sucursal Central, Bodega Norte..."
+                class="w-full !pl-12 !py-4 !rounded-2xl !bg-gray-50 !border-transparent focus:!bg-white focus:!border-indigo-200 focus:!ring-4 focus:!ring-indigo-100/50 !transition-all font-semibold"
                 [ngClass]="{
                   '!border-rose-300 !ring-rose-100':
-                    unitForm.get('name')?.invalid && unitForm.get('name')?.touched,
+                    branchForm.get('name')?.invalid && branchForm.get('name')?.touched,
                 }"
               />
             </div>
             <div class="mt-2 px-1 flex justify-between">
-              <p class="text-[10px] text-gray-400 font-medium">Nombre descriptivo completo</p>
+              <p class="text-[10px] text-gray-400 font-medium">Nombre identificador público</p>
               <p
-                *ngIf="unitForm.get('name')?.invalid && unitForm.get('name')?.touched"
+                *ngIf="branchForm.get('name')?.invalid && branchForm.get('name')?.touched"
                 class="text-[10px] text-rose-500 font-bold uppercase transition-all animate-pulse"
               >
-                El nombre es obligatorio
+                El nombre debe tener al menos 3 letras
               </p>
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
-            <!-- Abbreviation Field -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Phone Field -->
             <div class="group">
               <label
-                for="abbreviation"
+                for="phone"
                 class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 px-1"
               >
-                Abreviación
+                Teléfono
               </label>
               <div class="relative">
                 <span
                   class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors"
                 >
-                  <i class="pi pi-bookmark"></i>
+                  <i class="pi pi-phone"></i>
                 </span>
                 <input
                   pInputText
-                  id="abbreviation"
-                  formControlName="abbreviation"
-                  placeholder="Ej: kg, L..."
+                  id="phone"
+                  formControlName="phone"
+                  placeholder="Ej: +502 1234 5678"
                   class="w-full !pl-12 !py-4 !rounded-2xl !bg-gray-50 !border-transparent focus:!bg-white focus:!border-indigo-200 focus:!ring-4 focus:!ring-indigo-100/50 !transition-all"
                   [ngClass]="{
                     '!border-rose-300 !ring-rose-100':
-                      unitForm.get('abbreviation')?.invalid &&
-                      unitForm.get('abbreviation')?.touched,
+                      branchForm.get('phone')?.invalid && branchForm.get('phone')?.touched,
                   }"
                 />
               </div>
-              <p class="mt-2 px-1 text-[10px] text-gray-400 font-medium">
-                Símbolo corto (máx 5 car.)
-              </p>
             </div>
 
-            <!-- Decimals Toggle -->
-            <div class="flex flex-col justify-center">
+            <!-- Email Field -->
+            <div class="group">
               <label
-                class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 px-1"
+                for="email"
+                class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 px-1"
               >
-                ¿Permite Decimales?
+                Correo Electrónico
               </label>
-              <div
-                class="bg-gray-50 p-3 rounded-2xl flex items-center justify-between group hover:bg-gray-100/50 transition-colors"
-              >
-                <span class="text-sm font-semibold text-gray-600 pl-2">
-                  {{
-                    unitForm.get('allowsDecimals')?.value ? 'Sí, habilitado' : 'No, solo enteros'
-                  }}
+              <div class="relative">
+                <span
+                  class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors"
+                >
+                  <i class="pi pi-envelope"></i>
                 </span>
-                <p-toggleSwitch
-                  formControlName="allowsDecimals"
-                  inputId="allowsDecimals"
-                ></p-toggleSwitch>
+                <input
+                  pInputText
+                  id="email"
+                  formControlName="email"
+                  placeholder="ejemplo@negocio.com"
+                  class="w-full !pl-12 !py-4 !rounded-2xl !bg-gray-50 !border-transparent focus:!bg-white focus:!border-indigo-200 focus:!ring-4 focus:!ring-indigo-100/50 !transition-all"
+                  [ngClass]="{
+                    '!border-rose-300 !ring-rose-100':
+                      branchForm.get('email')?.invalid && branchForm.get('email')?.touched,
+                  }"
+                />
               </div>
             </div>
           </div>
 
-          <!-- Description Field -->
-          <div class="group text-left">
+          <!-- Address Field -->
+          <div class="group">
             <label
-              for="description"
+              for="address"
               class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 px-1"
             >
-              Descripción Opcional
+              Dirección Física
             </label>
             <textarea
               pTextarea
-              id="description"
-              formControlName="description"
-              placeholder="Añade detalles sobre el uso de esta unidad..."
+              id="address"
+              formControlName="address"
+              placeholder="Escribe la dirección exacta de la sucursal..."
               rows="3"
               class="w-full !p-4 !rounded-2xl !bg-gray-50 !border-transparent focus:!bg-white focus:!border-indigo-200 focus:!ring-4 focus:!ring-indigo-100/50 !transition-all resize-none"
+              [ngClass]="{
+                '!border-rose-300 !ring-rose-100':
+                  branchForm.get('address')?.invalid && branchForm.get('address')?.touched,
+              }"
             ></textarea>
+            <p
+              *ngIf="branchForm.get('address')?.invalid && branchForm.get('address')?.touched"
+              class="mt-2 px-1 text-[10px] text-rose-500 font-bold uppercase"
+            >
+              La dirección es obligatoria
+            </p>
           </div>
 
           <!-- Action Buttons -->
@@ -140,15 +152,15 @@
               type="button"
               label="Descartar"
               class="p-button-text !text-gray-400 hover:!text-gray-600 !rounded-2xl !px-6"
-              routerLink="/inventory/units"
+              (click)="onCancel()"
             ></button>
             <button
               pButton
               type="submit"
-              [label]="isEdit ? 'Actualizar Cambios' : 'Crear Unidad'"
+              [label]="isEdit ? 'Guardar Cambios' : 'Crear Sucursal'"
               [icon]="loading ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
               [loading]="loading"
-              [disabled]="unitForm.invalid"
+              [disabled]="branchForm.invalid"
               class="p-button-raised p-button-primary !rounded-2xl !px-8 !py-4 shadow-xl hover:shadow-indigo-200 transition-all font-bold tracking-tight"
             ></button>
           </div>

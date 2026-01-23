@@ -1,60 +1,191 @@
-<section class="px-16 py-10">
-  <div class="flex justify-between">
-    <h1 class="text-2xl font-semibold mb-8">Categorías de productos</h1>
-    <p-button label="Nueva Categoría" severity="success" (onClick)="goToNewCategory()"/>
-  </div>
-  <p-table 
-    #categoriesDataTable
-    [value]="categories" 
-    [loading]="loading()" 
-    [paginator]="true" 
-    [rows]="20" 
-    [rowsPerPageOptions]="[10, 15, 20, 25, 50]"
-    [globalFilterFields]="['name', 'id', 'defaultUnit.abbreviation']"
-    dataKey="id"
-    styleClass="p-datatable-striped p-datatable-sm p-datatable-gridless rounded-md">
-    <ng-template pTemplate="caption">
-      <div class="flex justify-between p-4">
-        <p-iconfield iconPosition="left">
-          <p-inputicon>
-            <i class="pi pi-search"></i>
-          </p-inputicon>
-          <input pInputText type="text" (input)="categoriesDataTable.filterGlobal($event.target.value, 'contains')" class="w-80" placeholder="Buscar categoría" />
-        </p-iconfield>
+<div class="p-6 bg-gray-50/30 min-h-screen">
+  <!-- Header Section -->
+  <div class="max-w-7xl mx-auto mb-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-800 tracking-tight">Categorías de Productos</h1>
+        <p class="text-gray-500 mt-1 text-base">
+          Organiza tu catálogo para una mejor gestión y reportes.
+        </p>
       </div>
-    </ng-template>
-    <ng-template pTemplate="header">
-        <tr class="h-16">
-          <th class="w-[250px]">ID</th>
-          <th class="w-[150px]" pSortableColumn="name">Categoría <p-sortIcon class="ml-2" field="name"/></th>
-          <th class="w-[200px]" pSortableColumn="createdAt">Fecha creación <p-sortIcon class="ml-2" field="createdAt" /></th>
-          <th class="w-[500px]">Descripción</th>
-          <th class="w-[200px]">Unidad de medida</th>
-          <th class="w-[120px]">Acciones</th>
-        </tr>
-    </ng-template>
-      <ng-template pTemplate="body" let-category>
-        <tr [pSelectableRow]="category" [pSelectableRowIndex]="category.id">
-          <td>{{ category.id }}</td>
-          <td>{{ category.name }}</td>
-          <td>{{ category.createdAt | date: 'dd/mm/yy' }}</td>
-          <td>{{ category.description }}</td>
-          <td>{{ category.defaultUnit?.abbreviation || 'No definido' }}</td>
-          <td>
-            <div class="flex gap-2">
-              <p-button 
-                icon="pi pi-pencil" 
-                severity="warn" 
-                (onClick)="onEditCategory(category.id)"
-              />
-              <p-button 
-                icon="pi pi-trash" 
-                severity="danger" 
-                (onClick)="onDeleteCategory(category)"
-              />
-            </div>
-          </td>
-        </tr>
-      </ng-template>
-  </p-table>
-</section>
+
+      <div class="flex flex-wrap items-center gap-4">
+        <!-- Show Deleted Toggle -->
+        <div
+          *ngIf="canViewDeleted"
+          class="group bg-white border border-gray-200 rounded-2xl py-2 px-5 shadow-sm flex items-center gap-4 transition-all hover:border-indigo-200 hover:shadow-md"
+        >
+          <div class="flex flex-col">
+            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Filtro</span>
+            <label for="showDeleted" class="text-sm font-semibold text-gray-700"
+              >Mostrar eliminados</label
+            >
+          </div>
+          <p-toggleSwitch
+            [(ngModel)]="showDeleted"
+            (onChange)="loadCategories()"
+            inputId="showDeleted"
+          ></p-toggleSwitch>
+        </div>
+
+        <!-- Search simplified/refined -->
+        <div
+          class="group bg-white border border-gray-200 rounded-2xl py-1 px-4 shadow-sm flex items-center gap-3 transition-all focus-within:border-indigo-300 focus-within:shadow-md"
+        >
+          <i class="pi pi-search text-gray-400"></i>
+          <input
+            pInputText
+            type="text"
+            (input)="categoriesDataTable.filterGlobal($event.target.value, 'contains')"
+            class="!border-none !shadow-none !bg-transparent w-48 md:w-64 text-sm"
+            placeholder="Buscar categoría..."
+          />
+        </div>
+
+        <button
+          pButton
+          label="Nueva Categoría"
+          icon="pi pi-plus"
+          (click)="goToNewCategory()"
+          class="p-button-raised p-button-primary !rounded-2xl !px-6 !py-3 shadow-lg hover:shadow-indigo-200 transition-all"
+        ></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Card -->
+  <div class="max-w-7xl mx-auto">
+    <div
+      class="bg-white rounded-[2rem] shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden"
+    >
+      <p-table
+        #categoriesDataTable
+        [value]="categories"
+        [loading]="loading()"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 20, 50]"
+        [globalFilterFields]="['name', 'id', 'description']"
+        dataKey="id"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
+        styleClass="p-datatable-modern"
+      >
+        <ng-template pTemplate="header">
+          <tr class="!bg-gray-50/50">
+            <th class="!py-5 !pl-8 text-gray-400 font-bold uppercase text-xs tracking-widest">
+              Estado
+            </th>
+            <th
+              class="!py-5 text-gray-400 font-bold uppercase text-xs tracking-widest"
+              pSortableColumn="name"
+            >
+              Nombre <p-sortIcon class="ml-1" field="name" />
+            </th>
+            <th class="!py-5 text-gray-400 font-bold uppercase text-xs tracking-widest text-center">
+              Unidad
+            </th>
+            <th class="!py-5 text-gray-400 font-bold uppercase text-xs tracking-widest">
+              Descripción
+            </th>
+            <th
+              class="!py-5 text-gray-400 font-bold uppercase text-xs tracking-widest"
+              pSortableColumn="createdAt"
+            >
+              Fecha <p-sortIcon class="ml-1" field="createdAt" />
+            </th>
+            <th
+              class="!py-5 !pr-8 text-gray-400 font-bold uppercase text-xs tracking-widest text-right"
+            >
+              Acciones
+            </th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-category>
+          <tr
+            class="group hover:bg-indigo-50/30 transition-colors"
+            [ngClass]="{ 'opacity-60 grayscale-[0.5]': isDeleted(category) }"
+          >
+            <td class="!py-4 !pl-8">
+              <span
+                *ngIf="isDeleted(category)"
+                class="inline-flex items-center px-3 py-1 text-xs font-bold rounded-lg bg-rose-50 text-rose-600 border border-rose-100"
+              >
+                <span class="w-1.5 h-1.5 rounded-full bg-rose-500 mr-2"></span>
+                Eliminado
+              </span>
+              <span
+                *ngIf="!isDeleted(category)"
+                class="inline-flex items-center px-3 py-1 text-xs font-bold rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100"
+              >
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span>
+                Activo
+              </span>
+            </td>
+            <td class="!py-4">
+              <span class="font-semibold text-gray-700 text-base">{{ category.name }}</span>
+            </td>
+            <td class="!py-4 text-center">
+              <code
+                class="px-2 py-1 bg-indigo-50 text-indigo-600 rounded-lg font-mono text-xs font-bold border border-indigo-100"
+              >
+                {{ category.defaultUnit?.abbreviation || 'N/A' }}
+              </code>
+            </td>
+            <td class="!py-4">
+              <span class="text-gray-500 text-sm line-clamp-1 italic">{{
+                category.description || 'Sin descripción'
+              }}</span>
+            </td>
+            <td class="!py-4 text-gray-400 text-sm">
+              {{ category.createdAt | date: 'dd/MM/yyyy' }}
+            </td>
+            <td class="!py-4 !pr-8 text-right">
+              <div class="flex justify-end gap-1">
+                <button
+                  *ngIf="!isDeleted(category)"
+                  pButton
+                  icon="pi pi-pencil"
+                  class="p-button-rounded p-button-text !text-amber-500 hover:!bg-amber-50 !transition-all hover:scale-110"
+                  (click)="onEditCategory(category.id)"
+                  pTooltip="Editar"
+                  tooltipPosition="bottom"
+                ></button>
+                <button
+                  *ngIf="!isDeleted(category)"
+                  pButton
+                  icon="pi pi-trash"
+                  class="p-button-rounded p-button-text !text-rose-500 hover:!bg-rose-50 !transition-all hover:scale-110"
+                  (click)="onDeleteCategory(category)"
+                  pTooltip="Eliminar"
+                  tooltipPosition="bottom"
+                ></button>
+                <button
+                  *ngIf="isDeleted(category)"
+                  pButton
+                  icon="pi pi-refresh"
+                  class="p-button-rounded p-button-text !text-emerald-500 hover:!bg-emerald-50 !transition-all hover:scale-110"
+                  (click)="restoreCategory(category)"
+                  pTooltip="Restaurar"
+                  tooltipPosition="bottom"
+                ></button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="5" class="text-center !py-12">
+              <div class="flex flex-col items-center gap-3">
+                <i class="pi pi-folder-open text-gray-200" style="font-size: 3rem"></i>
+                <p class="text-gray-400 font-medium text-lg">No se encontraron categorías.</p>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>

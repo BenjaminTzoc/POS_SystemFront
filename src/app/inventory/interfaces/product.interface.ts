@@ -7,6 +7,7 @@ export interface Category {
   name: string;
   description: string;
   defaultUnit: Unit | null;
+  deletedAt?: string;
 }
 
 export interface Unit {

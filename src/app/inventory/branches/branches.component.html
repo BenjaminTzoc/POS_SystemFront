@@ -3,13 +3,14 @@
   <div class="max-w-7xl mx-auto mb-8">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
       <div>
-        <h1 class="text-3xl font-bold text-gray-800 tracking-tight">Unidades de Medida</h1>
+        <h1 class="text-3xl font-bold text-gray-800 tracking-tight">Sucursales</h1>
         <p class="text-gray-500 mt-1 text-base">
-          Gestiona las dimensiones y métricas para el control de tus productos.
+          Administra las ubicaciones físicas de tu negocio y sus datos de contacto.
         </p>
       </div>
 
       <div class="flex flex-wrap items-center gap-4">
+        <!-- Show Deleted Toggle -->
         <div
           *ngIf="canViewDeleted"
           class="group bg-white border border-gray-200 rounded-2xl py-2 px-5 shadow-sm flex items-center gap-4 transition-all hover:border-indigo-200 hover:shadow-md"
@@ -22,16 +23,16 @@
           </div>
           <p-toggleSwitch
             [(ngModel)]="showDeleted"
-            (onChange)="loadUnits()"
+            (onChange)="loadBranches()"
             inputId="showDeleted"
           ></p-toggleSwitch>
         </div>
 
         <button
           pButton
-          label="Nueva Unidad"
+          label="Nueva Sucursal"
           icon="pi pi-plus"
-          routerLink="/inventory/new-unit"
+          (click)="goToNewBranch()"
           class="p-button-raised p-button-primary !rounded-2xl !px-6 !py-3 shadow-lg hover:shadow-indigo-200 transition-all"
         ></button>
       </div>
@@ -44,13 +45,16 @@
       class="bg-white rounded-[2rem] shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden"
     >
       <p-table
-        [value]="units"
-        [loading]="loading"
+        #branchesDataTable
+        [value]="branches"
+        [loading]="loading()"
         [paginator]="true"
         [rows]="10"
+        [rowsPerPageOptions]="[10, 20, 50]"
+        [globalFilterFields]="['name', 'address', 'phone', 'email']"
+        dataKey="id"
         [showCurrentPageReport]="true"
         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
-        [rowsPerPageOptions]="[10, 25, 50]"
         styleClass="p-datatable-modern"
       >
         <ng-template pTemplate="header">
@@ -58,15 +62,14 @@
             <th class="!py-5 !pl-8 text-gray-400 font-bold uppercase text-xs tracking-widest">
               Estado
             </th>
-            <th class="!py-5 text-gray-400 font-bold uppercase text-xs tracking-widest">Nombre</th>
             <th class="!py-5 text-gray-400 font-bold uppercase text-xs tracking-widest">
-              Abreviación
-            </th>
-            <th class="!py-5 text-gray-400 font-bold uppercase text-xs tracking-widest text-center">
-              Decimales
+              Sucursal
             </th>
             <th class="!py-5 text-gray-400 font-bold uppercase text-xs tracking-widest">
-              Descripción
+              Contacto
+            </th>
+            <th class="!py-5 text-gray-400 font-bold uppercase text-xs tracking-widest">
+              Dirección
             </th>
             <th
               class="!py-5 !pr-8 text-gray-400 font-bold uppercase text-xs tracking-widest text-right"
@@ -76,84 +79,76 @@
           </tr>
         </ng-template>
 
-        <ng-template pTemplate="body" let-unit>
+        <ng-template pTemplate="body" let-branch>
           <tr
             class="group hover:bg-indigo-50/30 transition-colors"
-            [ngClass]="{ 'opacity-60 grayscale-[0.5]': isDeleted(unit) }"
+            [ngClass]="{ 'opacity-60 grayscale-[0.5]': isDeleted(branch) }"
           >
             <td class="!py-4 !pl-8">
               <span
-                *ngIf="isDeleted(unit)"
+                *ngIf="isDeleted(branch)"
                 class="inline-flex items-center px-3 py-1 text-xs font-bold rounded-lg bg-rose-50 text-rose-600 border border-rose-100"
               >
                 <span class="w-1.5 h-1.5 rounded-full bg-rose-500 mr-2"></span>
                 Eliminado
               </span>
               <span
-                *ngIf="!isDeleted(unit)"
+                *ngIf="!isDeleted(branch)"
                 class="inline-flex items-center px-3 py-1 text-xs font-bold rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100"
               >
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span>
-                Activo
+                Activa
               </span>
             </td>
             <td class="!py-4">
-              <span class="font-semibold text-gray-700 text-base">{{ unit.name }}</span>
-            </td>
-            <td class="!py-4">
-              <code class="px-2 py-1 bg-gray-100 rounded text-gray-600 font-mono text-sm">{{
-                unit.abbreviation
-              }}</code>
-            </td>
-            <td class="!py-4 text-center">
-              <div class="flex justify-center">
-                <div
-                  [ngClass]="
-                    unit.allowsDecimals
-                      ? 'bg-emerald-100 text-emerald-600'
-                      : 'bg-gray-100 text-gray-400'
-                  "
-                  class="w-8 h-8 rounded-full flex items-center justify-center transition-all"
-                >
-                  <i
-                    class="pi"
-                    [ngClass]="unit.allowsDecimals ? 'pi-check' : 'pi-times'"
-                    style="font-size: 0.8rem"
-                  ></i>
-                </div>
+              <span class="font-semibold text-gray-700 text-base">{{ branch.name }}</span>
+              <div class="text-[10px] text-gray-400 font-medium uppercase tracking-tighter mt-0.5">
+                ID: {{ branch.id }}
               </div>
             </td>
             <td class="!py-4">
-              <span class="text-gray-500 text-sm italic">{{
-                unit.description || 'Sin descripción'
+              <div class="flex flex-col gap-0.5">
+                <span class="text-sm text-gray-600 flex items-center gap-1.5">
+                  <i class="pi pi-phone text-[10px] text-indigo-400"></i>
+                  {{ branch.phone || 'No asignado' }}
+                </span>
+                <span class="text-xs text-gray-400 flex items-center gap-1.5">
+                  <i class="pi pi-envelope text-[10px] text-gray-300"></i>
+                  {{ branch.email || 'No asignado' }}
+                </span>
+              </div>
+            </td>
+            <td class="!py-4">
+              <span class="text-gray-500 text-sm line-clamp-1 italic max-w-xs">{{
+                branch.address || 'Sin dirección registrada'
               }}</span>
             </td>
-            <td class="!py-4 !pr-8">
+            <td class="!py-4 !pr-8 text-right">
               <div class="flex justify-end gap-1">
                 <button
-                  *ngIf="!isDeleted(unit)"
+                  *ngIf="!isDeleted(branch)"
                   pButton
                   icon="pi pi-pencil"
                   class="p-button-rounded p-button-text !text-amber-500 hover:!bg-amber-50 !transition-all hover:scale-110"
-                  [routerLink]="['/inventory/edit-unit', unit.id]"
+                  (click)="onEditBranch(branch.id)"
                   pTooltip="Editar"
                   tooltipPosition="bottom"
                 ></button>
                 <button
-                  *ngIf="!isDeleted(unit)"
+                  *ngIf="!isDeleted(branch)"
                   pButton
                   icon="pi pi-trash"
                   class="p-button-rounded p-button-text !text-rose-500 hover:!bg-rose-50 !transition-all hover:scale-110"
-                  (click)="deleteUnit(unit.id)"
+                  (click)="onDeleteBranch(branch)"
                   pTooltip="Eliminar"
                   tooltipPosition="bottom"
                 ></button>
                 <button
-                  *ngIf="isDeleted(unit)"
+                  *ngIf="isDeleted(branch)"
                   pButton
                   icon="pi pi-refresh"
                   class="p-button-rounded p-button-text !text-emerald-500 hover:!bg-emerald-50 !transition-all hover:scale-110"
-                  (click)="restoreUnit(unit.id)"
+                  (click)="onRestoreBranch(branch)"
                   pTooltip="Restaurar"
                   tooltipPosition="bottom"
                 ></button>
@@ -164,12 +159,10 @@
 
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="6" class="text-center !py-12">
+            <td colspan="5" class="text-center !py-12">
               <div class="flex flex-col items-center gap-3">
-                <i class="pi pi-box text-gray-200" style="font-size: 3rem"></i>
-                <p class="text-gray-400 font-medium text-lg">
-                  No se encontraron unidades de medida.
-                </p>
+                <i class="pi pi-map-marker text-gray-200" style="font-size: 3rem"></i>
+                <p class="text-gray-400 font-medium text-lg">No se encontraron sucursales.</p>
               </div>
             </td>
           </tr>

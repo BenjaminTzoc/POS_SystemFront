@@ -1,0 +1,29 @@
+:host ::ng-deep .p-inputtext:focus {
+  box-shadow: none !important;
+}
+
+:host ::ng-deep textarea:focus {
+  box-shadow: none !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #cbcbcb !important;
+  font-size: 0.9rem;
+}
+
+:host ::ng-deep .modern-select .p-select {
+  width: 100% !important;
+  padding-left: 2.5rem !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+  border-radius: 1rem !important;
+  background-color: #f9fafb !important;
+  border: transparent !important;
+  transition: all 0.2s ease !important;
+}
+
+:host ::ng-deep .modern-select .p-select:focus-within {
+  background-color: white !important;
+  border-color: #e0e7ff !important;
+  box-shadow: 0 0 0 4px rgba(224, 231, 255, 0.5) !important;
+}

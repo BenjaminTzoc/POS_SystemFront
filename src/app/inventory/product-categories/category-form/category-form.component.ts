@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -13,9 +14,16 @@ import { Category } from '../../interfaces/product.interface';
 
 @Component({
   selector: 'app-category-form',
-  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, TextareaModule, SelectModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    ButtonModule,
+    InputTextModule,
+    TextareaModule,
+    SelectModule,
+  ],
   templateUrl: './category-form.component.html',
-  styleUrl: './category-form.component.css'
+  styleUrl: './category-form.component.css',
 })
 export class CategoryFormComponent implements OnInit {
   private fb = inject(FormBuilder);
@@ -47,8 +55,8 @@ export class CategoryFormComponent implements OnInit {
     this.categoryForm = this.fb.group({
       name: ['', [Validators.required]],
       description: [''],
-      defaultUnitId: ['']
-    })
+      defaultUnitId: [''],
+    });
   }
 
   loadCategory(id: string): void {
@@ -62,13 +70,13 @@ export class CategoryFormComponent implements OnInit {
         }
       },
       error: (err) => {
-        this.messageService.add({ 
-          severity: 'error', 
-          summary: 'Error', 
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
           detail: `Error obteniendo la categoría: ${err.error.message}`,
         });
       },
-    })
+    });
   }
 
   loadUnits(): void {
@@ -79,13 +87,13 @@ export class CategoryFormComponent implements OnInit {
         }
       },
       error: (err) => {
-        this.messageService.add({ 
-          severity: 'error', 
-          summary: 'Error', 
-          detail: `Error cargando las unidades de medida: ${err.error.message}`
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error cargando las unidades de medida: ${err.error.message}`,
         });
-      }
-    })
+      },
+    });
   }
 
   onSaveCategory(): void {
@@ -94,33 +102,35 @@ export class CategoryFormComponent implements OnInit {
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'Por favor, completa todos los campos requeridos'
+        detail: 'Por favor, completa todos los campos requeridos',
       });
       return;
     }
 
     const body = this.categoryForm.value;
-    const request = !this.isEditMode ? this.productsService.createCategory(body) : this.productsService.editCategory(this.selectedCategory!.id, body);
+    const request = !this.isEditMode
+      ? this.productsService.createCategory(body)
+      : this.productsService.editCategory(this.selectedCategory!.id, body);
 
     request.subscribe({
       next: (res) => {
         if (this.isEditMode ? res.statusCode === 200 : res.statusCode === 201) {
-          this.messageService.add({ 
-            severity: 'success', 
-            summary: 'Éxito', 
-            detail: `La categoría se ha creado correctamente.`
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: `La categoría se ha creado correctamente.`,
           });
           this.router.navigate(['/inventory/product-categories']);
         }
       },
       error: (err) => {
-        this.messageService.add({ 
-          severity: 'error', 
-          summary: 'Error', 
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
           detail: `Error creando la categoría: ${err.error.message}`,
         });
-      }
-    })
+      },
+    });
   }
 
   onCancelProccess() {
@@ -140,7 +150,7 @@ export class CategoryFormComponent implements OnInit {
       },
 
       accept: () => {
-        this.router.navigate(['inventory/product-categories'])
+        this.router.navigate(['inventory/product-categories']);
       },
     });
   }

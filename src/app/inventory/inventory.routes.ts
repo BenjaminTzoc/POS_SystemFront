@@ -63,4 +63,18 @@ export const INVENTORY_ROUTES: Routes = [
     loadComponent: () =>
       import('./units/unit-form/unit-form.component').then((m) => m.UnitFormComponent),
   },
+  {
+    path: 'branches',
+    loadComponent: () => import('./branches/branches.component').then((m) => m.BranchesComponent),
+  },
+  {
+    path: 'new-branch',
+    loadComponent: () =>
+      import('./branches/branch-form/branch-form.component').then((m) => m.BranchFormComponent),
+  },
+  {
+    path: 'edit-branch/:id',
+    loadComponent: () =>
+      import('./branches/branch-form/branch-form.component').then((m) => m.BranchFormComponent),
+  },
 ];
