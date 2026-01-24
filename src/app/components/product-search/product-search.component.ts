@@ -20,6 +20,7 @@ import { Product } from '../../inventory/interfaces/product.interface';
 import { catchError, debounceTime, distinctUntilChanged, map, Observable, of, Subject, Subscription, switchMap, tap } from 'rxjs';
 import { ProductsService } from '../../inventory/services/products.service';
 import { ButtonModule } from 'primeng/button';
+import { ApiResponse } from '../../core/models/api-response.model';
 
 @Component({
   selector: 'app-product-search',
@@ -100,7 +101,7 @@ export class ProductSearchComponent implements OnInit, OnDestroy, OnChanges {
           this.searchLoading = true;
           this.isTopSelling = false;
         }),
-        switchMap((query) => this.searchProductsApi(query))
+        switchMap((query) => this.searchProductsApi(query)),
       )
       .subscribe({
         next: (products) => {
@@ -122,7 +123,9 @@ export class ProductSearchComponent implements OnInit, OnDestroy, OnChanges {
           const products = response.data;
           // Filter out already added products
           if (this.excludedProductIds.length > 0) {
-            return products.filter((product) => !this.excludedProductIds.includes(product.id));
+            return products.filter(
+              (product: Product) => !this.excludedProductIds.includes(product.id),
+            );
           }
           return products;
         }
@@ -131,7 +134,7 @@ export class ProductSearchComponent implements OnInit, OnDestroy, OnChanges {
       catchError((error) => {
         console.error('Error searching products:', error);
         return of([]);
-      })
+      }),
     );
   }
 
@@ -161,11 +164,13 @@ export class ProductSearchComponent implements OnInit, OnDestroy, OnChanges {
     this.showProductResults = true;
     this.isTopSelling = true;
     this.productsService.getTopSelling(this.branchId).subscribe({
-      next: (res) => {
+      next: (res: ApiResponse<Product[]>) => {
         if (res.statusCode === 200) {
           let products = res.data;
           if (this.excludedProductIds.length > 0) {
-            products = products.filter((product) => !this.excludedProductIds.includes(product.id));
+            products = products.filter(
+              (product: Product) => !this.excludedProductIds.includes(product.id),
+            );
           }
           this.filteredProducts = products;
         } else {

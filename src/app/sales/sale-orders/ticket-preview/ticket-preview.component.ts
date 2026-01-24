@@ -1,3 +1,4 @@
+// Ticket preview component for POS
 import { Component, Input, OnInit, inject, signal, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';

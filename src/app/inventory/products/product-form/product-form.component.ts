@@ -15,6 +15,7 @@ import { RadioButton } from 'primeng/radiobutton';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { FileUploadModule } from 'primeng/fileupload';
+import { MessageModule } from 'primeng/message';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Category } from '../../interfaces/product.interface';
 import { Branch } from '../../interfaces/branch.interface';
@@ -36,6 +37,7 @@ import { environment } from '../../../../environments/environment';
     ButtonModule,
     ReactiveFormsModule,
     FileUploadModule,
+    MessageModule,
   ],
   templateUrl: './product-form.component.html',
   styleUrl: './product-form.component.css',
@@ -79,6 +81,7 @@ export class ProductFormComponent implements OnInit {
   productId: string | null = null;
   isEditMode: boolean = false;
   currentImageUrl: string | null = null;
+  isSaving: boolean = false;
 
   ngOnInit(): void {
     this.productId = this.route.snapshot.paramMap.get('id');
@@ -225,6 +228,7 @@ export class ProductFormComponent implements OnInit {
     }
 
     const formData = this.createFormData();
+    this.isSaving = true;
 
     if (this.isEditMode) {
       this.productsService.updateProduct(this.productId!, formData).subscribe({
@@ -242,7 +246,9 @@ export class ProductFormComponent implements OnInit {
             summary: 'Error',
             detail: `Error actualizando el producto: ${error.error.message}`,
           });
+          this.isSaving = false;
         },
+        complete: () => (this.isSaving = false),
       });
     } else {
       this.productsService.createProduct(formData).subscribe({
@@ -260,7 +266,9 @@ export class ProductFormComponent implements OnInit {
             summary: 'Error',
             detail: `Error creando el producto: ${error.error.message}`,
           });
+          this.isSaving = false;
         },
+        complete: () => (this.isSaving = false),
       });
     }
   }
@@ -310,7 +318,7 @@ export class ProductFormComponent implements OnInit {
     const branches = this.branches();
 
     const filtered = branches.filter(
-      (branch) => !selectedBranchId.includes(branch.id) || branch.id === currentBranchId
+      (branch) => !selectedBranchId.includes(branch.id) || branch.id === currentBranchId,
     );
 
     return filtered;

@@ -1,8 +1,8 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { Button } from 'primeng/button';
+import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { InventoryService } from '../services/inventory.service';
@@ -12,10 +12,20 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../auth/auth.service';
 import { BranchesService } from '../services/branches.service';
 import { Branch } from '../interfaces/branch.interface';
+import { InputTextModule } from 'primeng/inputtext';
 
 @Component({
   selector: 'app-inventories',
-  imports: [Button, TableModule, CurrencyPipe, DatePipe, Select, FormsModule],
+  imports: [
+    ButtonModule,
+    TableModule,
+    CurrencyPipe,
+    DatePipe,
+    Select,
+    FormsModule,
+    CommonModule,
+    InputTextModule,
+  ],
   templateUrl: './inventories.component.html',
   styleUrl: './inventories.component.css',
 })
@@ -30,8 +40,36 @@ export class InventoriesComponent implements OnInit {
   inventories: Inventory[] = [];
   branches: Branch[] = [];
   selectedBranchId: string | undefined;
+  searchTerm: string = '';
   loading = false;
   isSuperAdmin = false;
+
+  get groupedInventories() {
+    const filtered = this.inventories.filter(
+      (inv) =>
+        inv.product.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        inv.product.sku.toLowerCase().includes(this.searchTerm.toLowerCase()),
+    );
+
+    const groups = filtered.reduce(
+      (acc, inventory) => {
+        const branchName = inventory.branch.name;
+        if (!acc[branchName]) {
+          acc[branchName] = [];
+        }
+        acc[branchName].push(inventory);
+        return acc;
+      },
+      {} as Record<string, Inventory[]>,
+    );
+
+    return Object.keys(groups)
+      .sort()
+      .map((branch) => ({
+        branch,
+        items: groups[branch],
+      }));
+  }
 
   ngOnInit(): void {
     this.checkUserRole();
@@ -93,21 +131,13 @@ export class InventoriesComponent implements OnInit {
 
   onDeleteInventory(inventory: Inventory) {
     this.confirmationService.confirm({
-      message: `
-          Estás seguro de eliminar el inventario del producto 
-          "${inventory.product.name}" de la sucursal "${inventory.branch.name}"?`,
+      message: `¿Estás seguro de eliminar el inventario del producto "${inventory.product.name}" de la sucursal "${inventory.branch.name}"?`,
       header: 'Confirmar eliminación',
       icon: 'pi pi-info-circle',
+      acceptLabel: 'Eliminar',
       rejectLabel: 'Cancelar',
-      rejectButtonProps: {
-        label: 'Cancelar',
-        severity: 'secondary',
-        outlined: true,
-      },
-      acceptButtonProps: {
-        label: 'Eliminar',
-        severity: 'danger',
-      },
+      acceptButtonStyleClass: 'p-button-danger !rounded-2xl',
+      rejectButtonStyleClass: 'p-button-secondary p-button-text !rounded-2xl',
 
       accept: () => {
         this.inventoryService.deleteInventory(inventory.id).subscribe({

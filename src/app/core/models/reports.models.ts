@@ -37,3 +37,29 @@ export interface LowStockProductDto {
   minStock?: number;
   branchName?: string;
 }
+
+export interface HourlySalesDto {
+  hour: number;
+  count: number;
+  total: number;
+}
+
+export interface WeekdaySalesDto {
+  day: string;
+  index: number;
+  count: number;
+  total: number;
+}
+
+export interface InventoryMovementReportDto {
+  date: string;
+  entries: number;
+  exits: number;
+}
+
+export interface ProfitReportDto {
+  date: string;
+  revenue: number;
+  expenses: number;
+  profit: number;
+}

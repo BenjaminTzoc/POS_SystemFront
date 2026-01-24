@@ -37,4 +37,9 @@ export const SALES_ROUTES: Routes = [
         (m) => m.CashHistoryComponent,
       ),
   },
+  {
+    path: 'pos',
+    loadComponent: () =>
+      import('./pos/pos-layout/pos-layout.component').then((m) => m.PosLayoutComponent),
+  },
 ];

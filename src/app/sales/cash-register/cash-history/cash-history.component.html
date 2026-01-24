@@ -76,26 +76,27 @@
               {{ session.openingBalance | currency }}
             </td>
             <td class="!py-5">
-              <span *ngIf="session.status === 'CLOSED'" class="font-bold text-gray-800 text-lg">
-                {{ session.closingBalance | currency }}
-              </span>
-              <span
-                *ngIf="session.status === 'OPEN'"
-                class="text-emerald-500 font-black text-xs animate-pulse"
-                >SESIÓN ACTIVA</span
-              >
+              @if (session.status === 'CLOSED') {
+                <span class="font-bold text-gray-800 text-lg">
+                  {{ session.closingBalance | currency }}
+                </span>
+              }
+              @if (session.status === 'OPEN') {
+                <span class="text-emerald-500 font-black text-xs animate-pulse">SESIÓN ACTIVA</span>
+              }
             </td>
             <td class="!py-5">
-              <span
-                *ngIf="session.status === 'CLOSED'"
-                [ngClass]="session.difference === 0 ? 'text-emerald-500' : 'text-rose-500'"
-                class="font-black text-lg"
-              >
-                {{ session.difference | currency }}
-              </span>
-              <span *ngIf="session.status === 'OPEN'" class="text-gray-300 italic text-xs"
-                >Pendiente</span
-              >
+              @if (session.status === 'CLOSED') {
+                <span
+                  [ngClass]="session.difference === 0 ? 'text-emerald-500' : 'text-rose-500'"
+                  class="font-black text-lg"
+                >
+                  {{ session.difference | currency }}
+                </span>
+              }
+              @if (session.status === 'OPEN') {
+                <span class="text-gray-300 italic text-xs">Pendiente</span>
+              }
             </td>
             <td class="!py-5 !pr-10 text-center">
               <span

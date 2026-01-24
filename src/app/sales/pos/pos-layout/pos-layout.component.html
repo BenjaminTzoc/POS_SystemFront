@@ -1,0 +1,48 @@
+<div class="flex h-screen bg-slate-50 overflow-hidden">
+  <!-- Left Side: Products Area -->
+  <div class="flex-1 flex flex-col min-w-0">
+    <!-- Header / Search -->
+    <div
+      class="h-16 bg-white border-b border-gray-200 flex items-center px-6 justify-between shadow-sm z-10"
+    >
+      <h1 class="text-xl font-bold text-gray-800">Punto de Venta</h1>
+
+      <div class="relative w-96">
+        <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearch($event)"
+          class="w-full pl-10 pr-4 py-2 bg-gray-100 border-none rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none"
+          placeholder="Buscar producto (Escáner activo)..."
+        />
+      </div>
+    </div>
+
+    <div class="h-14 bg-white border-b border-gray-200 flex items-center px-4">
+      <app-category-selector
+        [categories]="categories"
+        [selectedCategory]="selectedCategory"
+        (categorySelected)="onCategorySelect($event)"
+      >
+      </app-category-selector>
+    </div>
+
+    <!-- Product Grid -->
+    <div class="flex-1 overflow-y-auto p-4">
+      <app-product-grid [products]="filteredProducts" [isLoading]="isLoading"></app-product-grid>
+    </div>
+  </div>
+
+  <!-- Right Side: Cart Panel -->
+  <div class="w-96 bg-white border-l border-gray-200 flex flex-col shadow-xl z-20">
+    <app-cart-panel (checkout)="onCheckout()"></app-cart-panel>
+  </div>
+</div>
+
+<p-toast></p-toast>
+<app-checkout-dialog
+  [(visible)]="isCheckoutVisible"
+  [total]="this.posService.total()"
+  (confirmPayment)="handlePayment($event)"
+></app-checkout-dialog>

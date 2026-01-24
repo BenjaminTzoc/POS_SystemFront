@@ -2,7 +2,6 @@ import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { AuthService } from '../../auth/auth.service';
 import { Router } from '@angular/router';
 
-import { LowStockAlertsComponent } from '../../shared/notifications/low-stock-alerts/low-stock-alerts.component';
 import { CashRegisterService } from '../../inventory/services/cash-register.service';
 import { CashSession } from '../../inventory/interfaces/cash-register.interface';
 import { CommonModule } from '@angular/common';
@@ -13,7 +12,7 @@ import { TooltipModule } from 'primeng/tooltip';
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [LowStockAlertsComponent, CommonModule, TooltipModule],
+  imports: [CommonModule, TooltipModule],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
 })

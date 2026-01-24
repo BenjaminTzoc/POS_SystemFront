@@ -1,17 +1,30 @@
-<section class="px-16 py-10">
-  <form class="grid grid-cols-12 gap-x-6" [formGroup]="productForm">
-    <div class="col-start-2 col-span-10 flex justify-between">
-      <h1 class="text-2xl font-semibold mb-8">Crear nuevo producto</h1>
+<div class="p-6 px-20 bg-gray-50/30 min-h-screen">
+  <!-- Header Section -->
+  <div class="max-w-[1400px] mx-auto mb-10">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-4xl font-bold text-gray-900 tracking-tight">
+          {{ isEditMode ? 'Editar Producto' : 'Crear nuevo producto' }}
+        </h1>
+        <p class="text-gray-500 mt-2 text-md">
+          Completa la información para {{ isEditMode ? 'actualizar' : 'añadir' }} un producto al
+          catálogo.
+        </p>
+      </div>
     </div>
-    <div class="col-start-2 col-span-6 flex flex-col gap-2">
-      <div class="py-5 px-10 rounded-md bg-white shadow-md">
+  </div>
+
+  <form class="grid grid-cols-12 gap-8 max-w-[1400px] mx-auto" [formGroup]="productForm">
+    <!-- Left Column: General & Image -->
+    <div class="col-start-1 col-span-12 lg:col-start-1 lg:col-span-7 flex flex-col gap-8">
+      <div class="p-8 rounded-2xl bg-white shadow-xl shadow-gray-200/40 border border-gray-50">
         <h3 class="font-semibold text-lg mb-6">General</h3>
         <div class="flex flex-col gap-y-4">
           <div class="flex flex-col">
             <label class="text-base" for="name">Nombre<span class="text-red-700">*</span></label>
             <input pInputText id="name" formControlName="name" aria-describedby="name-help" />
             @if (productForm.get('name')?.invalid && productForm.get('name')?.touched) {
-            <small class="text-red-700" id="name-help">Ingrese el nombre del producto.</small>
+              <small class="text-red-700" id="name-help">Ingrese el nombre del producto.</small>
             }
           </div>
           <div class="grid grid-cols-3 gap-4">
@@ -19,7 +32,7 @@
               <label class="text-base" for="sku">SKU<span class="text-red-700">*</span></label>
               <input pInputText id="sku" formControlName="sku" aria-describedby="sku-help" />
               @if (productForm.get('sku')?.invalid && productForm.get('sku')?.touched) {
-              <small class="text-red-700" id="sku-help">Ingrese el sku del producto.</small>
+                <small class="text-red-700" id="sku-help">Ingrese el sku del producto.</small>
               }
             </div>
             <div class="flex flex-col">
@@ -31,9 +44,9 @@
                 aria-describedby="barcode-help"
               />
               @if (productForm.get('barcode')?.invalid && productForm.get('barcode')?.touched) {
-              <small class="text-red-700" id="barcode-help"
-                >Ingrese el código de barras del producto.</small
-              >
+                <small class="text-red-700" id="barcode-help"
+                  >Ingrese el código de barras del producto.</small
+                >
               }
             </div>
             <div class="flex flex-col">
@@ -47,7 +60,7 @@
                 fluid
               />
               @if (productForm.get('price')?.invalid && productForm.get('price')?.touched) {
-              <small class="text-red-700" id="price-help">Ingrese un monto válido.</small>
+                <small class="text-red-700" id="price-help">Ingrese un monto válido.</small>
               }
             </div>
           </div>
@@ -83,7 +96,7 @@
                 class="w-full"
               />
               @if (productForm.get('unitId')?.invalid && productForm.get('unitId')?.touched) {
-              <small class="text-red-700" id="price-help">Seleccione una unidad válida.</small>
+                <small class="text-red-700" id="price-help">Seleccione una unidad válida.</small>
               }
             </div>
           </div>
@@ -96,177 +109,310 @@
           </div>
         </div>
       </div>
-      <div class="py-5 px-10 rounded-md bg-white shadow-md">
-        <h3 class="font-semibold text-lg mb-6">Imagen del producto</h3>
+      <div class="p-8 rounded-2xl bg-white shadow-xl shadow-gray-200/40 border border-gray-50">
+        <h3 class="font-bold text-xl text-gray-800 mb-6">Imagen del producto</h3>
         @if (!currentImageUrl) {
-        <p-fileUpload
-          name="images[]"
-          [multiple]="false"
-          accept="image/*"
-          maxFileSize="5000000"
-          (onSelect)="onUpload($event)"
-          [chooseLabel]="`${uploadedFiles.length > 0 ? 'Reemplazar imagen': 'Seleccionar imagen'}`"
-          showUploadButton="false"
-          showCancelButton="false"
-        >
-        </p-fileUpload>
-        } @if (currentImageUrl && uploadedFiles.length === 0) {
-        <div class="mt-4 flex flex-col items-center gap-2">
-          <img
-            [src]="currentImageUrl"
-            alt="Imagen del producto"
-            class="w-full h-48 object-contain rounded-md border border-gray-200"
-          />
-          <p-button
-            label="Cambiar imagen"
-            icon="pi pi-pencil"
-            [outlined]="true"
-            severity="secondary"
-            (onClick)="changeImage()"
-          ></p-button>
-        </div>
+          <div class="group relative">
+            <p-fileUpload
+              name="images[]"
+              [multiple]="false"
+              accept="image/*"
+              maxFileSize="5000000"
+              (onSelect)="onUpload($event)"
+              styleClass="w-full"
+              [showUploadButton]="false"
+              [showCancelButton]="false"
+              [customUpload]="true"
+            >
+              <ng-template pTemplate="content">
+                <div
+                  class="flex flex-col items-center justify-center py-10 px-4 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50 group-hover:bg-indigo-50/30 group-hover:border-indigo-200 transition-all cursor-pointer text-center"
+                >
+                  <div
+                    class="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center text-indigo-500 mb-4 group-hover:scale-110 transition-transform"
+                  >
+                    <i class="pi pi-upload text-2xl"></i>
+                  </div>
+                  <p class="text-gray-700 font-bold mb-1">
+                    {{ uploadedFiles.length > 0 ? 'Imagen seleccionada' : 'Haz clic para subir' }}
+                  </p>
+                  <p class="text-gray-400 text-sm italic">o arrastra y suelta aquí</p>
+                  @if (uploadedFiles.length > 0) {
+                    <div
+                      class="mt-4 px-3 py-1 bg-indigo-100 text-indigo-600 rounded-full text-xs font-bold"
+                    >
+                      {{ uploadedFiles[0].name }}
+                    </div>
+                  }
+                </div>
+              </ng-template>
+            </p-fileUpload>
+          </div>
+        }
+        @if (currentImageUrl && uploadedFiles.length === 0) {
+          <div
+            class="mt-4 flex flex-col items-center gap-6 p-6 border border-gray-100 rounded-2xl bg-gray-50/30"
+          >
+            <div
+              class="relative group overflow-hidden rounded-xl shadow-md border-4 border-white max-h-64"
+            >
+              <img
+                [src]="currentImageUrl"
+                alt="Imagen del producto"
+                class="w-full object-contain"
+              />
+            </div>
+            <p-button
+              label="Cambiar imagen"
+              icon="pi pi-pencil"
+              [outlined]="true"
+              severity="secondary"
+              (onClick)="changeImage()"
+              styleClass="!rounded-2xl font-bold"
+            ></p-button>
+          </div>
         }
       </div>
     </div>
-    <div class="col-span-4 flex flex-col gap-2">
-      <div class="w-full p-5 bg-white shadow-md rounded-md">
-        <h3 class="font-semibold text-lg mb-6">Estado del producto</h3>
+    <!-- Right Column: Status & Inventory -->
+    <div class="col-span-12 lg:col-span-5 flex flex-col gap-8">
+      <div
+        class="w-full p-8 bg-white shadow-xl shadow-gray-200/40 border border-gray-50 rounded-2xl"
+      >
+        <h3 class="font-bold text-xl text-gray-800 mb-6">Estado del producto</h3>
         <div class="flex flex-col gap-2">
-          <label class="text-base" for="status">Estado</label>
-          @for (status of statuses; track status.name) {
-          <div class="field-checkbox">
-            <p-radiobutton
-              [inputId]="status.key"
-              name="category"
-              formControlName="isActive"
-              [value]="status.key"
-            />
-            <label [for]="status.key" class="ml-2">{{ status.name }}</label>
-          </div>
-          }
-        </div>
-        <hr class="text-gray-200 my-6" />
-        <div class="flex flex-col gap-2">
-          <label class="text-base" for="status">Visibilidad</label>
-          @for (visible of visibility; track visible.name) {
-          <div class="field-checkbox">
-            <p-radiobutton
-              [inputId]="visible.key"
-              name="visibility"
-              formControlName="isVisible"
-              [value]="visible.key"
-            />
-            <label [for]="visible.key" class="ml-2">{{ visible.name }}</label>
-          </div>
-          }
-        </div>
-      </div>
-      <div class="w-full p-5 bg-white shadow-md rounded-md">
-        <h3 class="font-semibold text-lg mb-6">Inventario</h3>
-        <div class="flex flex-col gap-2">
-          <label class="text-base" for="status">¿Gestionar stock?</label>
-          @for (manage of manageStock; track manage.name) {
-          <div class="field-checkbox">
-            <p-radiobutton
-              [inputId]="manage.key"
-              name="manageStock"
-              formControlName="manageStock"
-              [value]="manage.key"
-            />
-            <label [for]="manage.key" class="ml-2">{{ manage.name }}</label>
-          </div>
-          }
-        </div>
-        <hr class="text-gray-200 my-6" />
-        @if (!productForm.get('manageStock')?.value) {
-        <div class="flex flex-col gap-2">
-          <label class="text-base" for="status">Disponibilidad</label>
-          @for (availability of stockAvailability; track availability.name) {
-          <div class="field-checkbox">
-            <p-radiobutton
-              [inputId]="availability.key"
-              name="availability"
-              formControlName="stockAvailability"
-              [value]="availability.key"
-            />
-            <label [for]="availability.key" class="ml-2">{{ availability.name }}</label>
-          </div>
-          }
-        </div>
-        } @if (productForm.get('manageStock')?.value) {
-        <div class="flex flex-col gap-2">
-          <label class="text-base" for="status">Cantidades</label>
-          <div class="flex flex-col gap-2" formArrayName="initialStocks">
-            @for (stock of initialStocks.controls; track stock.get('id')?.value; let i = $index) {
-            <div class="flex items-end gap-1" [formGroupName]="i">
-              <p-select
-                [options]="getAvailableBranchesForIndex(i)"
-                optionLabel="name"
-                optionValue="id"
-                formControlName="branchId"
-                placeholder="Seleccionar sucursal"
-                fluid
-              />
-              <div class="w-[12rem]">
-                <p-inputnumber
-                  formControlName="quantity"
-                  mode="decimal"
-                  [min]="0"
-                  [minFractionDigits]="selectedUnit?.allowsDecimals ? 2 : 0"
-                  [maxFractionDigits]="selectedUnit?.allowsDecimals ? 2 : 0"
-                  placeholder="Cantidad"
-                  [suffix]="' ' + selectedUnit?.abbreviation"
-                  fluid
+          <label class="text-base font-bold text-gray-700" for="status"
+            ><i class="pi pi-shield mr-2 text-indigo-500"></i>Estado</label
+          >
+          <div class="grid grid-cols-2 gap-4 mt-2">
+            @for (status of statuses; track status.name) {
+              <div
+                class="flex items-center p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:border-indigo-200 transition-all cursor-pointer"
+              >
+                <p-radiobutton
+                  [inputId]="status.key + '-status'"
+                  name="status"
+                  formControlName="isActive"
+                  [value]="status.key"
                 />
+                <label
+                  [for]="status.key + '-status'"
+                  class="ml-3 font-semibold text-gray-700 cursor-pointer text-sm"
+                  >{{ status.name }}</label
+                >
               </div>
-              @if (!isEditMode) {
-              <p-button
-                class="ml-3"
-                severity="danger"
-                icon="pi pi-trash"
-                (click)="removeStock(i)"
-              ></p-button>
-              }
-            </div>
             }
           </div>
-          @if (!isEditMode) {
-          <button
-            pButton
-            (click)="addStock()"
-            [disabled]="
-              branches().length === initialStocks.controls.length || selectedUnit === undefined
-            "
-          >
-            <i class="pi pi-plus" pButtonIcon></i>
-            <span pButtonLabel>Agregar sucursal</span>
-          </button>
-          } @if (selectedUnit === undefined) {
-
-          <small class="text-yellow-500 text-center"
-            >Considere seleccionar una unidad de medida.</small
-          >
-          }
         </div>
+        <hr class="text-gray-200 my-6" />
+        <div class="flex flex-col gap-2">
+          <label class="text-base font-bold text-gray-700" for="status"
+            ><i class="pi pi-eye mr-2 text-indigo-500"></i>Visibilidad</label
+          >
+          <div class="grid grid-cols-2 gap-4 mt-2">
+            @for (visible of visibility; track visible.name) {
+              <div
+                class="flex items-center p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:border-indigo-200 transition-all cursor-pointer"
+              >
+                <p-radiobutton
+                  [inputId]="visible.key + '-visibility'"
+                  name="visibility"
+                  formControlName="isVisible"
+                  [value]="visible.key"
+                />
+                <label
+                  [for]="visible.key + '-visibility'"
+                  class="ml-3 font-semibold text-gray-700 cursor-pointer text-sm"
+                  >{{ visible.name }}</label
+                >
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="w-full p-8 bg-white shadow-xl shadow-gray-200/40 border border-gray-50 rounded-2xl"
+      >
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="font-bold text-xl text-gray-800">Inventario</h3>
+          <i class="pi pi-box text-2xl text-indigo-500/50"></i>
+        </div>
+
+        <div class="flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <label class="text-base font-bold text-gray-700" for="status">¿Gestionar stock?</label>
+            <div class="flex gap-4">
+              @for (manage of manageStock; track manage.name) {
+                <div class="flex items-center">
+                  <p-radiobutton
+                    [inputId]="manage.key"
+                    name="manageStock"
+                    formControlName="manageStock"
+                    [value]="manage.key"
+                  />
+                  <label [for]="manage.key" class="ml-2 font-semibold text-gray-600 text-sm">{{
+                    manage.name
+                  }}</label>
+                </div>
+              }
+            </div>
+          </div>
+          <p class="text-xs text-gray-400 italic">
+            Habilite esta opción para llevar un registro detallado de las existencias físicas en sus
+            sucursales.
+          </p>
+        </div>
+
+        <hr class="text-gray-100 my-8" />
+        @if (!productForm.get('manageStock')?.value) {
+          <div class="flex flex-col gap-4">
+            <div class="flex items-center justify-between">
+              <label class="text-base font-bold text-gray-700"
+                ><i class="pi pi-check-circle mr-2 text-indigo-500"></i>Disponibilidad Manual</label
+              >
+            </div>
+            <p class="text-xs text-gray-400 italic">
+              Define la disponibilidad del producto de forma manual cuando no estás llevando un
+              control exacto de piezas por sucursal.
+            </p>
+            <div class="grid grid-cols-1 gap-3 mt-2">
+              @for (availability of stockAvailability; track availability.name) {
+                <div
+                  class="flex items-center p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:border-indigo-200 transition-all cursor-pointer"
+                >
+                  <p-radiobutton
+                    [inputId]="availability.key + '-availability'"
+                    name="availability"
+                    formControlName="stockAvailability"
+                    [value]="availability.key"
+                  />
+                  <label
+                    [for]="availability.key + '-availability'"
+                    class="ml-3 font-semibold text-gray-700 cursor-pointer text-sm"
+                    >{{ availability.name }}</label
+                  >
+                </div>
+              }
+            </div>
+          </div>
+        }
+        @if (productForm.get('manageStock')?.value) {
+          <div class="flex flex-col gap-6">
+            <div class="flex items-center justify-between">
+              <label class="text-base font-bold text-gray-700">Cantidades por Sucursal</label>
+              @if (isEditMode) {
+                <span
+                  class="text-[10px] font-bold px-2 py-1 bg-amber-50 text-amber-600 rounded-lg uppercase tracking-wider border border-amber-100"
+                  >Solo lectura</span
+                >
+              }
+            </div>
+
+            @if (isEditMode) {
+              <p-message severity="info" styleClass="w-full mb-4" variant="simple">
+                <span class="text-xs"
+                  >Para ajustar el stock de un producto existente, utilice el módulo de
+                  <strong>Movimientos de Inventario</strong>.</span
+                >
+              </p-message>
+            }
+
+            <div class="flex flex-col gap-4" formArrayName="initialStocks">
+              @for (stock of initialStocks.controls; track stock.get('id')?.value; let i = $index) {
+                <div
+                  class="p-4 rounded-xl border border-gray-100 bg-gray-50/30 flex flex-col gap-4"
+                  [formGroupName]="i"
+                >
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-widest"
+                      >Sucursal #{{ i + 1 }}</span
+                    >
+                    @if (!isEditMode) {
+                      <p-button
+                        icon="pi pi-times"
+                        [text]="true"
+                        severity="danger"
+                        (click)="removeStock(i)"
+                        styleClass="!p-0 !h-6 !w-6"
+                      ></p-button>
+                    }
+                  </div>
+                  <div class="grid grid-cols-1 gap-4">
+                    <p-select
+                      [options]="getAvailableBranchesForIndex(i)"
+                      optionLabel="name"
+                      optionValue="id"
+                      formControlName="branchId"
+                      placeholder="Seleccionar sucursal"
+                      styleClass="w-full !bg-white"
+                      fluid
+                    />
+                    <div class="flex flex-col gap-1">
+                      <p-inputnumber
+                        formControlName="quantity"
+                        mode="decimal"
+                        [min]="0"
+                        [minFractionDigits]="selectedUnit?.allowsDecimals ? 2 : 0"
+                        [maxFractionDigits]="selectedUnit?.allowsDecimals ? 2 : 0"
+                        placeholder="Cantidad inicial"
+                        [suffix]="' ' + selectedUnit?.abbreviation"
+                        styleClass="w-full !bg-white"
+                        fluid
+                      />
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+
+            @if (!isEditMode) {
+              <button
+                pButton
+                (click)="addStock()"
+                [disabled]="
+                  branches().length === initialStocks.controls.length || selectedUnit === undefined
+                "
+                class="p-button-outlined p-button-secondary !rounded-xl !py-3 w-full border-dashed border-2 flex items-center justify-center gap-2 hover:!bg-indigo-50 hover:!border-indigo-300 hover:!text-indigo-600 transition-all font-bold"
+              >
+                <i class="pi pi-plus-circle"></i>
+                <span>Agregar sucursal</span>
+              </button>
+            }
+
+            @if (selectedUnit === undefined) {
+              <div
+                class="p-4 rounded-xl bg-amber-50 border border-amber-100 flex items-center gap-3"
+              >
+                <i class="pi pi-exclamation-triangle text-amber-500"></i>
+                <small class="text-amber-700 font-medium"
+                  >Debe seleccionar una unidad de medida para configurar el stock.</small
+                >
+              </div>
+            }
+          </div>
         }
       </div>
-    </div>
-    <div class="col-start-2 col-span-10">
-      <hr class="w-full text-gray-200 my-6" />
-      <div class="flex justify-between">
+
+      <!-- Relocated Actions -->
+      <div class="flex flex-col gap-4 mt-2">
+        <p-button
+          (onClick)="onSaveProduct()"
+          [label]="isEditMode ? 'Actualizar Producto' : 'Guardar Producto'"
+          severity="primary"
+          styleClass="!rounded-2xl w-full shadow-lg !py-4 font-bold"
+          [loading]="isSaving"
+          icon="pi pi-check"
+        />
         <p-button
           (onClick)="onCancelProccess()"
           label="Cancelar"
-          variant="outlined"
-          severity="danger"
-        />
-        <p-button
-          (onClick)="onSaveProduct()"
-          [label]="isEditMode ? 'Actualizar' : 'Guardar'"
-          [raised]="true"
-          severity="success"
+          severity="secondary"
+          [text]="true"
+          styleClass="!rounded-2xl w-full font-bold !py-3"
+          icon="pi pi-times"
         />
       </div>
     </div>
   </form>
-</section>
+</div>

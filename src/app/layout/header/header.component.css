@@ -1,0 +1,15 @@
+.cash-expandable {
+  /* This ensures the content doesn't wrap or get squashed while expanding */
+  min-width: 0;
+}
+
+.group:hover .cash-expandable {
+  /* Using a fixed-ish width for the expansion */
+  width: 180px;
+  opacity: 1;
+}
+
+/* Optional: add a subtle glow effect on hover for the active session */
+.bg-emerald-50:hover {
+  box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.1), 0 4px 6px -2px rgba(16, 185, 129, 0.05);
+}

@@ -8,6 +8,10 @@ import {
   TopSellingProductDto,
   CategoryDistributionDto,
   PaymentMethodStatDto,
+  HourlySalesDto,
+  WeekdaySalesDto,
+  InventoryMovementReportDto,
+  ProfitReportDto,
 } from '../models/reports.models';
 import { ApiResponse } from '../models/api-response.model';
 
@@ -82,5 +86,54 @@ export class ReportsService {
         params,
       },
     );
+  }
+
+  getHourlySales(
+    startDate?: string,
+    endDate?: string,
+    branchId?: string,
+  ): Observable<ApiResponse<HourlySalesDto[]>> {
+    let params = new HttpParams();
+    if (startDate) params = params.set('startDate', startDate);
+    if (endDate) params = params.set('endDate', endDate);
+    if (branchId) params = params.set('branchId', branchId);
+    return this.http.get<ApiResponse<HourlySalesDto[]>>(`${this.apiUrl}/sales/hourly`, { params });
+  }
+
+  getWeekdaySales(
+    startDate?: string,
+    endDate?: string,
+    branchId?: string,
+  ): Observable<ApiResponse<WeekdaySalesDto[]>> {
+    let params = new HttpParams();
+    if (startDate) params = params.set('startDate', startDate);
+    if (endDate) params = params.set('endDate', endDate);
+    if (branchId) params = params.set('branchId', branchId);
+    return this.http.get<ApiResponse<WeekdaySalesDto[]>>(`${this.apiUrl}/sales/weekday`, {
+      params,
+    });
+  }
+
+  getInventoryMovements(
+    days: number = 30,
+    branchId?: string,
+  ): Observable<ApiResponse<InventoryMovementReportDto[]>> {
+    let params = new HttpParams().set('days', days);
+    if (branchId) params = params.set('branchId', branchId);
+    return this.http.get<ApiResponse<InventoryMovementReportDto[]>>(
+      `${this.apiUrl}/inventory/movements`,
+      { params },
+    );
+  }
+
+  getProfitReport(
+    days: number = 30,
+    branchId?: string,
+  ): Observable<ApiResponse<ProfitReportDto[]>> {
+    let params = new HttpParams().set('days', days);
+    if (branchId) params = params.set('branchId', branchId);
+    return this.http.get<ApiResponse<ProfitReportDto[]>>(`${this.apiUrl}/financial/profit`, {
+      params,
+    });
   }
 }

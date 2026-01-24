@@ -20,6 +20,10 @@ import {
   TopSellingProductDto,
   CategoryDistributionDto,
   PaymentMethodStatDto,
+  HourlySalesDto,
+  WeekdaySalesDto,
+  InventoryMovementReportDto,
+  ProfitReportDto,
 } from '../../core/models/reports.models';
 
 @Component({
@@ -70,6 +74,23 @@ export class DashboardComponent implements OnInit {
   isLoadingCategories = false;
   isLoadingPaymentMethods = false;
   isLoadingBranches = false;
+  isLoadingHourly = false;
+  isLoadingWeekday = false;
+  isLoadingMovements = false;
+  isLoadingProfit = false;
+
+  // New Charts Data
+  hourlySalesData: any;
+  hourlySalesOptions: any;
+
+  weekdaySalesData: any;
+  weekdaySalesOptions: any;
+
+  inventoryMovementsData: any;
+  inventoryMovementsOptions: any;
+
+  profitData: any;
+  profitOptions: any;
 
   get canFilterByBranch(): boolean {
     const user = this.authService.currentUser;
@@ -124,6 +145,10 @@ export class DashboardComponent implements OnInit {
     this.loadTopProducts(startDate, endDate);
     this.loadCategories();
     this.loadPaymentMethods(startDate, endDate);
+    this.loadHourlySales(startDate, endDate);
+    this.loadWeekdaySales(startDate, endDate);
+    this.loadInventoryMovements();
+    this.loadProfitReport();
   }
 
   onFilterChange() {
@@ -171,7 +196,7 @@ export class DashboardComponent implements OnInit {
       labels: data.map((d) => new Date(d.date).toLocaleDateString()),
       datasets: [
         {
-          label: 'Ventas ($)',
+          label: 'Ventas (Q)',
           data: data.map((d) => d.total),
           fill: true,
           borderColor: '#6366f1',
@@ -278,6 +303,144 @@ export class DashboardComponent implements OnInit {
     };
   }
 
+  private loadHourlySales(startDate?: string, endDate?: string) {
+    this.isLoadingHourly = true;
+    this.reportsService.getHourlySales(startDate, endDate, this.selectedBranchId).subscribe({
+      next: (res) => {
+        this.updateHourlySalesChart(res.data);
+        this.isLoadingHourly = false;
+      },
+      error: (err) => {
+        console.error('Error loading hourly sales', err);
+        this.isLoadingHourly = false;
+      },
+    });
+  }
+
+  private updateHourlySalesChart(data: HourlySalesDto[]) {
+    this.hourlySalesData = {
+      labels: data.map((d) => `${d.hour}:00`),
+      datasets: [
+        {
+          label: 'Ventas (Q)',
+          data: data.map((d) => d.total),
+          fill: true,
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          tension: 0.4,
+        },
+      ],
+    };
+  }
+
+  private loadWeekdaySales(startDate?: string, endDate?: string) {
+    this.isLoadingWeekday = true;
+    this.reportsService.getWeekdaySales(startDate, endDate, this.selectedBranchId).subscribe({
+      next: (res) => {
+        this.updateWeekdaySalesChart(res.data);
+        this.isLoadingWeekday = false;
+      },
+      error: (err) => {
+        console.error('Error loading weekday sales', err);
+        this.isLoadingWeekday = false;
+      },
+    });
+  }
+
+  private updateWeekdaySalesChart(data: WeekdaySalesDto[]) {
+    this.weekdaySalesData = {
+      labels: data.map((d) => d.day),
+      datasets: [
+        {
+          label: 'Ventas (Q)',
+          data: data.map((d) => d.total),
+          backgroundColor: '#f59e0b',
+          borderRadius: 8,
+        },
+      ],
+    };
+  }
+
+  private loadInventoryMovements() {
+    this.isLoadingMovements = true;
+    this.reportsService.getInventoryMovements(30, this.selectedBranchId).subscribe({
+      next: (res) => {
+        this.updateInventoryMovementsChart(res.data);
+        this.isLoadingMovements = false;
+      },
+      error: (err) => {
+        console.error('Error loading inventory movements', err);
+        this.isLoadingMovements = false;
+      },
+    });
+  }
+
+  private updateInventoryMovementsChart(data: InventoryMovementReportDto[]) {
+    this.inventoryMovementsData = {
+      labels: data.map((d) => new Date(d.date).toLocaleDateString()),
+      datasets: [
+        {
+          label: 'Entradas',
+          data: data.map((d) => d.entries),
+          backgroundColor: '#10b981',
+          borderRadius: 4,
+        },
+        {
+          label: 'Salidas',
+          data: data.map((d) => d.exits),
+          backgroundColor: '#ef4444',
+          borderRadius: 4,
+        },
+      ],
+    };
+  }
+
+  private loadProfitReport() {
+    this.isLoadingProfit = true;
+    this.reportsService.getProfitReport(30, this.selectedBranchId).subscribe({
+      next: (res) => {
+        this.updateProfitChart(res.data);
+        this.isLoadingProfit = false;
+      },
+      error: (err) => {
+        console.error('Error loading profit report', err);
+        this.isLoadingProfit = false;
+      },
+    });
+  }
+
+  private updateProfitChart(data: ProfitReportDto[]) {
+    this.profitData = {
+      labels: data.map((d) => new Date(d.date).toLocaleDateString()),
+      datasets: [
+        {
+          label: 'Ingresos (Q)',
+          data: data.map((d) => d.revenue),
+          fill: true,
+          borderColor: '#6366f1',
+          backgroundColor: 'rgba(99, 102, 241, 0.1)',
+          tension: 0.4,
+        },
+        {
+          label: 'Egresos (Q)',
+          data: data.map((d) => d.expenses),
+          fill: true,
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245, 158, 11, 0.1)',
+          tension: 0.4,
+        },
+        {
+          label: 'Utilidad (Q)',
+          data: data.map((d) => d.profit),
+          fill: false,
+          borderColor: '#10b981',
+          borderWidth: 3,
+          tension: 0.4,
+        },
+      ],
+    };
+  }
+
   private initChartOptions() {
     const documentStyle = getComputedStyle(document.documentElement);
     const textColor = documentStyle.getPropertyValue('--text-color');
@@ -372,6 +535,131 @@ export class DashboardComponent implements OnInit {
             font: {
               weight: 500,
             },
+          },
+          grid: {
+            color: surfaceBorder,
+            drawBorder: false,
+          },
+        },
+        y: {
+          ticks: {
+            color: textColorSecondary,
+          },
+          grid: {
+            color: surfaceBorder,
+            drawBorder: false,
+          },
+        },
+      },
+    };
+
+    this.hourlySalesOptions = {
+      maintainAspectRatio: false,
+      aspectRatio: 0.6,
+      plugins: {
+        legend: {
+          labels: {
+            color: textColor,
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: textColorSecondary,
+          },
+          grid: {
+            color: surfaceBorder,
+            drawBorder: false,
+          },
+        },
+        y: {
+          ticks: {
+            color: textColorSecondary,
+          },
+          grid: {
+            color: surfaceBorder,
+            drawBorder: false,
+          },
+        },
+      },
+    };
+
+    this.weekdaySalesOptions = {
+      maintainAspectRatio: false,
+      aspectRatio: 0.8,
+      plugins: {
+        legend: {
+          display: false,
+        },
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: textColorSecondary,
+          },
+          grid: {
+            display: false,
+          },
+        },
+        y: {
+          ticks: {
+            color: textColorSecondary,
+          },
+          grid: {
+            color: surfaceBorder,
+            drawBorder: false,
+          },
+        },
+      },
+    };
+
+    this.inventoryMovementsOptions = {
+      maintainAspectRatio: false,
+      aspectRatio: 0.8,
+      plugins: {
+        legend: {
+          labels: {
+            color: textColor,
+            usePointStyle: true,
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: textColorSecondary,
+          },
+          grid: {
+            display: false,
+          },
+        },
+        y: {
+          ticks: {
+            color: textColorSecondary,
+          },
+          grid: {
+            color: surfaceBorder,
+            drawBorder: false,
+          },
+        },
+      },
+    };
+
+    this.profitOptions = {
+      maintainAspectRatio: false,
+      aspectRatio: 0.6,
+      plugins: {
+        legend: {
+          labels: {
+            color: textColor,
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: textColorSecondary,
           },
           grid: {
             color: surfaceBorder,

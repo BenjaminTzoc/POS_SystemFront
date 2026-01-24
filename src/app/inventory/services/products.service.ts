@@ -12,8 +12,11 @@ export class ProductsService {
   private http = inject(HttpClient);
   private readonly API_URL = `${environment.apiUrl}/products`;
 
-  getProducts(branchId?: string): Observable<ApiResponse<Product[]>> {
-    let params = new HttpParams();
+  getProducts(
+    branchId?: string,
+    includeDeleted: boolean = false,
+  ): Observable<ApiResponse<Product[]>> {
+    let params = new HttpParams().set('includeDeleted', includeDeleted.toString());
     if (branchId) {
       params = params.set('branchId', branchId);
     }
@@ -21,12 +24,17 @@ export class ProductsService {
     return this.http.get<ApiResponse<Product[]>>(`${this.API_URL}`, { params });
   }
 
-  getProduct(productId: string): Observable<ApiResponse<Product>> {
-    return this.http.get<ApiResponse<Product>>(`${this.API_URL}/${productId}`);
+  getProduct(productId: string, includeDeleted: boolean = false): Observable<ApiResponse<Product>> {
+    let params = new HttpParams().set('includeDeleted', includeDeleted.toString());
+    return this.http.get<ApiResponse<Product>>(`${this.API_URL}/${productId}`, { params });
   }
 
-  searchProducts(query: string, branchId?: string): Observable<ApiResponse<Product[]>> {
-    let params = new HttpParams().set('q', query);
+  searchProducts(
+    query: string,
+    branchId?: string,
+    includeDeleted: boolean = false,
+  ): Observable<ApiResponse<Product[]>> {
+    let params = new HttpParams().set('q', query).set('includeDeleted', includeDeleted.toString());
 
     if (branchId) {
       params = params.set('branchId', branchId);
@@ -45,6 +53,10 @@ export class ProductsService {
 
   deleteProduct(productId: string): Observable<ApiResponse<any>> {
     return this.http.delete<ApiResponse<any>>(`${this.API_URL}/${productId}`);
+  }
+
+  restoreProduct(productId: string): Observable<ApiResponse<Product>> {
+    return this.http.patch<ApiResponse<Product>>(`${this.API_URL}/${productId}/restore`, {});
   }
 
   getCategories(showDeleted: boolean = false): Observable<ApiResponse<Category[]>> {

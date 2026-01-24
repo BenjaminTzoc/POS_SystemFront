@@ -55,6 +55,7 @@ export class InventoryFormComponent implements OnInit {
   isSuperAdmin: boolean = false;
 
   checked: boolean = false;
+  isSaving: boolean = false;
 
   ngOnInit(): void {
     this.initForm();
@@ -185,6 +186,7 @@ export class InventoryFormComponent implements OnInit {
       return;
     }
 
+    this.isSaving = true;
     this.inventoryService.createInventory(body).subscribe({
       next: (response) => {
         if (response.statusCode === 201) {
@@ -202,7 +204,9 @@ export class InventoryFormComponent implements OnInit {
           summary: 'Error',
           detail: `Error creando el inventario: ${error.error.message}`,
         });
+        this.isSaving = false;
       },
+      complete: () => (this.isSaving = false),
     });
   }
 
@@ -218,16 +222,10 @@ export class InventoryFormComponent implements OnInit {
       message: '¿Estás seguro de cancelar este proceso?',
       header: 'Confirmar cancelación',
       icon: 'pi pi-info-circle',
+      acceptLabel: 'Cancelar proceso',
       rejectLabel: 'Regresar',
-      rejectButtonProps: {
-        label: 'Regresar',
-        severity: 'secondary',
-        outlined: true,
-      },
-      acceptButtonProps: {
-        label: 'Cancelar proceso',
-        severity: 'danger',
-      },
+      acceptButtonStyleClass: 'p-button-danger !rounded-2xl',
+      rejectButtonStyleClass: 'p-button-secondary p-button-text !rounded-2xl',
 
       accept: () => {
         this.router.navigate(['inventory/inventories']);

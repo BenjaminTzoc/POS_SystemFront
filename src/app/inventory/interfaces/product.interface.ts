@@ -35,6 +35,7 @@ export interface Product {
   unit: Unit;
   stock?: number;
   inventories?: Inventory[];
+  deletedAt?: string;
 }
 
 //INVENTARIOS

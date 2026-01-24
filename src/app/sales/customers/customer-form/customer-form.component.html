@@ -1,84 +1,213 @@
-<section class="px-16 py-10">
-  <form class="grid grid-cols-12 gap-x-6" [formGroup]="customerForm">
-    <div class="col-start-2 col-span-10 flex justify-between">
-      <h1 class="text-2xl font-semibold mb-8">Nuevo cliente</h1>
-    </div>
-    <div class="col-start-2 col-span-10 flex flex-col gap-2">
-      <div class="py-5 px-10 rounded-md bg-white shadow-md">
-        <section>
-          <h3 class="font-semibold text-lg">General</h3>
-          <hr class="w-full text-gray-200 mt-2 mb-6">
-          <section class="space-y-4 mb-6">
-            <div class="grid grid-cols-2 gap-4">
-              <div class="flex flex-col">
-                <label class="text-base" for="name">Nombre<span class="text-red-700">*</span></label>
-                <input pInputText id="name" formControlName="name" aria-describedby="name-help">
-                @if (customerForm.get('name')?.invalid && customerForm.get('name')?.touched) {
-                  <small class="text-red-700" id="name-help">Ingrese el nombre del proveedor.</small>
-                }
-              </div>
-              <div class="flex flex-col">
-                <label class="text-base" for="name">NIT</label>
-                <input pInputText id="nit" formControlName="nit" aria-describedby="nit-help">
-                @if (customerForm.get('nit')?.invalid && customerForm.get('nit')?.touched) {
-                  <small class="text-red-700" id="nit-help">Ingrese el nit del proveedor.</small>
-                }
-              </div>
-              <div class="flex flex-col">
-                <label class="text-base" for="email">Email</label>
-                <input pInputText id="email" formControlName="email" aria-describedby="email-help">
-                @if (customerForm.get('email')?.invalid && customerForm.get('email')?.touched) {
-                  <small class="text-red-700" id="email-help">Ingrese el email de contacto.</small>
-                } 
-              </div>
-              <div class="flex flex-col">
-                <label class="text-base" for="categoryId">Categoría</label>
-                <p-select
-                  [options]="categories"
-                  [checkmark]="true"
-                  [showClear]="true"
-                  formControlName="categoryId"
-                  optionLabel="name"
-                  optionValue="id"
-                  placeholder="Seleccionar una categoría"
-                  class="w-full col-span-3"
-                />
-                @if (customerForm.get('categoryId')?.invalid && customerForm.get('categoryId')?.touched) {
-                  <small class="text-red-700" id="categoryId-help">Seleccione una categoría para el cliente.</small>
-                } 
-              </div>
-              <div class="col-span-2 flex flex-col">
-                <label class="text-base" for="address">Dirección</label>
-                <input pInputText id="address" formControlName="address" aria-describedby="address-help">
-                @if (customerForm.get('address')?.invalid && customerForm.get('address')?.touched) {
-                  <small class="text-red-700" id="address-help">Ingrese el email de contacto.</small>
-                } 
-              </div>
-              <div class="flex flex-col">
-                <label class="text-base" for="contactName">Nombre de contacto<span class="text-red-700">*</span></label>
-                <input pInputText id="contactName" formControlName="contactName" aria-describedby="contactName-help">
-                @if (customerForm.get('contactName')?.invalid && customerForm.get('contactName')?.touched) {
-                  <small class="text-red-700" id="contactName-help">Ingrese el nombre del contacto.</small>
-                }
-              </div>
-              <div class="flex flex-col">
-                <label class="text-base" for="phone">Teléfono de contacto<span class="text-red-700">*</span></label>
-                <input pInputText id="phone" formControlName="phone" aria-describedby="phone-help">
-                @if (customerForm.get('phone')?.invalid && customerForm.get('phone')?.touched) {
-                  <small class="text-red-700" id="phone-help">Ingrese el número de contacto.</small>
-                }
-              </div>
-            </div>
-          </section>
-        </section>
+<div class="p-6 px-20 bg-gray-50/30 min-h-screen">
+  <!-- Header Section -->
+  <div class="max-w-[1400px] mx-auto mb-10">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-4xl font-bold text-gray-900 tracking-tight">
+          {{ isEditMode ? 'Editar Cliente' : 'Nuevo Cliente' }}
+        </h1>
+        <p class="text-gray-500 mt-2 text-md">
+          {{
+            isEditMode
+              ? 'Actualice la información del cliente registrado.'
+              : 'Registre un nuevo cliente en su base de datos.'
+          }}
+        </p>
       </div>
     </div>
-    <div class="col-start-2 col-span-10">
-      <hr class="w-full text-gray-200 my-6">
-      <div class="flex justify-between">
-        <p-button (onClick)="onCancelProccess()" label="Cancelar" variant="outlined" severity="danger" />
-        <p-button (onClick)="onSaveCustomer()" label="Guardar" [raised]="true" severity="success" />
+  </div>
+
+  <form class="grid grid-cols-12 gap-8 max-w-[1400px] mx-auto" [formGroup]="customerForm">
+    <!-- Left Column: Fields -->
+    <div class="col-start-1 col-span-12 lg:col-start-1 lg:col-span-8 flex flex-col gap-8">
+      <!-- General Info Card -->
+      <div class="p-8 rounded-2xl bg-white shadow-xl shadow-gray-200/40 border border-gray-50">
+        <h3 class="font-bold text-xl text-gray-800 mb-6">Información General</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Name -->
+          <div class="flex flex-col gap-2">
+            <label class="text-base font-bold text-gray-700" for="name">
+              Nombre / Razón Social<span class="text-red-700">*</span>
+            </label>
+            <input
+              pInputText
+              id="name"
+              formControlName="name"
+              class="!rounded-xl border-gray-200"
+              placeholder="Ej: Juan Pérez"
+            />
+            @if (customerForm.get('name')?.invalid && customerForm.get('name')?.touched) {
+              <small class="text-rose-500 text-xs font-bold mt-1"
+                >Ingrese el nombre completo.</small
+              >
+            }
+          </div>
+
+          <!-- NIT -->
+          <div class="flex flex-col gap-2">
+            <label class="text-base font-bold text-gray-700" for="nit">NIT</label>
+            <input
+              pInputText
+              id="nit"
+              formControlName="nit"
+              class="!rounded-xl border-gray-200"
+              placeholder="C/F o Número de NIT"
+            />
+          </div>
+
+          <!-- Category -->
+          <div class="flex flex-col gap-2 col-span-1 md:col-span-2">
+            <label class="text-base font-bold text-gray-700" for="categoryId"
+              >Categoría de Cliente<span class="text-red-700">*</span></label
+            >
+            <p-select
+              [options]="categories"
+              [checkmark]="true"
+              [showClear]="true"
+              formControlName="categoryId"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Seleccionar una categoría"
+              class="w-full"
+              styleClass="!rounded-xl border-gray-200"
+            />
+            @if (
+              customerForm.get('categoryId')?.invalid && customerForm.get('categoryId')?.touched
+            ) {
+              <small class="text-rose-500 text-xs font-bold mt-1"
+                >Seleccione una categoría para el cliente.</small
+              >
+            }
+          </div>
+
+          <!-- Address -->
+          <div class="flex flex-col gap-2 col-span-1 md:col-span-2">
+            <label class="text-base font-bold text-gray-700" for="address"
+              >Dirección de Envío / Cobro</label
+            >
+            <input
+              pInputText
+              id="address"
+              formControlName="address"
+              class="!rounded-xl border-gray-200"
+              placeholder="Calle, Avenida, Zona, etc."
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Info Card -->
+      <div
+        class="p-8 rounded-2xl bg-white shadow-xl shadow-gray-200/40 border border-gray-50 text-indigo-900"
+      >
+        <h3 class="font-bold text-xl text-gray-800 mb-6 flex items-center gap-2">
+          <i class="pi pi-phone text-indigo-500 text-lg"></i> Información de Contacto
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Email -->
+          <div class="flex flex-col gap-2 col-span-1 md:col-span-2">
+            <label class="text-base font-bold text-gray-700" for="email">Correo Electrónico</label>
+            <div
+              class="flex items-center bg-gray-50 border border-gray-100 rounded-xl px-4 focus-within:ring-2 focus-within:ring-indigo-100 transition-all"
+            >
+              <i class="pi pi-envelope text-gray-400 mr-3"></i>
+              <input
+                pInputText
+                id="email"
+                formControlName="email"
+                class="!border-none !bg-transparent !shadow-none w-full !px-0 py-3"
+                placeholder="ejemplo@correo.com"
+              />
+            </div>
+          </div>
+
+          <!-- Contact Name -->
+          <div class="flex flex-col gap-2">
+            <label class="text-base font-bold text-gray-700" for="contactName"
+              >Persona de Contacto<span class="text-red-700">*</span></label
+            >
+            <input
+              pInputText
+              id="contactName"
+              formControlName="contactName"
+              class="!rounded-xl border-gray-200"
+              placeholder="Nombre completo"
+            />
+            @if (
+              customerForm.get('contactName')?.invalid && customerForm.get('contactName')?.touched
+            ) {
+              <small class="text-rose-500 text-xs font-bold mt-1"
+                >Ingrese el nombre del contacto.</small
+              >
+            }
+          </div>
+
+          <!-- Phone -->
+          <div class="flex flex-col gap-2">
+            <label class="text-base font-bold text-gray-700" for="phone"
+              >Teléfono<span class="text-red-700">*</span></label
+            >
+            <input
+              pInputText
+              id="phone"
+              formControlName="phone"
+              class="!rounded-xl border-gray-200"
+              placeholder="+502 0000 0000"
+            />
+            @if (customerForm.get('phone')?.invalid && customerForm.get('phone')?.touched) {
+              <small class="text-rose-500 text-xs font-bold mt-1"
+                >Ingrese el número telefónico.</small
+              >
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Actions -->
+    <div class="col-span-12 lg:col-span-4 flex flex-col gap-6">
+      <div
+        class="p-8 rounded-2xl bg-white shadow-xl shadow-gray-200/40 border border-gray-50 sticky top-10"
+      >
+        <h3 class="font-bold text-xl text-gray-800 mb-6">Finalizar Registro</h3>
+        <p class="text-sm text-gray-400 leading-relaxed mb-8 italic">
+          Complete la información obligatoria marcada con
+          <span class="text-rose-500 font-black">*</span> para guardar al cliente.
+        </p>
+
+        <div class="flex flex-col gap-4">
+          <button
+            pButton
+            (click)="onSaveCustomer()"
+            [label]="isEditMode ? 'Actualizar Cliente' : 'Guardar Cliente'"
+            icon="pi pi-check"
+            class="p-button-raised p-button-primary !rounded-2xl !py-4 shadow-lg hover:shadow-indigo-200 transition-all font-bold w-full"
+            [loading]="isSaving"
+          ></button>
+
+          <button
+            pButton
+            (click)="onCancelProccess()"
+            label="Cancelar"
+            icon="pi pi-times"
+            class="p-button-text p-button-secondary !rounded-2xl !py-3 font-bold w-full"
+          ></button>
+        </div>
+      </div>
+
+      <!-- Info Feature -->
+      <div class="p-6 rounded-2xl bg-amber-50 border border-amber-100 border-dashed animate-pulse">
+        <div class="flex items-center gap-3 text-amber-600 mb-2">
+          <i class="pi pi-shield font-bold"></i>
+          <span class="text-xs font-black uppercase tracking-widest">Control de Datos</span>
+        </div>
+        <p class="text-[11px] text-amber-700 leading-relaxed">
+          Los datos de contacto son vitales para el envío de facturas electrónicas y promociones de
+          lealtad.
+        </p>
       </div>
     </div>
   </form>
-</section>
+</div>

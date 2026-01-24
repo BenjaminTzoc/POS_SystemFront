@@ -1,137 +1,237 @@
-<section class="px-16 py-10">
-  <form class="grid grid-cols-12 gap-x-6" [formGroup]="inventoryForm">
-    <div class="col-start-2 col-span-10 flex justify-between">
-      <h1 class="text-2xl font-semibold mb-8">Generar nuevo inventario</h1>
-    </div>
-    <div class="col-start-2 col-span-10 flex flex-col gap-2">
-      <div class="py-5 px-10 rounded-md bg-white shadow-md">
-        <h3 class="font-semibold text-lg mb-6">General</h3>
-        <section class="space-y-4">
-          <div class="grid grid-cols-2 gap-4">
-            <div class="flex flex-col">
-              <label class="text-base" for="product">Producto<span class="text-red-700">*</span></label>
-              <p-select 
-                [options]="products" 
-                [filter]="true"
-                [filterFields]="['name', 'sku']"
-                [showClear]="true"
-                (onChange)="onProductChange($event)"
-                formControlName="productId"
-                optionLabel="name" 
-                optionValue="id" 
-                placeholder="Seleccionar un producto" 
-                class="w-full"
-              >
-                <ng-template #selectedItem let-selectedOption>
-                  <div class="flex items-center gap-4">
-                    <div class="w-15 aspect-square rounded-lg bg-gray-400 overflow-hidden">
-                      <img class="h-full object-cover object-top" [src]="getProductImageUrl(selectedOption.imageUrl)" alt="">
-                    </div>
-                    <div class="flex flex-col">
-                      <small class="text-xs">{{ selectedOption.sku }}</small>
-                      {{ selectedOption.name }}
-                    </div>
-                  </div>
-                </ng-template>
-                <ng-template let-product #item>
-                  <div class="flex items-center gap-4">
-                    <div class="w-15 aspect-square rounded-lg bg-gray-400 overflow-hidden">
-                      <img class="h-full object-cover object-top" [src]="getProductImageUrl(product.imageUrl)" alt="">
-                    </div>
-                    <div class="flex flex-col">
-                      <small class="text-xs">{{ product.sku }}</small>
-                      {{ product.name }}
-                    </div>
-                  </div>
-                </ng-template>
-              </p-select>
-              @if (inventoryForm.get('productId')?.invalid && inventoryForm.get('productId')?.touched) {
-                <small class="text-red-700" id="product-help">Seleccione un producto.</small>
-              }
-            </div>
-            <div class="flex flex-col">
-              <label class="text-base" for="branch">Sucursal<span class="text-red-700">*</span></label>
-              <p-select 
-                [options]="branches" 
-                [checkmark]="true"
-                [showClear]="true"
-                (onChange)="onBranchChange($event)"
-                formControlName="branchId"
-                optionLabel="name" 
-                optionValue="id" 
-                placeholder="Seleccionar una sucursal" 
-                class="w-full"
-              />
-              @if (inventoryForm.get('branchId')?.invalid && inventoryForm.get('branchId')?.touched) {
-                <small class="text-red-700" id="branch-help">Seleccione una sucursal.</small>
-              }
-            </div>
-          </div>
-          <div class="grid grid-cols-3 gap-4">
-            <div class="flex flex-col">
-              <label class="text-base" for="branch">Stock<span class="text-red-700">*</span></label>
-              <p-inputnumber 
-                formControlName="stock" 
-                mode="decimal" 
-                [min]="0"
-                [minFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
-                [maxFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
-                placeholder="Cantidad"
-                [suffix]="'  ' + (selectedProduct?.unit?.abbreviation || '')"
-                fluid 
-              />
-              @if (inventoryForm.get('stock')?.invalid && inventoryForm.get('stock')?.touched) {
-                <small class="text-red-700" id="stock-help">Ingrese una cantidad válida.</small>
-              }
-            </div>
-            <div class="flex flex-col">
-              <label class="text-base" for="branch">Stock Mínimo<span class="text-red-700">*</span></label>
-              <div class="flex items-center gap-2">
-                <p-toggleswitch formControlName="minStockActivated" />
-                <div class="flex-1">
-                  <p-inputnumber 
-                    [disabled]="!inventoryForm.get('minStockActivated')?.value"
-                    formControlName="minStock" 
-                    mode="decimal" 
-                    [min]="0"
-                    [minFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
-                    [maxFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
-                    placeholder="Cantidad"
-                    [suffix]="'  ' + (selectedProduct?.unit?.abbreviation || '')"
-                    fluid 
-                  />
-                </div>
-              </div>
-            </div>
-            <div class="flex flex-col">
-              <label class="text-base" for="branch">Stock Máximo<span class="text-red-700">*</span></label>
-              <div class="flex items-center gap-2">
-                <p-toggleswitch formControlName="maxStockActivated" />
-                <div class="flex-1">
-                  <p-inputnumber 
-                    [disabled]="!inventoryForm.get('maxStockActivated')?.value"
-                    formControlName="maxStock" 
-                    mode="decimal" 
-                    [min]="0"
-                    [minFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
-                    [maxFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
-                    placeholder="Cantidad"
-                    [suffix]="'  ' + (selectedProduct?.unit?.abbreviation || '')"
-                    fluid 
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+<div class="p-6 px-20 bg-gray-50/30 min-h-screen">
+  <!-- Header Section -->
+  <div class="max-w-[1400px] mx-auto mb-10">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-4xl font-bold text-gray-900 tracking-tight">Generar nuevo inventario</h1>
+        <p class="text-gray-500 mt-2 text-md">
+          Establece las existencias iniciales y límites de stock para un producto en una sucursal.
+        </p>
       </div>
     </div>
-    <div class="col-start-2 col-span-10">
-      <hr class="w-full text-gray-200 my-6">
-      <div class="flex justify-between">
-        <p-button (onClick)="onCancelProccess()" label="Cancelar" variant="outlined" severity="danger" />
-        <p-button (onClick)="onSaveInventory()" label="Guardar" [raised]="true" severity="success" />
+  </div>
+
+  <form class="grid grid-cols-12 gap-8 max-w-[1400px] mx-auto" [formGroup]="inventoryForm">
+    <!-- Left Column: Selection & Stock -->
+    <div class="col-start-1 col-span-12 lg:col-start-1 lg:col-span-8 flex flex-col gap-8">
+      <div class="p-8 rounded-2xl bg-white shadow-xl shadow-gray-200/40 border border-gray-50">
+        <h3 class="font-bold text-xl text-gray-800 mb-6">Configuración de Inventario</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Product Selector -->
+          <div class="flex flex-col gap-2">
+            <label class="text-base font-bold text-gray-700" for="product">
+              <i class="pi pi-box mr-2 text-indigo-500"></i>Producto<span class="text-red-700"
+                >*</span
+              >
+            </label>
+            <p-select
+              [options]="products"
+              [filter]="true"
+              [filterFields]="['name', 'sku']"
+              [showClear]="true"
+              (onChange)="onProductChange($event)"
+              formControlName="productId"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Seleccionar producto"
+              class="w-full"
+              styleClass="!rounded-xl border-gray-200"
+            >
+              <ng-template #selectedItem let-selectedOption>
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden border border-gray-100 flex-shrink-0"
+                  >
+                    <img
+                      class="w-full h-full object-cover"
+                      [src]="getProductImageUrl(selectedOption.imageUrl)"
+                      alt=""
+                    />
+                  </div>
+                  <div class="flex flex-col">
+                    <small class="text-[10px] font-black text-indigo-500 uppercase leading-none">{{
+                      selectedOption.sku
+                    }}</small>
+                    <span class="text-sm font-bold text-gray-700">{{ selectedOption.name }}</span>
+                  </div>
+                </div>
+              </ng-template>
+              <ng-template let-product #item>
+                <div class="flex items-center gap-3 py-1">
+                  <div
+                    class="w-12 h-12 rounded-lg bg-gray-50 overflow-hidden border border-gray-100 flex-shrink-0"
+                  >
+                    <img
+                      class="w-full h-full object-cover"
+                      [src]="getProductImageUrl(product.imageUrl)"
+                      alt=""
+                    />
+                  </div>
+                  <div class="flex flex-col">
+                    <small class="text-[10px] font-black text-indigo-500 uppercase leading-none">{{
+                      product.sku
+                    }}</small>
+                    <span class="text-sm font-bold text-gray-700">{{ product.name }}</span>
+                  </div>
+                </div>
+              </ng-template>
+            </p-select>
+            @if (
+              inventoryForm.get('productId')?.invalid && inventoryForm.get('productId')?.touched
+            ) {
+              <small class="text-rose-500 text-xs font-bold mt-1">
+                <i class="pi pi-exclamation-circle mr-1 text-[10px]"></i>Seleccione un producto.
+              </small>
+            }
+          </div>
+
+          <!-- Branch Selector -->
+          <div class="flex flex-col gap-2">
+            <label class="text-base font-bold text-gray-700" for="branch">
+              <i class="pi pi-building mr-2 text-indigo-500"></i>Sucursal<span class="text-red-700"
+                >*</span
+              >
+            </label>
+            <p-select
+              [options]="branches"
+              [checkmark]="true"
+              [showClear]="true"
+              (onChange)="onBranchChange($event)"
+              formControlName="branchId"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Seleccionar sucursal"
+              class="w-full"
+              styleClass="!rounded-xl border-gray-200"
+            />
+            @if (inventoryForm.get('branchId')?.invalid && inventoryForm.get('branchId')?.touched) {
+              <small class="text-rose-500 text-xs font-bold mt-1">
+                <i class="pi pi-exclamation-circle mr-1 text-[10px]"></i>Seleccione una sucursal.
+              </small>
+            }
+          </div>
+        </div>
+
+        <hr class="text-gray-100 my-8" />
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <!-- Stock -->
+          <div class="flex flex-col gap-2 p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100">
+            <label class="text-sm font-black text-indigo-700 uppercase tracking-widest" for="stock"
+              >Stock Inicial</label
+            >
+            <p-inputnumber
+              formControlName="stock"
+              mode="decimal"
+              [min]="0"
+              [minFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
+              [maxFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
+              placeholder="0.00"
+              [suffix]="' ' + (selectedProduct?.unit?.abbreviation || '')"
+              styleClass="w-full !bg-white !rounded-xl"
+              fluid
+            />
+            <small class="text-[10px] text-indigo-400 font-bold italic"
+              >Existencia inicial en el sistema.</small
+            >
+          </div>
+
+          <!-- Min Stock -->
+          <div class="flex flex-col gap-2 p-4 rounded-2xl bg-gray-50 border border-gray-100">
+            <div class="flex items-center justify-between mb-1">
+              <label
+                class="text-sm font-black text-gray-500 uppercase tracking-widest"
+                for="minStock"
+                >Min.</label
+              >
+              <p-toggleswitch formControlName="minStockActivated" styleClass="scale-75" />
+            </div>
+            <p-inputnumber
+              [disabled]="!inventoryForm.get('minStockActivated')?.value"
+              formControlName="minStock"
+              mode="decimal"
+              [min]="0"
+              [minFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
+              [maxFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
+              placeholder="Stock Min"
+              [suffix]="' ' + (selectedProduct?.unit?.abbreviation || '')"
+              styleClass="w-full !bg-white !rounded-xl"
+              fluid
+            />
+          </div>
+
+          <!-- Max Stock -->
+          <div class="flex flex-col gap-2 p-4 rounded-2xl bg-gray-50 border border-gray-100">
+            <div class="flex items-center justify-between mb-1">
+              <label
+                class="text-sm font-black text-gray-500 uppercase tracking-widest"
+                for="maxStock"
+                >Max.</label
+              >
+              <p-toggleswitch formControlName="maxStockActivated" styleClass="scale-75" />
+            </div>
+            <p-inputnumber
+              [disabled]="!inventoryForm.get('maxStockActivated')?.value"
+              formControlName="maxStock"
+              mode="decimal"
+              [min]="0"
+              [minFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
+              [maxFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
+              placeholder="Stock Max"
+              [suffix]="' ' + (selectedProduct?.unit?.abbreviation || '')"
+              styleClass="w-full !bg-white !rounded-xl"
+              fluid
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Actions -->
+    <div class="col-span-12 lg:col-span-4 flex flex-col gap-6 mt-4 lg:mt-0">
+      <div
+        class="p-8 rounded-2xl bg-white shadow-xl shadow-gray-200/40 border border-gray-50 flex flex-col gap-6"
+      >
+        <h3 class="font-bold text-xl text-gray-800">Finalizar Proceso</h3>
+        <p class="text-sm text-gray-400 leading-relaxed italic">
+          Verifique que el producto y la sucursal sean correctos antes de guardar. Estos datos
+          inicializarán los registros de control físico.
+        </p>
+
+        <div class="flex flex-col gap-4 pt-4">
+          <p-button
+            (onClick)="onSaveInventory()"
+            label="Guardar Inventario"
+            severity="primary"
+            styleClass="!rounded-2xl w-full !py-4 shadow-lg font-bold"
+            [loading]="isSaving"
+            icon="pi pi-check"
+          />
+          <p-button
+            (onClick)="onCancelProccess()"
+            label="Cancelar"
+            severity="secondary"
+            [text]="true"
+            styleClass="!rounded-2xl w-full font-bold !py-3"
+            icon="pi pi-times"
+          />
+        </div>
+      </div>
+
+      <!-- Info Card -->
+      <div
+        class="p-6 rounded-2xl bg-indigo-50 border border-indigo-100 border-dashed animate-pulse"
+      >
+        <div class="flex items-center gap-3 text-indigo-600 mb-2">
+          <i class="pi pi-info-circle font-bold"></i>
+          <span class="text-xs font-black uppercase tracking-widest">Nota Importante</span>
+        </div>
+        <p class="text-[11px] text-indigo-700 leading-relaxed">
+          Este formulario es para <strong>inicializar</strong> el inventario de un producto en una
+          sucursal nueva. No use esto para ajustes de stock cotidianos.
+        </p>
       </div>
     </div>
   </form>
-</section>
+</div>

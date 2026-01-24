@@ -87,17 +87,10 @@ export class ProductCategoriesComponent implements OnInit {
       message: `¿Está seguro de eliminar la categoría: ${category.name}?`,
       header: 'Confirmar eliminación',
       icon: 'pi pi-info-circle',
+      acceptLabel: 'Eliminar',
       rejectLabel: 'Cancelar',
-      rejectButtonProps: {
-        label: 'Cancelar',
-        severity: 'secondary',
-        outlined: true,
-      },
-      acceptButtonProps: {
-        label: 'Eliminar',
-        severity: 'danger',
-      },
-
+      acceptButtonStyleClass: 'p-button-danger !rounded-2xl',
+      rejectButtonStyleClass: 'p-button-secondary p-button-text !rounded-2xl',
       accept: () => {
         this.productsService.deleteCategory(category.id).subscribe({
           next: (response) => {
@@ -141,7 +134,8 @@ export class ProductCategoriesComponent implements OnInit {
       icon: 'pi pi-refresh',
       acceptLabel: 'Restaurar',
       rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-success',
+      acceptButtonStyleClass: 'p-button-success !rounded-2xl',
+      rejectButtonStyleClass: 'p-button-secondary p-button-text !rounded-2xl',
       accept: () => {
         this.productsService.restoreCategory(category.id).subscribe({
           next: () => {

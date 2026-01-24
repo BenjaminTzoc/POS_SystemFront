@@ -47,6 +47,12 @@ export const RECURRENT_MENU: MenuItem[] = [
     permission: '',
   },
   {
+    label: 'POS Rápido',
+    icon: 'pi pi-desktop',
+    route: '/sales/pos',
+    permission: '',
+  },
+  {
     label: 'Movimientos de inventario',
     icon: 'pi pi-objects-column',
     route: '/inventory/inventory-movements',

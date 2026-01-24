@@ -13,7 +13,7 @@ import { CustomersService } from '../../services/customers.service';
   selector: 'app-customer-form',
   imports: [ReactiveFormsModule, InputTextModule, SelectModule, ButtonModule],
   templateUrl: './customer-form.component.html',
-  styleUrl: './customer-form.component.css'
+  styleUrl: './customer-form.component.css',
 })
 export class CustomerFormComponent implements OnInit {
   private fb = inject(FormBuilder);
@@ -27,6 +27,7 @@ export class CustomerFormComponent implements OnInit {
   customerId: string | null = null;
   selectedCustomer: ICustomer | null = null; //SOLO PARA EDICION
   isEditMode: boolean = false;
+  isSaving: boolean = false;
   customerForm!: FormGroup;
   categories: ICustomerCategory[] = [];
 
@@ -56,14 +57,14 @@ export class CustomerFormComponent implements OnInit {
         }
       },
       error: (err) => {
-        this.messageService.add({ 
-          severity: 'error', 
-          summary: 'Error', 
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
           detail: `Error obteniendo datos del cliente: ${err.error.message}`,
         });
         this.router.navigate(['/sales/customers']);
-      }
-    })
+      },
+    });
   }
 
   initializeForm(): void {
@@ -75,7 +76,7 @@ export class CustomerFormComponent implements OnInit {
       phone: ['', [Validators.required]],
       address: [''],
       categoryId: ['', [Validators.required]],
-    })
+    });
   }
 
   loadCategories(): void {
@@ -87,13 +88,13 @@ export class CustomerFormComponent implements OnInit {
         }
       },
       error: (err) => {
-        this.messageService.add({ 
-          severity: 'error', 
-          summary: 'Error', 
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
           detail: `Error ${this.isEditMode ? 'modificando' : 'creando'} el proveedor: ${err.error.message}`,
         });
-      }
-    })
+      },
+    });
   }
 
   onSaveCustomer(): void {
@@ -102,33 +103,38 @@ export class CustomerFormComponent implements OnInit {
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'Por favor, completa todos los campos requeridos'
+        detail: 'Por favor, completa todos los campos requeridos',
       });
       return;
     }
 
+    this.isSaving = true;
     const body = this.customerForm.value;
-    const request = !this.isEditMode ? this.customerService.createCustomer(body) : this.customerService.editCustomer(this.selectedCustomer!.id, body);
+    const request = !this.isEditMode
+      ? this.customerService.createCustomer(body)
+      : this.customerService.editCustomer(this.selectedCustomer!.id, body);
 
     request.subscribe({
       next: (res) => {
         if (this.isEditMode ? res.statusCode === 200 : res.statusCode === 201) {
-          this.messageService.add({ 
-            severity: 'success', 
-            summary: 'Éxito', 
-            detail: `El cliente se ha ${this.isEditMode ? 'modificado' : 'creado'} correctamente.`
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: `El cliente se ha ${this.isEditMode ? 'modificado' : 'creado'} correctamente.`,
           });
-          this.router.navigate(['/sales/customers'])
+          this.router.navigate(['/sales/customers']);
         }
       },
       error: (err) => {
-        this.messageService.add({ 
-          severity: 'error', 
-          summary: 'Error', 
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
           detail: `Error ${this.isEditMode ? 'modificando' : 'creando'} el cliente: ${err.error.message}`,
         });
+        this.isSaving = false;
       },
-    })
+      complete: () => (this.isSaving = false),
+    });
   }
 
   onCancelProccess(): void {
@@ -136,19 +142,13 @@ export class CustomerFormComponent implements OnInit {
       message: '¿Estás seguro de cancelar este proceso?',
       header: 'Confirmar cancelación',
       icon: 'pi pi-info-circle',
+      acceptLabel: 'Cancelar proceso',
       rejectLabel: 'Regresar',
-      rejectButtonProps: {
-        label: 'Regresar',
-        severity: 'secondary',
-        outlined: true,
-      },
-      acceptButtonProps: {
-        label: 'Cancelar proceso',
-        severity: 'danger',
-      },
+      acceptButtonStyleClass: 'p-button-danger !rounded-2xl',
+      rejectButtonStyleClass: 'p-button-secondary p-button-text !rounded-2xl',
 
       accept: () => {
-        this.router.navigate(['sales/customers'])
+        this.router.navigate(['sales/customers']);
       },
     });
   }
