@@ -76,6 +76,12 @@ export const RECURRENT_MENU: MenuItem[] = [
     route: '/inventory/branches',
     permission: '',
   },
+  {
+    label: 'Traslados de Inventario',
+    icon: 'pi pi-sync',
+    route: '/inventory/inventory-transfers',
+    permission: '',
+  },
 ];
 
 export const MENU_ITEMS: MenuItem[] = [
@@ -111,8 +117,8 @@ export const MENU_ITEMS: MenuItem[] = [
       },
       {
         label: 'Traslados',
-        icon: 'pi pi-arrows-h',
-        route: '/inventory/transfers',
+        icon: 'pi pi-sync',
+        route: '/inventory/inventory-transfers',
         permission: '',
       },
       {

@@ -77,4 +77,18 @@ export const INVENTORY_ROUTES: Routes = [
     loadComponent: () =>
       import('./branches/branch-form/branch-form.component').then((m) => m.BranchFormComponent),
   },
+  {
+    path: 'inventory-transfers',
+    loadComponent: () =>
+      import('./inventory-transfers/inventory-transfers.component').then(
+        (m) => m.InventoryTransfersComponent,
+      ),
+  },
+  {
+    path: 'new-transfer',
+    loadComponent: () =>
+      import('./inventory-transfers/transfer-form/transfer-form.component').then(
+        (m) => m.TransferFormComponent,
+      ),
+  },
 ];

@@ -1,129 +1,175 @@
-<div class="p-8 bg-gray-50/30 min-h-screen">
-  <div class="max-w-[1400px] mx-auto">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+<div class="p-6 bg-gray-50/30 min-h-screen">
+  <!-- Header Section -->
+  <div class="max-w-7xl mx-auto mb-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
       <div>
-        <h1 class="text-4xl font-black text-gray-900 tracking-tight">Historial de Cajas</h1>
-        <p class="text-gray-500 mt-2 text-lg font-medium">
-          Consulta el registro histórico de arqueos y turnos.
+        <h1 class="text-3xl font-bold text-gray-800 tracking-tight">Historial de Cajas</h1>
+        <p class="text-gray-500 mt-1 text-base">
+          Consulta el registro histórico de arqueos y turnos de tus sucursales.
         </p>
       </div>
-      <p-button
-        label="Actualizar"
-        icon="pi pi-refresh"
-        [loading]="isLoadingHistory()"
-        (click)="loadHistory()"
-        class="p-button-raised p-button-secondary !rounded-2xl !px-6"
-      ></p-button>
-    </div>
 
+      <div class="flex flex-wrap items-center gap-4">
+        <button
+          pButton
+          label="Actualizar"
+          icon="pi pi-refresh"
+          [loading]="isLoadingHistory()"
+          (click)="loadHistory()"
+          class="p-button-raised p-button-secondary !rounded-2xl !px-6 !py-3 shadow-lg hover:shadow-gray-200 transition-all font-bold"
+        ></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Table Card -->
+  <div class="max-w-7xl mx-auto">
     <div
-      class="bg-white rounded-[2.5rem] shadow-xl shadow-gray-200/40 border border-gray-100 overflow-hidden"
+      class="bg-white rounded-[2rem] shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden"
     >
       <p-table
         [value]="history()"
         [loading]="isLoadingHistory()"
         [paginator]="true"
-        [rows]="10"
+        [rows]="15"
         [rowsPerPageOptions]="[10, 20, 50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
         styleClass="p-datatable-modern"
       >
         <ng-template pTemplate="header">
           <tr class="!bg-gray-50/50">
-            <th class="!py-6 !pl-10 text-gray-400 font-bold uppercase text-xs tracking-widest">
-              Apertura
-            </th>
-            <th class="!py-6 text-gray-400 font-bold uppercase text-xs tracking-widest">
-              Sucursal / Cajero
-            </th>
-            <th class="!py-6 text-gray-400 font-bold uppercase text-xs tracking-widest">
-              Saldo Inicial
-            </th>
-            <th class="!py-6 text-gray-400 font-bold uppercase text-xs tracking-widest">
-              Saldo Final
-            </th>
-            <th class="!py-6 text-gray-400 font-bold uppercase text-xs tracking-widest">
-              Diferencia
-            </th>
             <th
-              class="!py-6 !pr-10 text-gray-400 font-bold uppercase text-xs tracking-widest text-center"
+              class="!py-5 !pl-10 text-gray-400 font-bold uppercase text-[10px] tracking-widest w-[120px]"
             >
               Estado
+            </th>
+            <th
+              class="!py-5 text-gray-400 font-bold uppercase text-[10px] tracking-widest w-[140px]"
+            >
+              Apertura
+            </th>
+            <th class="!py-5 text-gray-400 font-bold uppercase text-[10px] tracking-widest">
+              Sucursal / Cajero
+            </th>
+            <th
+              class="!py-5 text-gray-400 font-bold uppercase text-[10px] tracking-widest text-right"
+            >
+              Saldo Inicial
+            </th>
+            <th
+              class="!py-5 text-gray-400 font-bold uppercase text-[10px] tracking-widest text-right"
+            >
+              Saldo Final
+            </th>
+            <th
+              class="!py-5 !pr-10 text-gray-400 font-bold uppercase text-[10px] tracking-widest text-right"
+            >
+              Diferencia
             </th>
           </tr>
         </ng-template>
 
         <ng-template pTemplate="body" let-session>
-          <tr class="hover:bg-gray-50/50 transition-colors">
-            <td class="!py-5 !pl-10">
-              <div class="flex flex-col">
-                <span class="font-bold text-gray-700">{{
-                  session.openedAt | date: 'dd MMM, yyyy'
-                }}</span>
-                <span class="text-xs text-gray-400 font-medium"
-                  >{{ session.openedAt | date: 'HH:mm' }} hrs</span
-                >
-              </div>
-            </td>
-            <td class="!py-5">
-              <div class="flex flex-col">
-                <span class="font-bold text-gray-600 truncate max-w-[150px]">{{
-                  session.branchName
-                }}</span>
-                <span class="text-xs text-gray-400">{{ session.userName }}</span>
-              </div>
-            </td>
-            <td class="!py-5 font-bold text-gray-600 text-lg">
-              {{ session.openingBalance | currency }}
-            </td>
-            <td class="!py-5">
-              @if (session.status === 'CLOSED') {
-                <span class="font-bold text-gray-800 text-lg">
-                  {{ session.closingBalance | currency }}
-                </span>
-              }
-              @if (session.status === 'OPEN') {
-                <span class="text-emerald-500 font-black text-xs animate-pulse">SESIÓN ACTIVA</span>
-              }
-            </td>
-            <td class="!py-5">
-              @if (session.status === 'CLOSED') {
-                <span
-                  [ngClass]="session.difference === 0 ? 'text-emerald-500' : 'text-rose-500'"
-                  class="font-black text-lg"
-                >
-                  {{ session.difference | currency }}
-                </span>
-              }
-              @if (session.status === 'OPEN') {
-                <span class="text-gray-300 italic text-xs">Pendiente</span>
-              }
-            </td>
-            <td class="!py-5 !pr-10 text-center">
+          <tr class="group hover:bg-indigo-50/30 transition-colors border-b border-gray-50">
+            <td class="!py-4 !pl-10">
               <span
                 [ngClass]="
                   session.status === 'OPEN'
-                    ? 'bg-emerald-50 text-emerald-600'
-                    : 'bg-gray-100 text-gray-500'
+                    ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                    : 'bg-gray-50 text-gray-500 border-gray-100'
                 "
-                class="px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border"
-                [ngClass]="session.status === 'OPEN' ? 'border-emerald-100' : 'border-gray-200'"
+                class="inline-flex items-center px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border"
               >
+                <span
+                  class="w-1.5 h-1.5 rounded-full mr-2"
+                  [ngClass]="session.status === 'OPEN' ? 'bg-emerald-500' : 'bg-gray-400'"
+                ></span>
                 {{ session.status === 'OPEN' ? 'Abierta' : 'Cerrada' }}
               </span>
+            </td>
+            <td class="!py-4">
+              <div class="flex flex-col">
+                <span class="font-bold text-gray-800 text-sm leading-tight">{{
+                  session.openedAt | date: 'dd MMM, yyyy'
+                }}</span>
+                <span class="text-[10px] font-medium text-indigo-500 uppercase mt-0.5">{{
+                  session.openedAt | date: 'hh:mm a'
+                }}</span>
+              </div>
+            </td>
+            <td class="!py-4">
+              <div class="flex flex-col">
+                <span class="font-bold text-gray-700 text-sm">{{ session.branchName }}</span>
+                <span class="text-xs text-gray-400 tracking-tight">
+                  <i class="pi pi-user text-[10px] mr-1"></i>{{ session.userName }}
+                </span>
+              </div>
+            </td>
+            <td class="!py-4 text-right">
+              <span class="font-bold text-gray-600 text-sm">
+                {{ session.openingBalance | currency: 'Q ' }}
+              </span>
+            </td>
+            <td class="!py-4 text-right">
+              @if (session.status === 'CLOSED') {
+                <span class="font-black text-gray-800 text-sm">
+                  {{ session.closingBalance | currency: 'Q ' }}
+                </span>
+              } @else {
+                <span
+                  class="text-emerald-500 font-bold text-[10px] uppercase tracking-tighter animate-pulse"
+                  >Sesión Activa</span
+                >
+              }
+            </td>
+            <td class="!py-4 !pr-10 text-right">
+              @if (session.status === 'CLOSED') {
+                <div class="flex flex-col items-end">
+                  <span
+                    [ngClass]="session.difference >= 0 ? 'text-emerald-600' : 'text-rose-600'"
+                    class="font-black text-sm"
+                  >
+                    {{ session.difference | currency: 'Q ' }}
+                  </span>
+                  <span
+                    class="text-[9px] font-bold uppercase tracking-widest"
+                    [ngClass]="
+                      session.difference === 0
+                        ? 'text-gray-300'
+                        : session.difference > 0
+                          ? 'text-emerald-400'
+                          : 'text-rose-400'
+                    "
+                  >
+                    {{
+                      session.difference === 0
+                        ? 'Exacto'
+                        : session.difference > 0
+                          ? 'Sobrante'
+                          : 'Faltante'
+                    }}
+                  </span>
+                </div>
+              } @else {
+                <span class="text-gray-300 italic text-[10px] font-bold uppercase tracking-widest"
+                  >Pendiente</span
+                >
+              }
             </td>
           </tr>
         </ng-template>
 
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="6" class="text-center !py-20">
+            <td colspan="6" class="text-center !py-24">
               <div class="flex flex-col items-center gap-4">
-                <div class="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center">
+                <div class="w-20 h-20 bg-gray-50 rounded-[2rem] flex items-center justify-center">
                   <i class="pi pi-inbox text-4xl text-gray-200"></i>
                 </div>
                 <div>
-                  <p class="text-gray-500 font-bold text-lg">No hay registros</p>
-                  <p class="text-gray-400 text-sm">
+                  <p class="text-gray-800 font-bold text-xl">Sin historial de registros</p>
+                  <p class="text-gray-400 text-sm max-w-xs mx-auto">
                     Aún no se han realizado arqueos en el sistema.
                   </p>
                 </div>

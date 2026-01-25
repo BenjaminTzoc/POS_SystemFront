@@ -1,0 +1,187 @@
+<div class="p-4 px-12 bg-gray-50/30 min-h-screen">
+  <!-- Header Section -->
+  <div class="max-w-[1200px] mx-auto mb-6">
+    <div class="flex items-center gap-3 mb-2">
+      <button
+        pButton
+        icon="pi pi-arrow-left"
+        class="p-button-text p-button-secondary !rounded-lg !p-2"
+        (click)="onCancel()"
+      ></button>
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Nuevo Traslado</h1>
+        <p class="text-xs text-gray-500 font-medium">Movimiento controlado de stock entre sedes</p>
+      </div>
+    </div>
+  </div>
+
+  <form [formGroup]="transferForm" class="max-w-[1200px] mx-auto space-y-6 pb-20">
+    <!-- Configuration Card -->
+    <div
+      class="bg-white rounded-2xl shadow-xl shadow-gray-200/40 border border-gray-100 overflow-hidden"
+    >
+      <div class="px-8 py-5 border-b border-gray-50 bg-gray-50/20">
+        <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+          Configuración del Traslado
+        </h3>
+      </div>
+
+      <div class="p-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div class="flex flex-col gap-2.5">
+            <label class="text-[9px] font-black text-gray-400 uppercase tracking-widest px-1"
+              >Sucursal de Origen</label
+            >
+            <p-select
+              [options]="branches"
+              formControlName="originBranchId"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="¿De dónde sale?"
+              (onChange)="onOriginChange()"
+              styleClass="w-full !rounded-xl !bg-gray-50 !border-transparent !py-2.5 focus-within:!bg-white focus-within:!border-indigo-100 transition-all font-bold text-sm"
+            ></p-select>
+          </div>
+
+          <div class="flex flex-col gap-2.5">
+            <label class="text-[9px] font-black text-gray-400 uppercase tracking-widest px-1"
+              >Sucursal de Destino</label
+            >
+            <p-select
+              [options]="branches"
+              formControlName="destinationBranchId"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="¿A dónde llega?"
+              styleClass="w-full !rounded-xl !bg-gray-50 !border-transparent !py-2.5 focus-within:!bg-white focus-within:!border-indigo-100 transition-all font-bold text-sm"
+            ></p-select>
+          </div>
+        </div>
+
+        <div class="mt-8 flex flex-col gap-2.5">
+          <label class="text-[9px] font-black text-gray-400 uppercase tracking-widest px-1"
+            >Notas / Motivo</label
+          >
+          <textarea
+            pTextarea
+            formControlName="notes"
+            rows="2"
+            placeholder="Escribe el motivo del traslado o notas para el transportista..."
+            class="w-full !rounded-xl !p-4 !bg-gray-50 !border-transparent focus:!bg-white focus:!border-indigo-100 !transition-all font-medium text-sm text-gray-600 italic resize-none"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Items Card -->
+    <div
+      class="bg-white rounded-2xl shadow-xl shadow-gray-200/40 border border-gray-100 overflow-hidden"
+    >
+      <div
+        class="px-8 py-5 border-b border-gray-50 bg-gray-50/20 flex justify-between items-center"
+      >
+        <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+          Productos a Trasladar
+        </h3>
+        <button
+          pButton
+          type="button"
+          label="Añadir Producto"
+          icon="pi pi-plus"
+          (click)="addItem()"
+          class="p-button-text p-button-primary !rounded-lg !py-1 !px-3 font-bold text-[10px]"
+        ></button>
+      </div>
+
+      <div class="p-8" formArrayName="items">
+        <div class="space-y-4">
+          @for (item of items.controls; track $index) {
+            <div
+              [formGroupName]="$index"
+              class="flex flex-col md:flex-row items-end gap-4 p-4 rounded-xl bg-gray-50/30 border border-gray-50 group hover:bg-white hover:border-indigo-100 transition-all"
+            >
+              <div class="flex-1 w-full flex flex-col gap-2">
+                <label class="text-[8px] font-bold text-gray-400 uppercase ml-1">Producto</label>
+                <p-select
+                  [options]="products"
+                  [filter]="true"
+                  [filterFields]="['name', 'sku']"
+                  formControlName="productId"
+                  optionLabel="name"
+                  optionValue="id"
+                  placeholder="Selecciona el producto..."
+                  styleClass="w-full !bg-white !rounded-lg !py-1.5 text-xs font-bold"
+                >
+                  <ng-template let-prod #item>
+                    <div class="flex items-center gap-2 py-1">
+                      <img
+                        [src]="getProductImageUrl(prod.imageUrl)"
+                        class="w-8 h-8 rounded object-cover"
+                      />
+                      <div class="flex flex-col">
+                        <span class="text-xs font-bold text-gray-700">{{ prod.name }}</span>
+                        <span class="text-[8px] text-gray-400 font-bold">SKU: {{ prod.sku }}</span>
+                      </div>
+                    </div>
+                  </ng-template>
+                </p-select>
+              </div>
+
+              <div class="w-full md:w-32 flex flex-col gap-2">
+                <div class="flex justify-between px-1">
+                  <label class="text-[8px] font-bold text-gray-400 uppercase">Cantidad</label>
+                  @if (item.get('maxStock')?.value !== null) {
+                    <span class="text-[8px] font-black text-emerald-500 uppercase"
+                      >Stock: {{ item.get('maxStock')?.value }}</span
+                    >
+                  }
+                </div>
+                <p-inputnumber
+                  formControlName="quantity"
+                  [min]="0.01"
+                  [max]="item.get('maxStock')?.value || 999999"
+                  placeholder="0"
+                  styleClass="w-full"
+                  inputStyleClass="!w-full !bg-white !rounded-lg !py-2 !px-3 font-black text-gray-700 text-sm"
+                ></p-inputnumber>
+              </div>
+
+              <div class="flex flex-col gap-2">
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-trash"
+                  (click)="removeItem($index)"
+                  [disabled]="items.length === 1"
+                  class="p-button-rounded p-button-text p-button-danger !w-10 !h-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                ></button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div
+        class="px-8 py-6 bg-gray-50/10 border-t border-gray-50 flex justify-between items-center"
+      >
+        <button
+          pButton
+          type="button"
+          label="Descartar"
+          class="p-button-text p-button-secondary !rounded-xl !px-6 font-bold text-sm"
+          (click)="onCancel()"
+        ></button>
+
+        <button
+          pButton
+          type="button"
+          label="Crear Traslado"
+          icon="pi pi-check"
+          [loading]="loading"
+          (click)="onSave()"
+          class="p-button-raised p-button-success !rounded-xl !px-8 !py-3 shadow-lg shadow-emerald-100/50 font-bold text-sm"
+        ></button>
+      </div>
+    </div>
+  </form>
+</div>
