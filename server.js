@@ -16,6 +16,7 @@ app.get('/*', (req, res) => {
 // Seenode suele usar enviroment variables para el puerto
 const port = process.env.PORT || 8080;
 
-app.listen(port, () => {
-    console.log(`Frontend servido en el puerto ${port}`);
+app.listen(port, '0.0.0.0', () => {
+    console.log(`Frontend servido en el puerto ${port} (0.0.0.0)`);
 });
+
