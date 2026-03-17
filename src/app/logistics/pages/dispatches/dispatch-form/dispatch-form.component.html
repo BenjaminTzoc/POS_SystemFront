@@ -1,0 +1,274 @@
+<div class="py-4 px-0 md:px-6 bg-gray-50/30 min-h-screen pb-[500px]">
+  <!-- Header Section -->
+  <div class="max-w-[1700px] mx-auto mb-6 md:mb-8 px-4 md:px-0">
+    <div class="flex flex-col md:flex-row items-stretch md:items-end justify-between gap-4">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
+          Nuevo Despacho de Ruta
+        </h1>
+        <p class="text-gray-500 mt-1 md:mt-2 text-sm md:text-md">
+          Gestione el envío de productos a sucursales (Logística de Ruta).
+        </p>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <p-button 
+          label="Cancelar" 
+          (onClick)="onCancel()"
+          variant="outlined" 
+          severity="danger" 
+          icon="pi pi-times"
+          styleClass="font-bold border-rose-400! w-full sm:w-auto justify-center"
+          [disabled]="saving()"
+        />
+        <p-button
+          (onClick)="onSave()"
+          label="Confirmar Envío"
+          severity="primary"
+          styleClass="!rounded-lg w-full sm:w-auto shadow-lg !py-2 font-bold justify-center"
+          [loading]="saving()"
+          icon="pi pi-send"
+          [disabled]="dispatchForm.invalid"
+        />
+      </div>
+    </div>
+  </div>
+
+  <form class="max-w-[1700px] mx-auto px-4 md:px-0" [formGroup]="dispatchForm">
+    <div class="grid grid-cols-12 gap-6 md:gap-8">
+      <!-- Left Column: Basic Info -->
+      <div class="col-span-12 lg:col-span-4 flex flex-col gap-6">
+        <div class="px-5 md:px-8 py-6 rounded-2xl bg-white border border-slate-300 shadow-sm">
+          
+          <div class="flex flex-col gap-y-4">
+            <!-- Date Selection -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-semibold text-slate-700" for="date">
+                Fecha de Despacho <span class="text-red-700">*</span>
+              </label>
+              <p-datepicker
+                id="date"
+                formControlName="date"
+                dateFormat="dd/mm/yy"
+                [showIcon]="true"
+                styleClass="w-full !rounded-xl border-slate-200 h-11"
+                fluid
+                appendTo="body"
+              ></p-datepicker>
+            </div>
+
+            <!-- Origin Branch (Plant) -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-semibold text-slate-700" for="originBranchId">
+                Sucursal Origen (Planta) <span class="text-red-700">*</span>
+              </label>
+              <p-select
+                id="originBranchId"
+                formControlName="originBranchId"
+                [options]="originBranches()"
+                optionLabel="name"
+                optionValue="id"
+                placeholder="Seleccione la planta origen..."
+                [filter]="true"
+                filterBy="name"
+                class="w-full"
+                styleClass="w-full !rounded-xl border-slate-200 h-11"
+                (onChange)="onOriginBranchChange()"
+                appendTo="body"
+              ></p-select>
+            </div>
+
+            <!-- Branch Selection -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-semibold text-slate-700" for="branchId">
+                Sucursal Destino <span class="text-red-700">*</span>
+              </label>
+              <p-select
+                id="branchId"
+                formControlName="branchId"
+                [options]="branches()"
+                optionLabel="name"
+                optionValue="id"
+                placeholder="Seleccione la sucursal..."
+                [filter]="true"
+                filterBy="name"
+                class="w-full"
+                styleClass="w-full !rounded-xl border-slate-200 h-11"
+                appendTo="body"
+              ></p-select>
+            </div>
+
+            <!-- Notes -->
+            <div class="flex flex-col gap-1.5 pt-2">
+              <label class="text-sm font-semibold text-slate-700" for="notes">
+                Notas / Observaciones
+              </label>
+              <textarea
+                id="notes"
+                pInputText
+                formControlName="notes"
+                class="w-full !rounded-xl border-slate-200 p-4 min-h-[100px] text-sm"
+                placeholder="Ruta, vehículo, piloto u observaciones generales..."
+              ></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Items -->
+      <div class="col-span-12 lg:col-span-8 flex flex-col gap-6">
+        <div class="rounded-2xl md:rounded-xl bg-white border border-slate-300 shadow-sm overflow-hidden flex flex-col -mx-4 md:mx-0">
+          <div class="p-4 md:px-8 md:py-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+            <h3 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+              <!-- <i class="pi pi-box text-indigo-500"></i> -->
+              Productos a Enviar
+            </h3>
+            <div class="flex flex-col items-end gap-1 w-full sm:w-auto">
+              <p-button
+                type="button"
+                label="Añadir Producto"
+                icon="pi pi-plus"
+                (onClick)="addItem()"
+                [disabled]="!dispatchForm.get('originBranchId')?.value"
+                styleClass="p-button-sm p-button-info !rounded-lg !py-2 !px-4 font-bold text-xs w-full sm:w-auto justify-center"
+                [pTooltip]="!dispatchForm.get('originBranchId')?.value ? 'Seleccione primero una planta origen' : ''"
+                tooltipPosition="left"
+              />
+            </div>
+          </div>
+
+          <div class="p-4 md:p-6" formArrayName="items">
+            <div class="space-y-4">
+              @for (item of items.controls; track $index) {
+                <div [formGroupName]="$index"
+                  class="flex flex-col p-4 md:p-6 rounded-xl bg-slate-50/30 border border-slate-200 group hover:border-indigo-300 hover:bg-white transition-all">
+                  <div class="flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-6 w-full">
+                    <div class="flex-1 w-full flex flex-col gap-1.5">
+                      <div class="flex items-center justify-between">
+                         <label class="text-sm font-semibold text-slate-700">Producto</label>
+                         <p-button
+                           icon="pi pi-trash"
+                           (onClick)="removeItem($index)"
+                           severity="danger"
+                           variant="text"
+                           styleClass="p-button-rounded !w-8 !h-8 p-0 lg:hidden hover:bg-rose-50 transition-colors"
+                         />
+                      </div>
+                      <p-select
+                        [options]="getAvailableProducts($index)"
+                        formControlName="productId"
+                        optionLabel="name"
+                        optionValue="id"
+                        placeholder="Buscar producto..."
+                        [filter]="true"
+                        filterBy="name,sku"
+                        (onChange)="onProductChange($index, $event)"
+                        appendTo="body"
+                        styleClass="w-full !rounded-xl border-slate-200"
+                      >
+                        <ng-template #selectedItem let-selectedOption>
+                           <div class="flex items-center gap-3" *ngIf="selectedOption">
+                             <div class="w-10 h-10 md:w-12 md:h-12 rounded-lg overflow-hidden border border-slate-200 flex items-center justify-center bg-slate-50 flex-shrink-0 shadow-sm">
+                               @if (selectedOption.imageUrl) {
+                                 <img 
+                                   [src]="getProductImageUrl(selectedOption.imageUrl)" 
+                                   class="w-full h-full object-cover" />
+                               } @else {
+                                 <i class="pi pi-image text-slate-300 text-lg!"></i>
+                               }
+                             </div>
+                             <div class="flex flex-col overflow-hidden">
+                               <span class="font-bold text-sm text-slate-700 truncate leading-none mb-1">{{ selectedOption.name }}</span>
+                               <span class="text-[10px] text-slate-500 font-semibold leading-none">{{ selectedOption.sku }}</span>
+                             </div>
+                           </div>
+                        </ng-template>
+                        <ng-template #item let-p>
+                          <div class="flex items-center gap-3 py-1 border-b border-slate-50 last:border-0 w-full">
+                            <div class="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 flex items-center justify-center bg-slate-50 flex-shrink-0">
+                               @if (p.imageUrl) {
+                                 <img [src]="getProductImageUrl(p.imageUrl)" class="w-full h-full object-cover" />
+                               } @else {
+                                 <i class="pi pi-image text-slate-300"></i>
+                               }
+                            </div>
+                            <div class="flex flex-col overflow-hidden">
+                               <span class="font-bold text-sm text-slate-700 truncate mb-0.5">{{ p.name }}</span>
+                               <div class="flex items-center gap-2">
+                                 <span class="text-[10px] text-indigo-500 font-semibold tracking-widest uppercase bg-indigo-50 px-1.5 py-0.5 rounded">{{ p.sku }}</span>
+                                 <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-tighter">{{ p.unit?.name }}</span>
+                               </div>
+                            </div>
+                            @if (p.stock !== undefined) {
+                               <div class="ml-auto flex flex-col items-end">
+                                 <span [ngClass]="p.stock > 0 ? 'text-emerald-500' : 'text-rose-500'" class="text-[10px] font-black uppercase tracking-tight">Stock</span>
+                                 <span class="font-black text-xs" [ngClass]="p.stock > 0 ? 'text-slate-700' : 'text-rose-500'">{{ p.stock }}</span>
+                               </div>
+                            }
+                          </div>
+                        </ng-template>
+                      </p-select>
+                    </div>
+                    
+                    <div class="w-full lg:w-48 flex items-end gap-3 lg:gap-0">
+                      <div class="w-full flex flex-col gap-1.5 border-t border-slate-100 lg:border-none pt-3 lg:pt-0 mt-1 lg:mt-0">
+                         <label class="text-xs uppercase tracking-widest text-slate-500 font-bold lg:normal-case lg:tracking-normal lg:text-sm lg:text-slate-700">Cant. Enviada</label>
+                         <p-inputnumber
+                           formControlName="sentQuantity"
+                           [min]="0.01"
+                           [minFractionDigits]="item.get('allowsDecimals')?.value ? 2 : 0"
+                           [maxFractionDigits]="item.get('allowsDecimals')?.value ? 4 : 0"
+                           [suffix]="' ' + (item.get('unitAbbreviation')?.value || '')"
+                           placeholder="0"
+                           styleClass="w-full"
+                           inputStyleClass="w-full !rounded-xl border-slate-200 h-11 px-4 font-semibold transition-all"
+                           [ngClass]="(item.get('stock')?.value > 0 && (item.get('sentQuantity')?.value > item.get('stock')?.value)) ? 'text-rose-600' : 'text-indigo-700'"
+                         ></p-inputnumber>
+                      </div>
+                      
+                      <div class="hidden lg:block pb-1 pl-4">
+                         <p-button
+                           icon="pi pi-trash"
+                           (onClick)="removeItem($index)"
+                           severity="danger"
+                           variant="text"
+                           styleClass="p-button-rounded !w-11 !h-11 hover:bg-rose-50 transition-colors"
+                         />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex flex-col">
+                    @if (item.get('productId')?.value) {
+                        <div class="flex items-center gap-1 mt-2 px-2">
+                          <i class="pi pi-info-circle text-[11px]!" [ngClass]="item.get('stock')?.value > 0 ? 'text-indigo-400' : 'text-rose-400'"></i>
+                          <span class="text-[11px] font-semibold tracking-tight" [ngClass]="item.get('stock')?.value > 0 ? 'text-indigo-500' : 'text-rose-500'">
+                            Stock Disponible: {{ item.get('stock')?.value }} {{ item.get('unitAbbreviation')?.value }}
+                          </span>
+                        </div>
+                      }
+                  </div>
+                </div>
+              }
+
+              @if (items.length === 0) {
+                <div class="py-12 flex flex-col items-center justify-center text-slate-400 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/20">
+                  <i class="pi pi-map-marker text-5xl! mb-4 opacity-20"></i>
+                  <p class="font-medium text-slate-500">
+                    {{ !dispatchForm.get('originBranchId')?.value ? 'Para añadir productos configure el origen y destino del despacho' : 'No se han añadido productos todavía.' }}
+                  </p>
+                  <p-button
+                    [label]="!dispatchForm.get('originBranchId')?.value ? 'Seleccione Planta Origen' : 'Click para añadir el primer producto'"
+                    variant="text"
+                    (onClick)="addItem()"
+                    [disabled]="!dispatchForm.get('originBranchId')?.value"
+                    styleClass="text-indigo-600 font-bold text-sm mt-2 hover:underline"
+                  />
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+

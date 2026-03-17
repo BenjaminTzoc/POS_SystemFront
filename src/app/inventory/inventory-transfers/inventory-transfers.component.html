@@ -1,38 +1,81 @@
-<div class="p-4 px-12 bg-gray-50/30 min-h-screen">
+<div class="py-4 px-0 md:px-6 bg-gray-50/30 min-h-screen">
   <!-- Header Section -->
-  <div class="max-w-[1400px] mx-auto mb-6">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Traslados de Inventario</h1>
-        <p class="text-xs text-gray-500 font-medium tracking-tight">
-          Gestión de movimiento de mercadería entre sedes.
+  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-6 md:mb-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div class="w-full md:max-w-[60%]">
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Traslados de Inventario</h1>
+        <p class="text-gray-500 mt-1 md:mt-2 text-sm md:text-md">
+           Gestión de movimiento de mercadería entre sedes.
         </p>
       </div>
 
-      <div class="flex flex-wrap items-center gap-3">
-        <button
-          pButton
-          label="Nuevo Traslado"
+      <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto">
+        <div class="group bg-white border border-slate-300 rounded-xl py-1.5 px-3 md:px-4 shadow-sm flex items-center gap-2 md:gap-3 transition-all focus-within:border-indigo-300 focus-within:shadow-md flex-1 md:w-80">
+          <i class="pi pi-search text-gray-400 text-sm"></i>
+          <input
+            pInputText
+            type="text"
+            [(ngModel)]="searchTerm"
+            (input)="loadTransfers()"
+            class="!border-none !shadow-none !bg-transparent w-full text-sm font-medium"
+            placeholder="No. Traslado, Sucursal..."
+            autocomplete="off"
+          />
+        </div>
+
+        <p-button
+          label="Nuevo"
           icon="pi pi-plus"
-          (click)="goToNewTransfer()"
-          class="p-button-raised p-button-primary !rounded-xl !px-6 !py-2.5 shadow-lg shadow-indigo-100/50 transition-all font-bold text-xs"
-        ></button>
-        <button
-          pButton
-          icon="pi pi-refresh"
-          [loading]="loading"
-          (click)="loadTransfers()"
-          class="p-button-raised p-button-secondary !rounded-xl !px-3 !py-2.5 shadow-lg shadow-gray-200/50 transition-all font-bold text-xs"
-        ></button>
+          (onClick)="goToNewTransfer()"
+          styleClass="!rounded-xl px-4 md:px-6 shadow-lg font-bold h-[44px] flex-none md:flex-none justify-center"
+        />
       </div>
     </div>
   </div>
 
-  <!-- Main Table Card -->
-  <div class="max-w-[1400px] mx-auto">
-    <div
-      class="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden"
-    >
+  <div class="max-w-[1700px] mx-auto px-0 md:px-0">
+    <!-- Filters Toolbar -->
+    <div class="flex flex-col md:flex-row items-center gap-3 md:gap-4 mb-6 px-4 md:px-0">
+      <div class="w-full md:w-auto">
+        <p-datePicker
+          [(ngModel)]="dateRange"
+          selectionMode="range"
+          [showIcon]="true"
+          [readonlyInput]="true"
+          (onSelect)="loadTransfers()"
+          placeholder="Rango de fechas"
+          class="!rounded-xl shadow-sm w-full"
+          styleClass="!rounded-xl border-slate-300 w-full md:w-64 !h-[42px]"
+          fluid
+        ></p-datePicker>
+      </div>
+
+      <div class="w-full md:w-auto flex flex-row items-center gap-2">
+        <p-select
+          [options]="statusOptions"
+          [(ngModel)]="statusFilter"
+          optionLabel="label"
+          optionValue="value"
+          [showClear]="true"
+          (onChange)="loadTransfers()"
+          placeholder="Todos los estados"
+          class="!rounded-xl shadow-sm flex-1 md:flex-none"
+          styleClass="!rounded-xl border-slate-300 w-full md:w-64 !h-[42px]"
+          fluid
+        ></p-select>
+
+        <button
+          pButton
+          icon="pi pi-filter-slash"
+          (click)="clearFilters()"
+          class="p-button-text p-button-secondary !rounded-xl !h-[42px] !w-[42px] bg-white border border-slate-300 shadow-sm flex-shrink-0"
+          pTooltip="Limpiar filtros"
+        ></button>
+      </div>
+    </div>
+
+    <!-- Main Table Card -->
+    <div class="bg-transparent lg:bg-white lg:rounded-xl lg:border lg:border-slate-300 overflow-hidden lg:shadow-sm -mx-6 lg:mx-0">
       <p-table
         [value]="transfers"
         [loading]="loading"
@@ -40,41 +83,25 @@
         [rows]="15"
         [rowsPerPageOptions]="[10, 20, 50]"
         dataKey="id"
+        [expandedRowKeys]="expandedRows"
+        (onRowExpand)="onRowExpand($event)"
         styleClass="p-datatable-modern"
       >
-        <ng-template pTemplate="header">
-          <tr class="!bg-gray-50/50">
+        <ng-template #header>
+          <tr class="!h-18 text-sm hidden lg:table-row">
             <th style="width: 5rem"></th>
-            <th
-              class="!py-5 !pl-10 text-gray-400 font-bold uppercase text-[10px] tracking-widest w-[120px]"
-            >
-              Estado
-            </th>
-            <th class="!py-5 text-gray-400 font-bold uppercase text-[10px] tracking-widest">
-              Origen
-            </th>
-            <th class="!py-5 text-gray-400 font-bold uppercase text-[10px] tracking-widest">
-              Destino
-            </th>
-            <th class="!py-5 text-gray-400 font-bold uppercase text-[10px] tracking-widest">
-              Fecha
-            </th>
-            <th
-              class="!py-5 text-gray-400 font-bold uppercase text-[10px] tracking-widest text-center"
-            >
-              Items
-            </th>
-            <th
-              class="!py-5 !pr-10 text-gray-400 font-bold uppercase text-[10px] tracking-widest text-right"
-            >
-              Acciones
-            </th>
+            <th class="!pl-10 tracking-widest w-[140px]">Estado</th>
+            <th class="tracking-widest">Documento / Ruta</th>
+            <th class="tracking-widest text-center">Creado</th>
+            <th class="tracking-widest text-center">Últ. Cambio</th>
+            <th class="tracking-widest">Registrado por</th>
+            <th class="!pr-8 text-right">Acciones</th>
           </tr>
         </ng-template>
 
-        <ng-template pTemplate="body" let-transfer let-expanded="expanded">
-          <tr class="group hover:bg-indigo-50/10 transition-colors border-b border-gray-50">
-            <td>
+        <ng-template #body let-transfer let-expanded="expanded">
+          <tr class="bg-transparent lg:bg-white border-none lg:border-b last:border-0 transition-colors group lg:hover:bg-indigo-50/10 !h-auto lg:!h-16">
+            <td class="hidden lg:table-cell text-center">
               <p-button
                 type="button"
                 pRipple
@@ -86,43 +113,50 @@
                 class="!h-8 !w-8"
               />
             </td>
-            <td class="!py-4 !pl-10">
+            <td class="hidden lg:table-cell !py-4 !pl-8">
               <span
-                class="inline-flex items-center px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border"
+                class="inline-flex items-center px-3 py-1 rounded-lg text-sm font-semibold tracking-wide border"
                 [ngClass]="{
-                  'bg-amber-50 text-amber-600 border-amber-100': transfer.status === 'PENDING',
-                  'bg-blue-50 text-blue-600 border-blue-100': transfer.status === 'SHIPPED',
-                  'bg-emerald-50 text-emerald-600 border-emerald-100':
+                  'bg-amber-50 text-amber-600 border-amber-200': transfer.status === 'PENDING',
+                  'bg-blue-50 text-blue-600 border-blue-200': transfer.status === 'SHIPPED',
+                  'bg-emerald-50 text-emerald-600 border-emerald-200':
                     transfer.status === 'RECEIVED',
-                  'bg-rose-50 text-rose-600 border-rose-100': transfer.status === 'CANCELLED',
+                  'bg-rose-50 text-rose-600 border-rose-200': transfer.status === 'CANCELLED'
                 }"
               >
-                <i [class]="getIcon(transfer.status) + ' mr-1.5'"></i>
+                <i [class]="getIcon(transfer.status) + ' mr-1.5 text-[10px]'"></i>
                 {{ transfer.status | transferStatus }}
               </span>
             </td>
-            <td class="!py-4 text-sm font-bold text-gray-700">
+            <td class="hidden lg:table-cell !py-4 text-sm font-semibold">
               <div class="flex flex-col">
-                <span class="text-indigo-600 text-[10px] font-black uppercase">{{
-                  transfer.transferNumber
-                }}</span>
-                {{ transfer.originBranchName || '---' }}
+                <span class="text-blue-600 text-xs font-semibold uppercase tracking-wider mb-0.5">
+                  {{ transfer.transferNumber }}
+                </span>
+                <div class="flex items-center gap-2">
+                   <span class="truncate max-w-[120px]">{{ transfer.originBranchName }}</span>
+                   <i class="pi pi-arrow-right text-[10px] text-green-500"></i>
+                   <span class="truncate max-w-[120px]">{{ transfer.destinationBranchName }}</span>
+                </div>
               </div>
             </td>
-            <td class="!py-4 text-sm font-bold text-gray-700">
-              {{ transfer.destinationBranchName || '---' }}
+            <td class="hidden lg:table-cell !py-4 text-sm font-semibold text-center">
+              {{ transfer.createdAt | date: 'dd/MM/yyyy' }}
+              <p class="text-[11px]! opacity-80">{{ transfer.createdAt | date: 'hh:mm a' }}</p>
             </td>
-            <td class="!py-4 text-xs font-medium text-gray-500 uppercase">
-              {{ transfer.createdAt | date: 'dd MMM, hh:mm a' }}
+            <td class="hidden lg:table-cell !py-4 text-sm font-semibold text-center">
+              {{ transfer.updatedAt | date: 'dd/MM/yyyy' }}
+              <p class="text-[11px]! opacity-80">{{ transfer.updatedAt | date: 'hh:mm a' }}</p>
             </td>
-            <td class="!py-4 text-center">
-              <span
-                class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-[10px] font-black"
-              >
-                {{ transfer.items.length }}
-              </span>
+            <td class="hidden lg:table-cell !py-4 text-sm font-medium">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-full bg-indigo-50 flex items-center justify-center text-[10px] font-bold text-indigo-600 border border-indigo-100 uppercase">
+                  {{ (transfer.createdBy || 'U').substring(0, 1) }}
+                </div>
+                <span class="truncate max-w-[100px]">{{ transfer.createdBy || '---' }}</span>
+              </div>
             </td>
-            <td class="!py-4 !pr-10 text-right">
+            <td class="hidden lg:table-cell !py-4 !pr-8 text-right">
               <div class="flex justify-end gap-2">
                 @if (transfer.status === 'PENDING') {
                   <button
@@ -130,7 +164,7 @@
                     label="Enviar"
                     icon="pi pi-truck"
                     (click)="confirmStatusChange(transfer, 'SHIPPED')"
-                    class="p-button-sm p-button-info !rounded-lg !px-3 font-bold text-[10px]"
+                    class="p-button-sm p-button-info !rounded-lg font-semibold! tracking-wider"
                   ></button>
                 }
                 @if (transfer.status === 'SHIPPED') {
@@ -139,87 +173,215 @@
                     label="Recibir"
                     icon="pi pi-check"
                     (click)="confirmStatusChange(transfer, 'RECEIVED')"
-                    class="p-button-sm p-button-success !rounded-lg !px-3 font-bold text-[10px]"
+                    class="p-button-sm p-button-success !rounded-lg font-semibold! tracking-wider"
                   ></button>
                 }
                 @if (transfer.status === 'PENDING' || transfer.status === 'SHIPPED') {
                   <button
                     pButton
-                    icon="pi pi-times"
+                    label="Anular"
+                    icon="pi pi-trash"
                     (click)="confirmStatusChange(transfer, 'CANCELLED')"
-                    class="p-button-sm p-button-danger p-button-text !rounded-lg !w-8 !h-8"
-                    pTooltip="Anular traslado"
+                    class="p-button-sm p-button-danger !rounded-lg font-semibold tracking-wider"
                   ></button>
                 }
+              </div>
+            </td>
+
+            <!-- VISTA MÓVIL (Tarjeta) -->
+            <!-- VISTA MÓVIL (Tarjeta) -->
+            <td class="lg:hidden !p-0 bg-transparent block w-full" colspan="7">
+              <div class="w-full bg-white border-b border-slate-100 flex flex-col p-4 transition-all active:bg-slate-50" [pRowToggler]="transfer">
+                 <!-- Top row: Status & Doc -->
+                 <div class="flex justify-between items-start mb-2">
+                    <div class="flex flex-col min-w-0">
+                      <span class="text-[9px] font-black text-indigo-500 uppercase tracking-widest leading-none mb-1">
+                        {{ transfer.transferNumber }}
+                      </span>
+                      <div class="flex items-center gap-1.5 min-w-0">
+                         <span class="text-sm font-bold text-slate-900 truncate">{{ transfer.originBranchName }}</span>
+                         <i class="pi pi-arrow-right text-[10px] text-emerald-500 flex-shrink-0"></i>
+                         <span class="text-sm font-bold text-slate-900 truncate">{{ transfer.destinationBranchName }}</span>
+                      </div>
+                    </div>
+
+                    <span
+                      class="inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border flex-shrink-0"
+                      [ngClass]="{
+                        'bg-amber-50 text-amber-600 border-amber-200': transfer.status === 'PENDING',
+                        'bg-blue-50 text-blue-600 border-blue-200': transfer.status === 'SHIPPED',
+                        'bg-emerald-50 text-emerald-600 border-emerald-200': transfer.status === 'RECEIVED',
+                        'bg-rose-50 text-rose-600 border-rose-200': transfer.status === 'CANCELLED'
+                      }"
+                    >
+                      {{ transfer.status | transferStatus }}
+                    </span>
+                 </div>
+
+                 <!-- Users & Dates Row -->
+                 <div class="flex items-center gap-4 text-slate-400 mb-4">
+                    <div class="flex items-center gap-1">
+                      <i class="pi pi-user text-[10px]"></i>
+                      <span class="text-[10px] font-semibold truncate max-w-[80px]">{{ transfer.createdBy || '---' }}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <i class="pi pi-calendar text-[10px]"></i>
+                      <span class="text-[10px] font-semibold">{{ transfer.createdAt | date: 'dd/MM/yy' }}</span>
+                    </div>
+                    @if (transfer.items?.length) {
+                      <div class="flex items-center gap-1 ml-auto">
+                        <i class="pi pi-box text-[10px] text-indigo-400"></i>
+                        <span class="text-[10px] font-bold text-indigo-600">{{ transfer.items.length }} ítems</span>
+                      </div>
+                    }
+                 </div>
+
+                 <!-- Actions Button Row (Full Width on mobile if needed or compact) -->
+                 <div class="flex items-center gap-2">
+                    <div class="flex-1 flex gap-2">
+                      @if (transfer.status === 'PENDING') {
+                        <p-button label="Enviar" icon="pi pi-truck" (onClick)="confirmStatusChange(transfer, 'SHIPPED'); $event.stopPropagation()" styleClass="!text-[10px] !py-1.5 !px-3 font-bold !rounded-lg" severity="info" size="small" />
+                      }
+                      @if (transfer.status === 'SHIPPED') {
+                        <p-button label="Recibir" icon="pi pi-check" (onClick)="confirmStatusChange(transfer, 'RECEIVED'); $event.stopPropagation()" styleClass="!text-[10px] !py-1.5 !px-3 font-bold !rounded-lg" severity="success" size="small" />
+                      }
+                      @if (transfer.status === 'PENDING' || transfer.status === 'SHIPPED') {
+                        <p-button label="Anular" icon="pi pi-trash" (onClick)="confirmStatusChange(transfer, 'CANCELLED'); $event.stopPropagation()" styleClass="!text-[10px] !py-1.5 !px-3 font-bold !rounded-lg" severity="danger" variant="outlined" size="small" />
+                      }
+                    </div>
+
+                    <p-button 
+                      [icon]="expanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" 
+                      [text]="true"
+                      severity="secondary"
+                      styleClass="!w-8 !h-8 !rounded-lg bg-slate-50! border border-slate-100!" />
+                 </div>
               </div>
             </td>
           </tr>
         </ng-template>
 
         <!-- Expanded Row Details -->
-        <ng-template pTemplate="rowexpansion" let-transfer>
+        <ng-template #expandedrow let-transfer>
           <tr>
-            <td colspan="7" class="!p-0">
-              <div class="p-8 bg-gray-50/50">
-                <div class="grid grid-cols-12 gap-8">
-                  <div class="col-span-12 md:col-span-8">
-                    <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">
-                      Detalle de Productos
-                    </h4>
-                    <div
-                      class="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm"
-                    >
-                      <table class="w-full text-left text-sm">
-                        <thead class="bg-gray-50/50 border-b border-gray-100">
-                          <tr>
-                            <th class="px-6 py-3 font-bold text-gray-500 uppercase text-[9px]">
-                              Producto
-                            </th>
-                            <th
-                              class="px-6 py-3 font-bold text-gray-500 uppercase text-[9px] text-center"
-                            >
-                              Cantidad
-                            </th>
-                            <th
-                              class="px-6 py-3 font-bold text-gray-500 uppercase text-[9px] text-right"
-                            >
-                              ID
-                            </th>
+            <td colspan="7" class="!p-0 border-b border-slate-200">
+              <div class="px-2 lg:px-12 py-4 bg-slate-50/50 lg:border-l-4 lg:border-indigo-400 relative overflow-hidden">
+                <!-- Mobile Connector Line -->
+                <div class="absolute left-6 top-0 bottom-4 w-0.5 bg-indigo-100 lg:hidden"></div>
+
+                <div class="flex flex-col lg:grid lg:grid-cols-12 gap-4 lg:gap-8 max-w-[1400px] mx-auto relative z-10 lg:pl-0 pl-6 pr-2 lg:pr-0">
+                  <!-- Connector Dot -->
+                  <div class="w-2 h-2 rounded-full bg-indigo-400 lg:hidden absolute -left-[25px] top-4 shadow-sm border-2 border-slate-50"></div>
+
+                  <div class="w-full lg:col-span-8">
+                    <div class="flex items-center gap-2 mb-4">
+                         <i class="pi pi-list text-indigo-500 text-xs hidden lg:block"></i>
+                         <h4 class="text-[10px] font-bold text-indigo-900 uppercase tracking-widest">
+                            Detalle de Productos
+                        </h4>
+                    </div>
+                    <div class="bg-transparent lg:bg-white lg:rounded-lg lg:border lg:border-slate-200 lg:shadow-sm overflow-hidden">
+                      <p-table [value]="transfer.items || []" class="p-datatable-sm">
+                        <ng-template pTemplate="header">
+                          <tr class="bg-slate-50/80 text-[12px] text-slate-500 tracking-wider font-bold !h-12 hidden lg:table-row">
+                            <th class="px-8 font-bold text-slate-500 uppercase text-[10px] tracking-widest" style="width: 35%">Producto</th>
+                            <th class="px-8 font-bold text-slate-500 uppercase text-[10px] tracking-widest">SKU</th>
+                            <th class="px-8 font-bold text-slate-500 uppercase text-[10px] tracking-widest text-right">Detalle</th>
+                            <th class="px-8 font-bold text-slate-500 uppercase text-[10px] tracking-widest text-right">Subtotal</th>
                           </tr>
-                        </thead>
-                        <tbody>
-                          @for (item of transfer.items; track item.productId) {
-                            <tr class="border-b border-gray-50 last:border-0">
-                              <td class="px-6 py-4 flex items-center gap-3">
-                                <img
-                                  [src]="getProductImageUrl()"
-                                  class="w-10 h-10 rounded-lg object-cover border border-gray-100 bg-white"
-                                />
-                                <div class="flex flex-col">
-                                  <span class="font-bold text-gray-800">{{
-                                    item.productName
-                                  }}</span>
-                                  <span class="text-[10px] text-gray-400 uppercase">UNIDAD</span>
+                        </ng-template>
+                        <ng-template pTemplate="body" let-item>
+                          <tr class="text-sm border-none lg:border-b border-slate-100 last:border-0 bg-transparent lg:bg-white transition-colors block lg:table-row pb-3 lg:pb-0">
+                            <!-- VISTA ESCRITORIO -->
+                            <td class="hidden lg:table-cell px-8 py-4">
+                              <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded shadow-sm border border-slate-200 bg-slate-50 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                  <img
+                                    [src]="getProductImageUrl(item.imageUrl)"
+                                    class="w-full h-full object-cover"
+                                  />
                                 </div>
-                              </td>
-                              <td class="px-6 py-4 text-center font-black text-indigo-600">
-                                {{ item.quantity }}
-                              </td>
-                              <td class="px-6 py-4 text-right text-xs font-mono text-gray-400">
-                                {{ item.productId.substring(0, 8) }}...
-                              </td>
-                            </tr>
-                          }
-                        </tbody>
-                      </table>
+                                <span class="font-bold text-slate-700 tracking-tight leading-none truncate">{{ item.productName }}</span>
+                              </div>
+                            </td>
+                            <td class="hidden lg:table-cell px-8 py-4">
+                              <code class="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[11px] font-mono border border-slate-200">
+                                {{ item.sku }}
+                              </code>
+                            </td>
+                            <td class="hidden lg:table-cell px-8 py-4 text-right">
+                              <div class="flex items-center justify-end gap-1">
+                                <span class="text-sm font-semibold text-slate-600">{{ item.quantity }} {{ item.unitAbbreviation }}</span>
+                                <span class="text-sm font-semibold text-slate-400">x {{ item.price | currency : 'Q ' : 'symbol' : '1.2-2' }}</span>
+                              </div>
+                            </td>
+                            <td class="hidden lg:table-cell px-8 py-4 text-right font-black text-indigo-700 tabular-nums">
+                              {{ item.subtotal | currency : 'Q ' : 'symbol' : '1.2-2' }}
+                            </td>
+
+                            <!-- VISTA MÓVIL (Items) -->
+                            <td class="lg:hidden p-0 bg-transparent block w-full" colspan="4">
+                               <div class="flex items-center gap-2 relative z-10 pl-5 pr-1 lg:pr-1">
+                                  <!-- Row Connector -->
+                                  <div class="absolute left-0 w-5 h-[1px] bg-indigo-100"></div>
+                                  <div class="w-2 h-2 rounded-full absolute left-[18px] bg-white border-2 border-indigo-200 shadow-sm"></div>
+
+                                  <div class="flex-1 w-full bg-white p-2.5 lg:rounded-xl border-y lg:border border-slate-200 shadow-sm flex items-center gap-3 transition-all active:scale-[0.98]">
+                                     <!-- Mini Image -->
+                                     <div class="w-14 h-14 rounded-lg bg-slate-50 border border-slate-100 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                         <img [src]="getProductImageUrl(item.imageUrl)" class="w-full h-full object-cover" />
+                                     </div>
+
+                                     <!-- Info -->
+                                     <div class="flex-1 min-w-0 flex flex-col justify-center">
+                                        <h4 class="text-[11px] font-extrabold text-slate-900 leading-tight mb-1 truncate">{{ item.productName }}</h4>
+                                        <div class="flex items-center gap-1.5 mb-1.5">
+                                           <span class="text-[9px] text-slate-600 font-bold tabular-nums px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200">{{ item.sku }}</span>
+                                           <span class="text-[10px] font-semibold text-slate-500 bg-slate-50 px-1 border border-slate-100 rounded">{{ item.quantity }} {{ item.unitAbbreviation }} a {{ item.price | currency:'Q ' }}</span>
+                                        </div>
+                                        <span class="text-[13px] font-black text-indigo-700 tabular-nums">{{ item.subtotal | currency : 'Q ' : 'symbol' : '1.2-2' }}</span>
+                                     </div>
+                                  </div>
+                               </div>
+                            </td>
+                          </tr>
+                        </ng-template>
+                        <ng-template pTemplate="footer">
+                          <tr class="hidden lg:table-row bg-indigo-50/30">
+                            <td colspan="3">
+                              <div class="w-full px-8 py-1 text-right font-bold uppercase tracking-widest text-[10px] text-indigo-800">
+                                Total del Traslado
+                              </div>
+                            </td>
+                            <td class="px-8 py-4 text-right font-black text-base text-indigo-700">
+                              {{ transfer.totalValue | currency : 'Q ' : 'symbol' : '1.2-2' }}
+                            </td>
+                          </tr>
+                          <!-- Mobile footer -->
+                          <tr class="lg:hidden block mt-2">
+                             <td class="block">
+                                <div class="px-4 flex justify-between items-center bg-indigo-50 border border-indigo-100 p-3 rounded-lg ml-6 shadow-sm">
+                                   <span class="font-bold uppercase tracking-widest text-[9px] text-indigo-800">Total del Traslado</span>
+                                   <span class="font-black text-[15px] text-indigo-700">{{ transfer.totalValue | currency : 'Q ' : 'symbol' : '1.2-2' }}</span>
+                                </div>
+                             </td>
+                          </tr>
+                        </ng-template>
+                      </p-table>
                     </div>
                   </div>
-                  <div class="col-span-12 md:col-span-4">
-                    <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">
-                      Observaciones
-                    </h4>
-                    <div class="p-5 bg-white rounded-xl border border-gray-100 shadow-sm min-h-32">
-                      <p class="text-sm text-gray-600 italic leading-relaxed">
+                  <div class="w-full lg:col-span-4">
+                    <div class="flex items-center gap-2 mb-4 mt-6 lg:mt-0 lg:pl-0 pl-6">
+                         <i class="pi pi-comment text-indigo-500 text-xs hidden lg:block"></i>
+                         <h4 class="text-[10px] font-bold text-indigo-900 uppercase tracking-widest">
+                            Observaciones
+                        </h4>
+                    </div>
+                    <div class="p-6 bg-white rounded-xl border border-slate-300 shadow-sm min-h-[150px] relative">
+                      <div class="absolute -top-1 -left-1">
+                          <i class="pi pi-quote-right text-indigo-100 text-3xl"></i>
+                      </div>
+                      <p class="text-sm leading-relaxed italic relative z-10">
                         "{{ transfer.notes || 'Sin comentarios adicionales.' }}"
                       </p>
                     </div>
@@ -230,18 +392,14 @@
           </tr>
         </ng-template>
 
-        <ng-template pTemplate="emptymessage">
+        <ng-template #emptymessage>
           <tr>
             <td colspan="7" class="text-center !py-24">
-              <div class="flex flex-col items-center gap-4">
-                <div class="w-20 h-20 bg-gray-50 rounded-[2rem] flex items-center justify-center">
-                  <i class="pi pi-sync text-4xl text-gray-200"></i>
-                </div>
-                <div>
-                  <p class="text-gray-800 font-bold text-xl">Sin traslados registrados</p>
-                  <p class="text-gray-400 text-sm max-w-xs mx-auto">
-                    Aún no se han realizado movimientos de mercadería entre tus sucursales.
-                  </p>
+              <div class="flex flex-col items-center justify-center gap-3">
+                <i class="pi pi-truck text-gray-200" style="font-size: 5rem"></i>
+                <div class="flex flex-col items-center gap-1">
+                  <p class="text-gray-400 font-bold text-xl">No se encontraron traslados.</p>
+                  <p class="text-gray-400 text-sm font-medium">Prueba ajustando el rango de fechas o los filtros de búsqueda.</p>
                 </div>
               </div>
             </td>

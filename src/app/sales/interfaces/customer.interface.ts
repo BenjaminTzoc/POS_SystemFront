@@ -13,6 +13,7 @@ export interface ICustomer {
     totalPurchases: string;
     lastPurchaseDate: Date;
     category: ICustomerCategory;
+    creditLimit: number;
 }
 
 export interface ICustomerCategory {
@@ -23,5 +24,6 @@ export interface ICustomerCategory {
   description: string;
   discountPercentage: number;
   minPurchaseAmount: number;
-  isActive: boolean
+  isActive: boolean;
+  defaultCreditLimit: number;
 }

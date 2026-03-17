@@ -27,16 +27,10 @@ export class LowStockAlertsComponent implements OnInit {
 
   refreshAlerts(): void {
     this.loading.set(true);
-    // Usamos el resumen del dashboard para obtener el conteo rápido primero
-    this.reportsService.getDashboardSummary().subscribe({
+    // Usamos el panel unificado para obtener el conteo de stock bajo (cards.lowStockProductsCount)
+    this.reportsService.getUnifiedDashboard(undefined, 1).subscribe({
       next: (res) => {
-        this.lowStockCount.set(res.data.lowStockProductsCount);
-        // Si hay productos, podríamos cargar la lista detallada si existiera el endpoint
-        // Por ahora simularemos o usaremos el conteo.
-        // Simulando carga de detalles (en un sistema real esto sería otro endpoint):
-        if (res.data.lowStockProductsCount > 0) {
-          // this.loadDetailedLowStock();
-        }
+        this.lowStockCount.set(res.data.cards.lowStockProductsCount);
         this.loading.set(false);
       },
       error: () => this.loading.set(false),

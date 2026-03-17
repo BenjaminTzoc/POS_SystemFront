@@ -1,0 +1,470 @@
+<div class="py-4 px-0 md:px-6 bg-gray-50/30 min-h-screen">
+  <!-- Header Section -->
+  <div class="max-w-[1700px] mx-auto mb-6 md:mb-8 px-4 md:px-0">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
+      <div>
+        <div class="flex flex-wrap items-center gap-3 mb-1">
+          <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Detalle de Orden</h1>
+          <p-tag 
+            [value]="getStatusLabel(order()?.status || 'pending')" 
+            [severity]="getStatusSeverity(order()?.status || 'pending')"
+            styleClass="!text-[11px] !px-3 !py-1 !font-bold uppercase tracking-widest border-none"
+          ></p-tag>
+        </div>
+        <p class="text-gray-500 mt-1 md:mt-2 text-sm md:text-md">
+          Gestión de lote y seguimiento de producción sincronizado.
+        </p>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+        <button
+          pButton
+          label="Regresar"
+          icon="pi pi-arrow-left"
+          class="p-button-text p-button-secondary font-bold !px-4 w-full sm:w-auto justify-center"
+          (click)="onBack()"
+        ></button>
+        
+        @if (order()?.status === 'pending' || order()?.status === 'in_progress') {
+          <button
+            pButton
+            label="Cancelar Orden"
+            icon="pi pi-times"
+            class="p-button-danger p-button-outlined !rounded-xl !px-6 font-bold border-rose-200 hover:!bg-rose-50 w-full sm:w-auto justify-center"
+            (click)="onCancelOrder()"
+          ></button>
+          
+          <button
+            pButton
+            label="Finalizar Producción"
+            icon="pi pi-check-circle"
+            class="p-button-success !rounded-xl !px-8 font-bold shadow-lg shadow-emerald-100 w-full sm:w-auto justify-center"
+            (click)="onComplete()"
+          ></button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-[1700px] mx-auto px-4 md:px-0">
+    <div class="grid grid-cols-12 gap-6 md:gap-8">
+      
+      <!-- Left Column: Summary & Info -->
+      <div class="col-span-12 lg:col-span-5 flex flex-col gap-6">
+        
+        <!-- Product & Batch Info -->
+        <div class="px-5 md:px-8 py-6 rounded-2xl bg-white border border-slate-300 shadow-sm">
+          <h3 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+            <i class="pi pi-file-edit text-indigo-500"></i>
+            Datos del Lote
+          </h3>
+          
+          <div class="flex flex-col gap-y-4">
+            <!-- Product Identification -->
+            <div class="flex items-center gap-4 p-4 bg-slate-100 rounded-xl border border-slate-100">
+              <div class="w-20 h-20 rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center overflow-hidden flex-shrink-0">
+                <img [src]="getProductImageUrl(order()?.product?.imageUrl)" class="w-full h-full object-cover" />
+              </div>
+              <div class="flex flex-col min-w-0">
+                <span class="text-lg font-semibold text-slate-800 leading-tight truncate">{{ order()?.product?.name }}</span>
+                <span class="text-xs font-semibold text-indigo-500 uppercase tracking-widest">{{ order()?.product?.sku }}</span>
+                <div class="mt-2 flex items-center gap-2">
+                  <span class="text-[10px] bg-white border border-slate-200 text-slate-500 px-2 py-0.5 rounded font-bold uppercase">
+                    {{ order()?.product?.category?.name || 'Producto Terminado' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Details Table -->
+            <div class="flex flex-col gap-2">
+              <div class="flex justify-between items-center py-2 border-b border-slate-50">
+                <span class="text-sm text-slate-500 font-medium">Planta / Sucursal</span>
+                <span class="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
+                  <i class="pi pi-map-marker text-indigo-400 text-xs!"></i>
+                  {{ order()?.branch?.name }}
+                </span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-slate-50">
+                <span class="text-sm text-slate-500 font-medium">Fecha de Apertura</span>
+                <span class="text-sm font-semibold text-slate-700">{{ order()?.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+              @if (order()?.status === 'completed') {
+                <div class="flex justify-between items-center py-2 border-b border-slate-50">
+                  <span class="text-sm text-slate-500 font-medium">Fecha de Finalización</span>
+                  <span class="text-sm font-semibold text-slate-700">{{ order()?.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+              }
+              <div class="flex justify-between items-center py-2 border-b border-slate-50">
+                <span class="text-sm text-slate-500 font-medium">Cantidad Planificada</span>
+                <span class="text-sm font-semibold text-slate-800">
+                  {{ order()?.plannedQuantity | number: (order()?.product?.unit?.allowsDecimals ? '1.2-4' : '1.0-0') }}
+                  <span>{{ order()?.product?.unit?.abbreviation }}</span>
+                </span>
+              </div>
+              @if (order()?.status === 'completed') {
+                <div class="flex justify-between items-center py-2">
+                  <span class="text-sm text-slate-500 font-medium">Producción Real Lograda</span>
+                  <span class="text-sm font-semibold text-slate-800">
+                    {{ order()?.actualQuantity | number: (order()?.product?.unit?.allowsDecimals ? '1.2-4' : '1.0-0') }}
+                    <span>{{ order()?.product?.unit?.abbreviation }}</span>
+                  </span>
+                </div>
+              }
+            </div>
+
+            <!-- Observations -->
+            @if (order()?.notes) {
+              <div class="mt-2 flex flex-col gap-2">
+                <label class="text-sm font-medium text-slate-500 px-1">Notas del Lote</label>
+                <div class="p-3 bg-amber-100/50 rounded-xl border border-amber-100 text-xs text-amber-800 leading-relaxed">
+                    "{{ order()?.notes }}"
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Cost & Efficiency Card -->
+        @if (order()?.status === 'completed') {
+          <div class="p-6 rounded-xl bg-indigo-900 text-white shadow-xl shadow-indigo-100 flex items-center justify-between overflow-hidden relative">
+            <div class="flex flex-col gap-1 relative z-10">
+              <span class="text-[11px] font-semibold text-indigo-300 uppercase tracking-widest">Costo Real del Lote</span>
+              <div class="flex items-baseline gap-2">
+                <span class="text-3xl font-bold">{{ (order()?.totalCost || 0) | currency:'Q ' }}</span>
+                <span class="text-sm text-indigo-400 font-medium">Total Insumos</span>
+              </div>
+              <div class="mt-2 flex items-center gap-2">
+                <div class="px-2 py-0.5 rounded bg-white/10 border border-white/5 text-[10px] font-bold">
+                  {{ (order()?.unitCost || 0) | currency:'Q ' }} / {{ order()?.product?.unit?.abbreviation }}
+                </div>
+                <div class="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/20 text-[10px] font-bold text-emerald-300 uppercase tracking-widest">
+                  {{ ((order()?.actualQuantity! / order()?.plannedQuantity!) * 100) | number: '1.0-0' }}% Rendimiento
+                </div>
+              </div>
+            </div>
+            <i class="pi pi-percentage absolute -right-6 -bottom-6 text-9xl text-indigo-800/40 -rotate-12"></i>
+          </div>
+        } @else {
+          <!-- Placeholder pending cost -->
+          <div class="p-6 rounded-xl bg-slate-100 border border-slate-300 text-slate-500 flex items-center gap-4">
+              <i class="pi pi-clock text-2xl!"></i>
+              <div class="flex flex-col">
+                  <span class="text-sm font-bold">Costo Pendiente</span>
+                  <span class="text-[12px] font-medium">Los costos finales se calcularán basándose en los insumos consumidos al cerrar la orden.</span>
+              </div>
+          </div>
+        }
+      </div>
+
+      <!-- Right Column: Ingredients / Movements -->
+      <div class="col-span-12 lg:col-span-7 flex flex-col gap-6">
+        
+        @if (order()?.status === 'completed') {
+          <!-- Movements Table -->
+          <div class="bg-white rounded-2xl border border-slate-300 flex flex-col shadow-sm">
+            <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-50/50 rounded-t-2xl">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <i class="pi pi-history text-emerald-600"></i>
+                </div>
+                <div>
+                  <h3 class="text-lg font-semibold text-slate-800">Insumos Gastados</h3>
+                  <p class="text-[12px] text-slate-500 font-medium tracking-tight">Registro histórico de consumo para auditoría</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto w-full">
+              <p-table [value]="order()?.movements || []" styleClass="p-datatable-modern block lg:min-w-[700px] w-full" [responsiveLayout]="'scroll'">
+                <ng-template pTemplate="header">
+                  <tr class="h-12 text-[11px] uppercase tracking-widest text-slate-400 font-bold bg-slate-50/30 hidden lg:table-row">
+                    <th class="!pl-8">Entidad / Insumo</th>
+                    <th class="text-center">Cant. Gastada</th>
+                    <th class="text-right">Costo Unit.</th>
+                    <th class="text-right !pr-8">Subtotal</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-mov>
+                  <tr class="hover:bg-transparent lg:hover:bg-slate-50 transition-all border-b border-slate-100 block lg:table-row bg-transparent">
+                    
+                    <!-- VISTA MÓVIL (Tarjeta) -->
+                    <td class="lg:hidden block !p-0 border-none bg-transparent">
+                      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 mx-4 my-3 p-5 flex flex-col gap-4">
+                        <div class="flex flex-col">
+                          <span class="font-bold text-slate-800 text-sm">{{ mov.productName }}</span>
+                          <span class="text-[10px] text-slate-400 font-mono tracking-widest uppercase mt-0.5">{{ mov.sku }}</span>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 border-t border-slate-100 pt-3 mt-1">
+                          <div class="flex flex-col gap-3">
+                            <div class="flex flex-col">
+                              <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Cant. Gastada</span>
+                              <span class="text-sm font-semibold text-slate-700 mt-0.5">
+                                {{ mov.quantity | number: '1.2-4' }}
+                                <span class="text-[11px]">{{ mov.unit }}</span>
+                              </span>
+                            </div>
+                          </div>
+                          <div class="flex flex-col gap-3 text-right">
+                            <div class="flex flex-col items-end">
+                              <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Costo Unit.</span>
+                              <span class="text-sm font-semibold text-slate-600 mt-0.5">{{ mov.unitCost | currency:'Q ' }}</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between border-t border-slate-100 pt-3 mt-1 bg-slate-50/50 -mx-5 -mb-5 p-5 rounded-b-2xl">
+                          <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Subtotal</span>
+                          <span class="text-lg font-bold text-[#1B768E]">{{ mov.totalCost | currency:'Q ' }}</span>
+                        </div>
+                      </div>
+                    </td>
+
+                    <!-- DESKTOP VIEW -->
+                    <td class="!pl-8 hidden lg:table-cell py-4">
+                      <div class="flex flex-col">
+                        <span class="font-semibold text-slate-800 text-sm">{{ mov.productName }}</span>
+                        <span class="text-[11px] text-slate-500 font-medium tracking-widest uppercase">{{ mov.sku }}</span>
+                      </div>
+                    </td>
+                    <td class="text-center hidden lg:table-cell">
+                      <span class="text-sm font-semibold text-slate-700">
+                        {{ mov.quantity | number: '1.2-4' }}
+                        <span>{{ mov.unit }}</span>
+                      </span>
+                    </td>
+                    <td class="text-right text-sm text-slate-600 font-medium hidden lg:table-cell">
+                        {{ mov.unitCost | currency:'Q ' }}
+                    </td>
+                    <td class="text-right !pr-8 hidden lg:table-cell">
+                      <span class="text-sm font-bold text-[#1B768E]">
+                        {{ mov.totalCost | currency:'Q ' }}
+                      </span>
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+          </div>
+        } @else {
+          <!-- Recipe Projection Table -->
+          <div class="bg-white rounded-2xl border border-slate-300 flex flex-col shadow-sm">
+            <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-50/50 rounded-t-2xl">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                  <i class="pi pi-objects-column text-indigo-600"></i>
+                </div>
+                <div>
+                  <h3 class="text-lg font-semibold text-slate-800">Receta Proyectada</h3>
+                  <p class="text-[12px] text-slate-500 font-medium tracking-tight">Impacto proyectado en inventario planta</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto w-full">
+              <p-table [value]="order()?.recipe || []" styleClass="p-datatable-modern block lg:min-w-[700px] w-full" [responsiveLayout]="'scroll'">
+                <ng-template pTemplate="header">
+                  <tr class="h-12 text-[11px] uppercase tracking-widest text-slate-400 font-bold bg-slate-50/30 hidden lg:table-row">
+                    <th class="!pl-8">Ingrediente</th>
+                    <th class="text-center">Req. Lote</th>
+                    <th class="text-center">En Mano (Stock)</th>
+                    <th class="text-right !pr-8">Disponibilidad</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-ing>
+                  <tr class="hover:bg-transparent lg:hover:bg-slate-50 transition-all border-b border-slate-100 block lg:table-row bg-transparent">
+                    
+                    <!-- VISTA MÓVIL (Tarjeta) -->
+                    <td class="lg:hidden block !p-0 border-none bg-transparent">
+                      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 mx-4 my-3 p-5 flex flex-col gap-4">
+                        <div class="flex justify-between items-start">
+                          <div class="flex flex-col">
+                            <span class="font-bold text-slate-800 text-sm">{{ ing.componentName }}</span>
+                            <span class="text-[10px] text-slate-400 font-mono tracking-widest uppercase mt-0.5">{{ ing.sku }}</span>
+                          </div>
+                          <div class="w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm shrink-0 border"
+                               [ngClass]="ing.hasStock ? 'bg-emerald-50 text-emerald-500 border-emerald-100' : 'bg-rose-50 text-rose-500 border-rose-100'">
+                            <i class="pi text-xs font-bold" [ngClass]="ing.hasStock ? 'pi-check' : 'pi-exclamation-triangle'"></i>
+                          </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 border-t border-slate-100 pt-3 mt-1">
+                          <div class="flex flex-col gap-3">
+                            <div class="flex flex-col">
+                              <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Req. Lote</span>
+                              <span class="text-sm font-semibold text-slate-700 mt-0.5">
+                                {{ ing.requiredQuantity | number: '1.2-4' }}
+                                <span class="text-[11px]">{{ ing.unit }}</span>
+                              </span>
+                            </div>
+                          </div>
+                          <div class="flex flex-col items-end gap-3 text-right">
+                            <div class="flex flex-col items-end">
+                              <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">En Mano (Stock)</span>
+                              <span class="text-sm font-semibold mt-0.5" [ngClass]="ing.hasStock ? 'text-[#1B768E]' : 'text-rose-600'">
+                                {{ ing.currentStock | number: '1.2-4' }}
+                                <span class="text-[11px]">{{ ing.unit }}</span>
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+                    </td>
+
+                    <!-- DESKTOP VIEW -->
+                    <td class="!pl-8 hidden lg:table-cell py-4">
+                      <div class="flex flex-col">
+                        <span class="font-semibold text-slate-800 text-sm">{{ ing.componentName }}</span>
+                        <span class="text-[11px] text-slate-500 font-medium tracking-widest">{{ ing.sku }}</span>
+                      </div>
+                    </td>
+                    <td class="text-center hidden lg:table-cell">
+                      <span class="text-sm font-semibold text-slate-700">
+                        {{ ing.requiredQuantity | number: '1.2-4' }}
+                        <span>{{ ing.unit }}</span>
+                      </span>
+                    </td>
+                    <td class="text-center hidden lg:table-cell">
+                      <span class="text-sm font-semibold" [ngClass]="ing.hasStock ? 'text-[#1B768E]' : 'text-rose-600'">
+                        {{ ing.currentStock | number: '1.2-4' }}
+                        <span class="ml-0.5" [ngClass]="ing.hasStock ? 'text-[#1B768E]' : 'text-rose-600'">
+                          {{ ing.unit }}
+                        </span>
+                      </span>
+                    </td>
+                    <td class="text-right !pr-8 hidden lg:table-cell">
+                      <div class="flex justify-end">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm"
+                             [ngClass]="ing.hasStock ? 'bg-emerald-50 text-emerald-500 border border-emerald-100' : 'bg-rose-50 text-rose-500 border border-rose-100'">
+                          <i class="pi text-xs font-bold" [ngClass]="ing.hasStock ? 'pi-check' : 'pi-exclamation-triangle'"></i>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+            
+            <div class="p-4 bg-indigo-900 border-t border-indigo-800 text-white flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-white/10">
+                    <i class="pi pi-info-circle text-indigo-200"></i>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-[13px] font-semibold tracking-widest text-indigo-400">Automatización de Inventario</span>
+                    <p class="text-[12px] text-indigo-100 leading-tight">
+                        Al completar esta orden, el sistema aplicará los descuentos automáticamente basándose en la cantidad real reportada.
+                    </p>
+                </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Complete Dialog (Quick access) -->
+  <p-dialog 
+    [(visible)]="showCompleteDialog" 
+    header="Finalizar Producción" 
+    [modal]="true" 
+    [style]="{width: '450px'}"
+    styleClass="!rounded-2xl overflow-hidden"
+  >
+    <div class="flex flex-col gap-6">
+      <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-300">
+        <div class="w-12 h-12 rounded-lg border border-slate-300 overflow-hidden shadow-sm flex-shrink-0 bg-white flex items-center justify-center">
+          @if (order()?.product?.imageUrl) {
+            <img [src]="getProductImageUrl(order()?.product?.imageUrl)" class="w-full h-full object-cover" />
+          } @else {
+            <i class="pi pi-box text-slate-300 text-xl"></i>
+          }
+        </div>
+        <div class="flex flex-col">
+          <span class="text-sm font-semibold text-slate-700">{{ order()?.product?.name }}</span>
+          <span class="text-[12px] text-slate-500 font-medium tracking-widest uppercase">{{ order()?.product?.sku }}</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-semibold text-slate-700">Cantidad Real Producida</label>
+        <p-inputnumber
+          [(ngModel)]="actualQuantity"
+          [min]="order()?.product?.unit?.allowsDecimals ? 0.01 : 0"
+          [minFractionDigits]="order()?.product?.unit?.allowsDecimals ? 2 : 0"
+          [maxFractionDigits]="order()?.product?.unit?.allowsDecimals ? 4 : 0"
+          [placeholder]="order()?.product?.unit?.allowsDecimals ? '0.00' : '0'"
+          styleClass="w-full"
+          inputStyleClass="!rounded-xl border-slate-200 shadow-sm h-12 text-lg font-semibold px-4 text-emerald-700"
+          [suffix]="' ' + (order()?.product?.unit?.abbreviation || '')"
+          autofocus
+        ></p-inputnumber>
+        <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg flex gap-3 mt-2">
+          <i class="pi pi-exclamation-triangle text-amber-500 mt-0.5"></i>
+          <p class="text-[11px] text-amber-800 leading-relaxed font-medium">
+            Al confirmar, se actualizará el stock de producto terminado y se consumirá la materia prima proporcional.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="flex gap-2 justify-end">
+        <button pButton label="Cancelar" class="p-button-text p-button-secondary font-bold" (click)="showCompleteDialog.set(false)"></button>
+        <button 
+          pButton 
+          label="Confirmar Finalización" 
+          class="p-button-success !rounded-xl !px-6 font-bold shadow-lg shadow-emerald-100" 
+          icon="pi pi-check"
+          (click)="confirmComplete()"
+          [loading]="completingOrder()"
+        ></button>
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Cancellation Dialog -->
+  <p-dialog 
+    [(visible)]="showCancelDialog" 
+    header="Cancelar Orden de Producción" 
+    [modal]="true" 
+    [style]="{width: '450px'}"
+    styleClass="!rounded-2xl overflow-hidden"
+  >
+    <div class="flex flex-col gap-6">
+      <div class="flex items-center gap-4 p-4 bg-rose-50 rounded-xl border border-rose-100">
+        <i class="pi pi-exclamation-triangle text-rose-500 text-2xl!"></i>
+        <div class="flex flex-col">
+          <span class="text-sm font-semibold text-rose-800">¿Confirmar cancelación?</span>
+          <span class="text-[12px] text-rose-800">Esta acción no se puede deshacer y liberará los insumos proyectados.</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-semibold text-slate-700">Motivo de Cancelación (Opcional)</label>
+        <textarea 
+          pTextarea
+          [(ngModel)]="cancelReason"
+          pInputText
+          class="!rounded-xl border-slate-200 p-4 text-sm leading-relaxed min-h-[100px]"
+          placeholder="Ej: Error en cantidad planificada, falta de insumos no detectada, cambio de prioridad..."
+        ></textarea>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="flex gap-2 justify-end">
+        <button pButton label="Ignorar" class="p-button-text p-button-secondary font-bold" (click)="showCancelDialog.set(false)"></button>
+        <button 
+          pButton 
+          label="Si, Cancelar Orden" 
+          class="p-button-danger !rounded-xl !px-6 font-bold shadow-lg shadow-rose-100" 
+          icon="pi pi-times"
+          (click)="confirmCancel()"
+          [loading]="cancellingOrder()"
+        ></button>
+      </div>
+    </ng-template>
+  </p-dialog>
+</div>

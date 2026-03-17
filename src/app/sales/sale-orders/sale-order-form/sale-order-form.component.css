@@ -1,0 +1,83 @@
+.adjustment-container {
+    min-width: 120px;
+}
+
+.adjustment-trigger-btn :host ::ng-deep .p-button {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+/* Badge styling for discounts/surcharges */
+.adjustment-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    width: fit-content;
+}
+
+.adjustment-badge.discount {
+    background-color: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.adjustment-badge.surcharge {
+    background-color: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+
+/* Note styling */
+.adjustment-note {
+    display: inline-flex;
+    align-items: center;
+    font-size: 10px;
+    color: #64748b;
+    font-style: italic;
+    background-color: #f8fafc;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border-left: 2px solid #94a3b8;
+    max-width: 140px;
+    cursor: help;
+}
+
+.truncate-note {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    max-width: 120px;
+}
+
+/* Success state for button when adjusted */
+:host ::ng-deep .p-button-success.p-button-text {
+    background-color: #f0fdf4 !important;
+}
+
+.adjustment-container:hover .adjustment-note {
+    color: #334155;
+    background-color: #f1f5f9;
+}
+
+/* Icon & Badge Interactivity */
+.pi-pen-to-square {
+    transition: all 0.2s ease;
+}
+
+.pi-pen-to-square:hover {
+    transform: scale(1.15);
+    color: #4f46e5 !important;
+}
+
+.adjustment-badge.cursor-pointer {
+    transition: all 0.2s ease;
+}
+
+.adjustment-badge.cursor-pointer:hover {
+    filter: brightness(0.95);
+    transform: translateY(-1px);
+}

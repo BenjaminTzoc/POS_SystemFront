@@ -1,0 +1,455 @@
+<div class="py-4 px-0 md:px-6 bg-gray-50/30 min-h-screen pb-[500px]">
+  <!-- Header -->
+  <div class="max-w-7xl mx-auto mb-6 px-4 md:px-0">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="flex flex-col">
+        <div class="flex items-center gap-3 mb-1">
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">Nuevo Proceso de Despiece</h1>
+        </div>
+        <p class="text-gray-500 text-xs md:text-sm">
+          Transforme materias primas y distribuya los costos entre los cortes resultantes.
+        </p>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+        <button
+          pButton
+          label="Cancelar"
+          icon="pi pi-times"
+          class="p-button-danger p-button-outlined !rounded-lg !px-6 w-full sm:w-auto justify-center"
+          (click)="onCancel()"
+          [disabled]="saving()"
+        ></button>
+        <button
+          pButton
+          label="Guardar Proceso"
+          icon="pi pi-check"
+          class="p-button-primary !rounded-lg !px-8 w-full sm:w-auto justify-center"
+          (click)="onSave()"
+          [loading]="saving()"
+        ></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 px-4 md:px-0">
+    <!-- Left Column: Input Data -->
+    <div class="lg:col-span-4 space-y-4">
+      <div class="bg-white rounded-xl border border-slate-200 p-4 md:p-6 shadow-sm">
+        <h3 class="text-sm font-semibold tracking-wide mb-4 flex items-center gap-2">
+          <!-- <i class="pi pi-sign-in text-indigo-500"></i> -->
+          Entrada (Materia Prima)
+        </h3>
+
+        <form [formGroup]="decompositionForm" class="space-y-4">
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold" for="inputProductId">
+              <i class="pi pi-box mr-1 text-xs! text-blue-500"></i>
+              Materia Prima <span class="text-red-700">*</span>
+            </label>
+            <p-select
+              id="inputProductId"
+              [options]="rawMaterials()"
+              formControlName="inputProductId"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Seleccionar materia prima..."
+              class="w-full"
+              styleClass="!rounded-lg border-slate-300 shadow-sm"
+              [filter]="true"
+              filterBy="name,sku"
+              appendTo="body"
+            >
+              <ng-template #item let-item>
+                <div class="flex flex-col">
+                  <span class="font-bold text-sm">{{ item.name }}</span>
+                  <span class="text-[10px] text-slate-400 uppercase">{{ item.sku }}</span>
+                </div>
+              </ng-template>
+            </p-select>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold" for="branchId">
+              <i class="pi pi-map-marker mr-1 text-xs! text-blue-500"></i>
+              Planta de Proceso <span class="text-red-700">*</span>
+            </label>
+            <p-select
+              id="branchId"
+              [options]="branches()"
+              formControlName="branchId"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Seleccionar planta..."
+              class="w-full"
+              styleClass="!rounded-lg border-slate-300 shadow-sm"
+              appendTo="body"
+            ></p-select>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-semibold" for="inputQuantity">
+                <i class="pi pi-hashtag mr-1 text-xs! text-blue-500"></i>
+                Cantidad <span class="text-red-700">*</span>
+              </label>
+              <p-inputnumber
+                id="inputQuantity"
+                formControlName="inputQuantity"
+                [min]="0.01"
+                [minFractionDigits]="2"
+                [maxFractionDigits]="2"
+                placeholder="0.00"
+                styleClass="w-full"
+                inputStyleClass="!rounded-lg border-slate-300 shadow-sm"
+                fluid
+              ></p-inputnumber>
+          @if (selectedInputProduct()) {
+            <div class="flex items-center gap-4 p-3 bg-slate-50 border border-slate-200 rounded-xl mb-2">
+              <div class="w-14 h-14 rounded-lg border border-slate-100 bg-white flex items-center justify-center overflow-hidden shadow-sm">
+                @if (selectedInputProduct()?.imageUrl) {
+                  <img [src]="getProductImageUrl(selectedInputProduct()?.imageUrl)" class="w-full h-full object-cover" />
+                } @else {
+                  <i class="pi pi-box text-2xl text-slate-200"></i>
+                }
+              </div>
+              <div class="flex flex-col">
+                <span class="text-sm font-bold text-slate-700 leading-tight">{{ selectedInputProduct()?.name }}</span>
+                <div class="flex items-center gap-1 mt-0.5">
+                  <span class="text-[10px] text-slate-400 font-mono tracking-tighter uppercase mr-2">{{ selectedInputProduct()?.sku }}</span>
+                  <span class="text-[10px] font-bold px-1.5 py-0.5 rounded" [ngClass]="availableStock() > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'">
+                    Stock: {{ availableStock() }} {{ selectedInputProduct()?.unit?.abbreviation }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          }
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-semibold" for="totalCost">
+                <i class="pi pi-wallet mr-1 text-xs! text-blue-500"></i>
+                Costo Total <span class="text-red-700">*</span>
+              </label>
+              <p-inputnumber
+                id="totalCost"
+                formControlName="totalCost"
+                mode="decimal"
+                [min]="0"
+                [minFractionDigits]="2"
+                [maxFractionDigits]="2"
+                prefix="Q "
+                placeholder="0.00"
+                styleClass="w-full"
+                inputStyleClass="!rounded-lg border-slate-300 text-indigo-600 bg-indigo-50/10"
+                fluid
+              ></p-inputnumber>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Resumen Card -->
+      <div class="bg-indigo-900 rounded-2xl p-4 md:p-6 text-white shadow-xl shadow-indigo-100">
+        <h3 class="text-[10px] font-bold text-indigo-300 uppercase tracking-widest mb-4">Balance de Distribución</h3>
+        <div class="flex items-end justify-between mb-2">
+          <div class="flex flex-col">
+            <span class="text-3xl font-bold">{{ totalPercentage() }}%</span>
+            <span class="text-[11px] font-semibold text-indigo-300 tracking-tighter">Costo Distribuido</span>
+          </div>
+          <div class="flex flex-col items-end">
+            <span class="text-xl font-bold">{{ decompositionForm.get('totalCost')?.value | currency: 'Q ' }}</span>
+            <span class="text-[11px] font-semibold text-indigo-300 tracking-tighter">Total a Repartir</span>
+          </div>
+        </div>
+
+        <div class="w-full h-2 bg-indigo-700 rounded-full overflow-hidden border border-white/10">
+          <div 
+            class="h-full bg-emerald-400 transition-all duration-500 shadow-[0_0_10px_rgba(52,211,153,0.5)]"
+            [style.width.%]="totalPercentage()"
+            [ngClass]="{'!bg-rose-400': totalPercentage() > 100}"
+          ></div>
+        </div>
+        
+        @if (totalPercentage() !== 100) {
+          <p class="mt-4 text-[11px] font-medium text-indigo-200 flex items-center gap-2 bg-white/5 p-2 rounded-lg border border-white/5">
+            <i class="pi pi-info-circle text-xs! text-amber-400"></i>
+            La suma de porcentajes debe ser exactamente 100%. Falta: {{ 100 - totalPercentage() | number: '1.2-2' }}%
+          </p>
+        } @else {
+          <p class="mt-4 text-[11px] font-medium text-emerald-300 flex items-center gap-2 bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20">
+            <i class="pi pi-check-circle text-xs!"></i>
+            Distribución de costos balanceada correctamente.
+          </p>
+        }
+
+        <!-- Nuevo: Balance de Peso (Merma y Rendimiento) -->
+        <div class="mt-4 pt-4 border-t border-white/10 space-y-4">
+          <div class="flex items-center gap-2">
+            <h3 class="text-[11px] font-semibold text-indigo-300 tracking-widest">Rendimiento:</h3>
+            <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+              {{ yieldPercentage() | number: '1.1-1' }}% RENDIMIENTO
+            </span>
+          </div>
+          
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="text-white font-semibold">Peso de Entrada:</span>
+              <span class="font-bold text-white">{{ inputQuantity() | number: '1.2-2' }} {{ selectedInputProduct()?.unit?.abbreviation }}</span>
+            </div>
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="text-white font-semibold">Peso en Cortes:</span>
+              <span class="font-bold text-indigo-100">{{ totalOutputQuantity() | number: '1.2-2' }} {{ selectedInputProduct()?.unit?.abbreviation }}</span>
+            </div>
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="text-rose-300 font-semibold">Merma (Desperdicio):</span>
+              <span class="font-bold text-rose-300">-{{ weightShrinkage() | number: '1.2-2' }} {{ selectedInputProduct()?.unit?.abbreviation }}</span>
+            </div>
+          </div>
+
+          <div class="w-full h-2 bg-indigo-950 rounded-full overflow-hidden border border-white/5 p-[1px]">
+            <div 
+              class="h-full bg-emerald-500 rounded-full transition-all duration-700"
+              [style.width.%]="yieldPercentage()"
+            ></div>
+          </div>
+          
+          <p class="text-[10px] text-indigo-300 leading-tight">
+            * El total del costo (Q {{ decompositionForm.get('totalCost')?.value | number: '1.2-2' }}) se distribuye únicamente entre los cortes resultantes.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Output Items -->
+    <div class="lg:col-span-8">
+      <div class="bg-white rounded-2xl border border-slate-300 flex flex-col shadow-sm">
+        <div class="px-4 md:px-6 py-4 bg-slate-50 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div class="flex flex-col">
+            <h3 class="text-base font-semibold tracking-wide">Cortes y Productos Resultantes</h3>
+            <p class="text-[12px] text-slate-500 font-medium leading-tight mt-1">Agregue los productos obtenidos del proceso de despiece.</p>
+          </div>
+          <button
+            pButton
+            label="Agregar Item"
+            icon="pi pi-plus"
+            class="p-button-outlined p-button-info p-button-sm !font-bold !border-2 w-full sm:w-auto justify-center"
+            (click)="addItem()"
+          ></button>
+        </div>
+
+        <div class="flex-1 overflow-x-auto w-full min-h-[400px]">
+          <p-table
+            [value]="items.controls"
+            styleClass="p-datatable-modern block lg:min-w-[900px] w-full"
+            [responsiveLayout]="'scroll'"
+          >
+            <ng-template pTemplate="header">
+              <tr class="h-12! text-[12px]! hidden lg:table-row">
+                <th class="!pl-6 tracking-widest text-slate-400 min-w-[300px]">Producto Resultante</th>
+                <th class="tracking-widest text-slate-400 text-center w-[160px] min-w-[160px]">Cantidad</th>
+                <th class="tracking-widest text-slate-400 text-center w-[140px] min-w-[140px]">% Costo</th>
+                <th class="tracking-widest text-slate-400 text-right w-[160px] min-w-[160px]">Valor Calculado</th>
+                <th class="!pr-6 w-[50px] min-w-[60px]"></th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-item let-i="rowIndex">
+              <tr [formGroup]="item" class="group hover:bg-transparent lg:hover:bg-slate-50/50 transition-all border-b border-slate-100 block lg:table-row bg-transparent">
+                
+                <!-- VISTA MÓVIL (Tarjeta) -->
+                <td class="lg:hidden block !p-0 border-none bg-transparent">
+                  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 mx-4 my-3 p-5 flex flex-col gap-4">
+                    <!-- Fila 1: Producto y Borrar -->
+                    <div class="flex items-start justify-between gap-3">
+                      <div class="w-10 h-10 rounded-lg border border-slate-100 bg-slate-50 flex items-center justify-center overflow-hidden shadow-sm flex-shrink-0">
+                        @if (getSelectedProduct(item.get('productId')?.value)?.imageUrl) {
+                          <img [src]="getProductImageUrl(getSelectedProduct(item.get('productId')?.value)?.imageUrl)" class="w-full h-full object-cover" />
+                        } @else {
+                          <i class="pi pi-box text-slate-300"></i>
+                        }
+                      </div>
+                      <div class="flex flex-col flex-1 gap-1">
+                        <p-select
+                          formControlName="productId"
+                          [options]="components()"
+                          optionLabel="name"
+                          optionValue="id"
+                          placeholder="Elegir producto..."
+                          appendTo="body"
+                          class="w-full"
+                          styleClass="!rounded-lg border-slate-300 !text-sm font-medium bg-white"
+                          [filter]="true"
+                        >
+                          <ng-template #item let-p>
+                            <div class="flex flex-col">
+                              <span class="font-bold text-xs">{{ p.name }}</span>
+                              <span class="text-[9px] text-slate-500 font-medium uppercase">{{ p.sku }}</span>
+                            </div>
+                          </ng-template>
+                        </p-select>
+                        @if (item.get('productId')?.value) {
+                           <div class="flex items-center gap-1.5 px-1 mt-0.5">
+                              <span class="text-[10px] text-slate-400 font-medium italic">P. Catálogo:</span>
+                              <span class="text-[10px] text-slate-600 font-bold">
+                                {{ getSelectedProduct(item.get('productId')?.value)?.price | currency: 'Q ' }}
+                              </span>
+                            </div>
+                        }
+                      </div>
+                      <button
+                        pButton
+                        icon="pi pi-trash"
+                        class="p-button-rounded p-button-text p-button-danger !w-8 !h-8 mt-1 shrink-0 bg-rose-50/50"
+                        (click)="removeItem(i)"
+                      ></button>
+                    </div>
+
+                    <!-- Fila 2: Inputs -->
+                    <div class="grid grid-cols-2 gap-4 border-t border-slate-100 pt-3 mt-1">
+                      <div class="flex flex-col gap-1.5">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-center">Cantidad</span>
+                        <p-inputnumber
+                          formControlName="quantity"
+                          [min]="0"
+                          [minFractionDigits]="2"
+                          [maxFractionDigits]="2"
+                          [suffix]="' ' + (getSelectedProduct(item.get('productId')?.value)?.unit?.abbreviation || 'und')"
+                          styleClass="w-full"
+                          inputStyleClass="!rounded-lg border-slate-300 !text-sm font-bold bg-white py-2 text-center"
+                          fluid
+                        ></p-inputnumber>
+                      </div>
+                      <div class="flex flex-col gap-1.5">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-center">% Costo</span>
+                        <p-inputnumber
+                          formControlName="costPercentage"
+                          suffix="%"
+                          [min]="0"
+                          [max]="100"
+                          [minFractionDigits]="2"
+                          [maxFractionDigits]="2"
+                          styleClass="w-full"
+                          inputStyleClass="!rounded-lg border-slate-300 !text-sm font-bold bg-white py-2 text-center"
+                          fluid
+                        ></p-inputnumber>
+                      </div>
+                    </div>
+
+                    <!-- Totales -->
+                    <div class="flex items-center justify-between bg-slate-50 rounded-lg p-3 border border-slate-100">
+                       <span class="text-[10px] text-slate-500 font-semibold tracking-wide">Cálculo:</span>
+                       <div class="flex flex-col items-end">
+                         <span class="text-sm font-bold text-slate-800">
+                           {{ calculateItemCost(item.get('costPercentage')?.value) | currency: 'Q ' }}
+                         </span>
+                         <span class="text-[11px] text-indigo-500 font-bold">
+                           P. rec.: {{ calculateUnitPrice(item.get('costPercentage')?.value, item.get('quantity')?.value) | currency: 'Q ' }}
+                         </span>
+                       </div>
+                    </div>
+
+                  </div>
+                </td>
+
+                <!-- DESKTOP VIEW -->
+                <td class="!pl-6 py-4 hidden lg:table-cell">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg border border-slate-100 bg-slate-50 flex items-center justify-center overflow-hidden shadow-sm flex-shrink-0">
+                      @if (getSelectedProduct(item.get('productId')?.value)?.imageUrl) {
+                        <img [src]="getProductImageUrl(getSelectedProduct(item.get('productId')?.value)?.imageUrl)" class="w-full h-full object-cover" />
+                      } @else {
+                        <i class="pi pi-box text-slate-300"></i>
+                      }
+                    </div>
+                    <div class="flex flex-col flex-1 gap-1">
+                      <p-select
+                        formControlName="productId"
+                        [options]="components()"
+                        optionLabel="name"
+                        optionValue="id"
+                        placeholder="Elegir producto..."
+                        appendTo="body"
+                        class="w-full"
+                        styleClass="!rounded-lg border-slate-300 !text-sm font-medium bg-white"
+                        [filter]="true"
+                      >
+                        <ng-template #item let-p>
+                          <div class="flex flex-col">
+                            <span class="font-bold text-xs">{{ p.name }}</span>
+                            <span class="text-[9px] text-slate-500 font-medium uppercase">{{ p.sku }}</span>
+                          </div>
+                        </ng-template>
+                      </p-select>
+                      @if (item.get('productId')?.value) {
+                         <div class="flex items-center gap-1.5 px-1">
+                            <span class="text-[10px] text-slate-400 font-medium italic">P. Catálogo:</span>
+                            <span class="text-[10px] text-slate-600 font-bold">
+                              {{ getSelectedProduct(item.get('productId')?.value)?.price | currency: 'Q ' }}
+                            </span>
+                          </div>
+                      }
+                    </div>
+                  </div>
+                </td>
+                <td class="text-center hidden lg:table-cell">
+                  <p-inputnumber
+                    formControlName="quantity"
+                    [min]="0"
+                    [minFractionDigits]="2"
+                    [maxFractionDigits]="2"
+                    [suffix]="' ' + (getSelectedProduct(item.get('productId')?.value)?.unit?.abbreviation || 'und')"
+                    styleClass="w-28"
+                    inputStyleClass="!rounded-lg border-slate-300 !text-sm font-medium bg-white py-1"
+                    fluid
+                  ></p-inputnumber>
+                </td>
+                <td class="text-center hidden lg:table-cell">
+                  <p-inputnumber
+                    formControlName="costPercentage"
+                    suffix="%"
+                    [min]="0"
+                    [max]="100"
+                    [minFractionDigits]="2"
+                    [maxFractionDigits]="2"
+                    styleClass="w-24"
+                    inputStyleClass="!rounded-lg border-slate-300 !text-sm font-medium bg-white py-1"
+                    fluid
+                  ></p-inputnumber>
+                </td>
+                <td class="text-right hidden lg:table-cell">
+                  <div class="flex flex-col items-end">
+                    <span class="text-sm font-bold text-slate-700">
+                      {{ calculateItemCost(item.get('costPercentage')?.value) | currency: 'Q ' }}
+                    </span>
+                    <span class="text-[11px] text-blue-800 font-medium">
+                      Precio rec.: {{ calculateUnitPrice(item.get('costPercentage')?.value, item.get('quantity')?.value) | currency: 'Q ' }}
+                    </span>
+                  </div>
+                </td>
+                <td class="!pr-6 text-right hidden lg:table-cell">
+                  <button
+                    pButton
+                    icon="pi pi-trash"
+                    class="p-button-rounded p-button-text p-button-danger !w-8 !h-8"
+                    (click)="removeItem(i)"
+                  ></button>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="5" class="py-20 text-center">
+                  <div class="flex flex-col items-center gap-2 opacity-30">
+                    <i class="pi pi-shopping-cart text-3xl"></i>
+                    <span class="text-xs font-semibold tracking-wider uppercase">No hay productos derivados agregados</span>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

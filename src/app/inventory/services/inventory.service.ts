@@ -27,4 +27,10 @@ export class InventoryService {
   deleteInventory(inventoryId: string): Observable<ApiResponse<any>> {
     return this.http.delete<ApiResponse<any>>(`${this.API_URL}/${inventoryId}`);
   }
+
+  getInventoryByProductAndBranch(productId: string, branchId: string): Observable<ApiResponse<Inventory>> {
+    // Según el requerimiento el path es /inventory/product/:id/branch/:id
+    // El API_URL base es /api/v1/inventories, así que navegamos un nivel arriba
+    return this.http.get<ApiResponse<Inventory>>(`${environment.apiUrl}/inventories/product/${productId}/branch/${branchId}`);
+  }
 }

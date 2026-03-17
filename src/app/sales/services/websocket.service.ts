@@ -16,6 +16,10 @@ export class WebsocketService {
     return this.socket.fromEvent('newSaleCreated');
   }
 
+  onNewSale(): Observable<any> {
+    return this.socket.fromEvent('newSale');
+  }
+
   onNextInvoiceNumberUpdated(): Observable<any> {
     return this.socket.fromEvent('nextInvoiceNumberUpdated');
   }

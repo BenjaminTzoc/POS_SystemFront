@@ -10,6 +10,8 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { BranchesService } from '../services/branches.service';
 import { Branch } from '../interfaces/branch.interface';
 import { AuthService } from '../../auth/auth.service';
+import { InputTextModule } from 'primeng/inputtext';
+import { TagModule } from 'primeng/tag';
 
 @Component({
   selector: 'app-branches',
@@ -21,6 +23,8 @@ import { AuthService } from '../../auth/auth.service';
     TableModule,
     ToggleSwitchModule,
     TooltipModule,
+    InputTextModule,
+    TagModule
   ],
   templateUrl: './branches.component.html',
   styleUrl: './branches.component.css',

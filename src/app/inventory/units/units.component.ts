@@ -7,6 +7,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { CardModule } from 'primeng/card';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { TagModule } from 'primeng/tag';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { UnitsService } from '../services/units.service';
 import { UnitMeasure } from '../interfaces/unit.interface';
@@ -24,6 +25,7 @@ import { AuthService } from '../../auth/auth.service';
     CardModule,
     FormsModule,
     ToggleSwitchModule,
+    TagModule,
   ],
   templateUrl: './units.component.html',
   styleUrl: './units.component.css',

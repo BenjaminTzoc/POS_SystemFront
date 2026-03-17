@@ -1,0 +1,121 @@
+<div class="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden flex flex-col h-full">
+    <!-- Header -->
+    <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <i class="pi pi-chart-line text-indigo-500"></i>
+                Tendencias por Producto
+            </h3>
+            <p class="text-xs text-slate-500 font-medium">Ventas diarias de los productos más relevantes</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+            @if (canFilterByBranch) {
+                <p-select 
+                    [options]="branchesArr()" 
+                    [ngModel]="selectedBranchId()" 
+                    (ngModelChange)="selectedBranchId.set($event)"
+                    optionLabel="name" 
+                    optionValue="id"
+                    placeholder="Todas" 
+                    class="w-40"
+                    size="small"
+                    [showClear]="true"
+                    appendTo="body"
+                >
+                    <ng-template pTemplate="selectedItem" let-selectedOption>
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-map-marker text-indigo-500 text-[10px]"></i>
+                            <span class="text-[11px] font-bold">{{ selectedOption.name }}</span>
+                        </div>
+                    </ng-template>
+                </p-select>
+            }
+            <p-select 
+                [options]="months" 
+                [ngModel]="selectedMonth()" 
+                (ngModelChange)="selectedMonth.set($event); onMonthChange()"
+                optionLabel="label" 
+                optionValue="value"
+                placeholder="Mes" 
+                class="w-32"
+                size="small"
+            />
+            <p-select 
+                [options]="years" 
+                [ngModel]="selectedYear()" 
+                (ngModelChange)="selectedYear.set($event); onYearChange()"
+                optionLabel="label" 
+                optionValue="value"
+                placeholder="Año" 
+                class="w-24"
+                size="small"
+            />
+        </div>
+    </div>
+
+    <!-- Chart Area -->
+    <div class="flex-1 p-6 relative min-h-[400px]">
+        @if (isLoading()) {
+            <div class="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
+                <div class="flex flex-col items-center gap-3">
+                    <i class="pi pi-spin pi-spinner text-indigo-500 text-3xl"></i>
+                    <span class="text-sm font-bold text-slate-600 animate-pulse">Analizando tendencias...</span>
+                </div>
+            </div>
+        }
+
+        @if (chartOptions().series && chartOptions().series!.length > 0) {
+            <apx-chart
+                [series]="chartOptions().series!"
+                [chart]="chartOptions().chart!"
+                [xaxis]="chartOptions().xaxis!"
+                [stroke]="chartOptions().stroke!"
+                [dataLabels]="chartOptions().dataLabels!"
+                [yaxis]="chartOptions().yaxis!"
+                [legend]="chartOptions().legend!"
+                [grid]="chartOptions().grid!"
+                [colors]="chartOptions().colors!"
+                [tooltip]="chartOptions().tooltip!"
+            ></apx-chart>
+        } @else if (!isLoading()) {
+            <div class="h-full flex flex-col items-center justify-center py-20 text-slate-400 gap-4">
+                <div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100">
+                    <i class="pi pi-chart-line text-2xl"></i>
+                </div>
+                <div class="text-center">
+                    <p class="font-bold text-slate-600">Sin datos de productos</p>
+                    <p class="text-xs">No hubo ventas registradas en el periodo seleccionado</p>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Footer / Pagination -->
+    <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Página {{ currentPage() }} de {{ totalPages() }}</span>
+        </div>
+        
+        <div class="flex items-center gap-2">
+            <p-button 
+                icon="pi pi-chevron-left" 
+                [text]="true" 
+                [rounded]="true" 
+                size="small"
+                [disabled]="currentPage() === 1 || isLoading()"
+                (onClick)="prevPage()"
+                pTooltip="Productos anteriores"
+            />
+            <p-button 
+                icon="pi pi-chevron-right" 
+                [text]="true" 
+                [rounded]="true" 
+                size="small"
+                [disabled]="currentPage() === totalPages() || isLoading()"
+                (onClick)="nextPage()"
+                pTooltip="Siguientes productos"
+            />
+        </div>
+    </div>
+</div>

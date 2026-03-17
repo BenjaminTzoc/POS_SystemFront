@@ -1,145 +1,212 @@
-<div class="p-6 bg-gray-50/30 min-h-screen">
+<div class="py-4 px-0 md:px-6 bg-gray-50/30 min-h-screen">
   <!-- Header Section -->
-  <div class="max-w-7xl mx-auto mb-8">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-800 tracking-tight">Historial de Cajas</h1>
-        <p class="text-gray-500 mt-1 text-base">
-          Consulta el registro histórico de arqueos y turnos de tus sucursales.
+  <div class="max-w-[1700px] mx-auto mb-6 md:mb-8 px-4 md:px-0">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
+      <div class="w-full md:max-w-[50%]">
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Historial de Cajas</h1>
+        <p class="text-gray-500 mt-1 md:mt-2 text-sm md:text-md">
+          Consulta el registro histórico de arqueos y turnos de tus sucursales con detalle de saldos y diferencias.
         </p>
       </div>
 
-      <div class="flex flex-wrap items-center gap-4">
+      <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+        <div class="w-full sm:w-auto group bg-white border border-slate-300 rounded-xl 
+                    py-1 px-4 shadow-sm flex items-center gap-3 transition-all 
+                    focus-within:border-indigo-300 focus-within:shadow-md h-[44px]">
+          <i class="pi pi-search text-gray-400"></i>
+          <input
+            pInputText
+            type="text"
+            (input)="historyTable.filterGlobal($event.target.value, 'contains')"
+            class="!border-none !shadow-none !bg-transparent w-full sm:w-48 md:w-64 text-sm"
+            placeholder="Buscar por cajero o sucursal..."
+            autocomplete="off"
+          />
+        </div>
+
         <button
           pButton
           label="Actualizar"
           icon="pi pi-refresh"
           [loading]="isLoadingHistory()"
           (click)="loadHistory()"
-          class="p-button-raised p-button-secondary !rounded-2xl !px-6 !py-3 shadow-lg hover:shadow-gray-200 transition-all font-bold"
+          class="p-button-raised p-button-secondary !rounded-xl !px-6 !py-3 shadow-lg hover:shadow-gray-200 w-full sm:w-auto transition-all font-bold h-[44px] justify-center"
         ></button>
       </div>
     </div>
   </div>
 
   <!-- Main Table Card -->
-  <div class="max-w-7xl mx-auto">
+  <div class="max-w-[1700px] mx-auto">
     <div
-      class="bg-white rounded-[2rem] shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden"
+      class="bg-transparent md:bg-white rounded-none md:rounded-xl md:border md:border-slate-300 overflow-hidden"
     >
       <p-table
+        #historyTable
         [value]="history()"
         [loading]="isLoadingHistory()"
         [paginator]="true"
         [rows]="15"
-        [rowsPerPageOptions]="[10, 20, 50]"
+        [rowsPerPageOptions]="[10, 25, 50]"
         [showCurrentPageReport]="true"
         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
+        [globalFilterFields]="['branchName', 'userName']"
         styleClass="p-datatable-modern"
       >
         <ng-template pTemplate="header">
-          <tr class="!bg-gray-50/50">
-            <th
-              class="!py-5 !pl-10 text-gray-400 font-bold uppercase text-[10px] tracking-widest w-[120px]"
-            >
+          <tr class="h-18! text-sm! hidden lg:table-row">
+            <th class="!pl-10 tracking-widest text-slate-400 w-[120px]">
               Estado
             </th>
-            <th
-              class="!py-5 text-gray-400 font-bold uppercase text-[10px] tracking-widest w-[140px]"
-            >
+            <th class="tracking-widest text-slate-400 w-[140px]">
               Apertura
             </th>
-            <th class="!py-5 text-gray-400 font-bold uppercase text-[10px] tracking-widest">
+            <th class="tracking-widest text-slate-400 w-[250px]">
               Sucursal / Cajero
             </th>
-            <th
-              class="!py-5 text-gray-400 font-bold uppercase text-[10px] tracking-widest text-right"
-            >
+            <th class="tracking-widest text-slate-400 text-right">
               Saldo Inicial
             </th>
-            <th
-              class="!py-5 text-gray-400 font-bold uppercase text-[10px] tracking-widest text-right"
-            >
+            <th class="tracking-widest text-slate-400 text-right">
               Saldo Final
             </th>
-            <th
-              class="!py-5 !pr-10 text-gray-400 font-bold uppercase text-[10px] tracking-widest text-right"
-            >
+            <th class="!pr-10 tracking-widest text-slate-400 text-right">
               Diferencia
             </th>
           </tr>
         </ng-template>
 
         <ng-template pTemplate="body" let-session>
-          <tr class="group hover:bg-indigo-50/30 transition-colors border-b border-gray-50">
-            <td class="!py-4 !pl-10">
-              <span
-                [ngClass]="
-                  session.status === 'OPEN'
-                    ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                    : 'bg-gray-50 text-gray-500 border-gray-100'
-                "
-                class="inline-flex items-center px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border"
-              >
-                <span
-                  class="w-1.5 h-1.5 rounded-full mr-2"
-                  [ngClass]="session.status === 'OPEN' ? 'bg-emerald-500' : 'bg-gray-400'"
-                ></span>
-                {{ session.status === 'OPEN' ? 'Abierta' : 'Cerrada' }}
-              </span>
+          <tr class="group hover:bg-slate-50 transition-all border-b border-slate-100 block lg:table-row bg-transparent">
+            
+            <!-- VISTA MÓVIL (Tarjeta) -->
+            <td class="lg:hidden block !p-0 border-none bg-transparent">
+               <div class="bg-white rounded-2xl shadow-sm border border-slate-200 mx-4 my-3 p-5 flex flex-col gap-4">
+                  <!-- Mobile Header -->
+                  <div class="flex justify-between items-start">
+                     <div class="flex flex-col gap-1">
+                        <span class="text-sm font-bold text-slate-800">{{ session.branchName }}</span>
+                        <span class="text-xs font-medium text-slate-500 flex items-center gap-1.5 mt-0.5">
+                           <i class="pi pi-user text-indigo-500 text-[11px]!"></i> {{ session.userName }}
+                        </span>
+                     </div>
+                     @if (session.status === 'OPEN') {
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200 uppercase tracking-tighter shrink-0">
+                           <span class="w-1.5 h-1.5 rounded-full mr-1.5 bg-emerald-500 animate-pulse"></span> Abierta
+                        </span>
+                     } @else {
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-50 text-slate-500 border border-slate-300 uppercase tracking-tighter shrink-0">
+                           <span class="w-1.5 h-1.5 rounded-full mr-1.5 bg-slate-400"></span> Cerrada
+                        </span>
+                     }
+                  </div>
+
+                  <!-- Mobile Balances/Dates -->
+                  <div class="grid grid-cols-2 gap-4 mt-1 pt-4 border-t border-slate-100">
+                     <div class="flex flex-col gap-3">
+                        <div class="flex flex-col">
+                           <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Apertura</span>
+                           <span class="text-xs font-semibold text-slate-700 mt-0.5">
+                              {{ session.openedAt | date: 'dd/MM/yyyy' }} <span class="text-[10px] text-indigo-500">{{ session.openedAt | date: 'hh:mm a' }}</span>
+                           </span>
+                        </div>
+                        <div class="flex flex-col">
+                           <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Inicial</span>
+                           <span class="text-sm font-bold text-slate-800 mt-0.5">{{ session.openingBalance | currency: 'Q ' }}</span>
+                        </div>
+                     </div>
+                     
+                     <div class="flex flex-col gap-3 text-right">
+                        <div class="flex flex-col text-right">
+                           <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Diferencia</span>
+                           @if (session.status === 'CLOSED') {
+                              <span [ngClass]="session.difference >= 0 ? 'text-blue-600' : 'text-rose-600'" class="text-sm font-bold mt-0.5">
+                                 {{ (session.difference > 0 ? '+' : '') + (session.difference | currency: 'Q ') }}
+                              </span>
+                           } @else {
+                              <span class="text-slate-300 text-[10px] font-bold uppercase tracking-widest italic mt-1">--</span>
+                           }
+                        </div>
+                        <div class="flex flex-col text-right">
+                           <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Final</span>
+                           @if (session.status === 'CLOSED') {
+                              <span class="text-sm font-bold text-slate-800 mt-0.5">
+                                 {{ session.closingBalance | currency: 'Q ' }}
+                              </span>
+                           } @else {
+                              <span class="text-xs font-bold text-emerald-600 mt-0.5 uppercase tracking-tighter italic">
+                                 Activa
+                              </span>
+                           }
+                        </div>
+                     </div>
+                  </div>
+               </div>
             </td>
-            <td class="!py-4">
+
+            <!-- DESKTOP VIEW -->
+            <td class="!py-4 !pl-10 hidden lg:table-cell">
+              @if (session.status === 'OPEN') {
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[12px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200 uppercase tracking-tighter">
+                  <span class="w-1.5 h-1.5 rounded-full mr-1.5 bg-emerald-500 animate-pulse"></span> Abierta
+                </span>
+              } @else {
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[12px] font-bold bg-slate-50 text-slate-500 border border-slate-300 uppercase tracking-tighter">
+                  <span class="w-1.5 h-1.5 rounded-full mr-1.5 bg-slate-400"></span> Cerrada
+                </span>
+              }
+            </td>
+            <td class="!py-4 hidden lg:table-cell">
               <div class="flex flex-col">
-                <span class="font-bold text-gray-800 text-sm leading-tight">{{
-                  session.openedAt | date: 'dd MMM, yyyy'
+                <span class="text-sm font-semibold leading-tight">{{
+                  session.openedAt | date: 'dd/MM/yyyy'
                 }}</span>
-                <span class="text-[10px] font-medium text-indigo-500 uppercase mt-0.5">{{
+                <span class="text-[12px] font-medium text-indigo-500">{{
                   session.openedAt | date: 'hh:mm a'
                 }}</span>
               </div>
             </td>
-            <td class="!py-4">
+            <td class="!py-4 text-sm font-semibold text-slate-700 hidden lg:table-cell">
               <div class="flex flex-col">
-                <span class="font-bold text-gray-700 text-sm">{{ session.branchName }}</span>
-                <span class="text-xs text-gray-400 tracking-tight">
-                  <i class="pi pi-user text-[10px] mr-1"></i>{{ session.userName }}
+                <span class="text-sm font-semibold text-slate-700">{{ session.branchName }}</span>
+                <span class="text-xs font-normal flex items-center gap-1 mt-0.5">
+                  <i class="pi pi-user text-indigo-500 text-[12px]!"></i> {{ session.userName }}
                 </span>
               </div>
             </td>
-            <td class="!py-4 text-right">
-              <span class="font-bold text-gray-600 text-sm">
+            <td class="!py-4 text-right hidden lg:table-cell">
+              <span class="text-sm font-semibold">
                 {{ session.openingBalance | currency: 'Q ' }}
               </span>
             </td>
-            <td class="!py-4 text-right">
+            <td class="!py-4 text-right hidden lg:table-cell">
               @if (session.status === 'CLOSED') {
-                <span class="font-black text-gray-800 text-sm">
+                <span class="text-sm font-semibold">
                   {{ session.closingBalance | currency: 'Q ' }}
                 </span>
               } @else {
-                <span
-                  class="text-emerald-500 font-bold text-[10px] uppercase tracking-tighter animate-pulse"
-                  >Sesión Activa</span
-                >
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[12px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200 uppercase">
+                  Activa
+                </span>
               }
             </td>
-            <td class="!py-4 !pr-10 text-right">
+            <td class="!py-4 !pr-10 hidden lg:table-cell">
               @if (session.status === 'CLOSED') {
-                <div class="flex flex-col items-end">
+                <div class="flex flex-col">
                   <span
-                    [ngClass]="session.difference >= 0 ? 'text-emerald-600' : 'text-rose-600'"
-                    class="font-black text-sm"
+                    [ngClass]="session.difference >= 0 ? 'text-blue-600' : 'text-rose-600'"
+                    class="text-sm font-semibold"
                   >
-                    {{ session.difference | currency: 'Q ' }}
+                    {{ (session.difference > 0 ? '+' : '') + (session.difference | currency: 'Q ') }}
                   </span>
                   <span
-                    class="text-[9px] font-bold uppercase tracking-widest"
+                    class="text-[11px] font-semibold tracking-widest mt-0.5"
                     [ngClass]="
                       session.difference === 0
-                        ? 'text-gray-300'
+                        ? 'text-slate-300'
                         : session.difference > 0
-                          ? 'text-emerald-400'
-                          : 'text-rose-400'
+                          ? 'text-blue-500'
+                          : 'text-rose-500'
                     "
                   >
                     {{
@@ -152,9 +219,7 @@
                   </span>
                 </div>
               } @else {
-                <span class="text-gray-300 italic text-[10px] font-bold uppercase tracking-widest"
-                  >Pendiente</span
-                >
+                <span class="text-slate-300 text-[10px] font-bold uppercase tracking-widest italic">--</span>
               }
             </td>
           </tr>
@@ -164,13 +229,11 @@
           <tr>
             <td colspan="6" class="text-center !py-24">
               <div class="flex flex-col items-center gap-4">
-                <div class="w-20 h-20 bg-gray-50 rounded-[2rem] flex items-center justify-center">
-                  <i class="pi pi-inbox text-4xl text-gray-200"></i>
-                </div>
-                <div>
-                  <p class="text-gray-800 font-bold text-xl">Sin historial de registros</p>
-                  <p class="text-gray-400 text-sm max-w-xs mx-auto">
-                    Aún no se han realizado arqueos en el sistema.
+                <i class="pi pi-history text-slate-200" style="font-size: 5rem"></i>
+                <div class="flex flex-col items-center gap-1">
+                  <p class="text-slate-500 font-bold text-xl">Sin historial disponible</p>
+                  <p class="text-slate-400 text-sm max-w-[280px]">
+                    No se encontraron registros de arqueo que coincidan con su búsqueda.
                   </p>
                 </div>
               </div>

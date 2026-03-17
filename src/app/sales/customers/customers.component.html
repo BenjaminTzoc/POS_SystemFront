@@ -1,44 +1,24 @@
-<div class="p-6 px-20 bg-gray-50/30 min-h-screen">
-  <div class="max-w-[1700px] mx-auto mb-8">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-      <div>
-        <h1 class="text-4xl font-bold text-gray-900 tracking-tight">Clientes</h1>
-        <p class="text-gray-500 mt-2 text-md">
+<div class="py-4 px-0 md:px-6 bg-gray-50/30 min-h-screen">
+  <div class="max-w-[1700px] mx-auto mb-6 md:mb-8 px-4 md:px-0">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div class="text-center md:text-left">
+        <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Clientes</h1>
+        <p class="text-gray-500 mt-2 text-sm md:text-md">
           Gestione su base de datos de clientes, contactos y categorías de lealtad.
         </p>
       </div>
-
-      <div class="flex flex-wrap items-center gap-4">
-        <!-- Show Deleted Toggle (Styled like Products) -->
-        @if (canViewDeleted) {
-          <div
-            class="group bg-white border border-gray-200 rounded-2xl py-2 px-5 shadow-sm flex items-center gap-4 transition-all hover:border-indigo-200 hover:shadow-md"
-          >
-            <div class="flex flex-col">
-              <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Filtro</span>
-              <label for="showDeleted" class="text-sm font-semibold text-gray-700"
-                >Mostrar eliminados</label
-              >
-            </div>
-            <p-toggleSwitch
-              [(ngModel)]="showDeleted"
-              (onChange)="loadCustomers()"
-              inputId="showDeleted"
-            ></p-toggleSwitch>
-          </div>
-        }
-
-        <!-- Search (Styled like Products) -->
-        <div
-          class="group bg-white border border-gray-200 rounded-2xl py-1 px-4 shadow-sm flex items-center gap-3 transition-all focus-within:border-indigo-300 focus-within:shadow-md"
-        >
+      <div class="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+        <div class="group bg-white border border-slate-300 rounded-xl 
+                    py-1.5 px-4 shadow-sm flex items-center gap-3 transition-all 
+                    focus-within:border-indigo-300 focus-within:shadow-md w-full md:w-80">
           <i class="pi pi-search text-gray-400"></i>
           <input
             pInputText
             type="text"
             (input)="customersDataTable.filterGlobal($event.target.value, 'contains')"
-            class="!border-none !shadow-none !bg-transparent w-48 md:w-64 text-sm"
+            class="!border-none !shadow-none !bg-transparent w-full text-sm"
             placeholder="Buscar cliente..."
+            autocomplete="off"
           />
         </div>
 
@@ -47,119 +27,125 @@
           label="Nuevo Cliente"
           icon="pi pi-plus"
           (click)="createCustomer()"
-          class="p-button-raised p-button-primary !rounded-2xl !px-6 !py-3 shadow-lg hover:shadow-indigo-200 transition-all font-bold"
+          class="p-button-raised p-button-primary !rounded-xl !px-6 !py-3 shadow-lg hover:shadow-indigo-200 transition-all font-bold w-full md:w-auto"
         ></button>
       </div>
     </div>
   </div>
 
-  <!-- Main Content Card (Matches Products) -->
   <div class="max-w-[1700px] mx-auto">
-    <div
-      class="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden"
-    >
+    <div class="flex mb-4 md:mb-2 px-4 md:px-0">
+      @if (canViewDeleted) {
+        <div class="group bg-white border border-slate-300 rounded-lg py-2 px-5 flex items-center gap-4 transition-all hover:border-indigo-200 hover:shadow-md w-full sm:w-auto justify-between sm:justify-start">
+          <div class="flex flex-col">
+            <label for="showDeleted" class="text-sm font-medium">Mostrar eliminados</label>
+          </div>
+          <p-toggleSwitch
+            [(ngModel)]="showDeleted"
+            (onChange)="loadCustomers()"
+            inputId="showDeleted"
+          ></p-toggleSwitch>
+        </div>
+      }
+    </div>
+    <div class="bg-transparent lg:bg-white lg:rounded-xl lg:border lg:border-slate-300 overflow-hidden lg:shadow-sm">
       <p-table
         #customersDataTable
         [value]="filteredCustomers"
         [loading]="loading"
         [paginator]="true"
-        [rows]="20"
-        [rowsPerPageOptions]="[10, 20, 50]"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 20, 30]"
         [globalFilterFields]="['name', 'nit', 'phone', 'email']"
         dataKey="id"
         [showCurrentPageReport]="true"
         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
-        styleClass="p-datatable-modern"
+        styleClass="p-datatable-sm md:p-datatable-modern"
       >
         <ng-template pTemplate="header">
-          <tr class="!bg-gray-50/50 text-gray-400 font-bold uppercase text-xs tracking-widest">
-            <th class="!py-5 !pl-8 w-[150px]">Estado</th>
-            <th class="!py-5" pSortableColumn="name">
-              Cliente <p-sortIcon class="ml-1" field="name" />
+          <tr class="h-18! text-sm! hidden lg:table-row">
+            <th class="!pl-10 tracking-widest w-[130px]">Estado</th>
+            <th class="tracking-widest" pSortableColumn="name">
+              Cliente <p-sortIcon class="w-3! h-3!" field="name" />
             </th>
-            <th class="!py-5 w-[150px]">NIT</th>
-            <th class="!py-5 w-[250px]">Contacto</th>
-            <th class="!py-5 w-[200px]">Correo</th>
-            <th class="!py-5 w-[250px]">Dirección</th>
-            <th class="!py-5 w-[200px]" pSortableColumn="createdAt">
-              Registro <p-sortIcon class="ml-1" field="createdAt" />
+            <th class="tracking-widest w-[140px]">NIT</th>
+            <th class="tracking-widest w-[200px]">Contacto</th>
+            <th class="tracking-widest w-[180px]">Correo</th>
+            <th class="tracking-widest w-[150px]" pSortableColumn="createdAt">
+              Registro <p-sortIcon class="w-3! h-3!" field="createdAt" />
             </th>
-            <th class="!py-5 !pr-8 text-right w-[150px]">Acciones</th>
+            <th class="tracking-widest pr-8! text-right w-[130px]">Acciones</th>
           </tr>
         </ng-template>
 
         <ng-template pTemplate="body" let-customer>
-          <tr
-            class="group hover:bg-indigo-50/30 transition-colors"
-            [ngClass]="{ 'opacity-60 grayscale-[0.5]': isDeleted(customer) }"
-          >
-            <td class="!py-4 !pl-8 text-left">
+          <tr class="bg-transparent lg:bg-white border-none lg:border-b last:border-0 transition-colors group lg:hover:bg-indigo-50/10 !h-auto lg:!h-16 block lg:table-row" [ngClass]="{ 'opacity-60 lg:grayscale-[0.5]': isDeleted(customer) }">
+            <td class="hidden lg:table-cell !py-4 !pl-8">
               @if (isDeleted(customer)) {
-                <span
-                  class="inline-flex items-center px-3 py-1 text-xs font-bold rounded-lg bg-rose-50 text-rose-600 border border-rose-100"
-                >
-                  <span class="w-1.5 h-1.5 rounded-full bg-rose-500 mr-2"></span>
-                  Eliminado
+                <span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-lg 
+                  bg-rose-50 text-rose-600 border border-rose-300">
+                  <span class="w-1.5 h-1.5 rounded-full bg-rose-500 mr-2"></span> Eliminado
                 </span>
               } @else {
-                <span
-                  class="inline-flex items-center px-3 py-1 text-xs font-bold rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100"
-                >
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span>
-                  Activo
+                <span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-lg 
+                  bg-emerald-50 text-emerald-600 border border-emerald-300">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span> Activo
                 </span>
               }
             </td>
-            <td class="!py-4 text-left">
+            <td class="hidden lg:table-cell">
               <div class="flex flex-col">
-                <span class="font-bold text-gray-800 text-base leading-tight">{{
-                  customer.name
-                }}</span>
-                <span class="text-xs font-semibold text-indigo-500 uppercase tracking-wider mt-0.5">
-                  {{ customer.category.name }}
+                <p class="font-semibold text-base leading-tight">
+                  {{ customer.name }}
+                </p>
+                <div class="flex items-center gap-1.5 mt-1">
+                  @if (customer.creditLimit > 0) {
+                    <p class="text-[11px] font-semibold text-indigo-500 tracking-wide">
+                      <span class="text-gray-600 font-medium">Límite Crédito: </span>{{ customer.creditLimit | currency:'Q ' }}
+                    </p>
+                  } @else {
+                    <p class="text-[11px] font-semibold text-indigo-500 tracking-wide italic">
+                      <span class="text-gray-600 font-medium">Límite Crédito: </span>Ilimitado
+                    </p>
+                  }
+                </div>
+              </div>
+            </td>
+            <td class="hidden lg:table-cell !py-4">
+              <div class="flex flex-col gap-0.5">
+                <span class="text-sm font-medium text-slate-700 tracking-tight">
+                  {{ customer.nit || 'Consumidor Final' }}
                 </span>
               </div>
             </td>
-            <td class="!py-4 text-left">
-              <code
-                class="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs font-bold border border-gray-200"
-              >
-                {{ customer.nit || 'C/F' }}
-              </code>
-            </td>
-            <td class="!py-4 text-left">
-              <div class="flex flex-col">
-                <span class="text-[11px] font-bold text-gray-400 uppercase leading-none mb-1">{{
-                  customer.contactName
-                }}</span>
-                <span class="text-xs font-semibold text-gray-700">
-                  <i class="pi pi-phone text-[10px] mr-1 opacity-50"></i>{{ customer.phone }}
+            <td class="hidden lg:table-cell !py-4">
+              <div class="flex flex-col gap-0.5">
+                <span class="text-sm font-medium flex items-center gap-1.5">
+                  <i class="pi pi-phone text-[12px]! text-indigo-400"></i>
+                  {{ customer.phone }}
+                </span>
+                <span class="text-xs font-normal flex items-center gap-1.5">
+                  <i class="pi pi-user text-[12px]! text-indigo-400"></i>
+                  {{ customer.contactName }}
                 </span>
               </div>
             </td>
-            <td class="!py-4 text-left text-xs font-medium text-gray-500 italic">
-              {{ customer.email }}
-            </td>
-            <td class="!py-4 text-left">
-              <span
-                class="text-xs text-gray-500 line-clamp-1"
-                [pTooltip]="customer.address"
-                tooltipPosition="top"
-              >
-                {{ customer.address }}
+            <td class="hidden lg:table-cell">
+              <span class="text-[13px] italic block truncate w-[180px]" [pTooltip]="customer.email">
+                {{ customer.email }}
               </span>
             </td>
-            <td class="!py-4 text-left">
+            <td class="hidden lg:table-cell">
               <div class="flex flex-col">
-                <span class="text-xs font-bold text-gray-700 leading-none mb-1">{{
+                <span class="text-sm font-bold leading-none mb-1">{{
                   customer.createdAt | date: 'dd/MM/yyyy'
                 }}</span>
-                <span class="text-[10px] font-medium text-gray-400">{{
+                <span class="text-[12px] font-medium">{{
                   customer.createdAt | date: 'hh:mm a'
                 }}</span>
               </div>
             </td>
-            <td class="!py-4 !pr-8 text-right">
+            <td class="hidden lg:table-cell text-right pr-8!">
               <div class="flex justify-end gap-1">
                 @if (!isDeleted(customer)) {
                   <button
@@ -190,23 +176,73 @@
                 }
               </div>
             </td>
+
+            <!-- VISTA MÓVIL (Tarjeta) -->
+            <td class="lg:hidden !p-0 py-1.5 bg-transparent block w-full">
+              <div class="w-full bg-white border-y border-slate-200 shadow-sm flex flex-col p-4 transition-all active:scale-[0.98]">
+                 <div class="flex justify-between items-start mb-2">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest border"
+                          [ngClass]="isDeleted(customer) ? 'bg-rose-50 text-rose-600 border-rose-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200'">
+                       <span class="w-1.5 h-1.5 rounded-full mr-1.5" [ngClass]="isDeleted(customer) ? 'bg-rose-500' : 'bg-emerald-500'"></span>
+                       {{ isDeleted(customer) ? 'Eliminado' : 'Activo' }}
+                    </span>
+                    
+                    <div class="flex items-center gap-1 bg-slate-50 rounded-lg p-0.5 border border-slate-100 shadow-sm mt-0.5">
+                      @if (!isDeleted(customer)) {
+                        <button pButton icon="pi pi-pencil" (click)="editCustomer(customer.id)" class="p-button-rounded p-button-text !w-8 !h-8 !text-amber-500 hover:!bg-amber-100"></button>
+                        <button pButton icon="pi pi-trash" (click)="deleteCustomer(customer)" class="p-button-rounded p-button-text !w-8 !h-8 !text-rose-600 hover:!bg-rose-100"></button>
+                      } @else {
+                        <button pButton icon="pi pi-refresh" (click)="onRestoreCustomer(customer)" class="p-button-rounded p-button-text !w-8 !h-8 !text-emerald-500 hover:!bg-emerald-100"></button>
+                      }
+                    </div>
+                 </div>
+
+                 <div class="flex flex-col mb-3">
+                    <span class="text-[16px] font-black text-slate-900 leading-tight">{{ customer.name }}</span>
+                    <span class="text-[12px] font-bold text-slate-500 mt-0.5 tracking-tight border border-slate-200 w-max px-2 py-0.5 rounded bg-slate-50">NIT: {{ customer.nit || 'C.F.' }}</span>
+                 </div>
+
+                 <div class="grid grid-cols-2 gap-3 mb-3 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                    <div class="flex flex-col">
+                       <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest mb-0.5 flex items-center gap-1">
+                         <i class="pi pi-phone text-[8px] text-indigo-400"></i> Teléfono
+                       </span>
+                       <span class="text-[12px] font-extrabold text-slate-700 truncate">{{ customer.phone || '---' }}</span>
+                    </div>
+                    <div class="flex flex-col border-l border-slate-200 pl-3">
+                       <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest mb-0.5 flex items-center gap-1">
+                         <i class="pi pi-user text-[8px] text-indigo-400"></i> Contacto
+                       </span>
+                       <span class="text-[12px] font-bold text-slate-700 truncate">{{ customer.contactName || '---' }}</span>
+                    </div>
+                 </div>
+
+                 <div class="flex justify-between items-end border-t border-slate-100 pt-3">
+                    <div class="flex flex-col">
+                       <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Crédito</span>
+                       <span class="text-[11px] font-black" [ngClass]="customer.creditLimit > 0 ? 'text-indigo-600' : 'text-slate-500 italic'">
+                         {{ customer.creditLimit > 0 ? (customer.creditLimit | currency:'Q ') : 'Ilimitado' }}
+                       </span>
+                    </div>
+                    <div class="flex flex-col text-right">
+                       <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Registrado</span>
+                       <span class="text-[11px] font-bold text-slate-600">{{ customer.createdAt | date: 'dd/MM/yy' }}</span>
+                    </div>
+                 </div>
+              </div>
+            </td>
+
           </tr>
         </ng-template>
 
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="8" class="text-center !py-20">
+            <td colspan="7" class="text-center !py-20">
               <div class="flex flex-col items-center gap-4">
                 <i class="pi pi-users text-gray-200" style="font-size: 4rem"></i>
-                <div class="flex flex-col gap-1">
+                <div class="flex flex-col items-center gap-1">
                   <p class="text-gray-400 font-bold text-xl">No se encontraron clientes.</p>
-                  <p class="text-gray-400 text-sm">
-                    {{
-                      showDeleted
-                        ? 'No hay registros eliminados actualmente.'
-                        : 'Prueba ajustando los filtros de búsqueda.'
-                    }}
-                  </p>
+                  <p class="text-gray-400 text-sm">Prueba ajustando los filtros de búsqueda.</p>
                 </div>
               </div>
             </td>

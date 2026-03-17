@@ -1,0 +1,294 @@
+<div class="py-4 px-0 md:px-6 bg-gray-50/30 min-h-screen">
+  <div class="max-w-[1700px] mx-auto mb-6 md:mb-8 px-4 md:px-0">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
+      <div class="w-full md:max-w-[50%]">
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Recetas de Producción</h1>
+        <p class="text-gray-500 mt-1 md:mt-2 text-sm md:text-md">
+          Defina los ingredientes y proporciones para sus productos terminados y componentes.
+        </p>
+      </div>
+
+      <div class="group w-full md:w-auto bg-white border border-slate-300 rounded-xl 
+                  py-1 px-4 shadow-sm flex items-center gap-3 transition-all 
+                  focus-within:border-indigo-300 focus-within:shadow-md h-[44px]">
+        <i class="pi pi-search text-gray-400"></i>
+        <input
+          pInputText
+          type="text"
+          (input)="dt.filterGlobal($event.target.value, 'contains')"
+          class="!border-none !shadow-none !bg-transparent w-full sm:w-48 md:w-64 text-sm"
+          placeholder="Buscar producto..."
+        />
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-[1700px] mx-auto">
+    <div class="bg-transparent md:bg-white rounded-none md:rounded-xl md:border md:border-slate-300 overflow-hidden md:shadow-sm">
+      <p-table
+        #dt
+        [value]="products()"
+        [loading]="loading()"
+        [paginator]="true"
+        [rows]="10"
+        [globalFilterFields]="['name', 'sku']"
+        dataKey="id"
+        [rowExpandMode]="'single'"
+        [expandedRowKeys]="expandedRows"
+        (expandedRowKeysChange)="onExpandedRowKeysChange($any($event))"
+        responsiveLayout="scroll"
+      >
+        <ng-template #header>
+          <tr class="h-16! text-sm! hidden lg:table-row">
+            <th class="w-[50px]"></th>
+            <th pSortableColumn="name">Producto <p-sortIcon field="name" /></th>
+            <th pSortableColumn="sku" class="w-[150px]">SKU <p-sortIcon field="sku" /></th>
+            <th pSortableColumn="type" class="w-[120px]">Tipo <p-sortIcon field="type" /></th>
+            <th class="text-center w-[100px]">Unidad</th>
+            <th class="text-right !pr-6 w-[160px]">Acciones</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-product let-expanded="expanded">
+          <tr class="block lg:table-row bg-transparent hover:bg-transparent lg:hover:bg-slate-50/80 transition-colors border-b border-slate-100" [ngClass]="{ 'lg:bg-slate-50/50': expanded }">
+            
+            <!-- VISTA MÓVIL (Tarjeta) -->
+            <td class="lg:hidden block !p-0 border-none bg-transparent">
+              <div class="bg-white rounded-2xl shadow-sm border border-slate-200 mx-4 my-3 p-5 flex flex-col gap-4 relative">
+                @if (product.isMaster) {
+                  <p-tag 
+                    value="Maestro" 
+                    severity="secondary"
+                    [rounded]="true"
+                    styleClass="absolute top-4 right-4 !text-[9px] !px-2 !py-0.5 !h-fit bg-indigo-100! text-indigo-700! border-indigo-200!"
+                  />
+                }
+
+                <div class="flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-lg overflow-hidden border border-slate-200 bg-slate-50 flex-shrink-0 flex items-center justify-center shadow-sm">
+                    @if (product.imageUrl) {
+                      <img [src]="getProductImageUrl(product.imageUrl)" class="w-full h-full object-cover" />
+                    } @else {
+                      <i class="pi pi-image text-lg! text-slate-300"></i>
+                    }
+                  </div>
+                  <div class="flex flex-col min-w-0 pr-14 flex-1">
+                    <span class="font-bold text-slate-800 text-sm leading-tight truncate">{{ product.name }}</span>
+                    <span class="text-[10px] font-mono text-slate-400 uppercase mt-0.5 tracking-widest">{{ product.sku }}</span>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 border-t border-slate-100 pt-3 mt-1">
+                   <div class="flex flex-col gap-1">
+                     <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Tipo</span>
+                     <p-tag [severity]="getTypeSeverity(product.type)" [value]="getTypeLabel(product.type)" styleClass="!text-[9px] w-fit mt-0.5"></p-tag>
+                   </div>
+                   <div class="flex flex-col items-end gap-1 text-right">
+                     <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Unidad</span>
+                     <span class="text-sm font-semibold text-slate-700 mt-0.5">{{ product.unit?.abbreviation || 'und' }}</span>
+                   </div>
+                </div>
+
+                <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
+                  @if (product.variants && product.variants.length > 0) {
+                    <button 
+                      type="button" 
+                      pButton 
+                      pRipple 
+                      [pRowToggler]="product" 
+                      class="p-button-text p-button-sm p-button-secondary font-bold !pl-0" 
+                      [icon]="expanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+                      [label]="expanded ? 'Ocultar Variantes' : 'Ver Variantes'"
+                    ></button>
+                  } @else {
+                    <div></div>
+                  }
+                  @if (!product.isMaster) {
+                    <button
+                      pButton
+                      label="Gestionar Receta"
+                      icon="pi pi-receipt"
+                      class="p-button-text p-button-sm !text-indigo-600 font-bold !pr-0"
+                      (click)="manageRecipe(product.id)"
+                    ></button>
+                  }
+                </div>
+              </div>
+            </td>
+
+            <!-- DESKTOP VIEW -->
+            <td class="text-center hidden lg:table-cell">
+              @if (product.variants && product.variants.length > 0) {
+                <button 
+                  type="button" 
+                  pButton 
+                  pRipple 
+                  [pRowToggler]="product" 
+                  class="p-button-text p-button-secondary p-button-rounded !w-8 !h-8 !p-0" 
+                  [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                ></button>
+              }
+            </td>
+            <td class="!pl-0 hidden lg:table-cell">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 bg-slate-50 flex-shrink-0 flex items-center justify-center ml-2 shadow-sm">
+                  @if (product.imageUrl) {
+                    <img [src]="getProductImageUrl(product.imageUrl)" class="w-full h-full object-cover" />
+                  } @else {
+                    <i class="pi pi-image text-lg! text-slate-300"></i>
+                  }
+                </div>
+                <div class="flex flex-col min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="font-semibold text-slate-800 truncate">{{ product.name }}</span>
+                    @if (product.isMaster) {
+                      <p-tag 
+                        value="Maestro" 
+                        severity="secondary"
+                        [rounded]="true"
+                        styleClass="!text-[9px] !px-2 !py-0.5 !h-fit bg-indigo-100! text-indigo-700! border-indigo-200!"
+                      />
+                    }
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="hidden lg:table-cell">
+              <span class="text-sm font-mono uppercase text-slate-500">{{ product.sku }}</span>
+            </td>
+            <td class="hidden lg:table-cell">
+              <p-tag [severity]="getTypeSeverity(product.type)" [value]="getTypeLabel(product.type)" styleClass="!text-[10px]"></p-tag>
+            </td>
+            <td class="text-center font-medium text-sm text-slate-600 hidden lg:table-cell">
+              {{ product.unit?.abbreviation || 'und' }}
+            </td>
+            <td class="text-right !pr-6 hidden lg:table-cell">
+              <!-- Solo mostramos Gestionar Receta si NO es maestro -->
+              @if (!product.isMaster) {
+                <button
+                  pButton
+                  label="Gestionar Receta"
+                  icon="pi pi-receipt"
+                  class="p-button-text p-button-sm !text-indigo-600 font-bold"
+                  (click)="manageRecipe(product.id)"
+                ></button>
+              }
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template #expandedrow let-product>
+          <tr class="block lg:table-row bg-slate-50/30 lg:bg-transparent">
+            <td colspan="6" class="!p-0 border-b border-slate-200 block lg:table-cell">
+              <div class="px-4 lg:px-12 py-4 bg-slate-50/50 border-l-4 border-indigo-400">
+                <div class="flex items-center gap-2 mb-3">
+                  <i class="pi pi-sitemap text-indigo-500 text-sm"></i>
+                  <span class="text-xs font-bold text-indigo-900 uppercase tracking-widest">Variantes de {{ product.name }}</span>
+                </div>
+                
+                <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden mb-2 lg:mb-0">
+                  <!-- Solo mostrar tabla real en escritorio para variantes, o card view si combinamos, pero por ahora en móvil mejor bloque sin table headers -->
+                  <div class="hidden lg:block">
+                    <p-table [value]="product.variants || []" class="p-datatable-sm">
+                      <ng-template #header>
+                        <tr class="bg-slate-50/80 text-[11px] uppercase text-slate-500 tracking-wider font-bold h-10!">
+                          <th class="!pl-6">Producto / Variante</th>
+                          <th class="w-[140px]">SKU</th>
+                          <th class="w-[120px]">Tipo</th>
+                          <th class="text-center w-[90px]">Unidad</th>
+                          <th class="text-right pr-6 w-[150px]">Acciones</th>
+                        </tr>
+                      </ng-template>
+                      <ng-template #body let-variant>
+                        <tr class="text-sm border-b border-slate-100 last:border-0 hover:bg-slate-50/80 transition-colors">
+                          <td class="!pl-6 py-2">
+                           <div class="flex items-center gap-3">
+                              <div class="w-8 h-8 rounded border border-slate-200 bg-slate-50 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                @if (variant.imageUrl) {
+                                  <img [src]="getProductImageUrl(variant.imageUrl)" class="w-full h-full object-cover" />
+                                } @else {
+                                  <i class="pi pi-image text-xs! text-slate-300"></i>
+                                }
+                              </div>
+                              <span class="font-semibold text-slate-700 truncate">{{ variant.name }}</span>
+                           </div>
+                        </td>
+
+                        <!-- SKU -->
+                        <td class="py-2">
+                          <code class="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[11px] font-mono border border-slate-200">
+                            {{ variant.sku }}
+                          </code>
+                        </td>
+
+                        <!-- TIPO -->
+                        <td class="py-2">
+                          <p-tag [severity]="getTypeSeverity(variant.type)" [value]="getTypeLabel(variant.type)" styleClass="!text-[9px]"></p-tag>
+                        </td>
+
+                        <!-- UNIDAD -->
+                        <td class="py-2 text-center text-slate-500 italic">
+                          {{ variant.unit?.abbreviation || 'und' }}
+                        </td>
+
+                          <td class="py-2 text-right pr-6">
+                             <button
+                               pButton
+                               label="Gestionar Receta"
+                               icon="pi pi-receipt"
+                               class="p-button-text p-button-sm !text-indigo-600 font-bold"
+                               (click)="manageRecipe(variant.id)"
+                             ></button>
+                          </td>
+                        </tr>
+                      </ng-template>
+                    </p-table>
+                  </div>
+                  
+                  <!-- VISTA MÓVIL VARIANTES -->
+                  <div class="block lg:hidden">
+                    @for (variant of product.variants; track variant.id) {
+                      <div class="flex flex-col p-4 border-b border-slate-100 last:border-0">
+                        <div class="flex items-center gap-3 mb-3">
+                           <div class="w-10 h-10 rounded border border-slate-200 bg-slate-50 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                             @if (variant.imageUrl) {
+                               <img [src]="getProductImageUrl(variant.imageUrl)" class="w-full h-full object-cover" />
+                             } @else {
+                               <i class="pi pi-image text-lg! text-slate-300"></i>
+                             }
+                           </div>
+                           <div class="flex flex-col flex-1">
+                             <span class="font-semibold text-slate-800 text-sm leading-tight">{{ variant.name }}</span>
+                             <span class="text-[10px] text-slate-500 font-mono mt-0.5 tracking-widest uppercase">{{ variant.sku }}</span>
+                           </div>
+                        </div>
+                        <div class="flex items-center justify-between border-t border-slate-100/50 pt-2">
+                          <p-tag [severity]="getTypeSeverity(variant.type)" [value]="getTypeLabel(variant.type)" styleClass="!text-[9px]"></p-tag>
+                          <button
+                            pButton
+                            label="Gestionar"
+                            icon="pi pi-receipt"
+                            class="p-button-text p-button-sm !text-indigo-600 font-bold"
+                            (click)="manageRecipe(variant.id)"
+                          ></button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="6" class="text-center !py-20 text-slate-400 italic">
+              No se encontraron productos para recetas.
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>

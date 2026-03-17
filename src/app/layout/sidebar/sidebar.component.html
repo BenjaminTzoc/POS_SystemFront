@@ -46,26 +46,73 @@
       </small>
       <section class="flex flex-col gap-1">
         @for (item of recurrentItems(); track item.label) {
-          <a
-            [routerLink]="item.route"
-            routerLinkActive="bg-blue-50 text-blue-600"
-            [routerLinkActiveOptions]="{ exact: true }"
-            class="flex items-center justify-between py-2.5 rounded-lg cursor-pointer hover:bg-gray-100 transition-all duration-300"
-            [class]="!sidebarCollapsed ? 'px-3' : 'px-3'"
-          >
-            <div class="flex gap-3 items-center">
-              <i [class]="item.icon" class="scale-105"></i>
-              <span
-                class="text-base/tight m-0"
-                [class.opacity-0]="sidebarCollapsed"
-                [class.opacity-100]="!sidebarCollapsed"
-                [class.w-0]="sidebarCollapsed"
-                [class.w-auto]="!sidebarCollapsed"
-              >
-                {{ item.label }}
-              </span>
+          @if (item.children && item.children.length > 0) {
+            <div
+              (click)="toggleSubmenu(item)"
+              class="flex items-center justify-between py-2.5 rounded-lg cursor-pointer hover:bg-gray-100 transition-all duration-300 select-none"
+              [class]="!sidebarCollapsed ? 'px-3' : 'px-3'"
+              [class.bg-blue-50]="isSubmenuOpen(item) || isAnyChildActive(item)"
+              [class.text-blue-600]="isSubmenuOpen(item) || isAnyChildActive(item)"
+            >
+              <div class="flex gap-3 items-center">
+                <i [class]="item.icon" class="scale-105"></i>
+                <span
+                  class="text-base/tight m-0"
+                  [class.opacity-0]="sidebarCollapsed"
+                  [class.opacity-100]="!sidebarCollapsed"
+                  [class.w-0]="sidebarCollapsed"
+                  [class.w-auto]="!sidebarCollapsed"
+                >
+                  {{ item.label }}
+                </span>
+              </div>
+              @if (!sidebarCollapsed) {
+                <i
+                  class="pi pi-chevron-down text-[10px] transition-all duration-300"
+                  [class.rotate-180]="isSubmenuOpen(item)"
+                >
+                </i>
+              }
             </div>
-          </a>
+            @if (item.children && !sidebarCollapsed && isSubmenuOpen(item)) {
+              <div class="w-full flex flex-col gap-1 px-2 mb-2">
+                @for (child of item.children; track child.label) {
+                  <a
+                    [routerLink]="child.route"
+                    routerLinkActive="!bg-blue-50 !text-blue-600 font-bold"
+                    [routerLinkActiveOptions]="{ exact: true }"
+                    class="flex items-center gap-3 py-2 px-6 rounded-lg cursor-pointer hover:bg-gray-50 transition-all duration-300 text-gray-500"
+                  >
+                    <i [class]="child.icon" class="text-sm"></i>
+                    <span class="text-sm">
+                      {{ child.label }}
+                    </span>
+                  </a>
+                }
+              </div>
+            }
+          } @else {
+            <a
+              [routerLink]="item.route"
+              routerLinkActive="bg-blue-50 text-blue-600"
+              [routerLinkActiveOptions]="{ exact: true }"
+              class="flex items-center justify-between py-2.5 rounded-lg cursor-pointer hover:bg-gray-100 transition-all duration-300"
+              [class]="!sidebarCollapsed ? 'px-3' : 'px-3'"
+            >
+              <div class="flex gap-3 items-center">
+                <i [class]="item.icon" class="scale-105"></i>
+                <span
+                  class="text-base/tight m-0"
+                  [class.opacity-0]="sidebarCollapsed"
+                  [class.opacity-100]="!sidebarCollapsed"
+                  [class.w-0]="sidebarCollapsed"
+                  [class.w-auto]="!sidebarCollapsed"
+                >
+                  {{ item.label }}
+                </span>
+              </div>
+            </a>
+          }
         }
       </section>
     </section>

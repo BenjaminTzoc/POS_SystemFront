@@ -1,13 +1,28 @@
-:host ::ng-deep .p-datepicker {
-  background: transparent !important;
+:host ::ng-deep .p-datatable-sm .p-datatable-tbody > tr > td {
+  padding: 0;
 }
 
-:host ::ng-deep .p-datepicker input {
-  background: transparent !important;
+:host ::ng-deep .p-datatable .p-datatable-header {
+  background: white;
+  border: none;
 }
 
-:host ::ng-deep .p-select {
-  background: transparent !important;
+/* Scrollbar styling */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
 }
 
 /* Animations */
@@ -16,29 +31,118 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.max-w-\[1600px\] > div {
-  animation: fadeIn 0.5s ease-out forwards;
+.animate-in {
+  animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.max-w-\[1600px\] > div:nth-child(2) { animation-delay: 0.1s; }
-.max-w-\[1600px\] > div:nth-child(3) { animation-delay: 0.2s; }
-
-/* Custom Scrollbar for top products list if needed */
-.space-y-6 {
-  max-height: 400px;
-  overflow-y: auto;
-  padding-right: 0.5rem;
+/* Table Customization */
+.custom-dashboard-table ::ng-deep .p-datatable-wrapper {
+  overflow: visible !important;
 }
 
-.space-y-6::-webkit-scrollbar {
-  width: 4px;
+.custom-dashboard-table ::ng-deep .p-datatable-thead > tr > th {
+  background-color: #f8fafc50 !important;
 }
 
-.space-y-6::-webkit-scrollbar-track {
-  background: transparent;
+/* Calendar Widget Styles */
+.dashboard-inline-calendar ::ng-deep .p-datepicker {
+  background: transparent !important;
+  border: none !important;
 }
 
-.space-y-6::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
-  border-radius: 10px;
+.dashboard-inline-calendar ::ng-deep .p-datepicker-header {
+  background: transparent !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  padding: 1rem 0 !important;
+  margin-bottom: 1rem !important;
+}
+
+.dashboard-inline-calendar ::ng-deep .p-datepicker-calendar-container {
+  padding: 0 !important;
+}
+
+.dashboard-inline-calendar ::ng-deep .p-datepicker-calendar th {
+  color: #94a3b8 !important;
+  text-transform: uppercase !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.1em !important;
+  padding: 0.5rem !important;
+}
+
+.dashboard-inline-calendar ::ng-deep .p-datepicker-calendar td {
+  padding: 2px !important;
+}
+
+.dashboard-inline-calendar ::ng-deep .p-datepicker-calendar td > span {
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+}
+
+.glass-effect {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Print Styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+
+  body {
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  @page {
+    size: landscape;
+    margin: 1cm;
+  }
+
+  /* Clear backgrounds for ink saving */
+  .bg-white, .bg-slate-50, .bg-indigo-50, .bg-emerald-50 {
+    background-color: transparent !important;
+  }
+
+  .border, .border-slate-200, .border-slate-300 {
+    border-color: #e2e8f0 !important;
+  }
+}
+
+/* Consolidation Table Header Sticky */
+thead th.sticky {
+  z-index: 30;
+}
+
+/* Ensure tooltis or hover effects don't break simple layout */
+.contents {
+  display: contents;
+}
+
+.rounded-5px {
+  border-radius: 5px;
+}
+
+/* Tooltip Small Refinement */
+:host ::ng-deep .custom-tooltip-small .p-tooltip-text {
+  font-size: 10px !important;
+  padding: 4px 8px !important;
+  min-width: auto !important;
 }

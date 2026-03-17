@@ -15,10 +15,33 @@ export class ProductsService {
   getProducts(
     branchId?: string,
     includeDeleted: boolean = false,
+    type?: string,
+    hasRecipe?: boolean,
+    isMaster?: boolean,
+    excludeTypes?: string,
+    manageStock?: boolean
   ): Observable<ApiResponse<Product[]>> {
-    let params = new HttpParams().set('includeDeleted', includeDeleted.toString());
+    let params = new HttpParams();
+    if (includeDeleted === true) {
+      params = params.set('includeDeleted', includeDeleted.toString());
+    }
     if (branchId) {
       params = params.set('branchId', branchId);
+    }
+    if (type) {
+      params = params.set('type', type);
+    }
+    if (hasRecipe !== undefined) {
+      params = params.set('hasRecipe', hasRecipe.toString());
+    }
+    if (isMaster !== undefined) {
+      params = params.set('isMaster', isMaster.toString());
+    }
+    if (excludeTypes) {
+      params = params.set('excludeTypes', excludeTypes);
+    }
+    if (manageStock !== undefined) {
+      params = params.set('manageStock', manageStock.toString());
     }
 
     return this.http.get<ApiResponse<Product[]>>(`${this.API_URL}`, { params });
@@ -33,11 +56,27 @@ export class ProductsService {
     query: string,
     branchId?: string,
     includeDeleted: boolean = false,
+    type?: string,
+    hasRecipe?: boolean,
+    isMaster?: boolean,
+    excludeTypes?: string
   ): Observable<ApiResponse<Product[]>> {
     let params = new HttpParams().set('q', query).set('includeDeleted', includeDeleted.toString());
 
     if (branchId) {
       params = params.set('branchId', branchId);
+    }
+    if (type) {
+      params = params.set('type', type);
+    }
+    if (hasRecipe !== undefined) {
+      params = params.set('hasRecipe', hasRecipe.toString());
+    }
+    if (isMaster !== undefined) {
+      params = params.set('isMaster', isMaster.toString());
+    }
+    if (excludeTypes) {
+      params = params.set('excludeTypes', excludeTypes);
     }
 
     return this.http.get<ApiResponse<Product[]>>(`${this.API_URL}/search`, { params });
@@ -95,5 +134,24 @@ export class ProductsService {
     }
 
     return this.http.get<ApiResponse<Product[]>>(`${this.API_URL}/top-selling`, { params });
+  }
+
+  getBranchCatalog(branchId: string): Observable<ApiResponse<any[]>> {
+    return this.http.get<ApiResponse<any[]>>(`${this.API_URL}/branch/${branchId}/catalog`);
+  }
+
+  getDispatchCatalog(branchId?: string): Observable<ApiResponse<Product[]>> {
+    let params = new HttpParams();
+    if (branchId) params = params.set('branchId', branchId);
+    return this.http.get<ApiResponse<Product[]>>(`${this.API_URL}/dispatch-catalog`, { params });
+  }
+
+  suggestSku(categoryId?: string, type?: string, name?: string): Observable<ApiResponse<{ sku: string }>> {
+    let params = new HttpParams();
+    if (categoryId) params = params.set('categoryId', categoryId);
+    if (type) params = params.set('type', type);
+    if (name) params = params.set('name', name);
+    
+    return this.http.get<ApiResponse<{ sku: string }>>(`${this.API_URL}/suggest-sku`, { params });
   }
 }

@@ -1,159 +1,133 @@
-<div class="p-6 bg-gray-50/30 min-h-screen flex items-center justify-center">
-  <div class="w-full max-w-2xl">
-    <!-- Breadcrumb/Back Button -->
-    <div class="flex items-center gap-4 mb-8">
-      <button
-        pButton
-        icon="pi pi-arrow-left"
-        class="p-button-rounded p-button-text !text-gray-400 hover:!text-indigo-600 hover:!bg-white !shadow-sm !transition-all"
-        routerLink="/inventory/units"
-      ></button>
-      <div>
-        <h1 class="text-3xl font-bold text-gray-800 tracking-tight">
-          {{ isEdit ? 'Editar' : 'Nueva' }} Unidad
+<div class="py-4 px-0 md:px-6 bg-gray-50/30 min-h-screen">
+  <!-- Header Section -->
+  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-6 md:mb-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div class="w-full md:max-w-[60%]">
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
+          {{ isEdit ? 'Editar Unidad' : 'Nueva Unidad' }}
         </h1>
-        <p class="text-gray-500 text-sm">Configura los detalles de tu unidad de medida.</p>
+        <p class="text-gray-500 mt-1 md:mt-2 text-sm md:text-md">
+           Completa la información para {{ isEdit ? 'actualizar' : 'añadir' }} una unidad al catálogo.
+        </p>
       </div>
-    </div>
 
-    <!-- Main Form Card -->
-    <div
-      class="bg-white rounded-[2rem] shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden"
-    >
-      <div class="p-8 md:p-10">
-        <form [formGroup]="unitForm" (ngSubmit)="onSubmit()" class="space-y-8">
-          <!-- Name Field -->
-          <div class="relative group">
-            <label
-              for="name"
-              class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 px-1"
-            >
-              Nombre de la Unidad
-            </label>
-            <div class="relative">
-              <span
-                class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors"
-              >
-                <i class="pi pi-tag"></i>
-              </span>
-              <input
-                pInputText
-                id="name"
-                formControlName="name"
-                placeholder="Ej: Kilogramo, Litro..."
-                class="w-full !pl-12 !py-4 !rounded-2xl !bg-gray-50 !border-transparent focus:!bg-white focus:!border-indigo-200 focus:!ring-4 focus:!ring-indigo-100/50 !transition-all"
-                [ngClass]="{
-                  '!border-rose-300 !ring-rose-100':
-                    unitForm.get('name')?.invalid && unitForm.get('name')?.touched,
-                }"
-              />
-            </div>
-            <div class="mt-2 px-1 flex justify-between">
-              <p class="text-[10px] text-gray-400 font-medium">Nombre descriptivo completo</p>
-              <p
-                *ngIf="unitForm.get('name')?.invalid && unitForm.get('name')?.touched"
-                class="text-[10px] text-rose-500 font-bold uppercase transition-all animate-pulse"
-              >
-                El nombre es obligatorio
-              </p>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
-            <!-- Abbreviation Field -->
-            <div class="group">
-              <label
-                for="abbreviation"
-                class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 px-1"
-              >
-                Abreviación
-              </label>
-              <div class="relative">
-                <span
-                  class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors"
-                >
-                  <i class="pi pi-bookmark"></i>
-                </span>
-                <input
-                  pInputText
-                  id="abbreviation"
-                  formControlName="abbreviation"
-                  placeholder="Ej: kg, L..."
-                  class="w-full !pl-12 !py-4 !rounded-2xl !bg-gray-50 !border-transparent focus:!bg-white focus:!border-indigo-200 focus:!ring-4 focus:!ring-indigo-100/50 !transition-all"
-                  [ngClass]="{
-                    '!border-rose-300 !ring-rose-100':
-                      unitForm.get('abbreviation')?.invalid &&
-                      unitForm.get('abbreviation')?.touched,
-                  }"
-                />
-              </div>
-              <p class="mt-2 px-1 text-[10px] text-gray-400 font-medium">
-                Símbolo corto (máx 5 car.)
-              </p>
-            </div>
-
-            <!-- Decimals Toggle -->
-            <div class="flex flex-col justify-center">
-              <label
-                class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 px-1"
-              >
-                ¿Permite Decimales?
-              </label>
-              <div
-                class="bg-gray-50 p-3 rounded-2xl flex items-center justify-between group hover:bg-gray-100/50 transition-colors"
-              >
-                <span class="text-sm font-semibold text-gray-600 pl-2">
-                  {{
-                    unitForm.get('allowsDecimals')?.value ? 'Sí, habilitado' : 'No, solo enteros'
-                  }}
-                </span>
-                <p-toggleSwitch
-                  formControlName="allowsDecimals"
-                  inputId="allowsDecimals"
-                ></p-toggleSwitch>
-              </div>
-            </div>
-          </div>
-
-          <!-- Description Field -->
-          <div class="group text-left">
-            <label
-              for="description"
-              class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 px-1"
-            >
-              Descripción Opcional
-            </label>
-            <textarea
-              pTextarea
-              id="description"
-              formControlName="description"
-              placeholder="Añade detalles sobre el uso de esta unidad..."
-              rows="3"
-              class="w-full !p-4 !rounded-2xl !bg-gray-50 !border-transparent focus:!bg-white focus:!border-indigo-200 focus:!ring-4 focus:!ring-indigo-100/50 !transition-all resize-none"
-            ></textarea>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="flex items-center justify-end gap-4 pt-4">
-            <button
-              pButton
-              type="button"
-              label="Descartar"
-              class="p-button-text !text-gray-400 hover:!text-gray-600 !rounded-2xl !px-6"
-              routerLink="/inventory/units"
-            ></button>
-            <button
-              pButton
-              type="submit"
-              [label]="isEdit ? 'Actualizar Cambios' : 'Crear Unidad'"
-              [icon]="loading ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
-              [loading]="loading"
-              [disabled]="unitForm.invalid"
-              class="p-button-raised p-button-primary !rounded-2xl !px-8 !py-4 shadow-xl hover:shadow-indigo-200 transition-all font-bold tracking-tight"
-            ></button>
-          </div>
-        </form>
+      <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto">
+        <p-button 
+          label="Cancelar" 
+          routerLink="/inventory/units"
+          variant="outlined" 
+          severity="danger" 
+          icon="pi pi-times"
+          styleClass="!rounded-xl px-4 md:px-6 font-bold border-rose-400! h-[44px] flex-1 md:flex-none justify-center"
+        />
+        <p-button
+          (onClick)="onSubmit()"
+          [label]="isEdit ? 'Guardar Cambios' : 'Crear Unidad'"
+          severity="primary"
+          styleClass="!rounded-xl px-4 md:px-6 shadow-lg font-bold h-[44px] flex-1 md:flex-none justify-center"
+          [loading]="loading"
+          icon="pi pi-check"
+          [disabled]="unitForm.invalid"
+        />
       </div>
     </div>
   </div>
+
+  <form class="max-w-[1100px] mx-auto pb-40" [formGroup]="unitForm">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-0 md:gap-8">
+      <div class="col-span-12 md:col-start-1 md:col-span-12 flex flex-col gap-6">
+        <div class="p-5 md:p-8 rounded-none md:rounded-2xl bg-white border-y md:border border-slate-300 shadow-sm">
+          <div class="flex flex-col gap-y-6 md:gap-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Name Field -->
+                <div class="flex flex-col gap-1.5 md:gap-1">
+                <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0" for="name">
+                    <i class="pi pi-tag mr-1 text-xs! text-blue-500"></i>
+                    Nombre de la Unidad <span class="text-red-700">*</span>
+                </label>
+                <input
+                    pInputText
+                    id="name"
+                    formControlName="name"
+                    class="w-full !rounded-xl h-[44px] md:h-auto font-medium"
+                    [ngClass]="{
+                    'ng-invalid ng-dirty': unitForm.get('name')?.invalid && unitForm.get('name')?.touched
+                    }"
+                    placeholder="Ej. Kilogramo, Litro, Unidad..."
+                    autocomplete="off"
+                />
+                @if (unitForm.get('name')?.invalid && unitForm.get('name')?.touched) {
+                    <small class="text-rose-500 text-[10px] font-medium flex items-center mt-1">
+                    <i class="pi pi-exclamation-circle mr-1 text-[10px]!"></i>El nombre es obligatorio.
+                    </small>
+                }
+                </div>
+
+                <!-- Abbreviation Field -->
+                <div class="flex flex-col gap-1.5 md:gap-1">
+                    <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0" for="abbreviation">
+                        <i class="pi pi-bookmark mr-1 text-xs! text-blue-500"></i>
+                        Abreviación <span class="text-red-700">*</span>
+                    </label>
+                    <input
+                        pInputText
+                        id="abbreviation"
+                        formControlName="abbreviation"
+                        class="w-full !rounded-xl h-[44px] md:h-auto font-medium"
+                        [ngClass]="{
+                        'ng-invalid ng-dirty': unitForm.get('abbreviation')?.invalid && unitForm.get('abbreviation')?.touched
+                        }"
+                        placeholder="Ej. kg, L, und..."
+                        autocomplete="off"
+                    />
+                    @if (unitForm.get('abbreviation')?.invalid && unitForm.get('abbreviation')?.touched) {
+                        <small class="text-rose-500 text-[10px] font-medium flex items-center mt-1">
+                        <i class="pi pi-exclamation-circle mr-1 text-[10px]!"></i>La abreviación es obligatoria.
+                        </small>
+                    }
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                 <!-- Decimals Toggle -->
+                <div class="md:col-span-5 flex flex-col gap-2 p-4 md:p-6 rounded-2xl bg-slate-50 border border-slate-200">
+                    <div class="flex justify-between items-center gap-4">
+                        <div class="flex flex-col min-w-0">
+                            <label class="text-xs font-bold text-slate-800 uppercase tracking-tight">Permitir Decimales</label>
+                            <span class="text-[10px] text-slate-400 font-medium leading-none mt-1">¿Se vende en fracciones?</span>
+                        </div>
+                        <p-toggleSwitch
+                            formControlName="allowsDecimals"
+                            inputId="allowsDecimals"
+                        ></p-toggleSwitch>
+                    </div>
+                </div>
+
+                <div class="md:col-span-7 flex items-start gap-3 text-[11px] md:text-xs italic text-slate-400 font-medium leading-relaxed px-1">
+                    <i class="pi pi-info-circle text-indigo-400 mt-0.5"></i>
+                    Habilita esta opción si los productos con esta unidad requieren pesaje o cantidades fraccionadas (ej. 1.25 kg, 0.50 L).
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="flex flex-col gap-1.5 md:gap-1">
+              <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0" for="description">
+                <i class="pi pi-align-left mr-1 text-xs! text-blue-500"></i>
+                Descripción (Opcional)
+              </label>
+              <textarea
+                rows="4"
+                pTextarea
+                id="description"
+                formControlName="description"
+                class="w-full !rounded-xl border-slate-300 p-4 font-medium resize-none"
+                placeholder="Detalles sobre el uso de esta unidad..."
+                autocomplete="off"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
 </div>

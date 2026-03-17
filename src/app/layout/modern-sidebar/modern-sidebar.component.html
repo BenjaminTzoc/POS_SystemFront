@@ -1,0 +1,80 @@
+<aside class="modern-sidebar" [class.collapsed]="collapsed">
+  <!-- Sidebar Header -->
+  <div class="sidebar-header">
+      <div class="" 
+           [pTooltip]="collapsed ? 'Caben POS' : ''" 
+           tooltipPosition="right">
+        <img 
+          [src]="!collapsed ? 'svg/Logo caben programa-01.svg' : 'svg/Logo caben programa-02.svg'" 
+          alt="Caben Logo" 
+          [class]="!collapsed ? 'h-32!' : 'h-8!'"
+          class="w-auto object-contain" />
+      </div>
+  </div>
+
+  <!-- Sidebar Content -->
+  <div class="sidebar-content">
+    <nav class="nav-section">
+      @for (item of menuItems; track item.label) {
+        <div class="menu-item-wrapper">
+          @if (!item.children) {
+            <a [routerLink]="item.route" 
+               routerLinkActive="active" 
+               class="nav-item"
+               [pTooltip]="collapsed ? item.label : ''"
+               tooltipPosition="right">
+              <span class="nav-icon"><i [class]="item.icon"></i></span>
+              <span class="nav-label">{{ item.label }}</span>
+            </a>
+          } @else {
+            <div class="nav-item" 
+                 (click)="toggleExpand(item.label)"
+                 [class.active]="isActive(item)"
+                 [pTooltip]="collapsed ? item.label : ''"
+                 tooltipPosition="right">
+              <span class="nav-icon"><i [class]="item.icon"></i></span>
+              <span class="nav-label">{{ item.label }}</span>
+              <span class="badge" *ngIf="item.badge" [ngClass]="item.badgeSeverity || 'info'">{{ item.badge }}</span>
+              <span class="arrow" [class.expanded]="isExpanded(item.label)" *ngIf="!collapsed">
+                <i class="pi pi-chevron-right text-[10px]"></i>
+              </span>
+            </div>
+            
+            @if (isExpanded(item.label) && !collapsed) {
+              <div class="submenu" @submenuAnimation>
+                @for (child of item.children; track child.label) {
+                  <a [routerLink]="child.route" 
+                     routerLinkActive="active" 
+                     class="submenu-item">
+                    <span class="nav-label">{{ child.label }}</span>
+                  </a>
+                }
+              </div>
+            }
+          }
+        </div>
+      }
+    </nav>
+  </div>
+
+  <!-- Sidebar Footer -->
+  <div class="sidebar-footer">
+    <div class="user-profile">
+      <div class="user-avatar">
+        {{ userInitials }}
+      </div>
+      <div class="user-info">
+        <span class="user-name">{{ user?.name || 'Invitado' }}</span>
+        <span class="user-role">{{ user?.roles?.[0]?.name || 'Usuario' }}</span>
+      </div>
+      <div class="logout-btn" (click)="logout()" pTooltip="Cerrar sesión">
+        <i class="pi pi-power-off"></i>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- Toggle Button (Fuera del aside para evitar recortes) -->
+<button class="toggle-sidebar" (click)="toggleSidebar($event)" aria-label="Toggle Sidebar">
+  <i [class]="collapsed ? 'pi pi-chevron-right' : 'pi pi-chevron-left'" class="text-[10px] pointer-events-none"></i>
+</button>

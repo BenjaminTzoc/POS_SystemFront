@@ -1,4 +1,12 @@
 import { Inventory } from './inventory.interface';
+import { Area } from '../../logistics/interfaces/area.interface';
+
+export enum ProductType {
+  RAW_MATERIAL = 'raw_material',      // Para Compras y Despiece
+  INSUMO = 'insumo',                  // Para Compras y Recetas
+  COMPONENT = 'component',            // Resultado de Despiece
+  FINISHED_PRODUCT = 'finished_product' // Para Manufactura y Logística
+}
 
 export interface Category {
   id: string;
@@ -31,10 +39,20 @@ export interface Product {
   cost: string;
   price: string;
   imageUrl: string;
-  category: Category;
+  type?: ProductType;
+  category?: Category;
   unit: Unit;
+  area?: Area;
   stock?: number;
-  inventories?: Inventory[];
+  manageStock?: boolean;
+  stockAvailability?: string;
+  isActive?: boolean;
+  isVisible?: boolean;
+  inventories?: any[];
+  isMaster?: boolean;
+  isVariant?: boolean;
+  variants?: Product[];
+  parentId?: string | null;
   deletedAt?: string;
 }
 
@@ -53,6 +71,7 @@ export interface ProductWithInventory {
   stockAvailability: string;
   isActive: boolean;
   isVisible: boolean;
+  type?: ProductType;
   inventories: Array<{
     id: string;
     branchId: string;
@@ -73,6 +92,7 @@ export interface ProductWithInventory {
     abbreviation: string;
     allowsDecimals: boolean;
   };
+  area?: Area;
 }
 
 export interface ProductInventoryCard {
@@ -86,6 +106,7 @@ export interface ProductInventoryCard {
   manageStock: boolean;
   isActive: boolean;
   isVisible: boolean;
+  type?: ProductType;
   category: string;
   unit: string;
   unitAbbreviation: string;

@@ -59,27 +59,15 @@ export const RECURRENT_MENU: MenuItem[] = [
     permission: '',
   },
   {
-    label: 'Unidades de medida',
-    icon: 'pi pi-gauge',
-    route: '/inventory/units',
-    permission: '',
-  },
-  {
-    label: 'Categorías',
-    icon: 'pi pi-tags',
-    route: '/inventory/product-categories',
-    permission: '',
-  },
-  {
-    label: 'Sucursales',
-    icon: 'pi pi-map-marker',
-    route: '/inventory/branches',
-    permission: '',
-  },
-  {
     label: 'Traslados de Inventario',
     icon: 'pi pi-sync',
     route: '/inventory/inventory-transfers',
+    permission: '',
+  },
+  {
+    label: 'Órdenes de Compra',
+    icon: 'pi pi-shopping-bag',
+    route: '/purchases/orders',
     permission: '',
   },
 ];
@@ -110,29 +98,11 @@ export const MENU_ITEMS: MenuItem[] = [
         permission: '',
       },
       {
-        label: 'Categorías',
-        icon: 'pi pi-tags',
-        route: '/inventory/product-categories',
-        permission: '',
-      },
-      {
         label: 'Traslados',
         icon: 'pi pi-sync',
         route: '/inventory/inventory-transfers',
         permission: '',
-      },
-      {
-        label: 'Unidades de medida',
-        icon: 'pi pi-gauge',
-        route: '/inventory/units',
-        permission: '',
-      },
-      {
-        label: 'Sucursales',
-        icon: 'pi pi-map-marker',
-        route: '/inventory/branches',
-        permission: '',
-      },
+      }
     ],
   },
   {
@@ -159,7 +129,65 @@ export const MENU_ITEMS: MenuItem[] = [
         route: '/sales/cash-history',
         permission: '',
       },
+      {
+        label: 'Cotizaciones',
+        icon: 'pi pi-file-edit',
+        route: '/sales/quotations',
+        permission: '',
+      },
     ],
+  },
+  {
+    label: 'Producción',
+    icon: 'pi pi-microchip-ai',
+    route: '/production',
+    permission: '',
+    children: [
+      {
+        label: 'Despiece (Cortes)',
+        icon: 'pi pi-percentage',
+        route: '/production/decomposition',
+        permission: '',
+      },
+      {
+        label: 'Manufactura',
+        icon: 'pi pi-hammer',
+        route: '/production/orders',
+        permission: '',
+      },
+      {
+        label: 'Recetas',
+        icon: 'pi pi-receipt',
+        route: '/production/recipes',
+        permission: '',
+      }
+    ]
+  },
+  {
+    label: 'Logística',
+    icon: 'pi pi-truck',
+    route: '/logistics',
+    permission: '',
+    children: [
+      {
+        label: 'Despachos de Ruta',
+        icon: 'pi pi-send',
+        route: '/logistics/dispatches',
+        permission: '',
+      },
+      {
+        label: 'Liquidación Diaria',
+        icon: 'pi pi-calculator',
+        route: '/logistics/settlements',
+        permission: '',
+      },
+      {
+        label: 'Devoluciones',
+        icon: 'pi pi-backward',
+        route: '/logistics/returns',
+        permission: '',
+      }
+    ]
   },
   {
     label: 'Compras',
@@ -168,12 +196,6 @@ export const MENU_ITEMS: MenuItem[] = [
     permission: '',
     children: [
       {
-        label: 'Proveedores',
-        icon: 'pi pi-truck',
-        route: '/purchases/suppliers',
-        permission: '',
-      },
-      {
         label: 'Ordenes de compra',
         icon: 'pi pi-shopping-cart',
         route: '/purchases/orders',
@@ -181,4 +203,42 @@ export const MENU_ITEMS: MenuItem[] = [
       },
     ],
   },
+  {
+    label: 'Catálogos',
+    icon: 'pi pi-list',
+    route: '/catalogs',
+    permission: '',
+    children: [
+      {
+        label: 'Sucursales',
+        icon: 'pi pi-map-marker',
+        route: '/inventory/branches',
+        permission: '',
+      },
+      {
+        label: 'Unidades de medida',
+        icon: 'pi pi-gauge',
+        route: '/inventory/units',
+        permission: '',
+      },
+      {
+        label: 'Categorías',
+        icon: 'pi pi-tags',
+        route: '/inventory/product-categories',
+        permission: '',
+      },
+      {
+        label: 'Proveedores',
+        icon: 'pi pi-truck',
+        route: '/purchases/suppliers',
+        permission: '',
+      },
+      {
+        label: 'Áreas de Preparación',
+        icon: 'pi pi-map',
+        route: '/logistics/areas',
+        permission: '',
+      }
+    ]
+  }
 ];

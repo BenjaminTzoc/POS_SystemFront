@@ -1,89 +1,82 @@
-<div class="p-8 bg-gray-50/30 min-h-screen flex items-center justify-center">
+<div class="p-8 bg-gray-50/30 flex items-center justify-center">
   <div class="max-w-[1200px] w-full">
     <!-- Pantalla de Inicio de Turno (Dividida a la mitad) -->
     <div
       *ngIf="!currentSession() && !isLoadingStatus()"
-      class="animate-fade-in grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
+      class="animate-fade-in grid grid-cols-1 lg:grid-cols-2 gap-y-12 items-start gap-x-10 py-12"
     >
       <!-- Lado Izquierdo: Mensaje de Bienvenida -->
-      <div class="space-y-8 p-10">
-        <div
-          class="inline-flex items-center gap-3 px-4 py-2 bg-indigo-50 rounded-2xl border border-indigo-100/50"
-        >
-          <span class="relative flex h-3 w-3">
+      <div class="space-y-8">
+        <div class="inline-flex items-center gap-3 px-4 py-2 bg-indigo-50 rounded-lg border border-indigo-300">
+          <span class="relative flex h-2 w-2">
             <span
               class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"
             ></span>
-            <span class="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
           </span>
-          <span class="text-xs font-black text-indigo-600 uppercase tracking-widest"
+          <span class="text-xs font-semibold text-indigo-600 tracking-widest"
             >Sistema Listo</span
           >
         </div>
 
-        <div class="space-y-4">
-          <h1 class="text-5xl font-black text-gray-900 leading-[1.1] tracking-tight">
+        <div class="space-y-1">
+          <h1 class="text-3xl font-bold text-gray-900 leading-[1.1] tracking-tight">
             ¡Hola, <span class="text-indigo-600">{{ user?.name }}!</span>
           </h1>
-          <p class="text-xl text-gray-500 font-medium leading-relaxed">
+          <p class="text-sm text-gray-500 font-medium">
             Es un excelente momento para comenzar. Sigue estos pasos para iniciar tu turno de venta:
           </p>
         </div>
 
         <div class="space-y-6">
           <div class="flex gap-6 group">
-            <div
-              class="flex-shrink-0 w-12 h-12 bg-white rounded-2xl shadow-lg flex items-center justify-center text-xl font-black text-indigo-500 border border-gray-100 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300"
-            >
+            <div class="flex-shrink-0 w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center text-lg font-semibold text-white">
               1
             </div>
             <div>
-              <h4 class="font-black text-gray-800 uppercase text-xs tracking-widest mb-1">
+              <h4 class="font-semibold text-gray-800 text-sm">
                 Verifica tu efectivo
               </h4>
-              <p class="text-gray-400 text-sm leading-relaxed">
+              <p class="text-gray-500 text-xs leading-relaxed">
                 Cuenta el dinero físico que tienes en gaveta antes de abrir.
               </p>
             </div>
           </div>
 
           <div class="flex gap-6 group">
-            <div
-              class="flex-shrink-0 w-12 h-12 bg-white rounded-2xl shadow-lg flex items-center justify-center text-xl font-black text-indigo-500 border border-gray-100 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300"
-            >
+            <div class="flex-shrink-0 w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center text-lg font-semibold text-white">
               2
             </div>
             <div>
-              <h4 class="font-black text-gray-800 uppercase text-xs tracking-widest mb-1">
+              <h4 class="font-semibold text-gray-800 text-sm">
                 Asigna una Sucursal
               </h4>
-              <p class="text-gray-400 text-sm leading-relaxed">
+              <p class="text-gray-500 text-xs leading-relaxed">
                 Asegúrate de estar operando en la ubicación correcta.
               </p>
             </div>
           </div>
 
           <div class="flex gap-6 group">
-            <div
-              class="flex-shrink-0 w-12 h-12 bg-white rounded-2xl shadow-lg flex items-center justify-center text-xl font-black text-indigo-500 border border-gray-100 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300"
-            >
+            <div class="flex-shrink-0 w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center text-lg font-semibold text-white">
               3
             </div>
             <div>
-              <h4 class="font-black text-gray-800 uppercase text-xs tracking-widest mb-1">
+              <h4 class="font-semibold text-gray-800 text-sm">
                 Inicia la Operación
               </h4>
-              <p class="text-gray-400 text-sm leading-relaxed">
+              <p class="text-gray-500 text-xs leading-relaxed">
                 Una vez abierta, el sistema registrará cada venta en efectivo.
               </p>
             </div>
           </div>
         </div>
 
-        <div class="p-6 bg-amber-50 rounded-3xl border border-amber-100 flex gap-4">
-          <i class="pi pi-shield text-amber-500 text-xl mt-1"></i>
-          <p class="text-xs text-amber-700 font-bold leading-relaxed">
-            Recordatorio de Seguridad: No compartas tu sesión de caja con otros usuarios. El arqueo
+        <div class="p-4 bg-amber-50 rounded-lg border border-amber-300 flex gap-4">
+          <i class="pi pi-shield text-amber-500 text-xl! mt-1"></i>
+          <p class="text-xs text-amber-700 font-medium leading-relaxed">
+            <span class="font-bold">Recordatorio de Seguridad: </span>
+            No compartas tu sesión de caja con otros usuarios. El arqueo
             final es responsabilidad única del cajero activo.
           </p>
         </div>
@@ -91,7 +84,7 @@
 
       <!-- Lado Derecho: Formulario de Apertura -->
       <div
-        class="bg-white rounded-[3.5rem] p-12 shadow-2xl shadow-gray-200/50 border border-gray-50 relative overflow-hidden"
+        class="bg-white border border-slate-300 rounded-2xl p-6 relative overflow-hidden"
       >
         <!-- Decoration -->
         <div
@@ -103,52 +96,60 @@
 
         <form [formGroup]="openForm" class="space-y-8 relative z-10">
           <div class="group">
-            <label
-              class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 px-1"
-              >Saldo de Apertura (GTQ)</label
-            >
-            <div class="relative">
-              <span
-                class="absolute inset-y-0 left-0 pl-8 flex items-center text-gray-300 group-focus-within:text-indigo-500 transition-colors"
-              >
-                <i class="pi pi-wallet text-2xl"></i>
-              </span>
-              <input
-                pInputText
+            <div class="flex items-center justify-between px-1 mb-4">
+              <label class="block text-sm font-semibold text-slate-600">
+                Saldo de Apertura (GTQ)
+              </label>
+              <button 
+                type="button"
+                (click)="showCalculationDialog = true"
+                class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 cursor-pointer flex items-center gap-1.5 px-3 py-1 bg-indigo-50 rounded-lg transition-all hover:scale-105">
+                <i class="pi pi-calculator text-sm!"></i>
+                Contar Efectivo
+              </button>
+            </div>
+            <div class="relative group">
+              <p-inputnumber
                 formControlName="openingBalance"
-                type="number"
+                mode="decimal"
+                [min]="0"
+                [minFractionDigits]="2"
+                [maxFractionDigits]="2"
                 placeholder="0.00"
-                class="w-full !pl-16 !py-8 !rounded-3xl !bg-gray-50 !border-transparent focus:!bg-white focus:!border-indigo-200 focus:!ring-[12px] focus:!ring-indigo-100/20 !transition-all font-black text-5xl text-gray-800"
-              />
+                styleClass="w-full"
+                prefix="Q "
+                inputStyleClass="w-full !bg-gray-50 focus:!bg-white focus:!border-indigo-200 focus:!ring-[12px] focus:!ring-indigo-100/20 !transition-all font-semibold text-sm text-gray-800"
+              ></p-inputnumber>
             </div>
           </div>
 
           <div class="space-y-6">
             <div class="group">
-              <label
-                class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 px-1"
-                >Ubicación Actual</label
-              >
+              <label class="block text-sm font-semibold text-slate-600 mb-4">
+                Sucursal de Operación
+              </label>
               <p-select
                 [options]="branches"
                 formControlName="branchId"
                 optionLabel="name"
                 optionValue="id"
                 placeholder="Selecciona sucursal"
-                styleClass="w-full !rounded-2xl !bg-gray-50 !border-transparent !py-3 !px-5 font-bold"
+                appendTo="body"
+                [filter]="true"
+                filterBy="name"
+                styleClass="w-full !bg-gray-50 font-semibold flex items-center border! border-slate-300!"
               ></p-select>
             </div>
 
             <div class="group">
-              <label
-                class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 px-1"
-                >Notas de Turno (Opcional)</label
-              >
+              <label class="block text-sm font-semibold text-slate-600 mb-4">
+                Notas de Turno (Opcional)
+              </label>
               <textarea
                 pInputTextarea
                 formControlName="notes"
-                rows="2"
-                class="w-full !py-4 !px-6 !rounded-2xl !bg-gray-50 !border-transparent focus:!bg-white focus:!border-indigo-200 !transition-all font-medium italic"
+                rows="3"
+                class="w-full !bg-gray-50 focus:!bg-white focus:!border-indigo-200 !transition-all font-medium"
                 placeholder="Ej: Inicio de semana, fondo de reserva..."
               ></textarea>
             </div>
@@ -160,11 +161,11 @@
               icon="pi pi-check-circle"
               [loading]="isLoading"
               (click)="openCash()"
-              class="p-button-raised p-button-primary !w-full !rounded-[2.5rem] !py-6 shadow-2xl shadow-indigo-100 font-black text-xl tracking-wide uppercase group"
+              class="p-button-raised p-button-primary !w-full text-xl"
             >
               <ng-template pTemplate="icon">
                 <i
-                  class="pi pi-arrow-right ml-2 group-hover:translate-x-1 transition-transform"
+                  class="pi pi-unlock"
                 ></i>
               </ng-template>
             </p-button>
@@ -173,74 +174,122 @@
       </div>
     </div>
 
-    <!-- Cierre de Sesión (Se mantiene profesional y enfocado) -->
-    <div *ngIf="currentSession() && !isLoadingStatus()" class="animate-fade-in max-w-2xl mx-auto">
-      <div class="text-center mb-10">
-        <div class="inline-flex flex-col items-center">
-          <div
-            class="w-20 h-20 bg-emerald-500 rounded-[2rem] shadow-xl flex items-center justify-center mb-6 border-4 border-white"
-          >
-            <i class="pi pi-lock-open text-3xl text-white"></i>
-          </div>
-          <h1 class="text-4xl font-black text-gray-900 tracking-tight leading-tight">
-            Finalizar Turno
+    <!-- Cierre de Sesión (Diseño acoplado a la apertura) -->
+    <div
+      *ngIf="currentSession() && !isLoadingStatus()"
+      class="animate-fade-in grid grid-cols-1 lg:grid-cols-2 gap-y-12 items-start gap-x-10 py-12"
+    >
+      <!-- Lado Izquierdo: Resumen del Turno -->
+      <div class="space-y-8">
+        <div class="inline-flex items-center gap-3 px-4 py-2 bg-emerald-50 rounded-lg border border-emerald-300">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span class="text-xs font-semibold text-emerald-600 tracking-widest">Turno Activo</span>
+        </div>
+
+        <div class="space-y-1">
+          <h1 class="text-3xl font-bold text-gray-900 leading-[1.1] tracking-tight">
+            Hola, <span class="text-indigo-600">{{ sessionUserName() }}</span>
           </h1>
-          <p class="text-gray-400 mt-2 font-medium">
-            Realiza el arqueo físico para cerrar tu sesión.
+          <p class="text-sm text-gray-500 font-medium">
+            Tu turno está en curso. Aquí tienes un resumen de la actividad actual en <span class="text-emerald-600 font-bold">{{ sessionBranchName() }}</span>:
+          </p>
+        </div>
+
+        <div class="space-y-6">
+          <div class="flex gap-6">
+            <div class="flex-shrink-0 w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center text-white">
+              <i class="pi pi-calendar-plus"></i>
+            </div>
+            <div>
+              <h4 class="font-semibold text-gray-800 text-sm">Inicio de Turno</h4>
+              <p class="text-gray-500 text-xs">{{ currentSession()?.openedAt | date:'medium' }}</p>
+            </div>
+          </div>
+
+          <div class="flex gap-6">
+            <div class="flex-shrink-0 w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center text-white">
+              <i class="pi pi-wallet"></i>
+            </div>
+            <div>
+              <h4 class="font-semibold text-gray-800 text-sm">Fondo Inicial</h4>
+              <p class="text-gray-500 text-xs">{{ currentSession()?.openingBalance | currency:'Q ' }}</p>
+            </div>
+          </div>
+
+          <div class="flex gap-6">
+            <div class="flex-shrink-0 w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center text-white">
+              <i class="pi pi-money-bill"></i>
+            </div>
+            <div>
+              <h4 class="font-semibold text-gray-800 text-sm">Ventas en Efectivo</h4>
+              <p class="text-xs font-bold text-emerald-600">{{ (currentSession()?.totalCashSales || 0) | currency:'Q ' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 bg-amber-50 rounded-lg border border-amber-300 flex gap-4">
+          <i class="pi pi-exclamation-triangle text-amber-500 text-xl! mt-1"></i>
+          <p class="text-xs text-amber-700 font-medium leading-relaxed">
+            <span class="font-bold">Nota de Arqueo: </span>
+            Antes de cerrar, asegúrate de haber contado todo el efectivo físico de la gaveta.
           </p>
         </div>
       </div>
 
-      <div
-        class="bg-white rounded-[3.5rem] p-12 shadow-2xl shadow-gray-200/50 border border-gray-50"
-      >
-        <div class="grid grid-cols-2 gap-4 mb-10">
-          <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-            <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2"
-              >Saldo Inicial</span
-            >
-            <div class="text-2xl font-black text-slate-700">
-              {{ currentSession()?.openingBalance | currency }}
+      <!-- Lado Derecho: Formulario de Cierre -->
+      <div class="bg-white border border-slate-300 rounded-2xl p-6 relative overflow-hidden">
+        <!-- Decoration -->
+        <div class="absolute -top-10 -right-10 w-40 h-40 bg-emerald-50 rounded-full blur-3xl opacity-50"></div>
+        
+        <form [formGroup]="closeForm" class="space-y-8 relative z-10">
+          <div class="group">
+            <div class="flex items-center justify-between px-1 mb-4">
+              <label class="block text-sm font-semibold text-slate-600">Efectivo en Gaveta (Cierre)</label>
+              <button 
+                type="button"
+                (click)="showCalculationDialog = true"
+                class="text-xs font-semibold text-emerald-600 hover:text-emerald-800 cursor-pointer flex items-center gap-1.5 px-3 py-1 bg-emerald-50 rounded-lg transition-all hover:scale-105"
+              >
+                <i class="pi pi-calculator text-sm!"></i>
+                Contar Efectivo
+              </button>
             </div>
-          </div>
-          <div class="bg-emerald-50 p-6 rounded-3xl border border-emerald-100">
-            <span
-              class="text-[10px] font-black text-emerald-400 uppercase tracking-widest block mb-2"
-              >Punto de Venta</span
-            >
-            <div class="text-lg font-black text-emerald-700 truncate">
-              {{ currentSession()?.branchName }}
-            </div>
-          </div>
-        </div>
-
-        <form [formGroup]="closeForm" class="space-y-8">
-          <div class="group text-center">
-            <label
-              class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-6"
-              >Monto Total en Efectivo (Gaveta)</label
-            >
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 pl-8 flex items-center text-gray-400">
-                <i class="pi pi-money-bill text-2xl"></i>
-              </span>
-              <input
-                pInputText
+            <div class="relative group">
+              <p-inputnumber
                 formControlName="closingBalance"
-                type="number"
+                mode="decimal"
+                [min]="0"
+                [minFractionDigits]="2"
+                [maxFractionDigits]="2"
                 placeholder="0.00"
-                class="w-full !pl-16 !py-10 !rounded-[2.5rem] !bg-gray-50 !border-transparent focus:!bg-white focus:!border-indigo-200 focus:!ring-[12px] focus:!ring-indigo-100/20 !transition-all font-black text-6xl text-center text-gray-800"
-              />
+                styleClass="w-full"
+                prefix="Q "
+                inputStyleClass="w-full !bg-gray-50 focus:!bg-white focus:!border-emerald-200 focus:!ring-[12px] focus:!ring-emerald-100/20 !transition-all font-semibold text-sm text-gray-800"
+              ></p-inputnumber>
             </div>
           </div>
 
-          <div class="pt-6 flex flex-col gap-4">
+          <div class="group">
+            <label class="block text-sm font-semibold text-slate-600 mb-4">Notas de Cierre (Opcional)</label>
+            <textarea
+              pInputTextarea
+              formControlName="notes"
+              rows="3"
+              class="w-full !bg-gray-50 focus:!bg-white focus:!border-indigo-200 !transition-all font-medium"
+              placeholder="Observaciones sobre el arqueo..."
+            ></textarea>
+          </div>
+
+          <div class="pt-4">
             <p-button
-              label="Realizar Arqueo y Cerrar"
+              label="Realizar Arqueo y Cerrar Caja"
               icon="pi pi-lock"
               [loading]="isLoading"
               (click)="closeCash()"
-              class="p-button-raised p-button-danger !w-full !rounded-[2.5rem] !py-6 shadow-2xl shadow-rose-100 font-black text-xl uppercase tracking-tighter"
+              class="p-button-raised p-button-danger !w-full text-xl"
             ></p-button>
           </div>
         </form>
@@ -249,14 +298,69 @@
 
     <!-- Loading State -->
     <div *ngIf="isLoadingStatus()" class="text-center py-20 animate-pulse">
-      <div
-        class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4"
-      >
+      <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
         <i class="pi pi-spin pi-spinner text-3xl text-indigo-500"></i>
       </div>
-      <p class="text-indigo-400 font-black uppercase text-xs tracking-widest">
-        Sincronizando Estado...
-      </p>
+      <p class="text-indigo-400 font-black uppercase text-xs tracking-widest">Sincronizando Estado...</p>
     </div>
   </div>
+
+  <!-- Cash Calculator Dialog -->
+  <p-dialog 
+    [(visible)]="showCalculationDialog" 
+    [modal]="true" 
+    [draggable]="false" 
+    [resizable]="false"
+    appendTo="body"
+    [baseZIndex]="10000"
+    header="Calculadora de Efectivo"
+    styleClass="!rounded-xl overflow-hidden! border! border-slate-300!"
+    contentStyleClass="p-0"
+    [breakpoints]="{'960px': '75vw', '640px': '100vw'}"
+    [style]="{width: '500px'}"
+    (onHide)="resetDenominations()"
+  >
+    <div class="space-y-6">
+      <div class="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+        @for (d of denominations; track d.label) {
+          <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-slate-300 group hover:border-indigo-200 hover:bg-white transition-all">
+            <div class="flex flex-col">
+              <span class="text-sm font-semibold text-gray-400 tracking-widest">{{ d.value >= 1 ? 'Billete' : 'Moneda' }}</span>
+              <span class="text-lg font-bold text-gray-700">{{ d.label }}</span>
+            </div>
+            <div class="">
+              <p-inputnumber 
+                [(ngModel)]="d.count" 
+                [showButtons]="true" 
+                buttonLayout="horizontal" 
+                spinnerMode="horizontal"
+                [min]="0"
+                inputStyleClass="w-20 text-center font-semibold"
+                styleClass="w-full overflow-hidden bg-white"
+                decrementButtonClass="p-button-text p-button-secondary !w-10"
+                incrementButtonClass="p-button-text p-button-secondary !w-10"
+                incrementButtonIcon="pi pi-plus text-[10px]"
+                decrementButtonIcon="pi pi-minus text-[10px]"
+              ></p-inputnumber>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="p-4 bg-indigo-600 rounded-lg flex items-center justify-between">
+        <div class="flex flex-col text-white">
+          <span class="text-xs font-semibold tracking-wide">Total Calculado</span>
+          <span class="text-2xl font-bold">
+            {{ calculatedTotal | currency:'Q ' }}
+          </span>
+        </div>
+        <p-button 
+          label="Aplicar" 
+          icon="pi pi-check" 
+          (click)="calculateTotal()"
+          styleClass="p-button-white !px-6"
+        ></p-button>
+      </div>
+    </div>
+  </p-dialog>
 </div>

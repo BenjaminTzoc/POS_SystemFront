@@ -13,6 +13,7 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { TableModule } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
 import { SelectModule } from 'primeng/select';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { Product } from '../../../inventory/interfaces/product.interface';
 import { environment } from '../../../../environments/environment';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -44,11 +45,13 @@ import { CashSession } from '../../../inventory/interfaces/cash-register.interfa
 import { TicketPreviewComponent } from '../ticket-preview/ticket-preview.component';
 import { TicketTemplateComponent } from '../../../shared/components/ticket-template/ticket-template.component';
 import { PrintService } from '../../../shared/services/print.service';
+import { BankAccountsService } from '../../services/bank-accounts.service';
+import { IBankAccount } from '../../interfaces/bank-account.interface';
 
 @Component({
   selector: 'app-sale-order-form',
   //prettier-ignore
-  imports: [ReactiveFormsModule, FormsModule, RadioButtonModule, FloatLabelModule, InputTextModule, CurrencyPipe, ButtonModule, DatePickerModule, TableModule, DialogModule, SelectModule, InputNumberModule, TextareaModule, CommonModule, AutoCompleteModule, ProductSearchComponent, SaleDiscountsComponent, SaleStatusPipe, PaymentStatusPipe, TooltipModule, ConfirmDialogModule, TagModule, TicketPreviewComponent, TicketTemplateComponent],
+  imports: [ReactiveFormsModule, FormsModule, RadioButtonModule, FloatLabelModule, InputTextModule, CurrencyPipe, ButtonModule, DatePickerModule, TableModule, DialogModule, SelectModule, ToggleSwitchModule, InputNumberModule, TextareaModule, CommonModule, AutoCompleteModule, ProductSearchComponent, SaleDiscountsComponent, SaleStatusPipe, PaymentStatusPipe, TooltipModule, ConfirmDialogModule, TagModule, TicketPreviewComponent, TicketTemplateComponent],
   templateUrl: './sale-order-form.component.html',
   styleUrl: './sale-order-form.component.css',
   providers: [ConfirmationService],
@@ -67,6 +70,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   private printService = inject(PrintService);
   private paymentMethodsService = inject(PaymentMethodsService);
   private salePaymentsService = inject(SalePaymentsService);
+  private bankAccountsService = inject(BankAccountsService);
   private saleOrderWs = inject(SaleOrderWsService);
   private fb = inject(FormBuilder);
   private messageService = inject(MessageService);
@@ -105,6 +109,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   totals: SaleTotals = {
     subtotal: 0,
     lineDiscountTotal: 0,
+    lineSurchargeTotal: 0,
     globalDiscountTotal: 0,
     discountTotal: 0,
     subtotalWithDiscount: 0,
@@ -116,23 +121,53 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   orderForm!: FormGroup;
   productForm!: FormGroup;
   paymentForm!: FormGroup;
+  adjustmentForm!: FormGroup;
 
   isEditing: boolean = false;
   saleId: string | null = null;
   sale: ISaleOrderResponse | null = null;
   showDiscountDialog: boolean = false;
 
-  applyTax: boolean = true;
+  // Price adjustments
+  showAdjustmentDialog = false;
+  selectedDetailIndex: number | null = null;
+  adjustmentModes = [
+    { label: 'Descuento (%)', value: 'percentage' },
+    { label: 'Descuento (Monto)', value: 'fixed_amount' },
+    { label: 'Aumento (%)', value: 'surcharge_percentage' },
+    { label: 'Aumento (Monto)', value: 'surcharge_amount' },
+  ];
+
+  applyTax: boolean = false;
 
   payments: any[] = [];
   isAddingPayment: boolean = false;
   paymentMethods: IPaymentMethod[] = [];
+  bankAccounts: IBankAccount[] = [];
 
   hasUnsavedChanges: boolean = false;
   private initialDetails: ISaleDetailPayload[] = [];
   private initialFormValues: any = {};
   private initialDiscounts: any[] = [];
   private initialApplyTax: boolean = true;
+  
+  get selectedPaymentMethod(): IPaymentMethod | undefined {
+    const id = this.paymentForm?.get('paymentMethodId')?.value;
+    return this.paymentMethods.find((m) => m.id === id);
+  }
+
+  get isCashMethod(): boolean {
+    const method = this.selectedPaymentMethod;
+    if (!method) return false;
+    const name = method.name.toLowerCase();
+    const code = method.code.toLowerCase();
+    return name.includes('efectivo') || name.includes('cash') || code.includes('cash');
+  }
+
+  get requiresBankAccount(): boolean {
+    const methodId = this.paymentForm?.get('paymentMethodId')?.value;
+    return this.paymentMethods.find((m) => m.id === methodId)?.requiresBankAccount || false;
+  }
 
   get isCreateMode(): boolean {
     return !this.isEditing;
@@ -287,11 +322,15 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
             quantity: Number(detail.quantity),
             unitPrice: Number(detail.unitPrice),
             lineTotal: Number(detail.lineTotal),
+            discountType: detail.discountType,
+            discount: Number(detail.discount),
+            discountAmount: Number(detail.discountAmount),
+            notes: detail.notes,
           });
         });
 
-        this.initialDetails = JSON.parse(JSON.stringify(details));
         this.detailManager.setDetails(details);
+        this.initialDetails = JSON.parse(JSON.stringify(this.detailManager.getDetails()));
 
         if (res.data.discounts) {
           console.log(res.data.discounts);
@@ -389,7 +428,8 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
       return (
         detail1.product.id === detail2.product.id &&
         detail1.quantity === detail2.quantity &&
-        detail1.unitPrice === detail2.unitPrice
+        detail1.unitPrice === detail2.unitPrice &&
+        detail1.notes === detail2.notes
       );
     });
   }
@@ -534,10 +574,13 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
 
   cancelPayment() {
     this.paymentForm.patchValue({
-      paymentMethodId: this.paymentMethods[0].id,
+      paymentMethodId: this.paymentMethods[0]?.id || null,
       amount: 0,
       date: new Date(),
       notes: '',
+      referenceNumber: '',
+      bankAccountId: null,
+      isDownPayment: false,
     });
     this.isAddingPayment = false;
   }
@@ -559,7 +602,10 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
       paymentMethodId: formValue.paymentMethodId,
       amount: Number(formValue.amount),
       date: formValue.date.toISOString().split('T')[0],
+      referenceNumber: formValue.referenceNumber || undefined,
+      bankAccountId: formValue.bankAccountId || undefined,
       notes: formValue.notes || undefined,
+      isDownPayment: formValue.isDownPayment,
     };
 
     this.salePaymentsService.createSalePayment(paymentPayload).subscribe({
@@ -576,8 +622,10 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
           this.paymentForm.reset({
             paymentMethodId: '',
             amount: 0,
-            date: new Date(),
             notes: '',
+            referenceNumber: '',
+            bankAccountId: null,
+            isDownPayment: false,
           });
           this.isAddingPayment = false;
         }
@@ -593,7 +641,24 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   }
 
   addPayment() {
+    this.paymentForm.reset({
+      paymentMethodId: null,
+      amount: 0,
+      date: new Date(),
+      notes: '',
+      referenceNumber: '',
+      bankAccountId: null,
+      isDownPayment: false,
+    });
     this.isAddingPayment = true;
+
+    // Load bank accounts
+    this.bankAccountsService.getBankAccounts().subscribe({
+      next: (res) => {
+        this.bankAccounts = res.data;
+      },
+    });
+
     this.paymentMethodsService.getPaymentMethods().subscribe({
       next: (res) => {
         if (res.statusCode === 200) {
@@ -648,6 +713,42 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
       amount: [0, Validators.required],
       date: [new Date(), Validators.required],
       notes: [''],
+      referenceNumber: [''],
+      bankAccountId: [null],
+      isDownPayment: [false],
+    });
+
+    // Listener para el método de pago para manejar validaciones dinámicas
+    this.paymentForm.get('paymentMethodId')?.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((id) => {
+      const method = this.paymentMethods.find((m) => m.id === id);
+      if (method?.requiresBankAccount) {
+        this.paymentForm.get('bankAccountId')?.setValidators([Validators.required]);
+        this.paymentForm.get('referenceNumber')?.setValidators([Validators.required]);
+      } else {
+        this.paymentForm.get('bankAccountId')?.clearValidators();
+        this.paymentForm.get('referenceNumber')?.clearValidators();
+      }
+      this.paymentForm.get('bankAccountId')?.updateValueAndValidity();
+      this.paymentForm.get('referenceNumber')?.updateValueAndValidity();
+    });
+
+    // Listener para el monto para activar/desactivar isDownPayment por defecto
+    this.paymentForm.get('amount')?.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(value => {
+      if (this.sale) {
+        const pending = Number(this.sale.pendingAmount);
+        // Si el monto es menor al saldo pendiente, es probablemente un anticipo
+        if (value > 0 && value < pending) {
+          this.paymentForm.get('isDownPayment')?.setValue(true, { emitEvent: false });
+        } else {
+          this.paymentForm.get('isDownPayment')?.setValue(false, { emitEvent: false });
+        }
+      }
+    });
+
+    this.adjustmentForm = this.fb.group({
+      mode: ['percentage', Validators.required],
+      value: [0, [Validators.required, Validators.min(0)]],
+      notes: ['', Validators.required],
     });
 
     this.orderForm.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
@@ -663,7 +764,11 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   }
 
   onQuantityChanged(detail: any, event: any) {
-    console.log(detail.product);
+    const stock = detail.product?.stock ?? 0;
+    if (detail.quantity > stock) {
+      detail.quantity = stock;
+    }
+
     this.detailManager.updateQuantity(detail, detail.quantity);
     this.updateTotals();
     this.markAsChanged();
@@ -680,6 +785,14 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
     this.updateTotals();
     this.markAsChanged();
   }
+
+  scrollToPayments() {
+    const element = document.getElementById('payment-section');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
   // -------------------- FIN UTILIDADES ----------------------
 
   get details() {
@@ -717,6 +830,10 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
       productId: d.product.id,
       quantity: d.quantity,
       unitPrice: d.unitPrice,
+      discountType: d.discountType,
+      discount: d.discount,
+      discountAmount: d.discountAmount,
+      notes: d.notes,
     }));
 
     const payload = {
@@ -1002,6 +1119,17 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   }
 
   onBack(): void {
+    if (this.sale?.status === 'pending' && Number(this.sale.paidAmount) > 0) {
+      this.confirmationService.confirm({
+        message: 'Esta orden tiene anticipos registrados pero no ha sido confirmada. El inventario aún no ha sido reservados. ¿Desea salir de todos modos?',
+        header: 'Venta no confirmada',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Sí, salir',
+        rejectLabel: 'No, quedarme',
+        accept: () => this.router.navigate(['/sales/orders']),
+      });
+      return;
+    }
     this.router.navigate(['/sales/orders']);
   }
 
@@ -1063,6 +1191,105 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
         this.isSendingTicketEmail = false;
       },
     });
+  }
+
+  // -------------------- ADJUSTMENTS --------------------
+  openAdjustmentDialog(index: number) {
+    const detail = this.details[index];
+    this.selectedDetailIndex = index;
+    
+    const basePrice = Number(detail.product.price);
+    const currentPrice = Number(detail.unitPrice);
+    
+    let mode: any = detail.discountType || 'percentage';
+    let value = 0;
+
+    // Detectar si hay un descuento activo
+    if (detail.discountType === 'percentage') {
+      value = detail.discount || 0;
+    } else if (detail.discountType === 'fixed_amount') {
+      value = detail.discountAmount || 0;
+    } 
+    // Si no hay descuento formal pero el precio es mayor al base, es un aumento
+    else if (currentPrice > basePrice) {
+      // Intentamos determinar si fue por porcentaje o monto aproximado
+      // Si la diferencia cuadra con un porcentaje entero, usamos porcentaje, si no, monto.
+      // Pero para simplificar al usuario, si el precio cambió y no hay descuento, lo mostramos como aumento por monto.
+      mode = 'surcharge_amount';
+      value = currentPrice - basePrice;
+    }
+
+    this.adjustmentForm.reset({
+      mode: mode,
+      value: value,
+      notes: detail.notes || '',
+    });
+    this.showAdjustmentDialog = true;
+  }
+
+  applyAdjustment() {
+    if (this.adjustmentForm.invalid || this.selectedDetailIndex === null) return;
+
+    const { mode, value, notes } = this.adjustmentForm.value;
+    const detail = this.details[this.selectedDetailIndex];
+    const originalUnitPrice = Number(detail.product.price);
+
+    let finalDiscountType: 'percentage' | 'fixed_amount' | null = null;
+    let finalDiscountValue = 0;
+    let finalUnitPrice = originalUnitPrice;
+
+    if (mode === 'percentage') {
+      finalDiscountType = 'percentage';
+      finalDiscountValue = value;
+    } else if (mode === 'fixed_amount') {
+      finalDiscountType = 'fixed_amount';
+      finalDiscountValue = value;
+    } else if (mode === 'surcharge_percentage') {
+      finalUnitPrice = originalUnitPrice * (1 + value / 100);
+      finalDiscountType = null;
+      finalDiscountValue = 0;
+    } else if (mode === 'surcharge_amount') {
+      finalUnitPrice = originalUnitPrice + value;
+      finalDiscountType = null;
+      finalDiscountValue = 0;
+    }
+
+    // Actualizamos el precio unitario
+    detail.unitPrice = finalUnitPrice;
+
+    // Sincronizamos con el administrador de detalles
+    this.detailManager.updateDetailAdjustment(detail, finalDiscountType, finalDiscountValue, notes);
+    
+    this.updateTotals();
+    this.markAsChanged();
+    this.showAdjustmentDialog = false;
+  }
+
+  // Helpers para el template
+  isSurcharge(detail: any): boolean {
+    if (!detail?.product) return false;
+    return detail.unitPrice > Number(detail.product.price);
+  }
+
+  getSurchargeAmount(detail: any): number {
+    if (!detail?.product) return 0;
+    return detail.unitPrice - Number(detail.product.price);
+  }
+
+  resetAdjustment() {
+    if (this.selectedDetailIndex === null) return;
+    const detail = this.details[this.selectedDetailIndex];
+
+    // Volvemos al precio base del catálogo
+    detail.unitPrice = Number(detail.product.price);
+    detail.notes = '';
+    detail.discountType = undefined;
+    detail.discount = 0;
+    detail.discountAmount = 0;
+
+    this.updateTotals();
+    this.markAsChanged();
+    this.showAdjustmentDialog = false;
   }
 
   ngOnDestroy(): void {

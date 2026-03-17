@@ -1,0 +1,249 @@
+<div class="py-4 px-0 md:px-6 bg-gray-50/30 min-h-screen pb-[100px]">
+  <div class="max-w-[1400px] mx-auto mb-6 md:mb-8 px-4 md:px-0">
+    <div class="flex flex-col md:flex-row items-stretch md:items-end justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-3 mb-1 md:mb-2">
+          <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
+            Liquidación de Ruta
+          </h1>
+        </div>
+        <p class="text-gray-500 text-sm md:text-md mt-1">
+          Concilie ventas, mermas y devoluciones para cerrar el balance del día.
+        </p>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <p-button 
+          label="Cancelar" 
+          (onClick)="onCancel()"
+          variant="outlined" 
+          severity="secondary" 
+          icon="pi pi-times"
+          styleClass="font-semibold !border-slate-300 w-full sm:w-auto justify-center"
+        />
+        <p-button
+          (onClick)="onSave()"
+          label="Cerrar y Liquidar Día"
+          styleClass="!rounded-lg p-button-primary !py-2 !px-4 font-bold tracking-tight w-full sm:w-auto justify-center"
+          [loading]="saving()"
+          icon="pi pi-lock"
+          [disabled]="liquidateForm.invalid || loading()"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="max-w-[1400px] mx-auto px-4 md:px-0">
+      <div class="bg-white rounded-2xl md:rounded-xl p-8 border border-slate-300 flex flex-col gap-6">
+          <div class="flex items-center gap-4">
+            <p-skeleton shape="circle" size="3rem" />
+            <div class="flex flex-col gap-2">
+              <p-skeleton width="10rem" height="1.5rem" />
+              <p-skeleton width="6rem" />
+            </div>
+          </div>
+          <p-skeleton width="100%" height="20rem" borderRadius="12px" />
+      </div>
+    </div>
+  }
+
+  @if (!loading() && dispatch()) {
+    <form [formGroup]="liquidateForm" class="max-w-[1400px] mx-auto px-4 md:px-0">
+      <div class="flex flex-col gap-6 md:gap-8">
+        
+        <!-- Info Summary Header -->
+        <div class="rounded-2xl md:rounded-xl bg-white border border-slate-300 p-5 md:p-8 shadow-sm flex flex-col -mx-4 md:mx-0">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+             <div class="flex flex-col gap-1 md:gap-1.5">
+               <span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest">Fecha Operación</span>
+               <span class="text-sm md:text-base font-bold text-slate-800">{{ dispatch()?.date | date:'dd/MM/yyyy' }}</span>
+             </div>
+             <div class="flex flex-col gap-1 md:gap-1.5">
+               <span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest">Sucursal Destino</span>
+               <span class="text-sm md:text-base font-bold text-slate-800">{{ dispatch()?.branch?.name }}</span>
+             </div>
+             <div class="flex flex-col gap-1 md:gap-1.5">
+               <span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest">Encargado</span>
+               <span class="text-sm md:text-base font-bold text-slate-800">{{ dispatch()?.responsible?.name || 'Administrador' }}</span>
+             </div>
+             <div class="flex flex-col gap-1 md:gap-1.5 border-t border-slate-100 pt-3 md:border-none md:pt-0 col-span-2 md:col-span-1">
+               <span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest">Estado</span>
+               <div class="mt-1">
+                 <p-tag 
+                    [value]="dispatch()?.status === 'reconciled' ? 'Por Liquidar' : (dispatch()?.status === 'received' ? 'En Operación' : 'Cerrado')" 
+                    [severity]="dispatch()?.status === 'closed' ? 'success' : 'warn'" 
+                    styleClass="text-[10px] font-bold uppercase tracking-wider"
+                  />
+               </div>
+             </div>
+          </div>
+        </div>
+
+        <!-- Column: Liquidator Form -->
+        <div class="flex flex-col gap-6">
+          <div class="rounded-2xl md:rounded-xl bg-white border border-slate-300 overflow-hidden flex flex-col -mx-4 md:mx-0">
+            <div class="px-5 py-4 md:px-8 md:py-6 bg-slate-50 border-b border-slate-100 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-3 md:gap-0">
+              <h3 class="text-lg md:text-xl font-semibold text-slate-800 flex items-center gap-3">
+                Cuadrante de Operación Diaria
+              </h3>
+              <div class="flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-white rounded-lg border border-slate-200">
+                  <i class="pi pi-info-circle text-indigo-500"></i>
+                  <span class="text-[10px] md:text-[11px] font-semibold text-slate-500 uppercase tracking-tight">Ventas cargadas desde POS</span>
+              </div>
+            </div>
+
+            <div class="p-4 md:p-8" formArrayName="items">
+              <div class="space-y-6">
+                @if (items.controls.length === 0) {
+                  <div class="text-center py-20 text-slate-400">
+                    <i class="pi pi-box text-5xl mb-4 block opacity-20"></i>
+                    <p class="font-semibold">No se encontraron items para liquidar.</p>
+                  </div>
+                }
+
+                @for (item of items.controls; track $index) {
+                  <div [formGroupName]="$index"
+                    class="flex flex-col p-4 md:p-6 rounded-xl bg-slate-50/50 md:bg-white border border-slate-300 md:hover:border-indigo-200 transition-all group">
+                    
+                    <!-- Header Row: Product Info & Discrepancy Alert -->
+                    <div class="flex justify-between items-start md:items-center mb-6 border-b md:border-none border-slate-200/60 pb-4 md:pb-0">
+                        <div class="flex items-center gap-3 md:gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 overflow-hidden flex items-center justify-center shadow-sm">
+                              <img [src]="getProductImageUrl(item.get('imageUrl')?.value)" 
+                                   [alt]="item.get('productName')?.value"
+                                   class="w-full h-full object-cover">
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="font-semibold text-slate-800 text-sm md:text-lg md:leading-none">{{ item.get('productName')?.value }}</span>
+                                <span class="text-[10px] md:text-[11px] text-slate-500 font-bold md:font-medium mt-1 tracking-wide uppercase">{{ item.get('sku')?.value }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Control Grid -->
+                    <div class="flex flex-wrap md:grid md:grid-cols-3 xl:grid-cols-6 gap-3 gap-y-4 md:gap-6 justify-between">
+                        <!-- Recibido (Read Only) -->
+                         <div class="flex flex-col gap-1 md:gap-1.5 w-[48%] md:w-auto">
+                           <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest text-left">Recibido</span>
+                           <div class="flex flex-col py-1.5 md:py-2 px-3 md:px-4 bg-slate-50 rounded-lg border border-slate-300 items-start justify-center h-[38px] md:h-11">
+                               <span class="text-xs md:text-xl font-bold text-slate-800">
+                                 {{ item.get('receivedQuantity')?.value | number:(item.get('allowsDecimals')?.value ? '1.2-4' : '1.0-0') }}
+                                 <small class="text-[9px] md:text-[10px] font-bold uppercase ml-0.5 opacity-60">{{ item.get('unitAbbreviation')?.value }}</small>
+                               </span>
+                           </div>
+                         </div>
+
+                        <!-- Vendido (POS / Edit) -->
+                         <div class="flex flex-col gap-1 md:gap-1.5 w-[48%] md:w-auto">
+                           <span class="text-[9px] md:text-[10px] font-bold text-indigo-500 uppercase tracking-widest px-1">Vendido (POS)</span>
+                           <p-inputnumber
+                             formControlName="soldQuantity"
+                             [min]="0"
+                             [minFractionDigits]="item.get('allowsDecimals')?.value ? 2 : 0"
+                             [maxFractionDigits]="item.get('allowsDecimals')?.value ? 4 : 0"
+                             [suffix]="' ' + item.get('unitAbbreviation')?.value"
+                             placeholder="0.00"
+                             styleClass="w-full"
+                             inputStyleClass="w-full !rounded-lg border-indigo-200 h-[38px] md:h-[44px] px-2 md:px-3 text-xs md:text-base font-semibold text-indigo-800 bg-indigo-50/50"
+                           ></p-inputnumber>
+                         </div>
+
+                        <!-- Queda en sucursal (Input) -->
+                        <div class="flex flex-col gap-1 md:gap-1.5 w-[48%] md:w-auto">
+                            <span class="text-[9px] md:text-[10px] font-bold text-indigo-500 uppercase tracking-widest px-1">Se queda</span>
+                            <p-inputnumber
+                              formControlName="stayedQuantity"
+                              [min]="0"
+                              [minFractionDigits]="item.get('allowsDecimals')?.value ? 2 : 0"
+                              [maxFractionDigits]="item.get('allowsDecimals')?.value ? 4 : 0"
+                              [suffix]="' ' + item.get('unitAbbreviation')?.value"
+                              placeholder="0.00"
+                              styleClass="w-full"
+                              inputStyleClass="w-full !rounded-lg border-slate-200 h-[38px] md:h-[44px] px-2 md:px-3 text-xs md:text-base font-semibold text-slate-800"
+                            ></p-inputnumber>
+                        </div>
+
+                        <!-- Devolución (Input) -->
+                        <div class="flex flex-col gap-1 md:gap-1.5 w-[48%] md:w-auto">
+                            <span class="text-[9px] md:text-[10px] font-bold text-amber-500 uppercase tracking-widest px-1">Devuelto</span>
+                            <p-inputnumber
+                              formControlName="returnedQuantity"
+                              [min]="0"
+                              [minFractionDigits]="item.get('allowsDecimals')?.value ? 2 : 0"
+                              [maxFractionDigits]="item.get('allowsDecimals')?.value ? 4 : 0"
+                              [suffix]="' ' + item.get('unitAbbreviation')?.value"
+                              placeholder="0.00"
+                              styleClass="w-full"
+                              inputStyleClass="w-full !rounded-lg border-slate-200 h-[38px] md:h-[44px] px-2 md:px-3 text-xs md:text-base font-semibold text-slate-800"
+                            ></p-inputnumber>
+                        </div>
+
+                        <!-- Merma (Input) -->
+                        <div class="flex flex-col gap-1 md:gap-1.5 w-[48%] md:w-auto">
+                            <span class="text-[9px] md:text-[10px] font-bold text-rose-500 uppercase tracking-widest px-1">Merma</span>
+                            <p-inputnumber
+                              formControlName="wasteQuantity"
+                              [min]="0"
+                              [minFractionDigits]="item.get('allowsDecimals')?.value ? 2 : 0"
+                              [maxFractionDigits]="item.get('allowsDecimals')?.value ? 4 : 0"
+                              [suffix]="' ' + item.get('unitAbbreviation')?.value"
+                              placeholder="0.00"
+                              styleClass="w-full"
+                              inputStyleClass="w-full !rounded-lg border-slate-200 h-[38px] md:h-[44px] px-2 md:px-3 text-xs md:text-base font-semibold text-slate-800"
+                            ></p-inputnumber>
+                        </div>
+
+                        <!-- Discrepancy (Calculated) -->
+                         <div class="flex flex-col gap-1 md:gap-1.5 w-full md:w-auto border-t border-slate-100 pt-3 md:border-none md:pt-0 mt-2 md:mt-0">
+                           <span class="text-[10px] font-bold uppercase tracking-widest"
+                                 [ngClass]="{
+                                   'text-emerald-500': calculateDiscrepancy(item) === 0,
+                                   'text-rose-500': calculateDiscrepancy(item) > 0,
+                                   'text-orange-500': calculateDiscrepancy(item) < 0
+                                 }">
+                                Balance
+                           </span>
+                           <div class="flex flex-col gap-1.5 px-4 py-2 rounded-lg border transition-all h-11 xl:h-auto items-start xl:items-stretch justify-center"
+                                [ngClass]="{
+                                  'bg-emerald-50 border-emerald-100': calculateDiscrepancy(item) === 0,
+                                  'bg-rose-50 border-rose-100': calculateDiscrepancy(item) > 0,
+                                  'bg-orange-50 border-orange-100': calculateDiscrepancy(item) < 0
+                                }">
+                               <div class="flex items-center justify-between w-full">
+                                   <span class="text-sm md:text-xl font-bold" 
+                                         [ngClass]="{
+                                           'text-emerald-700': calculateDiscrepancy(item) === 0,
+                                           'text-rose-700': calculateDiscrepancy(item) > 0,
+                                           'text-orange-700': calculateDiscrepancy(item) < 0
+                                         }">
+                                       {{ calculateDiscrepancy(item) | number:(item.get('allowsDecimals')?.value ? '1.2-4' : '1.0-0') }}
+                                       <small class="text-[9px] md:text-[10px] font-bold uppercase ml-0.5 opacity-60">{{ item.get('unitAbbreviation')?.value }}</small>
+                                   </span>
+                                   <i class="pi text-[12px] md:text-base lg:text-lg" 
+                                      [ngClass]="{
+                                        'pi-check-circle text-emerald-500': calculateDiscrepancy(item) === 0,
+                                        'pi-exclamation-triangle text-rose-500': calculateDiscrepancy(item) > 0,
+                                        'pi-info-circle text-orange-500': calculateDiscrepancy(item) < 0
+                                      }"></i>
+                               </div>
+                           </div>
+                         </div>
+                    </div>
+
+                    <!-- Optional Notes per Item -->
+                    @if (item.get('wasteQuantity')?.value > 0 || calculateDiscrepancy(item) !== 0) {
+                      <div class="mt-4">
+                        <input pInputText formControlName="notes" placeholder="Motivo de la merma o discrepancia..." class="w-full !text-xs !bg-slate-50 !border-slate-200 !rounded-lg h-10 px-3 font-medium" />
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  }
+</div>

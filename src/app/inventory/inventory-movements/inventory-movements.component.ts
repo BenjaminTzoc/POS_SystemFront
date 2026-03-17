@@ -41,6 +41,7 @@ import { Textarea, TextareaModule } from 'primeng/textarea';
 export class InventoryMovementsComponent implements OnInit {
   inventoryMovements: InventoryMovement[] = [];
   loading: boolean = false;
+  stats: any = null;
 
   // Cancel dialog properties
   displayCancelDialog: boolean = false;
@@ -57,6 +58,16 @@ export class InventoryMovementsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadInventoryMovements();
+    this.loadStats();
+  }
+
+  loadStats(): void {
+    this.inventoryMovementsService.getStats().subscribe({
+      next: (res) => {
+        this.stats = res.data;
+      },
+      error: (err) => console.error('Error loading stats', err),
+    });
   }
 
   loadInventoryMovements(): void {
@@ -159,15 +170,59 @@ export class InventoryMovementsComponent implements OnInit {
       });
   }
 
+  confirmDelete(movement: InventoryMovement) {
+    this.confirmationService.confirm({
+      message: `¿Estás seguro de que deseas eliminar este movimiento? Esta acción realizará un borrado lógico.`,
+      header: 'Confirmar Eliminación',
+      icon: 'pi pi-trash',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cerrar',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-text p-button-secondary',
+      accept: () => {
+        this.executeDelete(movement.id);
+      },
+    });
+  }
+
+  private executeDelete(id: string) {
+    this.inventoryMovementsService.deleteMovement(id).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Eliminado',
+          detail: 'El movimiento ha sido eliminado.',
+        });
+        this.loadInventoryMovements();
+        this.loadStats();
+      },
+      error: (error) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `No se pudo eliminar: ${error.error.message}`,
+        });
+      },
+    });
+  }
+
+  editMovement(movement: InventoryMovement) {
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Info',
+      detail: 'Funcionalidad de edición en desarrollo.',
+    });
+  }
+
   getSeverity(type: string): 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' {
-    switch (type) {
-      case 'in':
-      case 'transfer_in':
+    switch (type.toUpperCase()) {
+      case 'IN':
+      case 'TRANSFER_IN':
         return 'success';
-      case 'out':
-      case 'transfer_out':
+      case 'OUT':
+      case 'TRANSFER_OUT':
         return 'danger';
-      case 'adjustment':
+      case 'ADJUSTMENT':
         return 'warn';
       default:
         return 'info';
@@ -175,14 +230,14 @@ export class InventoryMovementsComponent implements OnInit {
   }
 
   getIcon(type: string): string {
-    switch (type) {
-      case 'in':
-      case 'transfer_in':
+    switch (type.toUpperCase()) {
+      case 'IN':
+      case 'TRANSFER_IN':
         return 'pi pi-arrow-down';
-      case 'out':
-      case 'transfer_out':
+      case 'OUT':
+      case 'TRANSFER_OUT':
         return 'pi pi-arrow-up';
-      case 'adjustment':
+      case 'ADJUSTMENT':
         return 'pi pi-sliders-h';
       default:
         return 'pi pi-info-circle';
@@ -192,16 +247,16 @@ export class InventoryMovementsComponent implements OnInit {
   getConceptSeverity(
     concept: string
   ): 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' {
-    switch (concept) {
-      case 'purchase':
-      case 'return':
+    switch (concept.toUpperCase()) {
+      case 'PURCHASE':
+      case 'RETURN':
         return 'success';
-      case 'sale':
-      case 'waste':
+      case 'SALE':
+      case 'WASTE':
         return 'danger';
-      case 'transfer':
+      case 'TRANSFER':
         return 'info';
-      case 'adjustment':
+      case 'ADJUSTMENT':
         return 'warn';
       default:
         return 'secondary';
@@ -209,18 +264,18 @@ export class InventoryMovementsComponent implements OnInit {
   }
 
   getConceptIcon(concept: string): string {
-    switch (concept) {
-      case 'purchase':
+    switch (concept.toUpperCase()) {
+      case 'PURCHASE':
         return 'pi pi-shopping-cart';
-      case 'sale':
+      case 'SALE':
         return 'pi pi-tag';
-      case 'transfer':
+      case 'TRANSFER':
         return 'pi pi-sync';
-      case 'adjustment':
+      case 'ADJUSTMENT':
         return 'pi pi-sliders-h';
-      case 'waste':
+      case 'WASTE':
         return 'pi pi-trash';
-      case 'return':
+      case 'RETURN':
         return 'pi pi-replay';
       default:
         return 'pi pi-question-circle';
@@ -237,12 +292,12 @@ export class InventoryMovementsComponent implements OnInit {
   getStatusSeverity(
     status: string
   ): 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' {
-    switch (status) {
-      case 'completed':
+    switch (status.toUpperCase()) {
+      case 'COMPLETED':
         return 'success';
-      case 'pending':
+      case 'PENDING':
         return 'warn';
-      case 'cancelled':
+      case 'CANCELLED':
         return 'danger';
       default:
         return 'info';
@@ -250,15 +305,47 @@ export class InventoryMovementsComponent implements OnInit {
   }
 
   getStatusIcon(status: string): string {
-    switch (status) {
-      case 'completed':
+    switch (status.toUpperCase()) {
+      case 'COMPLETED':
         return 'pi pi-check-circle';
-      case 'pending':
+      case 'PENDING':
         return 'pi pi-clock';
-      case 'cancelled':
+      case 'CANCELLED':
         return 'pi pi-times-circle';
       default:
         return 'pi pi-question-circle';
+    }
+  }
+
+  getSeverityClass(type: string): string {
+    switch (type.toUpperCase()) {
+      case 'IN':
+      case 'TRANSFER_IN':
+        return 'bg-emerald-50 text-emerald-600 border border-emerald-100';
+      case 'OUT':
+      case 'TRANSFER_OUT':
+        return 'bg-rose-50 text-rose-600 border border-rose-100';
+      case 'ADJUSTMENT':
+        return 'bg-amber-50 text-amber-600 border border-amber-100';
+      default:
+        return 'bg-slate-50 text-slate-600 border border-slate-100';
+    }
+  }
+
+  getConceptClass(concept: string): string {
+    switch (concept.toUpperCase()) {
+      case 'PURCHASE':
+      case 'RETURN':
+        return 'bg-emerald-50 text-emerald-600 border border-emerald-100';
+      case 'SALE':
+      case 'WASTE':
+        return 'bg-rose-50 text-rose-600 border border-rose-100';
+      case 'TRANSFER':
+        return 'bg-blue-50 text-blue-600 border border-blue-100';
+      case 'ADJUSTMENT':
+        return 'bg-amber-50 text-amber-600 border border-amber-100';
+      default:
+        return 'bg-slate-50 text-slate-600 border border-slate-100';
     }
   }
 }

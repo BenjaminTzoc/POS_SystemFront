@@ -9,14 +9,32 @@ export class SaleCalculatorService {
   /**
    * Calculate a single line total (no global discounts applied)
    */
-  calculateLine(detail: SaleDetailCalc): SaleDetailCalc {
+  calculateLine(detail: any): any {
     const unitPrice = Number(detail.unitPrice || 0);
+    const basePrice = Number(detail.product?.price || detail.basePrice || 0);
     const qty = Number(detail.quantity || 0);
-    const discountPercent = Number(detail.discount || 0);
     const taxPercent = Number(detail.taxPercentage || 0);
 
     const lineSubtotal = +(unitPrice * qty);
-    const discountAmount = +(lineSubtotal * (discountPercent / 100));
+    
+    // Calcular recargo (si el precio unitario es mayor al base)
+    let lineSurcharge = 0;
+    if (unitPrice > basePrice) {
+      lineSurcharge = +((unitPrice - basePrice) * qty);
+    }
+
+    let discountAmount = 0;
+    if (detail.discountType === 'percentage') {
+      const discountPercent = Number(detail.discount || 0);
+      discountAmount = +(lineSubtotal * (discountPercent / 100));
+    } else if (detail.discountType === 'fixed_amount') {
+      discountAmount = Number(detail.discountAmount || 0);
+    } else if (detail.discount > 0 && !detail.discountType) {
+      // Compatibility with old behavior
+      const discountPercent = Number(detail.discount || 0);
+      discountAmount = +(lineSubtotal * (discountPercent / 100));
+    }
+
     const subtotalAfterLineDiscount = +(lineSubtotal - discountAmount);
     const taxAmount = +(subtotalAfterLineDiscount * (taxPercent / 100));
     const lineTotal = +(subtotalAfterLineDiscount + taxAmount);
@@ -24,6 +42,7 @@ export class SaleCalculatorService {
     return {
       ...detail,
       lineSubtotal: +lineSubtotal.toFixed(2),
+      lineSurcharge: +lineSurcharge.toFixed(2),
       discountAmount: +discountAmount.toFixed(2),
       subtotalAfterLineDiscount: +subtotalAfterLineDiscount.toFixed(2),
       taxAmount: +taxAmount.toFixed(2),
@@ -46,6 +65,7 @@ export class SaleCalculatorService {
 
     const subtotal = lines.reduce((s, l) => s + (l.lineSubtotal || 0), 0);
     const lineDiscountTotal = lines.reduce((s, l) => s + (l.discountAmount || 0), 0);
+    const lineSurchargeTotal = lines.reduce((s, l) => s + (l.lineSurcharge || 0), 0);
 
     const subtotalAfterLineDiscounts = +(subtotal - lineDiscountTotal);
 
@@ -101,6 +121,7 @@ export class SaleCalculatorService {
     return {
       subtotal: +subtotal.toFixed(2),
       lineDiscountTotal: +lineDiscountTotal.toFixed(2),
+      lineSurchargeTotal: +lineSurchargeTotal.toFixed(2),
       globalDiscountTotal: +globalDiscountTotal.toFixed(2),
       discountTotal: +discountTotal.toFixed(2),
       subtotalWithDiscount: +subtotalWithDiscount.toFixed(2),
@@ -118,24 +139,27 @@ export interface SaleDetailCalc {
   quantity: number;
   unitPrice: number;
   discount?: number;
+  discountType?: 'percentage' | 'fixed_amount';
+  discountAmount?: number;
   taxPercentage?: number;
 
   lineSubtotal?: number;
-  discountAmount?: number;
   subtotalAfterLineDiscount?: number;
   globalDiscountApplied?: number;
   taxAmount?: number;
   lineTotal?: number;
+  lineSurcharge?: number;
+  basePrice?: number;
 }
 
 export interface SaleTotals {
   subtotal: number;
   lineDiscountTotal: number;
+  lineSurchargeTotal: number;
   globalDiscountTotal: number;
   discountTotal: number;
   subtotalWithDiscount: number;
   taxTotal: number;
   total: number;
-
-  lines?: SaleDetailCalc[];
+  lines?: any[];
 }

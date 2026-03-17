@@ -1,171 +1,142 @@
-<div class="p-6 bg-gray-50/30 min-h-screen flex items-center justify-center">
-  <div class="w-full max-w-2xl">
-    <!-- Breadcrumb/Back Button -->
-    <div class="flex items-center gap-4 mb-8">
-      <button
-        pButton
-        icon="pi pi-arrow-left"
-        class="p-button-rounded p-button-text !text-gray-400 hover:!text-indigo-600 hover:!bg-white !shadow-sm !transition-all"
-        (click)="onCancel()"
-      ></button>
-      <div>
-        <h1 class="text-3xl font-bold text-gray-800 tracking-tight">
-          {{ isEdit ? 'Editar' : 'Nueva' }} Sucursal
+<div class="py-4 px-0 md:px-6 bg-gray-50/30 min-h-screen">
+  <!-- Header Section -->
+  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-6 md:mb-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div class="w-full md:max-w-[60%]">
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
+          {{ isEdit ? 'Editar Sucursal' : 'Nueva Sucursal' }}
         </h1>
-        <p class="text-gray-500 text-sm">Gestiona la información base y contacto de la sede.</p>
+        <p class="text-gray-500 mt-1 md:mt-2 text-sm md:text-md">
+           Completa la información para {{ isEdit ? 'actualizar' : 'añadir' }} una ubicación al catálogo.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto">
+        <p-button 
+          label="Cancelar" 
+          (onClick)="onCancel()" 
+          variant="outlined" 
+          severity="danger" 
+          icon="pi pi-times"
+          styleClass="!rounded-xl px-4 md:px-6 font-bold border-rose-400! h-[44px] flex-1 md:flex-none justify-center"
+        />
+        <p-button
+          (onClick)="onSubmit()"
+          [label]="isEdit ? 'Guardar Cambios' : 'Crear Sucursal'"
+          severity="primary"
+          styleClass="!rounded-xl px-4 md:px-6 shadow-lg font-bold h-[44px] flex-1 md:flex-none justify-center"
+          [loading]="loading"
+          icon="pi pi-check"
+          [disabled]="branchForm.invalid"
+        />
       </div>
     </div>
+  </div>
 
-    <!-- Main Form Card -->
-    <div
-      class="bg-white rounded-[2rem] shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden text-left"
-    >
-      <div class="p-8 md:p-10">
-        <form [formGroup]="branchForm" (ngSubmit)="onSubmit()" class="space-y-8">
-          <!-- Name Field -->
-          <div class="relative group">
-            <label
-              for="name"
-              class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 px-1"
-            >
-              Nombre de la Sucursal
-            </label>
-            <div class="relative">
-              <span
-                class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors"
-              >
-                <i class="pi pi-map-marker"></i>
-              </span>
-              <input
-                pInputText
-                id="name"
-                formControlName="name"
-                placeholder="Ej: Sucursal Central, Bodega Norte..."
-                class="w-full !pl-12 !py-4 !rounded-2xl !bg-gray-50 !border-transparent focus:!bg-white focus:!border-indigo-200 focus:!ring-4 focus:!ring-indigo-100/50 !transition-all font-semibold"
-                [ngClass]="{
-                  '!border-rose-300 !ring-rose-100':
-                    branchForm.get('name')?.invalid && branchForm.get('name')?.touched,
-                }"
-              />
-            </div>
-            <div class="mt-2 px-1 flex justify-between">
-              <p class="text-[10px] text-gray-400 font-medium">Nombre identificador público</p>
-              <p
-                *ngIf="branchForm.get('name')?.invalid && branchForm.get('name')?.touched"
-                class="text-[10px] text-rose-500 font-bold uppercase transition-all animate-pulse"
-              >
-                El nombre debe tener al menos 3 letras
-              </p>
-            </div>
-          </div>
+  <form class="max-w-[1100px] mx-auto pb-40" [formGroup]="branchForm">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-0 md:gap-8">
+      <div class="col-span-12 md:col-start-1 md:col-span-12 flex flex-col gap-6">
+        <div class="p-5 md:p-8 rounded-none md:rounded-2xl bg-white border-y md:border border-slate-300 shadow-sm">
+          <div class="flex flex-col gap-y-6 md:gap-y-8">
+            <!-- Name Field -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
+              <div class="lg:col-span-8 flex flex-col gap-1.5 md:gap-1">
+                <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0" for="name">
+                  <i class="pi pi-map-marker mr-1 text-xs! text-blue-500"></i>
+                  Nombre de la Sucursal <span class="text-red-700">*</span>
+                </label>
+                <input
+                  pInputText
+                  id="name"
+                  formControlName="name"
+                  class="w-full !rounded-xl h-[44px] md:h-auto font-medium"
+                  [ngClass]="{
+                    'ng-invalid ng-dirty': branchForm.get('name')?.invalid && branchForm.get('name')?.touched
+                  }"
+                  placeholder="Ej. Sucursal Central, Bodega Norte..."
+                  autocomplete="off"
+                />
+                @if (branchForm.get('name')?.invalid && branchForm.get('name')?.touched) {
+                  <small class="text-rose-500 text-[10px] font-medium flex items-center mt-1">
+                    <i class="pi pi-exclamation-circle mr-1 text-[10px]!"></i>El nombre debe tener al menos 3 letras.
+                  </small>
+                }
+              </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- Phone Field -->
-            <div class="group">
-              <label
-                for="phone"
-                class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 px-1"
-              >
-                Teléfono
-              </label>
-              <div class="relative">
-                <span
-                  class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors"
-                >
-                  <i class="pi pi-phone"></i>
-                </span>
+              <div class="lg:col-span-4 self-stretch">
+                <div class="flex flex-col gap-2 p-4 md:p-6 bg-slate-50/50 border border-slate-200 rounded-2xl h-full justify-center">
+                  <div class="flex items-center justify-between gap-4">
+                    <div class="flex flex-col min-w-0">
+                      <span class="text-xs font-bold text-slate-800 uppercase tracking-tight">¿Es Planta?</span>
+                      <span class="text-[10px] text-slate-400 font-medium leading-none mt-1">Habilita módulo de producción</span>
+                    </div>
+                    <p-toggleSwitch formControlName="isPlant" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Phone Field -->
+              <div class="flex flex-col gap-1.5 md:gap-1">
+                <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0" for="phone">
+                  <i class="pi pi-phone mr-1 text-xs! text-blue-500"></i>
+                  Teléfono de Contacto
+                </label>
                 <input
                   pInputText
                   id="phone"
                   formControlName="phone"
-                  placeholder="Ej: +502 1234 5678"
-                  class="w-full !pl-12 !py-4 !rounded-2xl !bg-gray-50 !border-transparent focus:!bg-white focus:!border-indigo-200 focus:!ring-4 focus:!ring-indigo-100/50 !transition-all"
-                  [ngClass]="{
-                    '!border-rose-300 !ring-rose-100':
-                      branchForm.get('phone')?.invalid && branchForm.get('phone')?.touched,
-                  }"
+                  class="w-full !rounded-xl h-[44px] md:h-auto font-medium"
+                  placeholder="Ej. +502 1234 5678"
+                  autocomplete="off"
                 />
               </div>
-            </div>
 
-            <!-- Email Field -->
-            <div class="group">
-              <label
-                for="email"
-                class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 px-1"
-              >
-                Correo Electrónico
-              </label>
-              <div class="relative">
-                <span
-                  class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors"
-                >
-                  <i class="pi pi-envelope"></i>
-                </span>
+              <!-- Email Field -->
+              <div class="flex flex-col gap-1.5 md:gap-1">
+                <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0" for="email">
+                  <i class="pi pi-envelope mr-1 text-xs! text-blue-500"></i>
+                  Correo Electrónico
+                </label>
                 <input
                   pInputText
                   id="email"
                   formControlName="email"
-                  placeholder="ejemplo@negocio.com"
-                  class="w-full !pl-12 !py-4 !rounded-2xl !bg-gray-50 !border-transparent focus:!bg-white focus:!border-indigo-200 focus:!ring-4 focus:!ring-indigo-100/50 !transition-all"
-                  [ngClass]="{
-                    '!border-rose-300 !ring-rose-100':
-                      branchForm.get('email')?.invalid && branchForm.get('email')?.touched,
-                  }"
+                  class="w-full !rounded-xl h-[44px] md:h-auto font-medium"
+                  placeholder="sucursal@caben.com"
+                  autocomplete="off"
                 />
               </div>
             </div>
-          </div>
 
-          <!-- Address Field -->
-          <div class="group">
-            <label
-              for="address"
-              class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 px-1"
-            >
-              Dirección Física
-            </label>
-            <textarea
-              pTextarea
-              id="address"
-              formControlName="address"
-              placeholder="Escribe la dirección exacta de la sucursal..."
-              rows="3"
-              class="w-full !p-4 !rounded-2xl !bg-gray-50 !border-transparent focus:!bg-white focus:!border-indigo-200 focus:!ring-4 focus:!ring-indigo-100/50 !transition-all resize-none"
-              [ngClass]="{
-                '!border-rose-300 !ring-rose-100':
-                  branchForm.get('address')?.invalid && branchForm.get('address')?.touched,
-              }"
-            ></textarea>
-            <p
-              *ngIf="branchForm.get('address')?.invalid && branchForm.get('address')?.touched"
-              class="mt-2 px-1 text-[10px] text-rose-500 font-bold uppercase"
-            >
-              La dirección es obligatoria
-            </p>
+            <!-- Address Field -->
+            <div class="flex flex-col gap-1.5 md:gap-1">
+              <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0" for="address">
+                <i class="pi pi-directions mr-1 text-xs! text-blue-500"></i>
+                Dirección Física Exacta <span class="text-red-700">*</span>
+              </label>
+              <textarea
+                rows="4"
+                pTextarea
+                id="address"
+                formControlName="address"
+                class="w-full !rounded-xl border-slate-300 p-4 font-medium resize-none"
+                [ngClass]="{
+                  'ng-invalid ng-dirty': branchForm.get('address')?.invalid && branchForm.get('address')?.touched
+                }"
+                placeholder="Indica calle, avenida, número de casa, zona y municipio..."
+                autocomplete="off"
+              ></textarea>
+              @if (branchForm.get('address')?.invalid && branchForm.get('address')?.touched) {
+                <small class="text-rose-500 text-[10px] font-medium flex items-center mt-1">
+                  <i class="pi pi-exclamation-circle mr-1 text-[10px]!"></i>La dirección es obligatoria.
+                </small>
+              }
+            </div>
           </div>
-
-          <!-- Action Buttons -->
-          <div class="flex items-center justify-end gap-4 pt-4">
-            <button
-              pButton
-              type="button"
-              label="Descartar"
-              class="p-button-text !text-gray-400 hover:!text-gray-600 !rounded-2xl !px-6"
-              (click)="onCancel()"
-            ></button>
-            <button
-              pButton
-              type="submit"
-              [label]="isEdit ? 'Guardar Cambios' : 'Crear Sucursal'"
-              [icon]="loading ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
-              [loading]="loading"
-              [disabled]="branchForm.invalid"
-              class="p-button-raised p-button-primary !rounded-2xl !px-8 !py-4 shadow-xl hover:shadow-indigo-200 transition-all font-bold tracking-tight"
-            ></button>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
-  </div>
+  </form>
 </div>

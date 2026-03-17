@@ -22,9 +22,14 @@ export class SaleDetailManagerService {
         ...d,
         lineSubtotal: line.lineSubtotal,
         lineTotal: line.lineTotal,
+        lineDiscount: line.discountAmount,
+        lineSurcharge: line.lineSurcharge,
+        subtotalAfterLineDiscount: line.subtotalAfterLineDiscount,
+        notes: d.notes,
       };
     });
   }
+
 
   clear(): void {
     this.details = [];
@@ -39,6 +44,8 @@ export class SaleDetailManagerService {
       const line = this.calculator.calculateLine(existing);
       existing.lineSubtotal = line.lineSubtotal;
       existing.lineTotal = line.lineTotal;
+      existing.lineSurcharge = line.lineSurcharge;
+      existing.subtotalAfterLineDiscount = line.subtotalAfterLineDiscount;
       return;
     }
 
@@ -53,6 +60,8 @@ export class SaleDetailManagerService {
     const line = this.calculator.calculateLine(newDetail);
     newDetail.lineSubtotal = line.lineSubtotal;
     newDetail.lineTotal = line.lineTotal;
+    newDetail.lineSurcharge = line.lineSurcharge;
+    newDetail.subtotalAfterLineDiscount = line.subtotalAfterLineDiscount;
 
     this.details.push(newDetail);
   }
@@ -71,6 +80,8 @@ export class SaleDetailManagerService {
     const line = this.calculator.calculateLine(detail);
     detail.lineSubtotal = line.lineSubtotal;
     detail.lineTotal = line.lineTotal;
+    detail.lineSurcharge = line.lineSurcharge;
+    detail.subtotalAfterLineDiscount = line.subtotalAfterLineDiscount;
   }
 
   updateUnitPrice(detail: ISaleDetailPayload, newPrice: number): void {
@@ -81,5 +92,36 @@ export class SaleDetailManagerService {
     const line = this.calculator.calculateLine(detail);
     detail.lineSubtotal = line.lineSubtotal;
     detail.lineTotal = line.lineTotal;
+    detail.lineSurcharge = line.lineSurcharge;
+    detail.subtotalAfterLineDiscount = line.subtotalAfterLineDiscount;
+  }
+
+  updateDetailAdjustment(
+    detail: ISaleDetailPayload,
+    discountType: 'percentage' | 'fixed_amount' | null,
+    discountValue: number,
+    notes: string
+  ): void {
+    detail.notes = notes;
+    detail.discountType = discountType || undefined;
+
+    if (discountType === 'percentage') {
+      detail.discount = discountValue;
+      detail.discountAmount = 0;
+    } else if (discountType === 'fixed_amount') {
+      detail.discountAmount = discountValue;
+      detail.discount = 0;
+    } else {
+      detail.discount = 0;
+      detail.discountAmount = 0;
+    }
+
+    const line = this.calculator.calculateLine(detail as any);
+    detail.lineSubtotal = line.lineSubtotal;
+    detail.lineTotal = line.lineTotal;
+    detail.lineDiscount = line.discountAmount;
+    detail.lineSurcharge = line.lineSurcharge;
+    detail.subtotalAfterLineDiscount = line.subtotalAfterLineDiscount;
   }
 }
+

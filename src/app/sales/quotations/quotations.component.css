@@ -1,0 +1,4 @@
+/* Quotations styles */
+:host ::ng-deep .p-datatable-modern .p-datatable-tbody > tr > td {
+    padding: 1rem 1.5rem;
+}

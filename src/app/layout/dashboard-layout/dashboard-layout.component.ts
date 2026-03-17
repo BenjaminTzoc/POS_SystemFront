@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
 import { HeaderComponent } from '../header/header.component';
-import { SidebarComponent } from '../sidebar/sidebar.component';
+import { ModernSidebarComponent } from '../modern-sidebar/modern-sidebar.component';
 import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard-layout',
-  imports: [HeaderComponent, SidebarComponent, RouterOutlet],
+  imports: [HeaderComponent, ModernSidebarComponent, RouterOutlet],
   templateUrl: './dashboard-layout.component.html',
   styleUrl: './dashboard-layout.component.css',
 })

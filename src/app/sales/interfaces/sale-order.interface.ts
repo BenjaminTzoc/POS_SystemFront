@@ -1,5 +1,6 @@
 import { Product } from '../../inventory/interfaces/product.interface';
 import { ICustomer } from './customer.interface';
+import { Area } from '../../logistics/interfaces/area.interface';
 
 export interface ISaleOrderResponse {
   id: string;
@@ -43,6 +44,36 @@ export interface ISaleDetailResponse {
   taxPercentage: string;
   taxAmount: string;
   lineTotal: string;
+  currentArea?: Area;
+  preparationStatus?: 'pending' | 'preparing' | 'completed';
+  discountType?: 'percentage' | 'fixed_amount';
+  notes?: string;
+}
+
+
+export interface IGroupedItem {
+  id: string; // Detail ID
+  product: Product;
+  quantity: number;
+  preparationStatus: 'pending' | 'preparing' | 'completed';
+  currentArea: Area;
+  saleId: string;
+  invoiceNumber: string;
+  customerName: string;
+}
+
+export interface ISaleGroupedByStatus {
+  [status: string]: {
+    total: number;
+    orders: ISaleOrderResponse[];
+  };
+}
+
+export interface ISaleGroupedByPreparation {
+  [status: string]: {
+    total: number;
+    items: IGroupedItem[];
+  };
 }
 
 export interface ISaleDetailPayload {
@@ -55,4 +86,10 @@ export interface ISaleDetailPayload {
   lineDiscount?: number;
   lineTax?: number;
   lineTotal?: number;
+  lineSurcharge?: number;
+  subtotalAfterLineDiscount?: number;
+  discountType?: 'percentage' | 'fixed_amount';
+  discountAmount?: number;
+  notes?: string;
 }
+

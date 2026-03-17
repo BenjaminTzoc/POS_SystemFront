@@ -1,15 +1,167 @@
-.cash-expandable {
-  /* This ensures the content doesn't wrap or get squashed while expanding */
-  min-width: 0;
+/* Drawer Navigation Styles */
+.nav-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.group:hover .cash-expandable {
-  /* Using a fixed-ish width for the expansion */
-  width: 180px;
-  opacity: 1;
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  color: #64748b;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s;
+  cursor: pointer;
+  border: 1px solid transparent;
 }
 
-/* Optional: add a subtle glow effect on hover for the active session */
-.bg-emerald-50:hover {
-  box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.1), 0 4px 6px -2px rgba(16, 185, 129, 0.05);
+.nav-item:hover {
+  background: #f8fafc;
+  color: #1e293b;
+}
+
+.nav-item.active {
+  background: #f1f5f9;
+  color: #6366f1;
+}
+
+.nav-icon {
+  font-size: 1.125rem;
+  min-width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-label {
+  margin-left: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.submenu {
+  margin-top: 4px;
+  padding-left: 2.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.submenu-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  color: #64748b;
+  text-decoration: none;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.submenu-item:hover {
+  color: #1e293b;
+  background: #f8fafc;
+}
+
+.submenu-item.active {
+  color: #6366f1;
+  font-weight: 700;
+}
+
+.badge {
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  margin-left: auto;
+}
+
+.badge.info { background: #e0f2fe; color: #0369a1; }
+.badge.success { background: #dcfce7; color: #15803d; }
+.badge.warning { background: #fef9c3; color: #a16207; }
+.badge.danger { background: #fee2e2; color: #b91c1c; }
+
+.arrow {
+  font-size: 0.65rem;
+  transition: transform 0.3s;
+  margin-left: auto;
+}
+
+.arrow.expanded {
+  transform: rotate(90deg);
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  border-top: 1px solid #f1f5f9;
+  padding: 1.25rem 0 0 0;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 16px;
+  background: #f8fafc;
+  gap: 0.75rem;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #6366f1;
+  border: 1px solid #e2e8f0;
+}
+
+.user-name {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: #1e293b;
+  display: block;
+}
+
+.user-role {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.logout-btn {
+  margin-left: auto;
+  padding: 0.5rem;
+  border-radius: 10px;
+  color: #ef4444;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.logout-btn:hover {
+  background: #fee2e2;
+}
+
+/* Forzar la eliminación del header interno de PrimeNG Drawer */
+::ng-deep .p-drawer-header {
+  display: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  height: 0 !important;
+  min-height: 0 !important;
+}
+
+::ng-deep .p-drawer-content {
+  padding-inline: 0.8rem !important;
+  padding-block: 1rem !important;
+}
+
+:host ::ng-deep .p-drawer {
+  padding: 0 !important;
 }

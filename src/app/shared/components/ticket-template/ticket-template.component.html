@@ -3,7 +3,7 @@
     <div class="logo-container" *ngIf="companyInfo.logo">
       <img [src]="companyInfo.logo" alt="Logo" class="logo" />
     </div>
-    <h1 class="company-name">{{ companyInfo.name }}</h1>
+    <!-- <h1 class="company-name">{{ companyInfo.name }}</h1> -->
     <p class="company-info">{{ companyInfo.address }}</p>
     <p class="company-info" *ngIf="companyInfo.phone">Tel: {{ companyInfo.phone }}</p>
     <p class="company-info" *ngIf="companyInfo.nit">NIT: {{ companyInfo.nit }}</p>
@@ -73,9 +73,16 @@
 
   <div class="payments-info" *ngIf="sale.payments && sale.payments.length > 0">
     <p><strong>PAGOS:</strong></p>
-    <div class="total-row" *ngFor="let p of sale.payments">
-      <span>{{ p.paymentMethod?.name || 'Pago' }}:</span>
-      <span>{{ p.amount | currency: 'Q' }}</span>
+    <div style="margin-bottom: 2mm;" *ngFor="let p of sale.payments">
+      <div class="total-row">
+        <span>{{ p.paymentMethod?.name || 'Pago' }}:</span>
+        <span>{{ p.amount | currency: 'Q' }}</span>
+      </div>
+      <div *ngIf="p.bankAccount || p.referenceNumber" style="font-size: 8pt; font-style: italic; margin-top: -1mm;">
+        <span *ngIf="p.bankAccount">{{ p.bankAccount.bankName }} - {{ p.bankAccount.accountNumber }}</span>
+        <span *ngIf="p.bankAccount && p.referenceNumber"> | </span>
+        <span *ngIf="p.referenceNumber">Ref: {{ p.referenceNumber }}</span>
+      </div>
     </div>
   </div>
 

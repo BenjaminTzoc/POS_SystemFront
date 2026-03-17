@@ -47,13 +47,13 @@ export class InventoriesComponent implements OnInit {
   get groupedInventories() {
     const filtered = this.inventories.filter(
       (inv) =>
-        inv.product.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        inv.product.sku.toLowerCase().includes(this.searchTerm.toLowerCase()),
+        inv.product?.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        inv.product?.sku.toLowerCase().includes(this.searchTerm.toLowerCase()),
     );
 
     const groups = filtered.reduce(
       (acc, inventory) => {
-        const branchName = inventory.branch.name;
+        const branchName = inventory.branchName || inventory.branch?.name || 'Desconocida';
         if (!acc[branchName]) {
           acc[branchName] = [];
         }
@@ -131,7 +131,7 @@ export class InventoriesComponent implements OnInit {
 
   onDeleteInventory(inventory: Inventory) {
     this.confirmationService.confirm({
-      message: `¿Estás seguro de eliminar el inventario del producto "${inventory.product.name}" de la sucursal "${inventory.branch.name}"?`,
+      message: `¿Estás seguro de eliminar el inventario del producto "${inventory.product?.name}" de la sucursal "${inventory.branchName || inventory.branch?.name}"?`,
       header: 'Confirmar eliminación',
       icon: 'pi pi-info-circle',
       acceptLabel: 'Eliminar',
@@ -174,7 +174,7 @@ export class InventoriesComponent implements OnInit {
     this.router.navigate(['inventory/new-inventory']);
   }
 
-  getProductImageUrl(imageUrl: string | null): string {
+  getProductImageUrl(imageUrl: string | null | undefined): string {
     if (!imageUrl) {
       return `${environment.baseUrl}/uploads/products/default-product.png`;
     }

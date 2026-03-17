@@ -14,6 +14,9 @@ import { Product } from '../interfaces/product.interface';
 import { AuthService } from '../../auth/auth.service';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { CommonModule } from '@angular/common';
+import { TagModule } from 'primeng/tag';
+import { TooltipModule } from 'primeng/tooltip';
+import { Ripple } from 'primeng/ripple';
 
 @Component({
   selector: 'app-products',
@@ -27,6 +30,9 @@ import { CommonModule } from '@angular/common';
     FormsModule,
     ToggleSwitchModule,
     CommonModule,
+    TagModule,
+    TooltipModule,
+    Ripple,
   ],
   templateUrl: './products.component.html',
   styleUrl: './products.component.css',
@@ -54,12 +60,28 @@ export class ProductsComponent implements OnInit {
     this.loadProducts();
   }
 
+  expandedRows: { [key: string]: boolean } = {};
+
+  onExpandedRowKeysChange(event: { [key: string]: boolean }) {
+    this.expandedRows = event;
+  }
+
+  toggleRowExpansion(product: Product) {
+    const id = product.id;
+    this.expandedRows = {
+      ...this.expandedRows,
+      [id]: !this.expandedRows[id]
+    };
+  }
+
   loadProducts(branchId?: string): void {
     this.loading = true;
-    this.productsService.getProducts(branchId, this.showDeleted).subscribe({
+    // Excluimos materias primas e insumos de la vista comercial
+    this.productsService.getProducts(branchId, this.showDeleted, undefined, undefined).subscribe({
       next: (response) => {
-        console.log(response);
-        this.filteredProducts = response.data;
+        // En la lista principal solo mostramos productos que NO son variantes
+        // ya que las variantes se mostrarán dentro de cada maestro desplegable
+        this.filteredProducts = response.data.filter(p => !p.isVariant);
       },
       error: (error) => {
         this.messageService.add({
@@ -82,7 +104,6 @@ export class ProductsComponent implements OnInit {
     this.confirmationService.confirm({
       message: `¿Está seguro de restaurar el producto: ${product.name}?`,
       header: 'Confirmar restauración',
-      icon: 'pi pi-refresh',
       acceptLabel: 'Restaurar',
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-success !rounded-2xl',
@@ -122,6 +143,12 @@ export class ProductsComponent implements OnInit {
 
   onEditProduct(productId: string) {
     this.router.navigate(['inventory/edit-product', productId]);
+  }
+
+  onCreateVariant(parent: Product) {
+    this.router.navigate(['inventory/new-product'], { 
+      queryParams: { parentId: parent.id } 
+    });
   }
 
   onDeleteProduct(product: Product) {
@@ -164,5 +191,35 @@ export class ProductsComponent implements OnInit {
         });
       },
     });
+  }
+
+  getProductTypeLabel(type: string): string {
+    switch (type) {
+      case 'raw_material':
+        return 'Materia Prima';
+      case 'insumo':
+        return 'Insumo';
+      case 'component':
+        return 'Componente';
+      case 'finished_product':
+        return 'Producto Terminado';
+      default:
+        return 'N/A';
+    }
+  }
+
+  getTypeSeverity(type: string): 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' {
+    switch (type) {
+      case 'raw_material':
+        return 'contrast';
+      case 'insumo':
+        return 'info';
+      case 'component':
+        return 'warn';
+      case 'finished_product':
+        return 'success';
+      default:
+        return 'secondary';
+    }
   }
 }

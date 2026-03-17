@@ -17,7 +17,7 @@ export class TicketTemplateComponent {
     phone: '2222-3333',
     email: 'contacto@pos.com',
     nit: '1234567-8',
-    logo: 'assets/layout/images/logo-dark.svg', // Using an existing logo if possible
+    logo: 'svg/Logo caben programa-01.svg',
   };
 
   get today() {

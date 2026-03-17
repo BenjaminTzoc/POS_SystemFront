@@ -6,11 +6,13 @@ import { Pipe, PipeTransform } from '@angular/core';
 export class InventoryMovementTypePipe implements PipeTransform {
   transform(type: string): string {
     const typeMap: { [key: string]: string } = {
-      in: 'Entrada',
-      out: 'Salida',
-      adjustment: 'Ajuste',
+      IN: 'Entrada',
+      OUT: 'Salida',
+      ADJUSTMENT: 'Ajuste',
+      TRANSFER_IN: 'Entrada por traslado',
+      TRANSFER_OUT: 'Salida por traslado',
     };
 
-    return typeMap[type] || type;
+    return typeMap[type.toUpperCase()] || type;
   }
 }

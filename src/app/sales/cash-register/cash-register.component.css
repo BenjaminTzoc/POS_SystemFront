@@ -33,6 +33,35 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.max-w-7xl > div {
+.animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
+
+:host ::ng-deep .p-dialog {
+  overflow: hidden;
+}
+
+:host ::ng-deep .p-inputnumber-buttons-horizontal .p-inputnumber-button-group {
+    border: none !important;
+}
+
+:host ::ng-deep .p-inputnumber-buttons-horizontal .p-inputnumber-input {
+    border: none !important;
 }

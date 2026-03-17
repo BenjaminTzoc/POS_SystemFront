@@ -1,187 +1,222 @@
-<div class="p-4 px-12 bg-gray-50/30 min-h-screen">
+<div class="py-4 px-0 md:px-6 bg-gray-50/30 min-h-screen">
   <!-- Header Section -->
-  <div class="max-w-[1200px] mx-auto mb-6">
-    <div class="flex items-center gap-3 mb-2">
-      <button
-        pButton
-        icon="pi pi-arrow-left"
-        class="p-button-text p-button-secondary !rounded-lg !p-2"
-        (click)="onCancel()"
-      ></button>
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Nuevo Traslado</h1>
-        <p class="text-xs text-gray-500 font-medium">Movimiento controlado de stock entre sedes</p>
+  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-6 md:mb-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div class="w-full md:max-w-[60%]">
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Registro de Traslado</h1>
+        <p class="text-gray-500 mt-1 md:mt-2 text-sm md:text-md">
+           Movimiento controlado de stock entre sedes
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto">
+        <p-button 
+          label="Cancelar" 
+          (onClick)="onCancel()" 
+          variant="outlined" 
+          severity="danger" 
+          icon="pi pi-times"
+          styleClass="!rounded-xl px-4 md:px-6 font-bold border-rose-400! h-[44px] flex-1 md:flex-none justify-center"
+        />
+        <p-button
+          (onClick)="onSave()"
+          label="Generar Traslado"
+          severity="primary"
+          styleClass="!rounded-xl px-4 md:px-6 shadow-lg font-bold h-[44px] flex-1 md:flex-none justify-center"
+          [loading]="loading"
+          icon="pi pi-check"
+          [disabled]="transferForm.invalid"
+        />
       </div>
     </div>
   </div>
 
-  <form [formGroup]="transferForm" class="max-w-[1200px] mx-auto space-y-6 pb-20">
-    <!-- Configuration Card -->
-    <div
-      class="bg-white rounded-2xl shadow-xl shadow-gray-200/40 border border-gray-100 overflow-hidden"
-    >
-      <div class="px-8 py-5 border-b border-gray-50 bg-gray-50/20">
-        <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-          Configuración del Traslado
-        </h3>
-      </div>
 
-      <div class="p-8">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div class="flex flex-col gap-2.5">
-            <label class="text-[9px] font-black text-gray-400 uppercase tracking-widest px-1"
-              >Sucursal de Origen</label
-            >
-            <p-select
-              [options]="branches"
-              formControlName="originBranchId"
-              optionLabel="name"
-              optionValue="id"
-              placeholder="¿De dónde sale?"
-              (onChange)="onOriginChange()"
-              styleClass="w-full !rounded-xl !bg-gray-50 !border-transparent !py-2.5 focus-within:!bg-white focus-within:!border-indigo-100 transition-all font-bold text-sm"
-            ></p-select>
-          </div>
-
-          <div class="flex flex-col gap-2.5">
-            <label class="text-[9px] font-black text-gray-400 uppercase tracking-widest px-1"
-              >Sucursal de Destino</label
-            >
-            <p-select
-              [options]="branches"
-              formControlName="destinationBranchId"
-              optionLabel="name"
-              optionValue="id"
-              placeholder="¿A dónde llega?"
-              styleClass="w-full !rounded-xl !bg-gray-50 !border-transparent !py-2.5 focus-within:!bg-white focus-within:!border-indigo-100 transition-all font-bold text-sm"
-            ></p-select>
-          </div>
-        </div>
-
-        <div class="mt-8 flex flex-col gap-2.5">
-          <label class="text-[9px] font-black text-gray-400 uppercase tracking-widest px-1"
-            >Notas / Motivo</label
-          >
-          <textarea
-            pTextarea
-            formControlName="notes"
-            rows="2"
-            placeholder="Escribe el motivo del traslado o notas para el transportista..."
-            class="w-full !rounded-xl !p-4 !bg-gray-50 !border-transparent focus:!bg-white focus:!border-indigo-100 !transition-all font-medium text-sm text-gray-600 italic resize-none"
-          ></textarea>
-        </div>
-      </div>
-    </div>
-
-    <!-- Items Card -->
-    <div
-      class="bg-white rounded-2xl shadow-xl shadow-gray-200/40 border border-gray-100 overflow-hidden"
-    >
-      <div
-        class="px-8 py-5 border-b border-gray-50 bg-gray-50/20 flex justify-between items-center"
-      >
-        <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-          Productos a Trasladar
-        </h3>
-        <button
-          pButton
-          type="button"
-          label="Añadir Producto"
-          icon="pi pi-plus"
-          (click)="addItem()"
-          class="p-button-text p-button-primary !rounded-lg !py-1 !px-3 font-bold text-[10px]"
-        ></button>
-      </div>
-
-      <div class="p-8" formArrayName="items">
-        <div class="space-y-4">
-          @for (item of items.controls; track $index) {
-            <div
-              [formGroupName]="$index"
-              class="flex flex-col md:flex-row items-end gap-4 p-4 rounded-xl bg-gray-50/30 border border-gray-50 group hover:bg-white hover:border-indigo-100 transition-all"
-            >
-              <div class="flex-1 w-full flex flex-col gap-2">
-                <label class="text-[8px] font-bold text-gray-400 uppercase ml-1">Producto</label>
-                <p-select
-                  [options]="products"
-                  [filter]="true"
-                  [filterFields]="['name', 'sku']"
-                  formControlName="productId"
-                  optionLabel="name"
-                  optionValue="id"
-                  placeholder="Selecciona el producto..."
-                  styleClass="w-full !bg-white !rounded-lg !py-1.5 text-xs font-bold"
-                >
-                  <ng-template let-prod #item>
-                    <div class="flex items-center gap-2 py-1">
-                      <img
-                        [src]="getProductImageUrl(prod.imageUrl)"
-                        class="w-8 h-8 rounded object-cover"
-                      />
-                      <div class="flex flex-col">
-                        <span class="text-xs font-bold text-gray-700">{{ prod.name }}</span>
-                        <span class="text-[8px] text-gray-400 font-bold">SKU: {{ prod.sku }}</span>
-                      </div>
-                    </div>
-                  </ng-template>
-                </p-select>
-              </div>
-
-              <div class="w-full md:w-32 flex flex-col gap-2">
-                <div class="flex justify-between px-1">
-                  <label class="text-[8px] font-bold text-gray-400 uppercase">Cantidad</label>
-                  @if (item.get('maxStock')?.value !== null) {
-                    <span class="text-[8px] font-black text-emerald-500 uppercase"
-                      >Stock: {{ item.get('maxStock')?.value }}</span
-                    >
-                  }
+  <form [formGroup]="transferForm" class="max-w-[1700px] mx-auto pb-40 md:pb-20">
+    <div class="grid grid-cols-12 gap-0 md:gap-8">
+      <div class="col-span-12 lg:col-span-4 flex flex-col gap-6 md:gap-8 mb-6 lg:mb-0">
+        <div class="p-5 md:p-8 rounded-none md:rounded-2xl bg-white border-y md:border border-slate-300 shadow-sm">
+            <h3 class="font-bold text-xl text-gray-800 mb-6 hidden md:block">Configuración</h3>
+            <div class="flex flex-col gap-6">
+                <div class="flex flex-col gap-1.5 md:gap-1">
+                    <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0">
+                        <i class="pi pi-map-marker mr-1 text-xs! text-blue-500"></i>Sucursal de Origen <span class="text-red-700">*</span>
+                    </label>
+                    <p-select
+                        [options]="branches"
+                        formControlName="originBranchId"
+                        optionLabel="name"
+                        optionValue="id"
+                        placeholder="¿De dónde sale?"
+                        (onChange)="onOriginChange()"
+                        styleClass="w-full !rounded-lg border-slate-300 !py-1 transition-all font-medium h-[44px] md:h-auto"
+                        fluid
+                    ></p-select>
                 </div>
-                <p-inputnumber
-                  formControlName="quantity"
-                  [min]="0.01"
-                  [max]="item.get('maxStock')?.value || 999999"
-                  placeholder="0"
-                  styleClass="w-full"
-                  inputStyleClass="!w-full !bg-white !rounded-lg !py-2 !px-3 font-black text-gray-700 text-sm"
-                ></p-inputnumber>
-              </div>
-
-              <div class="flex flex-col gap-2">
-                <button
-                  pButton
-                  type="button"
-                  icon="pi pi-trash"
-                  (click)="removeItem($index)"
-                  [disabled]="items.length === 1"
-                  class="p-button-rounded p-button-text p-button-danger !w-10 !h-10 opacity-0 group-hover:opacity-100 transition-opacity"
-                ></button>
-              </div>
+                <div class="flex flex-col gap-1.5 md:gap-1">
+                    <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0">
+                        <i class="pi pi-directions mr-1 text-xs! text-blue-500"></i>Sucursal de Destino <span class="text-red-700">*</span>
+                    </label>
+                    <p-select
+                        [options]="branches"
+                        formControlName="destinationBranchId"
+                        optionLabel="name"
+                        optionValue="id"
+                        placeholder="¿A dónde llega?"
+                        styleClass="w-full !rounded-lg border-slate-300 !py-1 transition-all font-medium h-[44px] md:h-auto"
+                        fluid
+                    ></p-select>
+                </div>
+                <div class="flex flex-col gap-1.5 md:gap-1">
+                    <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0">
+                        <i class="pi pi-align-left mr-1 text-xs! text-blue-500"></i>Notas / Observaciones
+                    </label>
+                    <textarea
+                        pTextarea
+                        formControlName="notes"
+                        rows="4"
+                        placeholder="Motivo del traslado..."
+                        class="w-full !rounded-lg !p-4 border-slate-300 !transition-all text-sm resize-none"
+                    ></textarea>
+                </div>
             </div>
-          }
         </div>
       </div>
+      <div class="col-span-12 lg:col-span-8 flex flex-col gap-6 md:gap-8">
+        <div class="rounded-none md:rounded-2xl bg-white border-y md:border border-slate-300 shadow-sm overflow-hidden">
+            <div class="px-5 md:px-8 py-4 md:py-6 border-b border-gray-100 bg-gray-50/40 flex justify-between items-center">
+                <h3 class="font-bold text-xl text-gray-800">
+                    <i class="pi pi-box mr-1 text-xs! text-blue-500"></i>
+                    Productos
+                </h3>
+                <p-button
+                    type="button"
+                    label="Añadir Item"
+                    icon="pi pi-plus"
+                    (onClick)="addItem()"
+                    styleClass="!rounded-xl !py-2 font-bold text-xs"
+                    severity="info"
+                />
+            </div>
+            
+            <div class="p-4 md:p-8" formArrayName="items">
+                <div class="flex flex-col gap-4">
+                    @if (!transferForm.get('originBranchId')?.value) {
+                      <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-center gap-3">
+                          <div class="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-white flex-shrink-0 animate-pulse">
+                              <i class="pi pi-exclamation-triangle"></i>
+                          </div>
+                          <div>
+                              <p class="text-[10px] font-black text-amber-600 uppercase tracking-widest leading-none mb-1">Sucursal Requerida</p>
+                              <p class="text-xs text-amber-800 font-medium">Seleccione origen para habilitar catálogo.</p>
+                          </div>
+                      </div>
+                    }
 
-      <div
-        class="px-8 py-6 bg-gray-50/10 border-t border-gray-50 flex justify-between items-center"
-      >
-        <button
-          pButton
-          type="button"
-          label="Descartar"
-          class="p-button-text p-button-secondary !rounded-xl !px-6 font-bold text-sm"
-          (click)="onCancel()"
-        ></button>
+                    @for (item of items.controls; track $index) {
+                      <div [formGroupName]="$index"
+                           class="relative flex flex-col md:flex-row items-stretch md:items-end gap-4 p-5 md:p-6 rounded-2xl bg-slate-50/50 border border-slate-200 transition-all hover:bg-white hover:shadow-lg hover:shadow-indigo-500/5 hover:border-indigo-200 group">
+                          
+                          <!-- Delete Button Mobile -->
+                          <div class="md:hidden absolute -top-2 -right-2 z-10">
+                            <p-button
+                                icon="pi pi-trash"
+                                (onClick)="removeItem($index)"
+                                [disabled]="items.length === 1"
+                                severity="danger"
+                                styleClass="!rounded-full !w-8 !h-8 shadow-md"
+                            />
+                          </div>
 
-        <button
-          pButton
-          type="button"
-          label="Crear Traslado"
-          icon="pi pi-check"
-          [loading]="loading"
-          (click)="onSave()"
-          class="p-button-raised p-button-success !rounded-xl !px-8 !py-3 shadow-lg shadow-emerald-100/50 font-bold text-sm"
-        ></button>
-      </div>
+                          <div class="flex-1 min-w-0 flex flex-col gap-2 md:gap-1.5">
+                              <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-400 md:text-slate-700 tracking-widest md:tracking-normal">
+                                Producto
+                              </label>
+                              <p-select
+                                  [options]="getAvailableProducts($index)"
+                                  [filter]="true"
+                                  [filterFields]="['name', 'sku']"
+                                  formControlName="productId"
+                                  optionLabel="name"
+                                  optionValue="id"
+                                  placeholder="Buscar producto..."
+                                  appendTo="body"
+                                  styleClass="w-full !rounded-lg border-slate-200 h-[44px] sm:h-auto"
+                                  fluid
+                              >
+                                  <ng-template let-prod #item>
+                                      <div class="flex items-center gap-3 py-1">
+                                          <div class="w-10 h-10 rounded-lg bg-gray-50 border border-slate-100 overflow-hidden flex-shrink-0">
+                                            <img [src]="getProductImageUrl(prod.imageUrl)" class="w-full h-full object-cover" />
+                                          </div>
+                                          <div class="flex flex-col min-w-0">
+                                              <span class="text-sm font-bold text-gray-700 truncate leading-none mb-1">{{ prod.name }}</span>
+                                              <div class="flex items-center gap-2">
+                                                <span class="text-[9px] font-black text-indigo-500 uppercase tracking-tighter">{{ prod.sku }}</span>
+                                                @if (transferForm.get('originBranchId')?.value) {
+                                                  <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                                                        [ngClass]="getStockInOrigin(prod) > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'">
+                                                      Stock: {{ getStockInOrigin(prod) }} {{ prod.unitAbbreviation }}
+                                                  </span>
+                                                }
+                                              </div>
+                                          </div>
+                                      </div>
+                                  </ng-template>
+                              </p-select>
+                          </div>
+
+                          <div class="w-full md:w-40 flex flex-col gap-2 md:gap-1.5">
+                              <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-400 md:text-slate-700 tracking-widest md:tracking-normal">
+                                Cantidad
+                              </label>
+                              <div class="relative">
+                                  <p-inputnumber
+                                      formControlName="quantity"
+                                      [min]="0"
+                                      [max]="item.get('maxStock')?.value || 999999"
+                                      [minFractionDigits]="2"
+                                      [maxFractionDigits]="2"
+                                      placeholder="0.00"
+                                      styleClass="w-full"
+                                      inputStyleClass="!w-full !rounded-lg !py-2.5 h-[44px] md:h-auto font-black text-gray-800 border-slate-200 !pr-10"
+                                      fluid
+                                  ></p-inputnumber>
+                                  <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                      {{ item.get('unitAbbreviation')?.value }}
+                                  </span>
+                              </div>
+                          </div>
+
+                          <!-- Delete Button Desktop -->
+                          <div class="hidden md:flex items-center justify-center pb-1">
+                              <p-button
+                                  icon="pi pi-trash"
+                                  (onClick)="removeItem($index)"
+                                  [disabled]="items.length === 1"
+                                  severity="danger"
+                                  variant="text"
+                                  styleClass="!rounded-xl !w-10 !h-10 hover:bg-rose-50 opacity-0 group-hover:opacity-100 transition-all"
+                              />
+                          </div>
+                      </div>
+                    }
+
+                    @if (items.length === 0) {
+                        <div class="py-12 flex flex-col items-center justify-center text-slate-300 border-2 border-dashed border-slate-100 rounded-3xl">
+                            <i class="pi pi-shopping-bag text-5xl mb-3 opacity-20"></i>
+                            <p class="font-bold text-sm">No hay productos añadidos</p>
+                            <button type="button" (click)="addItem()" class="mt-2 text-indigo-500 font-black text-[10px] uppercase tracking-widest hover:text-indigo-600">
+                                + Añadir el primero
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
     </div>
-  </form>
+  </div>
+</form>
 </div>
+
+

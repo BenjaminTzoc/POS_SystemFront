@@ -1,0 +1,313 @@
+<div class="py-4 px-0 md:px-6 bg-gray-50/30 min-h-screen pb-[500px]">
+  <!-- Header Section -->
+  <div class="max-w-[1700px] mx-auto mb-6 md:mb-8 px-4 md:px-0">
+    <div class="flex flex-col md:flex-row items-stretch md:items-end justify-between gap-4">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
+          Nueva Orden de Manufactura
+        </h1>
+        <p class="text-gray-500 mt-1 md:mt-2 text-sm md:text-md">
+          Planifique la producción de un artículo terminado y gestione su lote.
+        </p>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <p-button 
+          label="Cancelar" 
+          (onClick)="onCancel()"
+          variant="outlined" 
+          severity="danger" 
+          icon="pi pi-times"
+          styleClass="font-bold border-rose-400! w-full sm:w-auto justify-center"
+          [disabled]="saving()"
+        />
+        <p-button
+          (onClick)="onSave()"
+          label="Crear Orden"
+          severity="primary"
+          styleClass="!rounded-lg w-full sm:w-auto shadow-lg !py-2 font-bold justify-center"
+          [loading]="saving()"
+          icon="pi pi-check"
+          [disabled]="orderForm.invalid"
+        />
+      </div>
+    </div>
+  </div>
+
+  <form class="max-w-[1700px] mx-auto px-4 md:px-0" [formGroup]="orderForm">
+    <div class="grid grid-cols-12 gap-6 md:gap-8">
+      <!-- Left Column: Form Fields -->
+      <div class="col-span-12 lg:col-span-5 flex flex-col gap-6">
+        <div class="px-5 md:px-8 py-6 rounded-2xl bg-white border border-slate-300 shadow-sm">
+          <h3 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+            <i class="pi pi-file-edit text-indigo-500"></i>
+            Datos del Lote
+          </h3>
+          
+          <div class="flex flex-col gap-y-4">
+            <!-- Branch Selection -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-semibold text-slate-700" for="branchId">
+                Planta o Sucursal de Producción <span class="text-red-700">*</span>
+              </label>
+              <p-select
+                id="branchId"
+                formControlName="branchId"
+                [options]="branches()"
+                optionLabel="name"
+                optionValue="id"
+                placeholder="Seleccione la sucursal..."
+                class="w-full"
+                styleClass="w-full !rounded-xl border-slate-200 h-11"
+                appendTo="body"
+              ></p-select>
+            </div>
+
+            <!-- Product Selection -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-semibold text-slate-700" for="productId">
+                Producto a Producir <span class="text-red-700">*</span>
+              </label>
+              <p-select
+                id="productId"
+                formControlName="productId"
+                [options]="groupedProducts()"
+                [group]="true"
+                optionGroupLabel="label"
+                optionGroupChildren="items"
+                optionLabel="name"
+                optionValue="id"
+                placeholder="Seleccione el producto..."
+                [filter]="true"
+                filterBy="name,sku"
+                class="w-full"
+                styleClass="w-full !rounded-xl border-slate-200 h-11"
+                appendTo="body"
+              >
+                <ng-template #item let-p>
+                  <div class="flex items-center gap-3 py-1">
+                    <div class="w-10 h-10 rounded-lg border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0 bg-slate-50">
+                      @if (p.imageUrl) {
+                        <img [src]="getProductImageUrl(p.imageUrl)" class="w-full h-full object-cover" />
+                      } @else {
+                        <i class="pi pi-image text-slate-300"></i>
+                      }
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                      <span class="font-bold text-sm text-slate-700 truncate">{{ p.name }}</span>
+                      <span class="text-[10px] text-slate-400 font-mono tracking-wider uppercase">{{ p.sku }}</span>
+                    </div>
+                  </div>
+                </ng-template>
+              </p-select>
+            </div>
+
+            <!-- Quantity Field -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-semibold text-slate-700" for="plannedQuantity">
+                Cantidad a Producir <span class="text-red-700">*</span>
+              </label>
+              <p-inputnumber
+                id="plannedQuantity"
+                formControlName="plannedQuantity"
+                [min]="selectedProduct()?.unit?.allowsDecimals ? 0.01 : 1"
+                [minFractionDigits]="selectedProduct()?.unit?.allowsDecimals ? 2 : 0"
+                [maxFractionDigits]="selectedProduct()?.unit?.allowsDecimals ? 4 : 0"
+                [placeholder]="selectedProduct()?.unit?.allowsDecimals ? '0.00' : '0'"
+                styleClass="w-full"
+                inputStyleClass="w-full !rounded-xl border-slate-200 h-12 font-medium text-xl px-4 text-indigo-700"
+                [suffix]="' ' + (selectedProduct()?.unit?.abbreviation || '')"
+              ></p-inputnumber>
+              <div class="flex justify-between items-center px-1">
+                <span class="text-[11px] text-slate-500 font-medium">Capacidad de lote planificada.</span>
+              </div>
+            </div>
+
+            <!-- Notes Field -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-semibold text-slate-700" for="notes">
+                Notas / Observaciones del Lote
+              </label>
+              <textarea 
+                pTextarea
+                id="notes"
+                formControlName="notes"
+                pInputText
+                class="!rounded-xl border-slate-200 p-4 text-sm leading-relaxed"
+                placeholder="Escriba aquí comentarios sobre el proceso, temperatura, lotes de materia prima, etc..."
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary Cost Card -->
+        @if (selectedProduct() && orderForm.get('plannedQuantity')?.value > 0) {
+          <div class="p-6 rounded-xl bg-indigo-900 text-white shadow-xl shadow-indigo-100 flex items-center justify-between overflow-hidden relative">
+            <div class="flex flex-col gap-1 relative z-10">
+              <span class="text-[11px] font-semibold text-indigo-300 uppercase tracking-widest">Costo Teórico Estimado</span>
+              <div class="flex items-baseline gap-2">
+                <span class="text-3xl font-bold">{{ totalEstimatedCost() | currency:'Q ' }}</span>
+                <span class="text-sm text-indigo-200 font-medium">Costo Total</span>
+              </div>
+            </div>
+            <div class="flex flex-col items-end relative z-10">
+              <span class="text-[12px] font-medium text-indigo-300 tracking-widest text-right">Costo Unitario</span>
+              <span class="text-xl font-semibold">{{ (totalEstimatedCost() / orderForm.get('plannedQuantity')?.value) | currency:'Q ' }}</span>
+            </div>
+            <!-- Decorative background element -->
+            <i class="pi pi-dollar absolute -right-4 -bottom-4 text-8xl text-indigo-800/50 -rotate-12"></i>
+          </div>
+        }
+      </div>
+
+      <!-- Right Column: Availability & Recipe Details -->
+      <div class="col-span-12 lg:col-span-7 flex flex-col gap-6">
+        @if (selectedProduct()) {
+          <!-- Availability Panel -->
+          <div class="bg-white rounded-2xl border border-slate-300 flex flex-col shadow-sm">
+            <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-50/50 rounded-t-2xl">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                  <i class="pi pi-objects-column text-indigo-600"></i>
+                </div>
+                <div>
+                  <h3 class="text-lg font-semibold text-slate-800">Disponibilidad de Insumos</h3>
+                  <p class="text-[12px] text-slate-500 font-medium tracking-tight">Análisis dinámico según cantidad planificada</p>
+                </div>
+              </div>
+              <p-tag 
+                [severity]="hasShortage() ? 'danger' : 'success'" 
+                [value]="hasShortage() ? 'Faltante de Inventario' : 'Stock Asegurado'"
+                styleClass="!text-[13px] !px-4 !py-1 !font-semibold tracking-wide rounded-full"
+              ></p-tag>
+            </div>
+
+            <div class="overflow-x-auto w-full">
+              <p-table [value]="preFlightCheck()" styleClass="p-datatable-modern block lg:min-w-[700px] w-full" [responsiveLayout]="'scroll'">
+                <ng-template pTemplate="header">
+                  <tr class="h-12 text-[11px] uppercase tracking-widest text-slate-400 font-bold bg-slate-50/30 hidden lg:table-row">
+                    <th class="!pl-8">Ingrediente</th>
+                    <th class="text-center">Req. Unitario</th>
+                    <th class="text-center">Total Necesario</th>
+                    <th class="text-center">En Mano (Stock)</th>
+                    <th class="text-right !pr-8">Estado</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-item>
+                  <tr class="hover:bg-transparent lg:hover:bg-slate-50 transition-all border-b border-slate-100 block lg:table-row bg-transparent">
+                    
+                    <!-- VISTA MÓVIL (Tarjeta) -->
+                    <td class="lg:hidden block !p-0 border-none bg-transparent">
+                      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 mx-4 my-3 p-5 flex flex-col gap-4">
+                        
+                        <!-- Encabezado / Estado -->
+                        <div class="flex justify-between items-start">
+                          <div class="flex flex-col">
+                            <span class="font-bold text-slate-800 text-sm">{{ item.component?.name }}</span>
+                            <span class="text-[10px] text-slate-400 font-mono tracking-widest mt-0.5">{{ item.component?.sku }}</span>
+                          </div>
+                          <div class="w-8 h-8 rounded-full flex items-center justify-center transition-all bg-slate-50 border shrink-0"
+                               [ngClass]="item.isOk ? 'bg-emerald-50 text-emerald-500 border-emerald-100' : 'bg-rose-50 text-rose-500 border-rose-100'">
+                            <i class="pi text-xs font-bold" [ngClass]="item.isOk ? 'pi-check' : 'pi-exclamation-triangle'"></i>
+                          </div>
+                        </div>
+
+                        <!-- Detalles Numéricos -->
+                        <div class="grid grid-cols-2 gap-4 border-t border-slate-100 pt-3 mt-1">
+                          <div class="flex flex-col gap-3">
+                             <div class="flex flex-col">
+                               <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Req. Unitario</span>
+                               <span class="text-sm font-semibold text-slate-700 mt-0.5">
+                                 {{ item.quantity | number: (item.component?.unit?.allowsDecimals ? '1.2-4' : '1.0-0') }}
+                                 <span class="text-[11px] text-slate-500">{{ item.component?.unit?.abbreviation }}</span>
+                               </span>
+                             </div>
+                             <div class="flex flex-col">
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Total Neces.</span>
+                                <span class="text-xs font-bold text-slate-800 mt-0.5">
+                                 {{ item.required | number: (item.component?.unit?.allowsDecimals ? '1.2-4' : '1.0-0') }}
+                                 <span class="text-[11px] text-slate-600">{{ item.component?.unit?.abbreviation }}</span>
+                               </span>
+                             </div>
+                          </div>
+                          
+                          <div class="flex flex-col items-end gap-3 text-right">
+                             <div class="flex flex-col items-end">
+                               <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Stock Disponible</span>
+                               <span class="text-sm font-bold mt-0.5" [ngClass]="item.available >= item.required ? 'text-[#1B768E]' : 'text-rose-600'">
+                                 {{ item.available | number: (item.component?.unit?.allowsDecimals ? '1.2-4' : '1.0-0') }}
+                                 <span class="text-[11px]">{{ item.component?.unit?.abbreviation }}</span>
+                               </span>
+                             </div>
+                          </div>
+                        </div>
+
+                      </div>
+                    </td>
+
+                    <!-- DESKTOP VIEW -->
+                    <td class="!pl-8 hidden lg:table-cell py-4">
+                      <div class="flex flex-col">
+                        <span class="font-semibold text-slate-800 text-sm">{{ item.component?.name }}</span>
+                        <span class="text-[11px] text-slate-500 font-medium tracking-widest">{{ item.component?.sku }}</span>
+                      </div>
+                    </td>
+                    <td class="text-center hidden lg:table-cell">
+                      <span class="text-sm font-medium text-slate-600">
+                        {{ item.quantity | number: (item.component?.unit?.allowsDecimals ? '1.2-4' : '1.0-0') }}
+                        <span class="ml-0.5">{{ item.component?.unit?.abbreviation }}</span>
+                      </span>
+                    </td>
+                    <td class="text-center hidden lg:table-cell">
+                      <span class="text-sm font-semibold text-slate-800">
+                        {{ item.required | number: (item.component?.unit?.allowsDecimals ? '1.2-4' : '1.0-0') }}
+                        <span class="ml-0.5">{{ item.component?.unit?.abbreviation }}</span>
+                      </span>
+                    </td>
+                    <td class="text-center hidden lg:table-cell">
+                      <span class="text-sm font-semibold" [ngClass]="item.available >= item.required ? 'text-[#1B768E]' : 'text-rose-600'">
+                        {{ item.available | number: (item.component?.unit?.allowsDecimals ? '1.2-4' : '1.0-0') }}
+                        <span class="ml-0.5" [ngClass]="item.available >= item.required ? 'text-[#1B768E]' : 'text-rose-600'">
+                          {{ item.component?.unit?.abbreviation }}
+                        </span>
+                      </span>
+                    </td>
+                    <td class="text-right !pr-8 hidden lg:table-cell">
+                      <div class="flex justify-end">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm"
+                             [ngClass]="item.isOk ? 'bg-emerald-50 text-emerald-500 border border-emerald-100' : 'bg-rose-50 text-rose-500 border border-rose-100'">
+                          <i class="pi text-xs font-bold" [ngClass]="item.isOk ? 'pi-check' : 'pi-exclamation-triangle'"></i>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+            
+            @if (hasShortage()) {
+              <div class="p-4 bg-rose-50 border-t border-rose-100 flex items-center gap-3">
+                <i class="pi pi-info-circle text-rose-700 text-lg"></i>
+                <p class="text-xs text-rose-700 font-semibold leading-relaxed">
+                  ATENCIÓN: Se han detectado faltantes en la materia prima necesaria para este lote en la sucursal seleccionada. No se recomienda iniciar la producción hasta abastecer el almacén.
+                </p>
+              </div>
+            }
+          </div>
+        } @else {
+          <!-- Placeholder State -->
+          <div class="flex-1 rounded-xl border border-dashed border-slate-300 bg-slate-50/50 flex flex-col items-center justify-center py-24 gap-4">
+            <div class="w-20 h-20 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+              <i class="pi pi-box text-3xl text-slate-300"></i>
+            </div>
+            <div class="flex flex-col items-center text-center max-w-[300px]">
+              <h4 class="text-slate-500 font-bold">Sin Producto Seleccionado</h4>
+              <p class="text-xs text-slate-400 leading-relaxed mt-2">
+                Seleccione un producto para ver la receta, validar el inventario disponible y calcular el costo teórico del lote.
+              </p>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </form>
+</div>

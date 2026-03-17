@@ -1,9 +1,26 @@
-/* You can add global styles to this file, and also import other style files */
-@import "tailwindcss";
+@charset "UTF-8";
+@import "animate.css";
 @import "primeicons/primeicons.css";
+@import "tailwindcss";
+
 @import '@fontsource-variable/montserrat';
 
-body {
-  font-family: 'Montserrat Variable',
-    sans-serif;
+/* You can add global styles to this file, and also import other style files */
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Montserrat Variable', sans-serif;
+}
+
+/* Fix PrimeNG p-toast horizontal overflow on mobile screens */
+@media screen and (max-width: 768px) {
+  .p-toast {
+    width: 90vw !important;
+    max-width: 90vw !important;
+    left: 5vw !important;
+    right: 5vw !important;
+    transform: none !important;
+  }
 }

@@ -6,6 +6,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { CardModule } from 'primeng/card';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { BranchesService } from '../../services/branches.service';
 
@@ -19,6 +20,7 @@ import { BranchesService } from '../../services/branches.service';
     InputTextModule,
     TextareaModule,
     CardModule,
+    ToggleSwitchModule
   ],
   templateUrl: './branch-form.component.html',
   styleUrl: './branch-form.component.css',
@@ -51,6 +53,7 @@ export class BranchFormComponent implements OnInit {
       address: ['', [Validators.required]],
       phone: ['', [Validators.required]],
       email: ['', [Validators.email]],
+      isPlant: [false],
     });
   }
 

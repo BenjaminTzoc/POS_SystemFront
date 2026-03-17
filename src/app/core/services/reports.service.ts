@@ -5,13 +5,20 @@ import { environment } from '../../../environments/environment';
 import {
   DashboardSummaryDto,
   SalesTrendDto,
-  TopSellingProductDto,
-  CategoryDistributionDto,
-  PaymentMethodStatDto,
+  ProductPerformanceReportDto,
+  CategorySalesReportDto,
+  BranchPerformanceReportDto,
+  CriticalStockDto,
+  UnifiedDashboardDto,
   HourlySalesDto,
-  WeekdaySalesDto,
-  InventoryMovementReportDto,
-  ProfitReportDto,
+  OrderSummaryReportDto,
+  DashboardCalendarDto,
+  WeeklyConsolidationItemDto,
+  WeeklyConsolidationBranchDto,
+  ProductConsolidationItemDto,
+  CustomerConsolidationItemDto,
+  WeeklyDataConsolidationDto,
+  ProductMonthlyTrendDto
 } from '../models/reports.models';
 import { ApiResponse } from '../models/api-response.model';
 
@@ -23,117 +30,101 @@ export class ReportsService {
 
   constructor(private http: HttpClient) {}
 
-  getDashboardSummary(branchId?: string): Observable<ApiResponse<DashboardSummaryDto>> {
-    let params = new HttpParams();
-    if (branchId) params = params.set('branchId', branchId);
-    return this.http.get<ApiResponse<DashboardSummaryDto>>(`${this.apiUrl}/dashboard/summary`, {
-      params,
-    });
-  }
-
-  getSalesTrends(
+  getUnifiedDashboard(
+    branchId?: string,
     days: number = 7,
     startDate?: string,
     endDate?: string,
-    branchId?: string,
-  ): Observable<ApiResponse<SalesTrendDto[]>> {
-    let params = new HttpParams().set('days', days);
+  ): Observable<ApiResponse<UnifiedDashboardDto>> {
+    let params = new HttpParams().set('days', days.toString());
+    if (branchId) params = params.set('branchId', branchId);
     if (startDate) params = params.set('startDate', startDate);
     if (endDate) params = params.set('endDate', endDate);
-    if (branchId) params = params.set('branchId', branchId);
-    return this.http.get<ApiResponse<SalesTrendDto[]>>(`${this.apiUrl}/sales/trends`, { params });
+
+    return this.http.get<ApiResponse<UnifiedDashboardDto>>(`${this.apiUrl}/dashboard`, { params });
   }
 
-  getTopSellingProducts(
-    limit: number = 5,
-    startDate?: string,
-    endDate?: string,
-    branchId?: string,
-  ): Observable<ApiResponse<TopSellingProductDto[]>> {
-    let params = new HttpParams().set('limit', limit);
-    if (startDate) params = params.set('startDate', startDate);
-    if (endDate) params = params.set('endDate', endDate);
-    if (branchId) params = params.set('branchId', branchId);
-    return this.http.get<ApiResponse<TopSellingProductDto[]>>(
-      `${this.apiUrl}/products/top-selling`,
-      { params },
-    );
-  }
-
-  getCategoriesDistribution(branchId?: string): Observable<ApiResponse<CategoryDistributionDto[]>> {
+  getOrderSummary(branchId?: string): Observable<ApiResponse<OrderSummaryReportDto>> {
     let params = new HttpParams();
     if (branchId) params = params.set('branchId', branchId);
-    return this.http.get<ApiResponse<CategoryDistributionDto[]>>(
-      `${this.apiUrl}/categories/distribution`,
-      {
-        params,
-      },
-    );
+    return this.http.get<ApiResponse<OrderSummaryReportDto>>(`${this.apiUrl}/orders/summary`, { params });
   }
 
-  getPaymentMethodsStats(
-    startDate?: string,
-    endDate?: string,
-    branchId?: string,
-  ): Observable<ApiResponse<PaymentMethodStatDto[]>> {
+  getDashboardCalendar(
+    month?: number,
+    year?: number,
+    branchId?: string
+  ): Observable<ApiResponse<DashboardCalendarDto>> {
     let params = new HttpParams();
-    if (startDate) params = params.set('startDate', startDate);
-    if (endDate) params = params.set('endDate', endDate);
+    if (month) params = params.set('month', month.toString());
+    if (year) params = params.set('year', year.toString());
     if (branchId) params = params.set('branchId', branchId);
-    return this.http.get<ApiResponse<PaymentMethodStatDto[]>>(
-      `${this.apiUrl}/sales/payment-methods`,
-      {
-        params,
-      },
-    );
-  }
 
-  getHourlySales(
-    startDate?: string,
-    endDate?: string,
-    branchId?: string,
-  ): Observable<ApiResponse<HourlySalesDto[]>> {
-    let params = new HttpParams();
-    if (startDate) params = params.set('startDate', startDate);
-    if (endDate) params = params.set('endDate', endDate);
-    if (branchId) params = params.set('branchId', branchId);
-    return this.http.get<ApiResponse<HourlySalesDto[]>>(`${this.apiUrl}/sales/hourly`, { params });
-  }
-
-  getWeekdaySales(
-    startDate?: string,
-    endDate?: string,
-    branchId?: string,
-  ): Observable<ApiResponse<WeekdaySalesDto[]>> {
-    let params = new HttpParams();
-    if (startDate) params = params.set('startDate', startDate);
-    if (endDate) params = params.set('endDate', endDate);
-    if (branchId) params = params.set('branchId', branchId);
-    return this.http.get<ApiResponse<WeekdaySalesDto[]>>(`${this.apiUrl}/sales/weekday`, {
+    return this.http.get<ApiResponse<DashboardCalendarDto>>(`${this.apiUrl}/dashboard/calendar`, {
       params,
     });
   }
 
-  getInventoryMovements(
-    days: number = 30,
-    branchId?: string,
-  ): Observable<ApiResponse<InventoryMovementReportDto[]>> {
-    let params = new HttpParams().set('days', days);
+  getWeeklyConsolidation(
+    month?: number,
+    year?: number,
+    branchId?: string
+  ): Observable<ApiResponse<WeeklyConsolidationBranchDto[]>> {
+    let params = new HttpParams();
+    if (month) params = params.set('month', month.toString());
+    if (year) params = params.set('year', year.toString());
     if (branchId) params = params.set('branchId', branchId);
-    return this.http.get<ApiResponse<InventoryMovementReportDto[]>>(
-      `${this.apiUrl}/inventory/movements`,
-      { params },
+
+    return this.http.get<ApiResponse<WeeklyConsolidationBranchDto[]>>(
+      `${this.apiUrl}/branches/weekly-consolidation`,
+      { params }
     );
   }
 
-  getProfitReport(
-    days: number = 30,
-    branchId?: string,
-  ): Observable<ApiResponse<ProfitReportDto[]>> {
-    let params = new HttpParams().set('days', days);
+  getProductsWeeklyConsolidation(
+    weekStartDate: string,
+    branchId?: string
+  ): Observable<ApiResponse<WeeklyDataConsolidationDto<ProductConsolidationItemDto>>> {
+    let params = new HttpParams().set('weekStartDate', weekStartDate);
     if (branchId) params = params.set('branchId', branchId);
-    return this.http.get<ApiResponse<ProfitReportDto[]>>(`${this.apiUrl}/financial/profit`, {
-      params,
-    });
+
+    return this.http.get<ApiResponse<WeeklyDataConsolidationDto<ProductConsolidationItemDto>>>(
+      `${this.apiUrl}/products/weekly-consolidation`,
+      { params }
+    );
+  }
+
+  getCustomersWeeklyConsolidation(
+    weekStartDate: string,
+    branchId?: string
+  ): Observable<ApiResponse<WeeklyDataConsolidationDto<CustomerConsolidationItemDto>>> {
+    let params = new HttpParams().set('weekStartDate', weekStartDate);
+    if (branchId) params = params.set('branchId', branchId);
+
+    return this.http.get<ApiResponse<WeeklyDataConsolidationDto<CustomerConsolidationItemDto>>>(
+      `${this.apiUrl}/customers/weekly-consolidation`,
+      { params }
+    );
+  }
+
+  getProductMonthlyTrends(
+    month?: number,
+    year?: number,
+    branchId?: string,
+    page: number = 1,
+    limit: number = 5
+  ): Observable<ApiResponse<ProductMonthlyTrendDto>> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('limit', limit.toString());
+    
+    if (month) params = params.set('month', month.toString());
+    if (year) params = params.set('year', year.toString());
+    if (branchId) params = params.set('branchId', branchId);
+
+    return this.http.get<ApiResponse<ProductMonthlyTrendDto>>(
+      `${this.apiUrl}/products/monthly-trends`,
+      { params }
+    );
   }
 }

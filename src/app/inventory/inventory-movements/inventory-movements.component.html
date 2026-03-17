@@ -1,235 +1,310 @@
-<section class="px-16 py-10">
-  <div class="flex justify-between">
-    <h1 class="text-2xl font-semibold mb-8">Movimientos de inventario</h1>
-    <div class="">
-      <div class="flex gap-2">
+<div class="py-4 px-0 md:px-6 bg-gray-50/30 min-h-screen">
+  <!-- Header Section -->
+  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-6 md:mb-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div class="w-full md:max-w-[60%]">
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Movimientos de Inventario</h1>
+        <p class="text-gray-500 mt-1 md:mt-2 text-sm md:text-md">
+           Historial completo de entradas, salidas y ajustes.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto">
         <p-button
-          label="Registrar Nuevo Movimiento"
-          severity="success"
+          icon="pi pi-refresh"
+          severity="secondary"
+          variant="outlined"
+          (onClick)="loadInventoryMovements(); loadStats()"
+          styleClass="!rounded-xl border-slate-300! h-[44px] w-[44px] flex justify-center !bg-white"
+        />
+        <p-button
+          label="Registrar Movimiento"
+          icon="pi pi-plus"
+          severity="primary"
           (onClick)="recordMovement()"
+          styleClass="!rounded-xl px-4 md:px-6 shadow-lg font-bold h-[44px] flex-1 md:flex-none justify-center"
         />
       </div>
     </div>
   </div>
-  <p-table
-    #inventoryMovementsDataTable
-    [value]="inventoryMovements"
-    [loading]="loading"
-    [paginator]="true"
-    [rows]="10"
-    [rowsPerPageOptions]="[10, 15, 20, 25, 50]"
-    [globalFilterFields]="['name', 'sku', 'barcode']"
-    dataKey="id"
-    styleClass="p-datatable-striped p-datatable-sm p-datatable-gridless rounded-md"
-  >
-    <ng-template pTemplate="header">
-      <tr class="h-16">
-        <th style="width: 5rem"></th>
-        <th>Fecha y hora</th>
-        <th>Usuario</th>
-        <th>Producto</th>
-        <th>Cantidad</th>
-        <th>Sucursal</th>
-        <th>Tipo</th>
-        <th>Concepto</th>
-        <th>Estado</th>
-        <th>Evolución de Stock</th>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="body" let-movement let-expanded="expanded">
-      <tr>
-        <td>
-          <p-button
-            type="button"
-            pRipple
-            [pRowToggler]="movement"
-            [text]="true"
-            severity="secondary"
-            [rounded]="true"
-            [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
-          />
-        </td>
-        <td>{{ movement.movementDate | date : 'dd/MM/yyyy HH:mm' }}</td>
-        <td>{{ movement.createdBy?.name ?? 'Sistema' }}</td>
-        <td>{{ movement.product?.name }}</td>
-        <td>{{ movement.quantity }} {{ movement.product?.unit?.abbreviation || '' }}</td>
-        <td>{{ movement.branch?.name }}</td>
-        <td>
-          <p-tag
-            [severity]="getSeverity(movement.type)"
-            [value]="movement.type | inventoryMovementType"
-            [icon]="getIcon(movement.type)"
-          />
-        </td>
-        <td>
-          <p-tag
-            [severity]="getConceptSeverity(movement.concept)"
-            [value]="movement.concept | inventoryMovementConcept"
-            [icon]="getConceptIcon(movement.concept)"
-          />
-        </td>
-        <td>
-          @if (movement.status === 'pending') {
-          <span class="text-gray-500 italic">{{ movement.status | inventoryMovementStatus }}</span>
-          } @else {
-          <p-tag
-            [severity]="getStatusSeverity(movement.status)"
-            [value]="movement.status | inventoryMovementStatus"
-            [icon]="getStatusIcon(movement.status)"
-          />
-          }
-        </td>
-        <td>
-          <div class="flex gap-2 items-center">
-            @if (movement.status === 'pending' || movement.previousStock === null ||
-            movement.newStock === null) {
-            <span class="text-gray-400 font-medium italic">N/A</span>
-            } @else {
-            <span
-              class="line-through text-red-700 font-medium"
-              pTooltip="Stock Inicial (Antes del movimiento)"
-              tooltipPosition="top"
-              >{{ movement.previousStock }} {{ movement.product?.unit?.abbreviation || '' }}</span
-            >
-            <i class="pi pi-arrow-right text-xs!"></i>
-            <span
-              class="font-bold text-gray-900"
-              pTooltip="Stock Final (Después del movimiento)"
-              tooltipPosition="top"
-            >
-              {{ movement.newStock }} {{ movement.product?.unit?.abbreviation || '' }}
-            </span>
-            }
+
+  <!-- Stats Grid -->
+  @if (stats) {
+    <div class="max-w-[1700px] mx-auto px-4 md:px-0 grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8 md:mb-10">
+      <div class="bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
+        <div class="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4">
+          <div class="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 border border-emerald-100 flex-shrink-0">
+            <i class="pi pi-check-circle text-lg md:text-xl"></i>
           </div>
-        </td>
-      </tr>
-    </ng-template>
-    <ng-template #expandedrow let-movement>
-      <tr>
-        <td colspan="10">
-          <section class="py-6">
-            <div class="grid grid-cols-12 px-20 gap-10">
-              <div class="col-span-4 flex items-center gap-2">
-                <div class="w-16 aspect-square rounded-md border border-gray-200 overflow-hidden">
-                  <img
-                    [src]="getProductImageUrl(movement.product?.imageUrl)"
-                    [alt]="movement.product?.name"
-                    class="w-full h-full object-cover"
-                  />
-                </div>
-                <div>
-                  <p class="font-semibold">{{ movement.product?.name }}</p>
-                  <p class="text-sm text-gray-500">SKU: {{ movement.product?.sku }}</p>
-                  <p class="text-sm text-gray-500">
-                    Código de barras: {{ movement.product?.barcode }}
-                  </p>
-                </div>
-              </div>
+          <div class="min-w-0">
+            <p class="text-[10px] md:text-sm font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Completados</p>
+            <p class="text-xl md:text-2xl font-black text-slate-900 leading-none">{{ stats.completed || 0 }}</p>
+          </div>
+        </div>
+      </div>
 
-              <div class="col-span-3 flex flex-col justify-center">
-                @if (movement.referenceId && movement.referenceNumber) {
-                <p>
-                  <span class="font-semibold">Referencia: </span>
-                  <a
-                    class="text-blue-600 hover:underline"
-                    href="/sales/new-order?id={{ movement.referenceId }}"
-                  >
-                    {{ movement.referenceNumber }}
-                  </a>
-                </p>
-                }
-                <p>
-                  <span class="font-semibold">Fecha y hora: </span>
-                  {{ movement.movementDate | date : 'dd/MM/yyyy HH:mm' }}
-                </p>
-                <p>
-                  <span class="font-semibold">Usuario: </span>
-                  {{ movement.createdBy?.name ?? 'Sistema' }}
-                </p>
-                <p>
-                  <span class="font-semibold">Sucursal: </span>
-                  {{ movement.branch?.name ?? 'N/A' }}
-                </p>
-                <p>
-                  <span class="font-semibold">Estado: </span>
-                  @if (movement.status === 'pending') {
-                  <span class="text-gray-500 italic">{{
-                    movement.status | inventoryMovementStatus
-                  }}</span>
-                  } @else {
-                  <p-tag
-                    [severity]="getStatusSeverity(movement.status)"
-                    [value]="movement.status | inventoryMovementStatus"
-                    [icon]="getStatusIcon(movement.status)"
-                  />
-                  }
-                </p>
-              </div>
+      <div class="bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
+        <div class="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4">
+          <div class="w-10 h-10 md:w-12 md:h-12 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600 border border-amber-100 flex-shrink-0">
+            <i class="pi pi-clock text-lg md:text-xl"></i>
+          </div>
+          <div class="min-w-0">
+            <p class="text-[10px] md:text-sm font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Pendientes</p>
+            <p class="text-xl md:text-2xl font-black text-slate-900 leading-none">{{ stats.pending || 0 }}</p>
+          </div>
+        </div>
+      </div>
 
-              <div class="col-span-3 flex flex-col justify-center">
-                @if (movement.previousStock !== null && movement.newStock !== null) {
-                <p>
-                  <span class="font-semibold">Stock Inicial:</span>
-                  {{ movement.previousStock }} {{ movement.product?.unit?.abbreviation || '' }}
-                </p>
-                <p>
-                  <span class="font-semibold">Stock Final:</span>
-                  {{ movement.newStock }} {{ movement.product?.unit?.abbreviation || '' }}
-                </p>
-                }
-                <p>
-                  <span class="font-semibold">Concepto:</span>
-                  {{ movement.concept | inventoryMovementConcept }}
-                </p>
-                <p>
-                  <span class="font-semibold">Motivo:</span>
-                  {{ movement.notes || 'Sin descripción' }}
-                </p>
-              </div>
+      <div class="bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
+        <div class="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4">
+          <div class="w-10 h-10 md:w-12 md:h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 border border-blue-100 flex-shrink-0">
+            <i class="pi pi-sync text-lg md:text-xl"></i>
+          </div>
+          <div class="min-w-0">
+            <p class="text-[10px] md:text-sm font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Traslados</p>
+            <p class="text-xl md:text-2xl font-black text-slate-900 leading-none">{{ (stats.countByType?.TRANSFER_IN || 0) + (stats.countByType?.TRANSFER_OUT || 0) }}</p>
+          </div>
+        </div>
+      </div>
 
-              @if (movement.status === 'cancelled') {
-              <div class="col-span-3 flex flex-col justify-center border-l border-gray-200 pl-8">
-                <span class="font-semibold mb-3 text-red-600">Detalles de Cancelación</span>
-                <p class="text-sm">
-                  <span class="font-semibold">Cancelado por: </span>
-                  {{ movement.cancelledBy?.name ?? 'Sistema' }}
-                </p>
-                <p class="text-sm">
-                  <span class="font-semibold">Fecha: </span>
-                  {{ movement.cancelledAt | date : 'dd/MM/yyyy HH:mm' }}
-                </p>
-                <p class="text-sm">
-                  <span class="font-semibold">Razón: </span>
-                  {{ movement.cancellationReason || 'No especificada' }}
-                </p>
-              </div>
+      <div class="bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
+        <div class="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4">
+          <div class="w-10 h-10 md:w-12 md:h-12 bg-rose-50 rounded-xl flex items-center justify-center text-rose-600 border border-rose-100 flex-shrink-0">
+            <i class="pi pi-times-circle text-lg md:text-xl"></i>
+          </div>
+          <div class="min-w-0">
+            <p class="text-[10px] md:text-sm font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Cancelados</p>
+            <p class="text-xl md:text-2xl font-black text-slate-900 leading-none">{{ stats.cancelled || 0 }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+  <div class="max-w-[1700px] mx-auto">
+    <p-table
+      #inventoryMovementsDataTable
+      [value]="inventoryMovements"
+      [loading]="loading"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 15, 20, 25, 50]"
+      [globalFilterFields]="['name', 'sku', 'barcode']"
+      dataKey="id"
+      styleClass="p-datatable-sm rounded-none md:rounded-2xl overflow-hidden border-x-0 md:border-x border-slate-200 shadow-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr class="h-14 bg-slate-50 hidden lg:table-row">
+          <th style="width: 4rem"></th>
+          <th class="text-[11px] font-black uppercase text-slate-500 tracking-wider">Fecha y hora</th>
+          <th class="text-[11px] font-black uppercase text-slate-500 tracking-wider">Usuario</th>
+          <th class="text-[11px] font-black uppercase text-slate-500 tracking-wider">Producto</th>
+          <th class="text-[11px] font-black uppercase text-slate-500 tracking-wider">Cantidad</th>
+          <th class="text-[11px] font-black uppercase text-slate-500 tracking-wider">Sucursal</th>
+          <th class="text-[11px] font-black uppercase text-slate-500 tracking-wider">Tipo</th>
+          <th class="text-[11px] font-black uppercase text-slate-500 tracking-wider">Concepto</th>
+          <th class="text-[11px] font-black uppercase text-slate-500 tracking-wider">Estado</th>
+          <th class="text-[11px] font-black uppercase text-slate-500 tracking-wider">Evolución</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-movement let-expanded="expanded">
+        <!-- Desktop Row -->
+        <tr class="hidden lg:table-row group">
+          <td>
+            <p-button
+              type="button"
+              pRipple
+              [pRowToggler]="movement"
+              [text]="true"
+              severity="secondary"
+              [rounded]="true"
+              [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+              styleClass="!w-8 !h-8"
+            />
+          </td>
+          <td class="text-sm font-medium text-slate-600">{{ movement.movementDate | date : 'dd/MM/yyyy HH:mm' }}</td>
+          <td class="text-sm font-semibold text-slate-700">{{ movement.createdBy?.name ?? 'Sistema' }}</td>
+          <td class="text-sm font-bold text-indigo-600">{{ movement.product?.name }}</td>
+          <td class="text-sm font-black text-slate-900">{{ movement.quantity }} <small class="text-slate-400">{{ movement.product?.unit?.abbreviation || '' }}</small></td>
+          <td class="text-sm font-medium text-slate-600">{{ movement.branch?.name }}</td>
+          <td>
+            <p-tag
+              [severity]="getSeverity(movement.type)"
+              [value]="movement.type | inventoryMovementType"
+              [icon]="getIcon(movement.type)"
+              styleClass="text-[9px] uppercase font-black"
+            />
+          </td>
+          <td>
+            <p-tag
+              [severity]="getConceptSeverity(movement.concept)"
+              [value]="movement.concept | inventoryMovementConcept"
+              [icon]="getConceptIcon(movement.concept)"
+              styleClass="text-[9px] uppercase font-black"
+            />
+          </td>
+          <td>
+            @if (movement.status === 'pending') {
+              <span class="text-[10px] font-black uppercase text-amber-500 bg-amber-50 px-2 py-1 rounded-full border border-amber-200">Pendiente</span>
+            } @else {
+              <p-tag
+                [severity]="getStatusSeverity(movement.status)"
+                [value]="movement.status | inventoryMovementStatus"
+                [icon]="getStatusIcon(movement.status)"
+                styleClass="text-[9px] uppercase font-black"
+              />
+            }
+          </td>
+          <td>
+            <div class="flex gap-2 items-center">
+              @if (movement.status === 'pending' || movement.previousStock === null || movement.newStock === null) {
+                <span class="text-slate-300 font-bold text-[10px]">N/A</span>
+              } @else {
+                <span class="text-slate-400 font-bold text-[10px] line-through">{{ movement.previousStock }}</span>
+                <i class="pi pi-arrow-right text-[8px] text-slate-300"></i>
+                <span class="font-black text-slate-900 text-xs">{{ movement.newStock }}</span>
               }
             </div>
-            @if (movement.status === 'pending') {
-            <div class="w-full px-20">
-              <hr class="w-full border-gray-200 my-4" />
-              <div class="flex gap-4">
-                <p-button
-                  label="Confirmar Movimiento"
-                  icon="pi pi-check"
-                  severity="success"
-                  [raised]="true"
-                  (onClick)="confirmComplete(movement)"
-                />
-                <p-button
-                  label="Cancelar Movimiento"
-                  icon="pi pi-times"
-                  severity="danger"
-                  variant="outlined"
-                  (onClick)="openCancelDialog(movement)"
-                />
+          </td>
+        </tr>
+
+        <!-- Mobile Layout -->
+        <tr class="lg:hidden border-b border-slate-100 block px-4 py-4 bg-white active:bg-slate-50" [pRowToggler]="movement">
+          <td class="block p-0 border-none">
+            <div class="flex gap-4">
+              <!-- Movement Avatar/Icon -->
+              <div class="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0" [class]="getSeverityClass(movement.type)">
+                <i [class]="getIcon(movement.type) + ' text-xl'"></i>
+              </div>
+
+              <!-- Content Row -->
+              <div class="flex-1 min-w-0">
+                <div class="flex justify-between items-start mb-1">
+                  <div class="flex flex-col min-w-0">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
+                      {{ movement.movementDate | date : 'dd/MM HH:mm' }} • {{ movement.branch?.name }}
+                    </span>
+                    <h4 class="text-base font-bold text-slate-900 truncate">{{ movement.product?.name }}</h4>
+                  </div>
+                  <div class="flex flex-col items-end flex-shrink-0">
+                    <span class="text-lg font-black text-slate-900 leading-none" [class]="movement.quantity > 0 ? 'text-emerald-600' : 'text-rose-600'">
+                      {{ movement.quantity > 0 ? '+' : '' }}{{ movement.quantity }}
+                    </span>
+                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{{ movement.product?.unit?.abbreviation }}</span>
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 mt-2">
+                  <span class="text-[8px] font-black uppercase px-2 py-0.5 rounded-full" [class]="getConceptClass(movement.concept)">
+                    {{ movement.concept | inventoryMovementConcept }}
+                  </span>
+                  @if (movement.status === 'pending') {
+                    <span class="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-100">Pendiente</span>
+                  } @else if (movement.status === 'completed') {
+                    <span class="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">Completado</span>
+                  } @else {
+                    <span class="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-100">Cancelado</span>
+                  }
+                </div>
+              </div>
+
+              <div class="flex items-center text-slate-300">
+                <i [class]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>
               </div>
             </div>
-            }
-          </section>
-        </td>
-      </tr>
-    </ng-template>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="rowexpansion" let-movement>
+        <tr class="bg-slate-50/50">
+          <td colspan="10" class="p-0 border-none">
+            <div class="p-4 md:p-8">
+              <div class="bg-white rounded-2xl md:rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                <!-- Mobile Details Header -->
+                <div class="md:hidden p-4 bg-slate-900 text-white">
+                  <div class="flex items-center gap-3">
+                    <img [src]="getProductImageUrl(movement.product?.imageUrl)" class="w-10 h-10 rounded-lg object-cover border border-white/20" />
+                    <div class="flex-1 min-w-0">
+                      <p class="text-[10px] font-black uppercase text-white/60 leading-none mb-1">Producto</p>
+                      <p class="text-sm font-bold truncate">{{ movement.product?.name }}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-0 md:gap-8 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+                  <!-- Col 1: Product Info (Desktop) -->
+                  <div class="hidden md:flex p-8 flex-col gap-4">
+                    <div class="w-full aspect-video rounded-2xl border border-slate-200 overflow-hidden relative">
+                      <img [src]="getProductImageUrl(movement.product?.imageUrl)" class="w-full h-full object-cover" />
+                      <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                    </div>
+                    <div>
+                      <h4 class="text-lg font-black text-slate-900 leading-tight mb-1">{{ movement.product?.name }}</h4>
+                      <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">SKU: {{ movement.product?.sku }}</p>
+                    </div>
+                  </div>
+
+                  <!-- Col 2: Info Details -->
+                  <div class="p-6 md:p-8 flex flex-col gap-4 md:gap-5 justify-center">
+                    <div class="flex flex-col gap-1">
+                      <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Referencia</span>
+                      <p class="text-sm font-bold text-slate-900">
+                        @if (movement.referenceId && movement.referenceNumber) {
+                          <a class="text-indigo-600 hover:underline" href="/sales/new-order?id={{ movement.referenceId }}">{{ movement.referenceNumber }}</a>
+                        } @else {
+                          <span class="text-slate-400 italic font-medium tracking-normal capitalize">Sin referencia</span>
+                        }
+                      </p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                      <div class="flex flex-col gap-1">
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Usuario</span>
+                        <p class="text-sm font-bold text-slate-900">{{ movement.createdBy?.name ?? 'Sistema' }}</p>
+                      </div>
+                      <div class="flex flex-col gap-1">
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Fecha</span>
+                        <p class="text-sm font-bold text-slate-900">{{ movement.movementDate | date : 'dd/MM HH:mm' }}</p>
+                      </div>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                      <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Motivo</span>
+                      <p class="text-sm font-bold text-slate-900 italic leading-relaxed">"{{ movement.notes || 'Sin descripción adicional' }}"</p>
+                    </div>
+                  </div>
+
+                  <!-- Col 3: Actions & Status -->
+                  <div class="p-6 md:p-8 flex flex-col justify-center gap-6">
+                    @if (movement.status === 'cancelled') {
+                      <div class="bg-rose-50 border border-rose-100 rounded-2xl p-4 md:p-5">
+                        <p class="text-xs font-black text-rose-600 uppercase tracking-widest mb-2 flex items-center gap-2">
+                          <i class="pi pi-ban"></i> Cancelación
+                        </p>
+                        <p class="text-[11px] text-rose-900 font-medium leading-relaxed">
+                          La operación fue rechazada por <strong>{{ movement.cancelledBy?.name ?? 'Sistema' }}</strong> debido a: 
+                          <span class="italic">"{{ movement.cancellationReason || 'Sin razón especificada' }}"</span>
+                        </p>
+                      </div>
+                    } @else if (movement.status === 'pending') {
+                      <div class="flex flex-col gap-3">
+                        <p-button label="Confirmar Operación" icon="pi pi-check" severity="success" (onClick)="confirmComplete(movement)" styleClass="!rounded-xl font-bold w-full h-[44px]" />
+                        <div class="grid grid-cols-2 gap-2">
+                          <p-button label="Editar" icon="pi pi-pencil" severity="info" variant="text" (onClick)="editMovement(movement)" styleClass="!rounded-xl font-bold h-[40px] border border-slate-200!" />
+                          <p-button label="Anular" icon="pi pi-times" severity="danger" variant="text" (onClick)="openCancelDialog(movement)" styleClass="!rounded-xl font-bold h-[40px] border border-slate-200!" />
+                        </div>
+                        <p-button label="Eliminar Permanente" icon="pi pi-trash" severity="danger" variant="text" (onClick)="confirmDelete(movement)" styleClass="!rounded-xl text-[10px]! opacity-50 hover:opacity-100" />
+                      </div>
+                    } @else {
+                      <div class="flex flex-col items-center justify-center py-4 bg-emerald-50/50 rounded-2xl border border-emerald-100 border-dashed">
+                        <i class="pi pi-check-circle text-emerald-500 text-3xl mb-2"></i>
+                        <p class="text-[10px] font-black text-emerald-700 uppercase tracking-widest text-center">Operación Completada</p>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
 
     <ng-template pTemplate="emptymessage">
       <tr>
@@ -286,4 +361,4 @@
       />
     </ng-template>
   </p-dialog>
-</section>
+</div>

@@ -18,7 +18,7 @@ import { PosService } from '../../services/pos.service';
         class="group bg-white rounded-xl p-3 shadow-sm border border-gray-200 hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer flex flex-col h-full active:scale-95"
       >
         <div
-          class="aspect-square bg-gray-100 rounded-lg mb-3 flex items-center justify-center overflow-hidden relative"
+          class="aspect-square bg-gray-50 rounded-lg mb-3 flex items-center justify-center overflow-hidden relative border border-gray-200 text-slate-300"
         >
           <img
             *ngIf="product.imageUrl"
@@ -26,7 +26,7 @@ import { PosService } from '../../services/pos.service';
             alt="{{ product.name }}"
             class="w-full h-full object-cover"
           />
-          <i *ngIf="!product.imageUrl" class="pi pi-box text-3xl text-gray-400"></i>
+          <i *ngIf="!product.imageUrl" class="pi pi-image text-3xl"></i>
 
           <!-- Stock Badge -->
           <span

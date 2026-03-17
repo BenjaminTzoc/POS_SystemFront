@@ -7,10 +7,17 @@ import { TooltipModule } from 'primeng/tooltip';
 import { Router } from '@angular/router';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ConfirmDialog } from 'primeng/confirmdialog';
+import { RippleModule } from 'primeng/ripple';
 import { InventoryTransfersService } from '../services/inventory-transfers.service';
 import { InventoryTransfer, TransferStatus } from '../interfaces/inventory-transfer.interface';
 import { TransferStatusPipe } from '../../shared/pipes/transfer-status.pipe';
 import { environment } from '../../../environments/environment';
+import { FormsModule } from '@angular/forms';
+import { SelectModule } from 'primeng/select';
+import { DatePickerModule } from 'primeng/datepicker';
+import { InputTextModule } from 'primeng/inputtext';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 
 @Component({
   selector: 'app-inventory-transfers',
@@ -23,6 +30,13 @@ import { environment } from '../../../environments/environment';
     TooltipModule,
     ConfirmDialog,
     TransferStatusPipe,
+    RippleModule,
+    FormsModule,
+    SelectModule,
+    DatePickerModule,
+    InputTextModule,
+    IconFieldModule,
+    InputIconModule,
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './inventory-transfers.component.html',
@@ -36,16 +50,91 @@ export class InventoryTransfersComponent implements OnInit {
 
   transfers: InventoryTransfer[] = [];
   loading = false;
+  expandedRows: any = {};
+
+  // Filters
+  searchTerm = '';
+  statusFilter: TransferStatus | null = null;
+  dateRange: Date[] | null = null;
+  
+  statusOptions = [
+    { label: 'Todos los estados', value: null },
+    { label: 'Pendiente', value: 'PENDING' },
+    { label: 'Enviado', value: 'SHIPPED' },
+    { label: 'Recibido', value: 'RECEIVED' },
+    { label: 'Cancelado', value: 'CANCELLED' }
+  ];
 
   ngOnInit(): void {
     this.loadTransfers();
   }
 
+  clearFilters(): void {
+    this.statusFilter = null;
+    this.dateRange = null;
+    this.searchTerm = '';
+    this.loadTransfers();
+  }
+
+  onRowExpand(event: any): void {
+    const transfer = event.data as InventoryTransfer;
+    // Si ya tiene items, no necesitamos volver a cargarlos
+    if (transfer.items && transfer.items.length > 0) return;
+
+    // Cargamos los detalles completos
+    this.transfersService.getTransferById(transfer.id).subscribe({
+      next: (res) => {
+        const fullTransfer = res.data;
+        // Actualizamos el objeto en la lista para que la expansión muestre los datos
+        const index = this.transfers.findIndex((t) => t.id === transfer.id);
+        if (index !== -1) {
+          this.transfers[index] = { ...fullTransfer };
+        }
+      },
+      error: (err) => {
+        console.error('Error loading transfer details:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar los detalles del traslado.',
+        });
+      },
+    });
+  }
+
   loadTransfers(): void {
     this.loading = true;
-    this.transfersService.getTransfers().subscribe({
+    
+    const filters: any = {};
+    if (this.statusFilter) filters.status = this.statusFilter;
+    
+    if (this.dateRange && this.dateRange.length > 0) {
+      if (this.dateRange[0]) {
+        filters.startDate = this.dateRange[0].toISOString().split('T')[0];
+      }
+      if (this.dateRange[1]) {
+        filters.endDate = this.dateRange[1].toISOString().split('T')[0];
+      } else if (this.dateRange[0]) {
+        // Si solo hay una fecha seleccionada, usamos la misma para inicio y fin
+        filters.endDate = filters.startDate;
+      }
+    }
+
+    this.transfersService.getTransfers(filters).subscribe({
       next: (res) => {
-        this.transfers = res.data;
+        let data = res.data;
+        
+        // Búsqueda local por número de traslado si hay searchTerm
+        if (this.searchTerm) {
+          const term = this.searchTerm.toLowerCase();
+          data = data.filter(t => 
+            t.transferNumber.toLowerCase().includes(term) ||
+            t.originBranchName.toLowerCase().includes(term) ||
+            t.destinationBranchName.toLowerCase().includes(term)
+          );
+        }
+        
+        this.transfers = data;
         this.loading = false;
       },
       error: (err) => {

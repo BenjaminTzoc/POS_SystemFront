@@ -1,0 +1,193 @@
+<div class="py-4 px-0 md:px-6 bg-gray-50/30 min-h-screen pb-[100px]">
+  <!-- Header Section -->
+  <div class="max-w-[1700px] mx-auto mb-6 md:mb-8 px-4 md:px-0">
+    <div class="flex flex-col md:flex-row items-stretch md:items-end justify-between gap-4">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
+          Confirmar Recepción
+        </h1>
+        <p class="text-gray-500 mt-1 md:mt-2 text-sm md:text-md">
+          Valide las cantidades físicas recibidas en la sucursal (Logística de Ruta).
+        </p>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <p-button 
+          label="Cancelar" 
+          (onClick)="onCancel()"
+          variant="outlined" 
+          severity="danger" 
+          icon="pi pi-times"
+          styleClass="font-bold border-rose-400! w-full sm:w-auto justify-center"
+          [disabled]="saving()"
+        />
+        <p-button
+          (onClick)="onSave()"
+          label="Confirmar Recepción"
+          severity="primary"
+          styleClass="!rounded-lg w-full sm:w-auto shadow-lg !py-2 font-bold justify-center"
+          [loading]="saving()"
+          icon="pi pi-check"
+          [disabled]="receiveForm.invalid || loading()"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-[1700px] mx-auto px-4 md:px-0" *ngIf="loading()">
+    <div class="bg-white rounded-2xl md:rounded-xl p-8 border border-slate-300 shadow-sm">
+      <p-skeleton width="100%" height="2rem" styleClass="mb-4" />
+      <p-skeleton width="100%" height="15rem" />
+    </div>
+  </div>
+
+  <form [formGroup]="receiveForm" class="max-w-[1700px] mx-auto px-4 md:px-0" *ngIf="!loading() && dispatch()">
+    <div class="grid grid-cols-12 gap-6 md:gap-8">
+      <!-- Left Column: Basic Info -->
+      <div class="col-span-12 lg:col-span-4 flex flex-col gap-6">
+        <div class="px-5 md:px-8 py-6 rounded-2xl md:rounded-xl bg-white border border-slate-300 shadow-sm">
+          
+          <div class="flex flex-col gap-y-4">
+            <!-- Date -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-semibold text-slate-700">
+                Fecha de Despacho
+              </label>
+              <div class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 h-11 flex items-center text-sm font-medium text-slate-700">
+                {{ dispatch()?.date | date:'dd/MM/yyyy' }}
+              </div>
+            </div>
+
+            <!-- Origin Branch (Plant) -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-semibold text-slate-700">
+                Sucursal Origen (Planta)
+              </label>
+              <div class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 h-11 flex items-center text-sm font-medium text-slate-700">
+                {{ dispatch()?.originBranch?.name }}
+              </div>
+            </div>
+
+            <!-- Destination Branch -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-semibold text-slate-700">
+                Sucursal Destino
+              </label>
+              <div class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 h-11 flex items-center text-sm font-medium text-slate-700">
+                {{ dispatch()?.branch?.name }}
+              </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="flex flex-col gap-1.5 pt-2">
+              <label class="text-sm font-semibold text-slate-700">
+                Notas / Observaciones
+              </label>
+              <div class="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 min-h-[100px] text-sm text-slate-600 italic">
+                {{ dispatch()?.notes || 'Sin observaciones generales registradas.' }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Product Items -->
+      <div class="col-span-12 lg:col-span-8 flex flex-col gap-6">
+        <div class="rounded-2xl md:rounded-xl bg-white border border-slate-300 shadow-sm overflow-hidden p-5 md:p-6 flex flex-col -mx-4 md:mx-0">
+          <div class="mb-4">
+            <h3 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+              Productos Recibidos
+            </h3>
+            <div class="text-[11px] md:text-[12px] font-medium text-slate-500 pb-1">
+              Confirmación de recepción física
+            </div>
+          </div>
+
+          <div class="w-full" formArrayName="items">
+            <div class="space-y-4">
+              @for (item of items.controls; track $index) {
+                <div [formGroupName]="$index"
+                  class="flex flex-col p-4 md:p-6 rounded-xl bg-slate-50/30 border border-slate-200 group hover:border-indigo-300 hover:bg-white transition-all">
+                  
+                  <div class="flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-6 w-full">
+                    <!-- Product Display -->
+                    <div class="flex-1 w-full flex flex-col gap-1.5">
+                      <div class="flex items-center justify-between">
+                         <label class="text-sm font-semibold text-slate-700">Producto</label>
+                         <i class="pi text-lg lg:hidden" 
+                            [ngClass]="item.get('receivedQuantity')?.value === item.get('sentQuantity')?.value ? 'pi-check-circle text-emerald-500' : 'pi-exclamation-circle text-amber-500'"
+                         ></i>
+                      </div>
+                      <div class="w-full bg-white border border-slate-200 rounded-xl px-3 flex items-center gap-3 h-[52px]">
+                        <div class="w-10 h-10 rounded-lg overflow-hidden border border-slate-100 shadow-sm bg-slate-50 flex items-center justify-center flex-shrink-0">
+                          @if (item.get('imageUrl')?.value) {
+                            <img 
+                              [src]="getProductImageUrl(item.get('imageUrl')?.value)" 
+                              class="w-full h-full object-cover" />
+                          } @else {
+                            <i class="pi pi-image text-slate-300"></i>
+                          }
+                        </div>
+                        <div class="flex flex-col overflow-hidden">
+                          <span class="font-bold text-sm text-slate-700 truncate leading-none mb-1">{{ item.get('productName')?.value }}</span>
+                          <span class="text-[10px] text-slate-500 font-semibold leading-none">{{ item.get('sku')?.value }}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="w-full lg:w-36 flex lg:flex-col items-center lg:items-start justify-between lg:justify-start gap-1.5 border-t border-slate-100 lg:border-none pt-3 lg:pt-0 mt-1 lg:mt-0">
+                      <!-- Sent Quantity -->
+                      <div class="w-full lg:w-36 flex flex-col gap-1.5 flex-1 lg:flex-none">
+                        <label class="text-xs uppercase tracking-widest text-slate-500 font-bold lg:normal-case lg:tracking-normal lg:text-sm lg:text-slate-700">Cant. Enviada</label>
+                        <div class="w-full bg-slate-100 border border-slate-200 rounded-xl h-11 px-4 flex items-center gap-1 font-semibold text-slate-500">
+                          <span>{{ item.get('sentQuantity')?.value | number:(item.get('allowsDecimals')?.value ? '1.2-4' : '1.0-0') }}</span>
+                          <span class="text-[11px] font-bold">{{ item.get('unitAbbreviation')?.value }}</span>
+                        </div>
+                      </div>
+
+                      <div class="px-4 text-slate-300 lg:hidden">
+                          <i class="pi pi-arrow-right"></i>
+                      </div>
+
+                      <!-- Received Quantity (Input) -->
+                      <div class="w-full lg:w-48 flex flex-col gap-1.5 flex-1 lg:flex-none">
+                        <label class="text-xs uppercase tracking-widest text-slate-500 font-bold lg:normal-case lg:tracking-normal lg:text-sm lg:text-slate-700 text-right lg:text-left">Cant. Recibida</label>
+                        <p-inputnumber
+                          formControlName="receivedQuantity"
+                          [min]="0"
+                          [minFractionDigits]="item.get('allowsDecimals')?.value ? 2 : 0"
+                          [maxFractionDigits]="item.get('allowsDecimals')?.value ? 4 : 0"
+                          [suffix]="' ' + (item.get('unitAbbreviation')?.value || '')"
+                          placeholder="0"
+                          styleClass="w-full"
+                          inputStyleClass="w-full !rounded-xl border-slate-200 h-11 px-4 font-semibold text-indigo-700 transition-all focus:border-indigo-400 focus:shadow-sm"
+                        ></p-inputnumber>
+                      </div>
+                    </div>
+
+                    <!-- Validation Icon -->
+                    <div class="pt-5 hidden lg:flex items-center justify-center">
+                      <i class="pi text-xl" 
+                         [ngClass]="item.get('receivedQuantity')?.value === item.get('sentQuantity')?.value ? 'pi-check-circle text-emerald-500' : 'pi-exclamation-circle text-amber-500'"
+                         [pTooltip]="item.get('receivedQuantity')?.value === item.get('sentQuantity')?.value ? 'La cantidad coincide perfectamente' : 'Existe una diferencia física'"
+                      ></i>
+                    </div>
+                  </div>
+
+                  <!-- Alert if discrepancy -->
+                  @if (item.get('receivedQuantity')?.value !== item.get('sentQuantity')?.value) {
+                    <div class="mt-4 px-4 py-3 bg-amber-50 rounded-lg border border-amber-200 flex items-center gap-3">
+                       <i class="pi pi-info-circle text-amber-700"></i>
+                       <span class="text-xs md:text-sm font-semibold text-amber-800">
+                         Diferencia detectada: {{ (item.get('receivedQuantity')?.value || 0) - (item.get('sentQuantity')?.value || 0) | number:'1.2-4' }} {{ item.get('unitAbbreviation')?.value }}
+                       </span>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>

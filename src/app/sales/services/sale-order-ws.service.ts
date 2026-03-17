@@ -10,5 +10,7 @@ export class SaleOrderWsService {
 
   newSaleCreated$ = this.ws.onNewSaleCreated().pipe(shareReplay(1));
 
+  newSale$ = this.ws.onNewSale().pipe(shareReplay(1));
+
   nextInvoiceNumberUpdated$ = this.ws.onNextInvoiceNumberUpdated().pipe(shareReplay(1));
 }

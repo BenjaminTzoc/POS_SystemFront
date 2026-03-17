@@ -175,7 +175,7 @@ export class InventoryFormComponent implements OnInit {
     const { minStockActivated, maxStockActivated, ...body } = this.inventoryForm.getRawValue();
 
     if (!minStockActivated) body.minStock = null;
-    if (!maxStockActivated) body.minStock = null;
+    if (!maxStockActivated) body.maxStock = null;
 
     if (this.hasInvalidStockRange(body)) {
       this.messageService.add({
@@ -222,10 +222,16 @@ export class InventoryFormComponent implements OnInit {
       message: '¿Estás seguro de cancelar este proceso?',
       header: 'Confirmar cancelación',
       icon: 'pi pi-info-circle',
-      acceptLabel: 'Cancelar proceso',
       rejectLabel: 'Regresar',
-      acceptButtonStyleClass: 'p-button-danger !rounded-2xl',
-      rejectButtonStyleClass: 'p-button-secondary p-button-text !rounded-2xl',
+      rejectButtonProps: {
+        label: 'Regresar',
+        severity: 'secondary',
+        outlined: true,
+      },
+      acceptButtonProps: {
+        label: 'Cancelar proceso',
+        severity: 'danger',
+      },
 
       accept: () => {
         this.router.navigate(['inventory/inventories']);

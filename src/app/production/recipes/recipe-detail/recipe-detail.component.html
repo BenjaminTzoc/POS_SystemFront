@@ -1,0 +1,339 @@
+<div class="py-4 px-0 md:px-8 bg-slate-50/50 min-h-screen pb-[500px]">
+  <!-- Header -->
+  <div class="max-w-6xl mx-auto mb-6 md:mb-8 px-4 md:px-0">
+    <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+      <div class="flex flex-col">
+        <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Estructura de Receta</h1>
+        <p class="text-slate-500 text-sm mt-1">Configure los insumos base para la producción.</p>
+      </div>
+
+      <button
+        pButton
+        label="Regresar al Listado"
+        icon="pi pi-arrow-left"
+        class="p-button-outlined p-button-danger !rounded-xl !px-6 shadow-sm hover:shadow-md transition-all justify-center"
+        (click)="onBack()"
+      ></button>
+    </div>
+  </div>
+
+  <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 px-4 md:px-0">
+    
+    <!-- Left Column: Product Info & Add Ingredient -->
+    <div class="lg:col-span-4 space-y-6">
+      <!-- Product Card -->
+      <div class="bg-white rounded-2xl md:rounded-xl border border-slate-300 p-6 shadow-sm">
+        <h3 class="text-xs font-medium text-slate-500 tracking-wide mb-4">Producto Terminado</h3>
+        <div class="flex flex-col items-center text-center">
+          <div class="w-24 h-24 rounded-2xl border border-slate-300 bg-slate-100 flex items-center justify-center overflow-hidden mb-4">
+            @if (product()?.imageUrl) {
+              <img [src]="getProductImageUrl(product()?.imageUrl)" class="w-full h-full object-cover" />
+            } @else {
+              <i class="pi pi-image text-4xl! text-slate-300"></i>
+            }
+          </div>
+          <span class="text-xl font-bold text-slate-800 leading-tight">{{ product()?.name }}</span>
+          <span class="text-xs font-semibold text-indigo-500 uppercase mt-1">SKU: {{ product()?.sku }}</span>
+          <div class="mt-4 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-[5px] text-[11px] font-semibold tracking-wide">
+            Medido por: {{ product()?.unit?.name }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Ingredient Form -->
+      <div class="bg-indigo-900 rounded-2xl md:rounded-xl p-5 md:p-6 text-white shadow-xl shadow-indigo-100 transition-all">
+        <h3 class="text-xs font-semibold text-indigo-300 uppercase tracking-widest mb-6">
+          {{ editingIngredientId() ? 'Editar Ingrediente' : 'Agregar Ingrediente' }}
+        </h3>
+        
+        <form [formGroup]="ingredientForm" class="space-y-5">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[11px] font-semibold text-indigo-300">Insumo / Componente</label>
+            <p-select
+              formControlName="componentId"
+              [options]="filteredComponents()"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Buscar ingrediente..."
+              [filter]="true"
+              class="w-full"
+              styleClass="!rounded-lg flex items-center"
+              appendTo="body"
+            >
+              <ng-template #item let-p>
+                <div class="flex flex-col">
+                  <span class="font-bold text-xs">{{ p.name }}</span>
+                  <span class="text-[9px] text-slate-400 font-mono">{{ p.sku }}</span>
+                </div>
+              </ng-template>
+            </p-select>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] font-semibold text-indigo-300">Cantidad Sugerida</label>
+              <button 
+                type="button" 
+                pButton 
+                icon="pi pi-calculator" 
+                class="p-button-text p-button-xs !text-indigo-200 !p-0 !h-fit hover:!text-white"
+                pTooltip="Convertidor de unidades"
+                (click)="openConverter()"
+              ></button>
+            </div>
+            <p-inputnumber
+              formControlName="quantity"
+              [min]="getSelectedComponentAllowsDecimals() ? 0.0001 : 1"
+              [minFractionDigits]="getSelectedComponentAllowsDecimals() ? 2 : 0"
+              [maxFractionDigits]="getSelectedComponentAllowsDecimals() ? 4 : 0"
+              [placeholder]="getSelectedComponentAllowsDecimals() ? '0.0000' : '0'"
+              [suffix]="' ' + getSelectedComponentUnit()"
+              styleClass="w-full"
+              inputStyleClass="!rounded-lg px-4"
+            ></p-inputnumber>
+            <p class="text-[10px] text-indigo-200">* Cantidad necesaria por cada {{ product()?.unit?.abbreviation || 'Unidad' }}.</p>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[11px] font-semibold text-indigo-300">Notas Adicionales</label>
+            <input 
+              pInputText 
+              formControlName="notes"
+              class="!rounded-xl px-4"
+              placeholder="Opcional..."
+            />
+          </div>
+
+          <div class="flex flex-col gap-3">
+            <button
+              pButton
+              [label]="editingIngredientId() ? 'Actualizar Ingrediente' : 'Incluir en Receta'"
+              [icon]="editingIngredientId() ? 'pi pi-save' : 'pi pi-plus'"
+              class="p-button-success w-full !rounded-lg !font-bold"
+              (click)="onAddIngredient()"
+              [loading]="adding()"
+            ></button>
+            
+            @if (editingIngredientId()) {
+              <button
+                pButton
+                label="Cancelar Edición"
+                icon="pi pi-times"
+                class="p-button-text p-button-sm p-button-danger w-full !rounded-lg"
+                (click)="onCancelEdit()"
+              ></button>
+            }
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right Column: Ingredients Table -->
+    <div class="lg:col-span-8">
+      <div class="bg-white rounded-2xl md:rounded-xl border border-slate-300 shadow-sm flex flex-col -mx-4 md:mx-0">
+        <div class="p-4 md:p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 rounded-t-2xl md:rounded-t-xl">
+          <div>
+            <h3 class="text-lg font-bold text-slate-800">Capa de Insumos</h3>
+            <p class="text-[11px] md:text-xs text-slate-500/90 leading-tight md:leading-normal mt-0.5">Listado de materiales requeridos para la transformación.</p>
+          </div>
+          <p-tag [value]="ingredients().length + ' Insumos'" severity="info" styleClass="!text-[10px] md:!text-[12px] !px-3 font-semibold"></p-tag>
+        </div>
+
+        <div class="flex-1 w-full overflow-x-auto">
+          <p-table [value]="ingredients()" styleClass="p-datatable-modern block lg:min-w-[700px] w-full" [responsiveLayout]="'scroll'">
+            <ng-template pTemplate="header">
+              <tr class="h-12! text-[12px]! hidden lg:table-row bg-slate-50/50">
+                <th class="!pl-8 tracking-widest text-slate-400 font-bold uppercase">Ingrediente</th>
+                <th class="text-center tracking-widest text-slate-400 font-bold uppercase">Cant. Requerida</th>
+                <th class="tracking-widest text-slate-400 font-bold uppercase">Notas</th>
+                <th class="!pr-8 w-12 text-right"></th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-ing>
+              <tr 
+                [ngClass]="{'!bg-amber-100/50 !border-l-4 !border-l-indigo-500': editingIngredientId() == ing.id}"
+                class="hover:bg-transparent lg:hover:bg-slate-50/50 transition-all border-b border-slate-100 last:border-0 duration-300 block lg:table-row bg-transparent"
+              >
+                <!-- VISTA MÓVIL (Tarjeta) -->
+                <td class="lg:hidden block !p-0 border-none bg-transparent">
+                  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 mx-4 my-3 p-5 flex flex-col gap-4 relative overflow-hidden"
+                       [ngClass]="{'border-indigo-400 bg-amber-50 shadow-md': editingIngredientId() == ing.id}">
+                    @if (editingIngredientId() == ing.id) {
+                       <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500"></div>
+                    }
+                    
+                    <div class="flex items-start justify-between gap-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-lg overflow-hidden border border-slate-300 bg-slate-50 flex items-center justify-center shadow-sm flex-shrink-0">
+                          @if (ing.component?.imageUrl) {
+                            <img [src]="getProductImageUrl(ing.component?.imageUrl)" class="w-full h-full object-cover" />
+                          } @else {
+                            <i class="pi pi-image text-lg! text-slate-300"></i>
+                          }
+                        </div>
+                        <div class="flex flex-col flex-1 min-w-0 pr-2">
+                          <span class="font-bold text-sm text-slate-800 leading-tight">{{ ing.component?.name }}</span>
+                          <span class="text-[10px] text-gray-400 font-mono tracking-widest mt-0.5">{{ ing.component?.sku }}</span>
+                        </div>
+                      </div>
+                      
+                      <!-- Acción Móvil -->
+                      <div class="flex flex-col gap-1 items-end shrink-0 -mt-1 -mr-2">
+                        <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-warn !w-9 !h-9 !p-0" (click)="onEditIngredient(ing)"></button>
+                        <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger !w-9 !h-9 !p-0" (click)="onDeleteIngredient(ing)"></button>
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 border-t border-slate-100/80 pt-3 mt-1">
+                       <div class="flex flex-col gap-1">
+                          <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Cant. Requerida</span>
+                          <span class="text-sm font-bold text-[#1B768E] mt-0.5">
+                            {{ ing.quantity | number: '1.2-4' }}
+                            <span class="text-[11px] font-semibold">{{ ing.component?.unit?.abbreviation }}</span>
+                          </span>
+                       </div>
+                       <div class="flex flex-col gap-1 text-right">
+                          <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Notas</span>
+                          <span class="text-xs text-slate-500 font-medium italic mt-0.5 line-clamp-2" [class.opacity-50]="!ing.notes">{{ ing.notes || 'Ninguna' }}</span>
+                       </div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- DESKTOP VIEW -->
+                <td class="!pl-8 py-4 hidden lg:table-cell">
+                  <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-lg overflow-hidden border border-slate-300 bg-slate-50 flex items-center justify-center shadow-sm">
+                      @if (ing.component?.imageUrl) {
+                        <img [src]="getProductImageUrl(ing.component?.imageUrl)" class="w-full h-full object-cover" />
+                      } @else {
+                        <i class="pi pi-image text-lg! text-slate-300"></i>
+                      }
+                    </div>
+                    <div class="flex flex-col">
+                      <span class="font-semibold text-sm text-slate-700">{{ ing.component?.name }}</span>
+                      <span class="text-[11px] text-gray-500 font-mono">{{ ing.component?.sku }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="text-center hidden lg:table-cell">
+                  <span class="text-base font-semibold text-[#1B768E]">
+                    {{ ing.quantity | number: '1.2-4' }}
+                    <span class="text-[13px] font-semibold text-[#1B768E] ml-0.5">{{ ing.component?.unit?.abbreviation }}</span>
+                  </span>
+                </td>
+                <td class="hidden lg:table-cell">
+                  <span class="text-sm text-slate-500 font-medium italic">{{ ing.notes || 'Ninguna' }}</span>
+                </td>
+                <td class="!pr-8 text-right hidden lg:table-cell">
+                  <div class="flex justify-end gap-1">
+                    <button
+                      pButton
+                      icon="pi pi-pencil"
+                      class="p-button-rounded p-button-text p-button-warn !w-9 !h-9"
+                      (click)="onEditIngredient(ing)"
+                      pTooltip="Editar"
+                    ></button>
+                    <button
+                      pButton
+                      icon="pi pi-trash"
+                      class="p-button-rounded p-button-text p-button-danger !w-9 !h-9"
+                      (click)="onDeleteIngredient(ing)"
+                      pTooltip="Remover"
+                    ></button>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="4" class="py-20 text-center">
+                  <div class="flex flex-col items-center gap-3 opacity-20">
+                    <i class="pi pi-receipt text-5xl"></i>
+                    <span class="text-xs font-black uppercase tracking-widest">Sin ingredientes definidos</span>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+        
+        <div class="p-6 bg-slate-50/50 border-t border-slate-100">
+           <div class="flex items-center gap-3">
+              <div class="w-1 h-10 bg-indigo-500 rounded-full"></div>
+              <p class="text-[12px] text-slate-500 font-medium leading-relaxed">
+                * Las cantidades definidas en esta receta se multiplicarán por la cantidad fabricada en una <b>Orden de Manufactura</b> para calcular el descuento de inventario.
+              </p>
+           </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Diálogo de Conversión de Unidades -->
+<p-dialog 
+  [visible]="showConverter()" 
+  (onHide)="showConverter.set(false)"
+  header="Convertidor de Unidades" 
+  [modal]="true" 
+  [style]="{ width: '400px' }" 
+  [draggable]="false" 
+  [resizable]="false"
+  styleClass="custom-dialog"
+>
+  <div class="flex flex-col gap-6 py-4">
+    <p class="text-[13px] text-slate-500 mb-2">
+      Convierta cualquier unidad a la medida base del componente: 
+      <b class="text-indigo-600 uppercase">{{ getSelectedComponentUnit() }}</b>
+    </p>
+
+    <div class="flex flex-col gap-2">
+      <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Cantidad en otra unidad</label>
+      <p-inputnumber 
+        [ngModel]="convValue()" 
+        (ngModelChange)="convValue.set($event)"
+        [min]="0" 
+        [minFractionDigits]="2" 
+        [maxFractionDigits]="4"
+        placeholder="Ingrese cantidad..."
+        styleClass="w-full"
+        inputStyleClass="w-full !rounded-xl !border-slate-300"
+      ></p-inputnumber>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Unidad de origen</label>
+      <p-select 
+        [ngModel]="convUnit()" 
+        (ngModelChange)="convUnit.set($event)"
+        [options]="getCompatibleConvUnits()" 
+        optionLabel="label" 
+        optionValue="value"
+        placeholder="Seleccione unidad..."
+        styleClass="w-full !rounded-xl !border-slate-300"
+        appendTo="body"
+      ></p-select>
+    </div>
+
+    <div class="pt-4 flex gap-3">
+      <button 
+        pButton 
+        label="Aplicar Conversión" 
+        icon="pi pi-check" 
+        class="flex-1 p-button-success !rounded-xl !py-3 font-bold"
+        (click)="applyConversion()"
+        [disabled]="!convValue() || !convUnit()"
+      ></button>
+      <button 
+        pButton 
+        label="Cerrar" 
+        class="p-button-text p-button-secondary !rounded-xl"
+        (click)="showConverter.set(false)"
+      ></button>
+    </div>
+  </div>
+</p-dialog>

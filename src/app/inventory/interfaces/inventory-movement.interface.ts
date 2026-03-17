@@ -3,17 +3,27 @@ import { Branch } from './branch.interface';
 import { Product } from './product.interface';
 
 export enum MovementType {
-  IN = 'in', // Entrada de stock
-  OUT = 'out', // Salida de stock (ventas, mermas)
-  TRANSFER_OUT = 'transfer_out', // Transferencia entre sucursales (salida)
-  TRANSFER_IN = 'transfer_in', // Transferencia entre sucursales (entrada)
-  ADJUSTMENT = 'adjustment', // Ajuste de inventario
+  IN = 'IN',
+  OUT = 'OUT',
+  TRANSFER_OUT = 'TRANSFER_OUT',
+  TRANSFER_IN = 'TRANSFER_IN',
+  ADJUSTMENT = 'ADJUSTMENT',
+}
+
+export enum MovementConcept {
+  SALE = 'SALE',
+  PURCHASE = 'PURCHASE',
+  TRANSFER = 'TRANSFER',
+  ADJUSTMENT = 'ADJUSTMENT',
+  WASTE = 'WASTE',
+  INITIAL_STOCK = 'INITIAL_STOCK',
+  RETURN = 'RETURN',
 }
 
 export enum MovementStatus {
-  PENDING = 'pending',
-  COMPLETED = 'completed',
-  CANCELLED = 'cancelled',
+  PENDING = 'PENDING',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
 }
 
 export interface InventoryMovement {
@@ -41,5 +51,5 @@ export interface InventoryMovement {
   totalCost?: number;
   previousStock?: number;
   newStock?: number;
-  concept?: string;
+  concept?: MovementConcept;
 }

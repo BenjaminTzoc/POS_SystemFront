@@ -1,4 +1,6 @@
+import { CommonModule } from '@angular/common';
 import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { TooltipModule } from 'primeng/tooltip';
 import {
   FormBuilder,
   FormGroup,
@@ -24,10 +26,10 @@ import { environment } from '../../../../environments/environment';
 import { DialogModule } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { WebsocketService } from '../../services/websocket.service';
-import { Subject, takeUntil } from 'rxjs';
+import { forkJoin, Subject, takeUntil } from 'rxjs';
 import { TagModule } from 'primeng/tag';
 import { ProductsService } from '../../../inventory/services/products.service';
-import { Product } from '../../../inventory/interfaces/product.interface';
+import { Product, ProductType } from '../../../inventory/interfaces/product.interface';
 
 export enum PurchaseStatus {
   PENDING = 'pending',
@@ -39,6 +41,7 @@ export enum PurchaseStatus {
 @Component({
   selector: 'app-purchase-order-form',
   imports: [
+    CommonModule,
     ReactiveFormsModule,
     ButtonModule,
     InputTextModule,
@@ -46,13 +49,13 @@ export enum PurchaseStatus {
     TextareaModule,
     SelectModule,
     CurrencyPipe,
-    DatePipe,
     TableModule,
     DialogModule,
     FormsModule,
     InputNumberModule,
     TagModule,
     Button,
+    TooltipModule,
   ],
   templateUrl: './purchase-order-form.component.html',
   styleUrl: './purchase-order-form.component.css',
@@ -164,7 +167,7 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
 
   initializeForm(): void {
     this.orderForm = this.fb.group({
-      invoiceNumber: [''],
+      invoiceNumber: ['', [Validators.required]],
       date: [new Date()],
       dueDate: [null],
       notes: [''],
@@ -209,7 +212,7 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
   }
 
   loadProducts(): void {
-    this.productsService.getProducts().subscribe({
+    this.productsService.getProducts(undefined, false, undefined, undefined, false).subscribe({
       next: (res) => {
         if (res.statusCode === 200) {
           this.products.set(res.data);
@@ -421,6 +424,10 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
     });
   }
 
+  onBack() {
+    this.router.navigate(['/purchases/orders']);
+  }
+
   onCancelProccess() {
     this.confirmationService.confirm({
       message: '¿Estás seguro de cancelar este proceso?',
@@ -438,7 +445,7 @@ export class PurchaseOrderFormComponent implements OnInit, OnDestroy {
       },
 
       accept: () => {
-        this.router.navigate(['purchases/orders']);
+        this.onBack();
       },
     });
   }

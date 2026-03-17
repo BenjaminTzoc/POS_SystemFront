@@ -10,6 +10,7 @@ import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { TagModule } from 'primeng/tag';
 import { ProductsService } from '../services/products.service';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { AuthService } from '../../auth/auth.service';
@@ -27,6 +28,7 @@ import { AuthService } from '../../auth/auth.service';
     DatePipe,
     FormsModule,
     ToggleSwitchModule,
+    TagModule,
   ],
   templateUrl: './product-categories.component.html',
   styleUrl: './product-categories.component.css',
@@ -65,7 +67,7 @@ export class ProductCategoriesComponent implements OnInit {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: `Error cargando los productos: ${err.error.message}`,
+          detail: `Error cargando las categorías: ${err.error.message}`,
         });
       },
       complete: () => {

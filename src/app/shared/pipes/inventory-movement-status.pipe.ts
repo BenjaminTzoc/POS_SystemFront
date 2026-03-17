@@ -6,11 +6,11 @@ import { Pipe, PipeTransform } from '@angular/core';
 export class InventoryMovementStatusPipe implements PipeTransform {
   transform(status: string): string {
     const statusMap: { [key: string]: string } = {
-      pending: 'Pendiente',
-      completed: 'Completado',
-      cancelled: 'Cancelado',
+      PENDING: 'Pendiente',
+      COMPLETED: 'Completado',
+      CANCELLED: 'Cancelado',
     };
 
-    return statusMap[status] || status;
+    return statusMap[status.toUpperCase()] || status;
   }
 }

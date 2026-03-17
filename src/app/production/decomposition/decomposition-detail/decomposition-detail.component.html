@@ -1,0 +1,198 @@
+<div class="py-4 md:py-6 px-0 md:px-8 bg-slate-50/50 min-h-screen">
+  <!-- Header -->
+  <div class="max-w-7xl mx-auto mb-6 md:mb-8 px-4 md:px-0">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
+      <div class="flex flex-col">
+          <h1 class="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">Detalle de Despiece</h1>
+        <p class="text-slate-500 text-xs md:text-sm mt-1">
+          Visualización detallada de la transformación y distribución de costos.
+        </p>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+        <button
+          pButton
+          label="Regresar"
+          icon="pi pi-arrow-left"
+          class="p-button-secondary p-button-outlined !rounded-lg !px-6 w-full sm:w-auto justify-center !border-2"
+          (click)="onBack()"
+        ></button>
+        <button
+          pButton
+          label="Imprimir"
+          icon="pi pi-print"
+          class="p-button-primary !rounded-lg !px-8 w-full sm:w-auto justify-center shadow-lg shadow-indigo-200"
+          (click)="printDecomposition()"
+        ></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 px-4 md:px-0">
+    
+    <!-- Left Column: Summary and Stats -->
+    <div class="lg:col-span-4 space-y-4">
+      
+      <!-- Entrada Info Card -->
+      <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+        <h3 class="text-sm font-semibold tracking-wide mb-6 flex items-center justify-between">
+          <span class="flex items-center gap-2">
+            Entrada de Insumo
+          </span>
+          <span class="text-[12px] font-medium text-slate-600 bg-slate-50 px-2 py-0.5 rounded border">ID: {{ decomposition()?.id?.slice(0,8) }}</span>
+        </h3>
+
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-14 h-14 rounded-lg border border-slate-300 bg-slate-50 flex items-center justify-center overflow-hidden">
+            @if (decomposition()?.inputProduct?.imageUrl) {
+              <img [src]="getProductImageUrl(decomposition()?.inputProduct?.imageUrl)" class="w-full h-full object-cover" />
+            } @else {
+              <i class="pi pi-box text-2xl text-slate-300"></i>
+            }
+          </div>
+          <div class="flex flex-col">
+            <span class="text-base font-bold text-slate-900 leading-tight">{{ decomposition()?.inputProduct?.name }}</span>
+            <span class="text-[11px] font-mono text-slate-600 uppercase tracking-widest">SKU: {{ decomposition()?.inputProduct?.sku }}</span>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold text-slate-700">
+              <i class="pi pi-hashtag mr-1 text-xs! text-blue-500"></i>
+              Cantidad Procesada
+            </label>
+            <div class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg font-semibold tracking-wide text-slate-800 flex gap-2 items-center">
+              <span>{{ decomposition()?.inputQuantity | number: '1.2-2' }}</span>
+              <span>{{ decomposition()?.inputProduct?.unit?.abbreviation }}</span>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold text-slate-700">
+              <i class="pi pi-wallet mr-1 text-xs! text-blue-500"></i>
+              Costo Total (Materia Prima)
+            </label>
+            <div class="w-full p-2.5 bg-indigo-50/20 border border-slate-300 rounded-lg font-semibold tracking-wide text-indigo-700">
+              {{ decomposition()?.totalCost | currency: 'Q ' }}
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <i class="pi pi-map-marker text-sm! text-blue-500"></i>
+            <span class="text-sm font-medium">Planta: {{ decomposition()?.branch?.name }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resumen Card (The Indigo One from Form) -->
+      <div class="bg-indigo-900 rounded-2xl p-6 text-white shadow-xl shadow-indigo-100">
+        <h3 class="text-[10px] font-bold text-indigo-300 uppercase tracking-widest mb-4">Análisis de Resultados</h3>
+        
+        <div class="flex items-end justify-between mb-2">
+          <div class="flex flex-col">
+            <span class="text-3xl font-bold">100%</span>
+            <span class="text-[11px] font-semibold text-indigo-300 tracking-tighter">Costo Distribuido</span>
+          </div>
+          <div class="flex flex-col items-end">
+            <span class="text-xl font-bold text-emerald-300">{{ getYieldPercentage() | number: '1.1-1' }}%</span>
+            <span class="text-[11px] font-semibold text-indigo-300 tracking-tighter">Rendimiento</span>
+          </div>
+        </div>
+
+        <div class="w-full h-2 bg-indigo-700 rounded-full overflow-hidden border border-white/10">
+          <div 
+            class="h-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]"
+            [style.width.%]="getYieldPercentage()"
+          ></div>
+        </div>
+
+        <p class="mt-4 text-[11px] font-medium text-emerald-300 flex items-center gap-2 bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20">
+          <i class="pi pi-check-circle text-xs!"></i>
+          Costos distribuidos satisfactoriamente.
+        </p>
+
+        <div class="mt-4 pt-4 border-t border-white/10 space-y-4">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="text-white font-semibold">Peso en Cortes:</span>
+              <span class="font-bold text-white">{{ decomposition()?.inputQuantity! - decomposition()?.wasteQuantity! | number: '1.2-2' }} {{ decomposition()?.inputProduct?.unit?.abbreviation }}</span>
+            </div>
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="text-rose-300 font-semibold">Merma Destruida:</span>
+              <span class="font-bold text-rose-300">-{{ decomposition()?.wasteQuantity | number: '1.2-2' }} {{ decomposition()?.inputProduct?.unit?.abbreviation }}</span>
+            </div>
+          </div>
+          
+          <p class="text-[10px] text-indigo-300 leading-tight">
+            * El total del costo base se absorbió entre los {{ decomposition()?.items?.length }} derivados.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Detail Table -->
+    <div class="lg:col-span-8">
+      <div class="bg-white rounded-2xl border border-slate-300 overflow-hidden flex flex-col h-full shadow-sm">
+        <div class="px-6 py-4 bg-slate-50 border-b border-slate-100">
+          <h3 class="text-base font-semibold tracking-wide">Cortes y Productos Resultantes</h3>
+          <p class="text-[12px] text-slate-500 font-medium">Lista de los productos obtenidos del proceso.</p>
+        </div>
+
+        <div class="flex-1 overflow-x-auto w-full">
+          <p-table [value]="decomposition()?.items || []" styleClass="p-datatable-modern block min-w-[700px] w-full">
+            <ng-template pTemplate="header">
+              <tr class="h-12! text-[12px]!">
+                <th class="!pl-6 tracking-widest text-slate-400 min-w-[200px]">Producto Resultante</th>
+                <th class="tracking-widest text-slate-400 text-center w-[140px] min-w-[140px]">Cantidad</th>
+                <th class="tracking-widest text-slate-400 text-center w-[140px] min-w-[140px]">% Costo</th>
+                <th class="tracking-widest text-slate-400 text-right w-[180px] min-w-[180px]">Valor Calculado</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-item>
+              <tr class="hover:bg-slate-50/50 transition-all border-b border-slate-100">
+                <td class="!pl-6 py-4">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg border border-slate-100 bg-slate-50 flex items-center justify-center overflow-hidden shadow-sm">
+                      @if (item.product?.imageUrl) {
+                        <img [src]="getProductImageUrl(item.product.imageUrl)" class="w-full h-full object-cover" />
+                      } @else {
+                        <i class="pi pi-box text-slate-300"></i>
+                      }
+                    </div>
+                    <div class="flex flex-col">
+                      <span class="font-bold text-sm text-slate-700">{{ item.product?.name }}</span>
+                      <div class="flex items-center gap-1.5">
+                        <span class="text-[11px] text-indigo-500 font-semibold">Precio Catálogo:</span>
+                        <span class="text-[11px] text-slate-600 font-bold">{{ item.product?.price | currency: 'Q ' }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td class="text-center">
+                  <span class="text-sm font-medium text-slate-700 tracking-wide">
+                    {{ item.quantity | number: '1.2-2' }}
+                    <span class="text-sm ml-1">{{ item.product?.unit?.abbreviation }}</span>
+                  </span>
+                </td>
+                <td class="text-center">
+                  <span class="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-md text-sm font-semibold tracking-wide border border-indigo-100">
+                    {{ item.costPercentage | number: '1.2-2' }}%
+                  </span>
+                </td>
+                <td class="!pr-6 text-right">
+                  <div class="flex flex-col items-end">
+                    <span class="text-sm font-semibold tracking-wide">{{ item.totalCost | currency: 'Q ' }}</span>
+                    <span class="text-[11px] text-blue-800 font-medium">Precio rec.: {{ item.unitCost | currency: 'Q ' }}</span>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

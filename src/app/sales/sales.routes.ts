@@ -42,4 +42,16 @@ export const SALES_ROUTES: Routes = [
     loadComponent: () =>
       import('./pos/pos-layout/pos-layout.component').then((m) => m.PosLayoutComponent),
   },
+  {
+    path: 'quotations',
+    loadComponent: () =>
+      import('./quotations/quotations.component').then((m) => m.QuotationsComponent),
+  },
+  {
+    path: 'new-quotation',
+    loadComponent: () =>
+      import('./quotations/quotation-form/quotation-form.component').then(
+        (m) => m.QuotationFormComponent,
+      ),
+  },
 ];

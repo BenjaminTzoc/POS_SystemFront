@@ -54,7 +54,6 @@ export class TransferFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadProducts();
     this.loadBranches();
     this.addItem(); // Start with one empty item
   }
@@ -63,10 +62,10 @@ export class TransferFormComponent implements OnInit {
     return this.transferForm.get('items') as FormArray;
   }
 
-  loadProducts() {
-    this.productsService.getProducts().subscribe({
-      next: (res) => (this.products = res.data),
-      error: (err) => this.showError('Error cargando productos', err),
+  loadBranchCatalog(branchId: string) {
+    this.productsService.getBranchCatalog(branchId).subscribe({
+      next: (res) => (this.products = res.data as any[]),
+      error: (err) => this.showError('Error cargando catálogo de sucursal', err),
     });
   }
 
@@ -82,6 +81,7 @@ export class TransferFormComponent implements OnInit {
       productId: [null, [Validators.required]],
       quantity: [1, [Validators.required, Validators.min(0.01)]],
       maxStock: [null], // Helper for UI validation
+      unitAbbreviation: [''], // NEW: For showing the unit
     });
 
     // Watch for product changes to update maxStock (optional but helpful)
@@ -101,17 +101,24 @@ export class TransferFormComponent implements OnInit {
   }
 
   updateItemStock(group: FormGroup, productId: string) {
-    const originBranchId = this.transferForm.get('originBranchId')?.value;
-    if (!originBranchId || !productId) return;
+    if (!productId) return;
 
-    const product = this.products.find((p) => p.id === productId);
-    if (product?.inventories) {
-      const inventory = product.inventories.find((i) => i.branch.id === originBranchId);
-      group.get('maxStock')?.setValue(inventory ? inventory.stock : 0);
+    const product = this.products.find((p: any) => p.id === productId) as any;
+    if (product) {
+        group.get('unitAbbreviation')?.setValue(product.unitAbbreviation || '');
+        group.get('maxStock')?.setValue(product.stock || 0);
     }
   }
 
   onOriginChange() {
+    const originId = this.transferForm.get('originBranchId')?.value;
+    
+    if (originId) {
+      this.loadBranchCatalog(originId);
+    } else {
+      this.products = [];
+    }
+
     // Re-validate all items stock when origin branch changes
     this.items.controls.forEach((group) => {
       const productId = group.get('productId')?.value;
@@ -122,8 +129,7 @@ export class TransferFormComponent implements OnInit {
 
     // Prevent same origin and destination
     if (
-      this.transferForm.get('originBranchId')?.value ===
-      this.transferForm.get('destinationBranchId')?.value
+      originId === this.transferForm.get('destinationBranchId')?.value
     ) {
       this.transferForm.get('destinationBranchId')?.setValue(null);
     }
@@ -178,6 +184,18 @@ export class TransferFormComponent implements OnInit {
 
   onCancel() {
     this.router.navigate(['/inventory/inventory-transfers']);
+  }
+
+  getStockInOrigin(product: any): number {
+    return product.stock || 0;
+  }
+
+  getAvailableProducts(index: number): any[] {
+    const selectedProductIds = this.items.controls
+      .map((control, i) => (i !== index ? control.get('productId')?.value : null))
+      .filter((id) => id !== null);
+
+    return this.products.filter((p) => !selectedProductIds.includes(p.id));
   }
 
   getProductImageUrl(imageUrl?: string): string {

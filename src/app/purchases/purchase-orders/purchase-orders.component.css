@@ -1,0 +1,57 @@
+:host ::ng-deep .p-datatable-modern .p-datatable-thead > tr > th {
+  background: transparent !important;
+  border: none !important;
+}
+
+:host ::ng-deep .p-datatable-modern .p-datatable-tbody > tr {
+  border: none !important;
+  transition: all 0.2s ease;
+}
+
+:host ::ng-deep .p-datatable-modern .p-datatable-tbody > tr > td {
+  border: none !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03) !important;
+}
+
+:host ::ng-deep .p-datatable-modern .p-paginator {
+  background: transparent !important;
+  border: none !important;
+  padding: 1.5rem !important;
+}
+
+:host ::ng-deep .p-datatable-modern .p-datatable-pages .p-datatable-page.p-highlight {
+  background: #6366f1 !important;
+  color: white !important;
+  border-radius: 12px !important;
+}
+
+:host ::ng-deep .custom-dialog .p-dialog-header {
+    background: #f9fafb !important;
+    border-bottom: 1px solid #f3f4f6 !important;
+    padding: 1.5rem 2rem !important;
+}
+
+:host ::ng-deep .custom-dialog .p-dialog-content {
+    padding: 2rem !important;
+}
+
+:host ::ng-deep .custom-dialog .p-dialog-footer {
+    border-top: 1px solid #f3f4f6 !important;
+    padding: 1rem 2rem !important;
+}
+
+:host ::ng-deep .modern-select .p-select {
+    border-radius: 1rem !important;
+    border-color: #e5e7eb !important;
+    padding: 0.25rem 0.5rem !important;
+    transition: all 0.2s ease !important;
+}
+
+:host ::ng-deep .modern-select .p-select:hover {
+    border-color: #6366f1 !important;
+}
+
+:host ::ng-deep .modern-select .p-select.p-focus {
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1) !important;
+    border-color: #6366f1 !important;
+}

@@ -12,7 +12,7 @@ import { Supplier } from '../../interfaces/supplier.interface';
   selector: 'app-supplier-form',
   imports: [ReactiveFormsModule, InputTextModule, ButtonModule, TextareaModule],
   templateUrl: './supplier-form.component.html',
-  styleUrl: './supplier-form.component.css'
+  styleUrl: './supplier-form.component.css',
 })
 export class SupplierFormComponent implements OnInit {
   private fb = inject(FormBuilder);
@@ -22,6 +22,7 @@ export class SupplierFormComponent implements OnInit {
   private supplierService = inject(SuppliersService);
   private route = inject(ActivatedRoute);
 
+  searchingNit = false;
   supplierId: string | null = null;
   selectedSupplier: Supplier | null = null; //SOLO PARA EDICION
   isEditMode: boolean = false;
@@ -42,27 +43,54 @@ export class SupplierFormComponent implements OnInit {
       next: (res) => {
         if (res.statusCode === 200) {
           this.selectedSupplier = res.data;
-          this.supplierForm.get('name')?.setValue(this.selectedSupplier.name);
-          this.supplierForm.get('nit')?.setValue(this.selectedSupplier.nit);
-          this.supplierForm.get('email')?.setValue(this.selectedSupplier.email);
-          this.supplierForm.get('accountNumber')?.setValue(this.selectedSupplier.accountNumber);
-          this.supplierForm.get('address')?.setValue(this.selectedSupplier.address);
-          this.supplierForm.get('contactName')?.setValue(this.selectedSupplier.contactName);
-          this.supplierForm.get('phone')?.setValue(this.selectedSupplier.phone);
-          this.supplierForm.get('notes')?.setValue(this.selectedSupplier.notes);
+          this.supplierForm.patchValue(this.selectedSupplier);
         }
       },
       error: (err) => {
-        this.messageService.add({ 
-          severity: 'error', 
-          summary: 'Error', 
-          detail: `Error creando el proveedor: ${err.error.message}`,
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `No se pudo cargar el proveedor: ${err.error?.message || err.message}`,
         });
       },
-      complete: () => {
+    });
+  }
 
-      }
-    })
+  searchByNit(): void {
+    const nit = this.supplierForm.get('nit')?.value;
+    if (!nit) return;
+
+    this.searchingNit = true;
+    this.supplierService.getSupplierByNit(nit).subscribe({
+      next: (res) => {
+        if (res.statusCode === 200 && res.data) {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Encontrado',
+            detail: 'Se encontró un proveedor con este NIT.',
+          });
+          this.supplierForm.patchValue(res.data);
+        }
+      },
+      error: (err) => {
+        if (err.status === 404) {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'No encontrado',
+            detail: 'No hay proveedores registrados con este NIT.',
+          });
+        } else {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al buscar por NIT.',
+          });
+        }
+      },
+      complete: () => {
+        this.searchingNit = false;
+      },
+    });
   }
 
   initializeForm(): void {
@@ -74,7 +102,7 @@ export class SupplierFormComponent implements OnInit {
       phone: ['', [Validators.required]],
       address: [''],
       accountNumber: [''],
-      notes: ['']
+      notes: [''],
     });
   }
 
@@ -95,7 +123,7 @@ export class SupplierFormComponent implements OnInit {
       },
 
       accept: () => {
-        this.router.navigate(['purchases/suppliers'])
+        this.router.navigate(['purchases/suppliers']);
       },
     });
   }
@@ -106,35 +134,35 @@ export class SupplierFormComponent implements OnInit {
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'Por favor, completa todos los campos requeridos'
+        detail: 'Por favor, completa todos los campos requeridos',
       });
       return;
     }
 
     const body = this.supplierForm.value;
-    const request = !this.isEditMode ? this.supplierService.createSupplier(body) : this.supplierService.editSupplier(this.selectedSupplier!.id, body);
+    const request = !this.isEditMode
+      ? this.supplierService.createSupplier(body)
+      : this.supplierService.editSupplier(this.selectedSupplier!.id, body);
 
     request.subscribe({
       next: (res) => {
         if (this.isEditMode ? res.statusCode === 200 : res.statusCode === 201) {
-          this.messageService.add({ 
-            severity: 'success', 
-            summary: 'Éxito', 
-            detail: `El proveedor se ha ${this.isEditMode ? 'modificado' : 'creado'} correctamente.`
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: `El proveedor se ha ${this.isEditMode ? 'modificado' : 'creado'} correctamente.`,
           });
-          this.router.navigate(['/purchases/suppliers'])
+          this.router.navigate(['/purchases/suppliers']);
         }
       },
       error: (err) => {
-        this.messageService.add({ 
-          severity: 'error', 
-          summary: 'Error', 
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
           detail: `Error ${this.isEditMode ? 'modificando' : 'creando'} el proveedor: ${err.error.message}`,
         });
       },
-      complete: () => {
-        
-      }
-    })
+      complete: () => {},
+    });
   }
 }

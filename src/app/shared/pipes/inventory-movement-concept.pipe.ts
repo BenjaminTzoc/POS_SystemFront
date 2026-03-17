@@ -6,14 +6,15 @@ import { Pipe, PipeTransform } from '@angular/core';
 export class InventoryMovementConceptPipe implements PipeTransform {
   transform(concept: string): string {
     const conceptMap: { [key: string]: string } = {
-      sale: 'Venta',
-      purchase: 'Compra',
-      transfer: 'Transferencia',
-      adjustment: 'Ajuste',
-      waste: 'Merma/Desecho',
-      return: 'Devolución',
+      SALE: 'Venta',
+      PURCHASE: 'Compra',
+      TRANSFER: 'Traslado',
+      ADJUSTMENT: 'Ajuste',
+      WASTE: 'Merma',
+      INITIAL_STOCK: 'Stock Inicial',
+      RETURN: 'Devolución',
     };
 
-    return conceptMap[concept] || concept;
+    return conceptMap[concept.toUpperCase()] || concept;
   }
 }

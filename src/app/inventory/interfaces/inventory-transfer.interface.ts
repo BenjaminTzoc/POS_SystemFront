@@ -1,3 +1,4 @@
+import { User } from '../../core/models/user.model';
 import { Branch } from './branch.interface';
 import { Product } from './product.interface';
 
@@ -8,7 +9,12 @@ export interface InventoryTransferItem {
   transferId?: string;
   productId: string;
   productName?: string;
+  sku: string;
   quantity: number;
+  unitAbbreviation?: string;
+  price: number;
+  subtotal: number;
+  imageUrl?: string;
   product?: Product;
 }
 
@@ -21,10 +27,11 @@ export interface InventoryTransfer {
   transferNumber: string;
   status: TransferStatus;
   notes?: string;
+  totalValue?: number;
   createdBy: string;
   createdAt: string;
   updatedAt: string;
-  items: InventoryTransferItem[];
+  items?: InventoryTransferItem[];
 }
 
 export interface InventoryTransferResponse {

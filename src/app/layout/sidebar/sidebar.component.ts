@@ -160,8 +160,11 @@ export class SidebarComponent implements OnInit, OnDestroy {
   private keepParentOpenOnChildNavigation(): void {
     const currentUrl = this.router.url;
 
+    // Buscar en ambos menús
+    const allMenus = [...this.menuItems, ...RECURRENT_MENU];
+
     // Buscar el padre que contiene la ruta actual en sus hijos
-    const activeParent = this.menuItems.find(
+    const activeParent = allMenus.find(
       (item) =>
         item.children &&
         item.children.some((child: any) => child.route && currentUrl.startsWith(child.route)),
@@ -169,6 +172,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
     if (activeParent) {
       this.activeSubmenu = activeParent.label;
+    } else {
+      this.activeSubmenu = null;
     }
   }
 
