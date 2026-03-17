@@ -8,10 +8,12 @@ const DIST_PATH = path.join(__dirname, 'dist/sistema-pos-frontend/browser');
 
 app.use(express.static(DIST_PATH));
 
-// Manejo de todas las rutas para Angular (SPA)
-app.get('/*', (req, res) => {
+// Manejo de todas las rutas para Angular (SPA) - Compatible con Express 5
+app.get('(.*)', (req, res) => {
     res.sendFile(path.join(DIST_PATH, 'index.html'));
 });
+
+
 
 // Seenode suele usar enviroment variables para el puerto
 const port = process.env.PORT || 8080;
