@@ -8,10 +8,11 @@ const DIST_PATH = path.join(__dirname, 'dist/sistema-pos-frontend/browser');
 
 app.use(express.static(DIST_PATH));
 
-// Manejo de todas las rutas para Angular (SPA) - Compatible con Express 5
-app.get('(.*)', (req, res) => {
+// Manejo de todas las rutas para Angular (SPA) - Compatible con Express 5 (v8 path-to-regexp)
+app.get('/:any*', (req, res) => {
     res.sendFile(path.join(DIST_PATH, 'index.html'));
 });
+
 
 
 
