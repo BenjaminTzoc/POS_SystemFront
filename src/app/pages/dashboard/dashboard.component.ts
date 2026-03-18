@@ -65,7 +65,6 @@ export type PaymentChartOptions = {
     SaleStatusPipe,
     NgApexchartsModule,
     TooltipModule,
-    ProductTrendsWidgetComponent
 ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
@@ -254,7 +253,7 @@ export class DashboardComponent implements OnInit {
     this.loadWeeklyConsolidation();
   }
 
-  get weeklyWeeks(): { week: string, label: string, dateRange: string, startDate: string }[] {
+  get weeklyWeeks(): { week: string, label: string, dateRange: string, shortDateRange: string, startDate: string }[] {
     const data = this.weeklyConsolidation();
     if (data.length === 0) return [];
     
@@ -264,6 +263,7 @@ export class DashboardComponent implements OnInit {
       week: w.week,
       label: `Semana ${index + 1}`,
       dateRange: `${this.formatDate(w.startDate)} al ${this.formatDate(w.endDate)}`,
+      shortDateRange: `${this.formatDate(w.startDate, true)} - ${this.formatDate(w.endDate, true)}`,
       startDate: w.startDate
     }));
   }
@@ -336,14 +336,14 @@ export class DashboardComponent implements OnInit {
     return week ? week.dateRange : '';
   }
 
-  formatDate(dateStr: string | undefined): string {
+  formatDate(dateStr: string | undefined, short: boolean = false): string {
     if (!dateStr) return '';
     // Handle both YYYY-MM-DD and YYYY-MM-DDT00:00:00.000Z
     const cleanDate = dateStr.split('T')[0];
     const parts = cleanDate.split('-');
     if (parts.length !== 3) return dateStr;
     const [year, month, day] = parts;
-    return `${day}/${month}/${year}`;
+    return short ? `${day}/${month}` : `${day}/${month}/${year}`;
   }
 
   printConsolidation() {

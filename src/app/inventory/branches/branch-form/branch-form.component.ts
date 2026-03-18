@@ -7,6 +7,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { CardModule } from 'primeng/card';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { InputMaskModule } from 'primeng/inputmask';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { BranchesService } from '../../services/branches.service';
 
@@ -20,7 +21,8 @@ import { BranchesService } from '../../services/branches.service';
     InputTextModule,
     TextareaModule,
     CardModule,
-    ToggleSwitchModule
+    ToggleSwitchModule,
+    InputMaskModule
   ],
   templateUrl: './branch-form.component.html',
   styleUrl: './branch-form.component.css',

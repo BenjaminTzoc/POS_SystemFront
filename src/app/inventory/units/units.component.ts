@@ -12,6 +12,8 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { UnitsService } from '../services/units.service';
 import { UnitMeasure } from '../interfaces/unit.interface';
 import { AuthService } from '../../auth/auth.service';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 
 @Component({
   selector: 'app-units',
@@ -26,6 +28,8 @@ import { AuthService } from '../../auth/auth.service';
     FormsModule,
     ToggleSwitchModule,
     TagModule,
+    IconFieldModule,
+    InputIconModule
   ],
   templateUrl: './units.component.html',
   styleUrl: './units.component.css',

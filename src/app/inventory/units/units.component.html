@@ -1,44 +1,49 @@
 <div class="py-4 px-0 md:px-6 bg-gray-50/30 min-h-screen">
   <!-- Header Section -->
-  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-6 md:mb-8">
+  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-2 md:mb-8">
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
       <div class="w-full md:max-w-[50%]">
-        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Unidades de Medida</h1>
-        <p class="text-gray-500 mt-1 md:mt-2 text-sm md:text-md">
+        <h1 class="text-2xl md:text-4xl font-semibold text-gray-900 tracking-tight">Unidades de Medida</h1>
+        <p class="hidden md:block text-gray-500 mt-1 md:mt-2 text-sm md:text-md">
            Gestiona las dimensiones y métricas para el control de tus productos.
         </p>
       </div>
-
-      <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto">
-        <div class="group bg-white border border-slate-300 rounded-xl py-1.5 px-3 md:px-4 shadow-sm flex items-center gap-2 md:gap-3 transition-all focus-within:border-indigo-300 focus-within:shadow-md flex-1 md:w-80">
-          <i class="pi pi-search text-gray-400 text-sm"></i>
-          <input
-            pInputText
-            type="text"
-            (input)="unitsDataTable.filterGlobal($event.target.value, 'contains')"
-            class="!border-none !shadow-none !bg-transparent w-full text-sm font-medium"
-            placeholder="Buscar unidad..."
-            autocomplete="off"
-          />
+      <div class="flex items-center gap-2 w-full md:w-auto">
+        <div class="flex-1">
+          <p-iconfield>
+            <p-inputicon class="pi pi-search" />
+            <input 
+              (input)="unitsDesktopTable.filterGlobal($any($event.target).value, 'contains'); unitsMobileTable.filterGlobal($any($event.target).value, 'contains')"
+              type="text" 
+              pInputText 
+              placeholder="Buscar unidad..."
+              autocomplete="off"
+              fluid
+            />
+          </p-iconfield>
         </div>
-
-        <p-button
-          label="Nueva"
+        <p-button 
+          label="Nueva Unidad"
+          severity="info"
           icon="pi pi-plus"
+          class="hidden md:block"
           routerLink="/inventory/new-unit"
-          styleClass="!rounded-xl px-4 md:px-6 shadow-lg font-bold h-[44px] flex-none md:flex-none justify-center"
+        />
+        <p-button 
+          severity="info"
+          icon="pi pi-plus"
+          class="block md:hidden"
+          routerLink="/inventory/new-unit"
         />
       </div>
     </div>
   </div>
-
-  <!-- Main Content Card -->
   <div class="max-w-[1700px] mx-auto">
     <div class="flex mb-4 px-4 md:px-0">
       @if (canViewDeleted) {
         <div class="group bg-white border border-slate-300 rounded-lg py-2 px-4 shadow-sm flex items-center gap-3 transition-all hover:border-indigo-200">
           <div class="flex flex-col">
-            <label for="showDeleted" class="text-xs font-bold text-slate-500 tracking-wide uppercase">Mostrar eliminados</label>
+            <label for="showDeleted" class="text-sm font-semibold text-[#3B5B8A]">Mostrar Eliminados</label>
           </div>
           <p-toggleSwitch
             [(ngModel)]="showDeleted"
@@ -49,9 +54,10 @@
       }
     </div>
 
-    <div class="bg-transparent md:bg-white rounded-none md:rounded-xl md:border md:border-slate-300 overflow-hidden md:shadow-sm">
+    <!-- VISTA ESCRITORIO (Tabla Clásica) -->
+    <div class="hidden lg:block bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm">
       <p-table
-        #unitsDataTable
+        #unitsDesktopTable
         [value]="units"
         [loading]="loading"
         [paginator]="true"
@@ -60,13 +66,13 @@
         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
         [rowsPerPageOptions]="[10, 20, 30]"
         [globalFilterFields]="['name', 'abbreviation', 'description']"
-        styleClass="p-datatable-modern block lg:min-w-full"
-        [responsiveLayout]="'scroll'"
+        dataKey="id"
+        styleClass="p-datatable-modern"
       >
         <ng-template pTemplate="header">
-          <tr class="h-16 hidden lg:table-row bg-slate-50">
+          <tr class="h-18! text-sm! bg-slate-50">
             <th class="!pl-10 tracking-widest text-slate-400 w-[110px]">Estado</th>
-            <th class="tracking-widest text-slate-400" pSortableColumn="name">Nombre <p-sortIcon class="w-2.5 h-2.5 ml-1" field="name" /></th>
+            <th class="tracking-widest text-slate-400" pSortableColumn="name">Unidad <p-sortIcon class="w-3! h-3!" field="name" /></th>
             <th class="tracking-widest text-slate-400 w-[120px]">Abrev.</th>
             <th class="tracking-widest text-slate-400 text-center w-[120px]">Decimales</th>
             <th class="tracking-widest text-slate-400">Descripción</th>
@@ -75,75 +81,9 @@
         </ng-template>
 
         <ng-template pTemplate="body" let-unit>
-          <tr class="group hover:bg-transparent lg:hover:bg-slate-50 transition-all border-b border-slate-100 block lg:table-row bg-transparent last:border-0 lg:h-16"
+          <tr class="group hover:bg-slate-50 transition-all border-b border-slate-100 last:border-0"
               [ngClass]="{ 'opacity-60 grayscale-[0.5]': isDeleted(unit) }">
-            
-            <!-- VISTA MÓVIL (Tarjeta) -->
-            <td class="lg:hidden block !p-0 border-none bg-transparent">
-              <div class="bg-white border-b border-slate-100 p-5 flex flex-col gap-4 relative active:bg-slate-50 transition-colors"
-                   [routerLink]="['/inventory/edit-unit', unit.id]">
-                <div class="flex justify-between items-start gap-4">
-                  <div class="flex items-center gap-4">
-                     <div class="flex items-center justify-center shrink-0">
-                        <code class="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-black border border-indigo-100 uppercase tracking-widest shadow-sm">
-                           {{ unit.abbreviation || 'N/A' }}
-                        </code>
-                     </div>
-                     <div class="flex flex-col min-w-0">
-                        <span class="text-[10px] text-indigo-400 font-bold uppercase tracking-widest leading-none mb-1">Unidad de Medida</span>
-                        <span class="font-bold text-slate-800 text-lg leading-tight truncate">{{ unit.name }}</span>
-                     </div>
-                  </div>
-                  <div class="flex-shrink-0">
-                    @if (isDeleted(unit)) {
-                      <span class="px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 text-[8px] font-black uppercase tracking-widest border border-rose-200">Eliminado</span>
-                    } @else {
-                      <span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[8px] font-black uppercase tracking-widest border border-emerald-200">Activo</span>
-                    }
-                  </div>
-                </div>
-
-                <div class="flex items-center gap-4 border-l-2 border-slate-100 pl-3">
-                   <div class="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
-                      <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Decimales:</span>
-                      <i class="pi font-bold" [ngClass]="unit.allowsDecimals ? 'pi-check text-emerald-500' : 'pi-times text-rose-500'" style="font-size: 0.65rem"></i>
-                   </div>
-                   <p class="text-[11px] font-medium text-slate-400 italic truncate">{{ unit.description || 'Sin descripción adicional' }}</p>
-                </div>
-
-                <!-- Botones Mòvil -->
-                <div class="flex items-center justify-end gap-2 mt-2 pt-4 border-t border-slate-50">
-                  @if (!isDeleted(unit)) {
-                    <p-button
-                      icon="pi pi-pencil"
-                      styleClass="!w-9 !h-9 !rounded-xl !p-0"
-                      severity="warn"
-                      variant="text"
-                      [routerLink]="['/inventory/edit-unit', unit.id]"
-                      (onClick)="$event.stopPropagation()"
-                    />
-                    <p-button
-                      icon="pi pi-trash"
-                      styleClass="!w-9 !h-9 !rounded-xl !p-0"
-                      severity="danger"
-                      variant="text"
-                      (onClick)="deleteUnit(unit.id); $event.stopPropagation()"
-                    />
-                  } @else {
-                    <p-button
-                      label="Restaurar Unidad"
-                      icon="pi pi-refresh"
-                      styleClass="!rounded-xl px-4 py-1.5 text-[10px] font-black uppercase tracking-widest"
-                      severity="success"
-                      (onClick)="restoreUnit(unit.id); $event.stopPropagation()"
-                    />
-                  }
-                </div>
-              </div>
-            </td>
-
-            <!-- DESKTOP VIEW -->
-            <td class="!pl-10 hidden lg:table-cell py-4">
+            <td class="!pl-10 py-4">
               @if (isDeleted(unit)) {
                 <span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-lg bg-rose-50 text-rose-600 border border-rose-300">
                   <span class="w-1.5 h-1.5 rounded-full bg-rose-500 mr-2"></span> Eliminado
@@ -154,17 +94,17 @@
                 </span>
               }
             </td>
-            <td class="hidden lg:table-cell">
+            <td>
               <span class="font-semibold text-gray-700 text-base">{{ unit.name }}</span>
             </td>
-            <td class="hidden lg:table-cell">
+            <td>
               <div class="flex items-center">
                 <code class="px-2 py-1 bg-blue-50 text-blue-600 rounded-md text-sm font-bold border border-blue-200">
                   {{ unit.abbreviation || 'N/A' }}
                 </code>
               </div>
             </td>
-            <td class="text-center hidden lg:table-cell">
+            <td class="text-center">
               <div class="flex justify-center">
                 <div [ngClass]="unit.allowsDecimals ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-rose-50 text-rose-400 border-rose-200'"
                      class="w-7 h-7 rounded-lg flex items-center justify-center transition-all border">
@@ -172,10 +112,10 @@
                 </div>
               </div>
             </td>
-            <td class="hidden lg:table-cell">
+            <td>
               <span class="text-sm text-slate-600">{{ unit.description || 'Sin descripción' }}</span>
             </td>
-            <td class="!pr-10 text-right hidden lg:table-cell">
+            <td class="!pr-10 text-right">
               <div class="flex justify-end gap-1">
                 @if (!isDeleted(unit)) {
                   <button
@@ -209,23 +149,108 @@
           </tr>
         </ng-template>
 
-        <ng-template pTemplate="emptymessage">
+        <ng-template #emptymessage>
           <tr>
-            <td colspan="6" class="text-center !py-24 hidden lg:table-cell">
-              <div class="flex flex-col items-center justify-center gap-3">
-                <i class="pi pi-gauge text-slate-200" style="font-size: 5rem"></i>
+            <td colspan="6" class="text-center !py-32">
+              <div class="flex flex-col items-center justify-center gap-3 w-full h-full">
+                <i class="pi pi-gauge text-gray-200" style="font-size: 5rem"></i>
                 <div class="flex flex-col items-center gap-1">
-                  <p class="text-slate-500 font-bold text-xl">Sin unidades registradas</p>
-                  <p class="text-slate-500 text-sm max-w-xs mx-auto text-center font-medium">No se encontraron unidades de medida registradas.</p>
+                  <p class="text-gray-400 font-bold text-xl">No se encontraron unidades.</p>
+                  <p class="text-gray-400 text-sm">Prueba ajustando los filtros de búsqueda.</p>
                 </div>
               </div>
             </td>
-            <td class="lg:hidden block !p-0 border-none bg-transparent">
-              <div class="bg-white rounded-2xl border border-slate-200 mx-4 my-8 p-10 flex flex-col items-center gap-4 text-center">
-                <i class="pi pi-gauge text-slate-200" style="font-size: 4rem"></i>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <!-- VISTA MÓVIL (Lista de Tarjetas) -->
+    <div class="lg:hidden block">
+      <p-table
+        #unitsMobileTable
+        [value]="units"
+        [loading]="loading"
+        [paginator]="true"
+        [rows]="10"
+        [globalFilterFields]="['name', 'abbreviation', 'description']"
+        dataKey="id"
+        styleClass="p-datatable-modern bg-transparent w-full"
+        [showCurrentPageReport]="false"
+        [tableStyle]="{'table-layout': 'fixed', 'width': '100%'}"
+        [breakpoint]="'0px'"
+      >
+        <ng-template pTemplate="body" let-unit>
+          <tr class="bg-transparent border-none block" [ngClass]="{ 'opacity-60 grayscale-[0.5]': isDeleted(unit) }">
+            <td class="block !p-0 border-none bg-transparent">
+              <div class="bg-white rounded-2xl shadow-sm border border-slate-200 mx-4 my-2.5 flex flex-col overflow-hidden relative">
+                <div class="flex p-4 items-center gap-4">
+                  <div class="flex items-center justify-center shrink-0">
+                    <span class="px-2.5 py-1 bg-[#D0E2F2] text-[#3B5B8A] rounded-lg text-sm font-semibold border border-[#4A7FA7] tracking-widest shadow-sm">
+                        {{ unit.abbreviation || 'N/A' }}
+                    </span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-start gap-1">
+                      <div class="flex flex-col min-w-0">
+                        <span class="text-[10px] text-[#3B5B8A] font-semibold leading-none mb-1">Unidad de Medida</span>
+                        <h3 class="font-semibold text-slate-800 text-lg leading-tight truncate">{{ unit.name }}</h3>
+                      </div>
+                      @if (isDeleted(unit)) {
+                        <p-tag severity="danger" value="Eliminado" styleClass="!text-[10px] !font-semibold px-1.5 py-0.5 rounded-md" />
+                      } @else {
+                        <p-tag value="Activo" styleClass="!text-[10px] !font-semibold px-1.5 py-0.5 rounded-md" />
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <div class="px-4 pb-4 flex flex-col gap-2">
+                  <div class="flex items-center gap-4">
+                     <div class="flex items-center gap-1.5 bg-slate-100 px-2 py-1 rounded-md border border-slate-300">
+                        <span class="text-[10px] text-[#3B5B8A] font-semibold uppercase tracking-wider">Decimales:</span>
+                        <i class="pi font-black!" [ngClass]="unit.allowsDecimals ? 'pi-check text-[#2fd120]' : 'pi-times text-rose-500'" style="font-size: 0.75rem"></i>
+                     </div>
+                     <p class="text-[11px] font-medium text-[#3B5B8A] line-clamp-2 flex-1">{{ unit.description || 'Sin descripción adicional' }}</p>
+                  </div>
+                </div>
+
+                <div class="bg-slate-50/50 border-t border-slate-100 p-2 px-3 flex items-center justify-end">
+                  <div class="flex items-center gap-1">
+                    @if (!isDeleted(unit)) {
+                      <p-button
+                        icon="pi pi-pencil"
+                        styleClass="p-button-text !text-amber-600 hover:!bg-amber-50 !w-9 !h-9 !rounded-lg !p-0"
+                        [routerLink]="['/inventory/edit-unit', unit.id]"
+                      />
+                      <p-button
+                        icon="pi pi-trash"
+                        styleClass="p-button-text !text-rose-600 hover:!bg-rose-50 !w-9 !h-9 !rounded-lg !p-0"
+                        (onClick)="deleteUnit(unit.id)"
+                      />
+                    } @else {
+                      <p-button
+                        label="Restaurar"
+                        icon="pi pi-refresh"
+                        styleClass="p-button-text !text-emerald-500 hover:!bg-emerald-50 text-[10px] font-semibold !py-1 !px-2.5 rounded-lg border border-emerald-100 bg-white shadow-sm"
+                        (onClick)="restoreUnit(unit.id)"
+                      />
+                    }
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template #emptymessage>
+          <tr>
+            <td class="block !p-0 border-none bg-transparent">
+              <div class="bg-white rounded-lg border border-slate-300 mx-4 my-8 p-10 flex flex-col items-center gap-4 text-center">
+                <i class="pi pi-gauge text-[#95abce]" style="font-size: 4rem"></i>
                 <div class="flex flex-col gap-1">
-                  <p class="text-slate-500 font-bold">Sin unidades registradas</p>
-                  <p class="text-slate-400 text-xs">Crea nuevas unidades de inventario.</p>
+                  <p class="text-[#627ca7] font-semibold">No se encontraron unidades</p>
+                  <p class="text-[#627ca7] text-xs">Prueba ajustando los filtros.</p>
                 </div>
               </div>
             </td>

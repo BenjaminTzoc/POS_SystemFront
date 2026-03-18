@@ -3,74 +3,77 @@
   <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-6 md:mb-8">
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
       <div class="w-full md:max-w-[60%]">
-        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
-          {{ isEditMode ? 'Editar Producto' : 'Crear nuevo producto' }}
+        <h1 class="text-2xl md:text-4xl font-semibold text-gray-900 tracking-tight">
+          {{ isEditMode ? 'Editar Producto' : 'Nuevo producto' }}
         </h1>
-        <p class="text-gray-500 mt-1 md:mt-2 text-sm md:text-md">
+        <p class="hidden md:block text-gray-500 mt-1 md:mt-2 text-sm md:text-md">
            Completa la información para {{ isEditMode ? 'actualizar' : 'añadir' }} un producto al catálogo.
         </p>
       </div>
 
       <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto">
-        <p-button 
-          label="Cancelar" 
-          (onClick)="onCancelProccess()" 
-          variant="outlined" 
-          severity="danger" 
-          icon="pi pi-times"
-          styleClass="!rounded-xl px-4 md:px-6 font-bold border-rose-400! h-[44px] flex-1 md:flex-none justify-center"
-        />
-        <p-button
-          (onClick)="onSaveProduct()"
-          [label]="isEditMode ? 'Actualizar Producto' : 'Guardar Producto'"
-          severity="primary"
-          styleClass="!rounded-xl px-4 md:px-6 shadow-lg font-bold h-[44px] flex-1 md:flex-none justify-center"
-          [loading]="isSaving"
-          icon="pi pi-check"
-        />
+        <div class="flex-1">
+          <p-button 
+            label="Cancelar" 
+            variant="outlined" 
+            severity="danger" 
+            (onClick)="onCancelProccess()" 
+            icon="pi pi-times"
+            styleClass="border-rose-400!"
+            fluid
+          />
+        </div>
+        <div class="flex-1">
+          <p-button 
+            [label]="isEditMode ? 'Actualizar' : 'Crear'" 
+            [raised]="true" 
+            severity="info" 
+            (onClick)="onSaveProduct()"
+            icon="pi pi-check"
+            [loading]="isSaving"
+            fluid
+          />
+        </div>
       </div>
     </div>
   </div>
 
   <form class="grid grid-cols-12 gap-0 md:gap-8 max-w-[1700px] mx-auto" [formGroup]="productForm">
-    <!-- Left Column: General & Image -->
     <div class="col-span-12 lg:col-span-7 flex flex-col gap-6 md:gap-8">
-      <div class="p-5 md:p-8 rounded-none md:rounded-2xl bg-white border-y md:border border-slate-300">
+      <div class="p-5 md:p-8 rounded-none md:rounded-lg bg-white border-y md:border border-slate-300">
         @if (!isVariant) {
-          <div class="flex items-start sm:items-center justify-between p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl mb-6 gap-4">
+          <div class="flex items-start sm:items-center justify-between p-4 bg-[#D0E2F2] border border-[#4A7FA7] rounded-lg mb-6 gap-4">
             <div class="flex flex-col flex-1">
-              <span class="font-bold text-sm text-indigo-900 flex items-center gap-2">
-                <i class="pi pi-sitemap text-indigo-500"></i> ¿Es un producto Maestro (Familia)?
+              <span class="font-bold text-sm text-[#3B5B8A] flex items-center gap-2">
+                <i class="pi pi-sitemap text-[#3B5B8A]"></i> ¿Producto Maestro?
               </span>
-              <span class="text-[11px] text-indigo-700/70 leading-tight mt-1">
+              <span class="text-[11px] font-medium text-[#3B5B8A] leading-tight mt-1">
                 Agrupa variantes (ej. tamaños) en una familia. No lleva inventario físico ni precio.
               </span>
             </div>
             <div class="flex-shrink-0 mt-1 sm:mt-0">
-              <p-toggleSwitch formControlName="isMasterProduct"></p-toggleSwitch>
+              <p-toggleSwitch severity="info" formControlName="isMasterProduct"></p-toggleSwitch>
             </div>
           </div>
         }
-
         <div class="flex flex-col gap-y-4">
           @if (isCreatingVariantFromList) {
-            <!-- Mostramos información del padre en modo lectura si es variante forzada -->
-            <div class="flex flex-col gap-2 p-4 bg-slate-50 border border-slate-300 rounded-xl mb-4">
-              <span class="text-xs font-semibold text-slate-500 uppercase tracking-widest px-1">Nueva Variante para:</span>
+            <div class="flex flex-col gap-2 p-4 bg-slate-50 border border-slate-300 rounded-lg mb-4">
+              <span class="text-xs font-semibold text-slate-500 tracking-widest px-1">Nueva variante para:</span>
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
                    <i class="pi pi-sitemap text-indigo-600 text-lg!"></i>
                 </div>
                 <div class="flex flex-col">
                   <span class="font-bold text-indigo-900">{{ parentName }}</span>
-                  <span class="text-[10px] text-slate-500 font-mono uppercase">Master Familia</span>
+                  <span class="text-[10px] text-slate-500 font-mono">Master familia</span>
                 </div>
               </div>
             </div>
           }
 
           <div class="flex flex-col gap-1.5 md:gap-1">
-            <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0" for="name">
+            <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="name">
               <i class="pi pi-tag mr-1 text-xs! text-blue-500"></i>
               Nombre del Producto <span class="text-red-700">*</span>
             </label>
@@ -92,7 +95,7 @@
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="flex flex-col gap-1.5 md:gap-1">
-              <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0" for="sku">
+              <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="sku">
                 <i class="pi pi-hashtag mr-1 text-xs! text-blue-500"></i>
                 SKU
               </label>
@@ -132,7 +135,7 @@
               </p>
             </div>
             <div class="flex flex-col gap-1.5 md:gap-1">
-              <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0" for="barcode">
+              <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="barcode">
                 <i class="pi pi-barcode mr-1 text-xs! text-blue-500"></i>
                 Código de Barras
               </label>
@@ -149,7 +152,7 @@
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="flex flex-col gap-1.5 md:gap-1">
-              <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0" for="type">
+              <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="type">
                 <i class="pi pi-box mr-1 text-xs! text-blue-500"></i>
                 Tipo de Producto <span class="text-red-700">*</span>
               </label>
@@ -165,7 +168,7 @@
               />
             </div>
             <div class="flex flex-col gap-1.5 md:gap-1">
-              <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0" for="category">
+              <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="category">
                 <i class="pi pi-filter mr-1 text-xs! text-blue-500"></i>
                 Categoría
               </label>
@@ -187,7 +190,7 @@
           @if (!productForm.get('isMasterProduct')?.value) {
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
               <div class="flex flex-col gap-1.5 md:gap-1">
-                <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0" for="cost">
+                <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="cost">
                   <i class="pi pi-wallet mr-1 text-xs! text-blue-500"></i>
                   Costo Base
                 </label>
@@ -215,7 +218,7 @@
                 }
               </div>
               <div class="flex flex-col gap-1.5 md:gap-1">
-                <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0" for="price">
+                <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="price">
                   <i class="pi pi-money-bill mr-1 text-xs! text-blue-500"></i>
                   Precio Venta <span class="text-red-700">*</span>
                 </label>
@@ -238,7 +241,7 @@
                 }
               </div>
               <div class="flex flex-col gap-1.5 md:gap-1 col-span-2 md:col-span-1">
-                <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0" for="unit">
+                <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="unit">
                   <i class="pi pi-info-circle mr-1 text-xs! text-blue-500"></i>
                   Unidad <span class="text-red-700">*</span>
                 </label>
@@ -259,7 +262,7 @@
           }
 
           <div class="flex flex-col gap-1.5 md:gap-1">
-            <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0" for="description">
+            <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="description">
               <i class="pi pi-align-left mr-1 text-xs! text-blue-500"></i>
               Descripción
             </label>
@@ -274,7 +277,7 @@
           </div>
         </div>
       </div>
-      <div class="rounded-none md:rounded-2xl bg-white border-y md:border border-slate-300 overflow-hidden">
+      <div class="rounded-none md:rounded-lg bg-white border-y md:border border-slate-300 overflow-hidden">
         @if (!currentImageUrl) {
           <div class="group relative">
             <p-fileUpload
@@ -308,7 +311,7 @@
                 } @else {
                   <div class="flex flex-col items-center gap-4 p-4">
                     <div class="flex items-center justify-between w-full px-2">
-                        <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-wider">{{ uploadedFiles[0].name }}</span>
+                        <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full tracking-wider">{{ uploadedFiles[0].name }}</span>
                         <p-button label="Cambiar" icon="pi pi-pencil" [text]="true" size="small" (onClick)="fileUpload.choose()"></p-button>
                     </div>
                     <div class="relative group/preview w-full max-h-[400px] rounded-xl overflow-hidden border border-slate-100 shadow-sm">
@@ -326,7 +329,7 @@
         @if (currentImageUrl && uploadedFiles.length === 0) {
           <div class="flex flex-col items-center gap-4 p-4">
             <div class="flex items-center justify-between w-full px-2">
-                <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-wider">Imagen Actual</span>
+                <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full tracking-wider">Imagen Actual</span>
                 <p-button label="Cambiar" icon="pi pi-pencil" [text]="true" size="small" (onClick)="changeImage()"></p-button>
             </div>
             <div class="relative group/preview w-full max-h-[400px] rounded-xl overflow-hidden border border-slate-100 shadow-sm">
@@ -340,7 +343,7 @@
       </div>
     </div>
     <div class="col-span-12 lg:col-span-5 flex flex-col gap-6 md:gap-8">
-      <div class="w-full p-5 md:p-8 bg-white border-y md:border border-slate-300 rounded-none md:rounded-2xl shadow-sm">
+      <div class="w-full p-5 md:p-8 bg-white border-y md:border border-slate-300 rounded-none md:rounded-lg shadow-sm">
         <div class="flex flex-col gap-2">
           <label class="text-base font-semibold flex items-center" for="status">
             <i class="pi pi-cog mr-2 text-blue-500"></i>Estado Operativo
@@ -391,10 +394,10 @@
       </div>
 
       <!-- Section for Inventory Management (always visible, disabled if master product) -->
-      <div class="w-full p-5 md:p-8 bg-white border-y md:border border-slate-300 rounded-none md:rounded-2xl shadow-sm">
+      <div class="w-full p-5 md:p-8 bg-white border-y md:border border-slate-300 rounded-none md:rounded-lg shadow-sm">
         <div class="flex flex-col gap-4">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
-              <label class="text-base font-semibold" for="status">¿Gestionar stock?</label>
+              <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="status">¿Gestionar stock?</label>
               <div class="flex gap-4">
                 @for (manage of manageStock; track manage.name) {
                   <div class="flex items-center">
@@ -421,7 +424,7 @@
           @if (!productForm.get('manageStock')?.value) {
             <div class="flex flex-col gap-4">
               <div class="flex items-center justify-between">
-                <label class="text-base font-semibold">Disponibilidad Manual</label>
+                <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]">Disponibilidad Manual</label>
               </div>
               <p class="text-xs text-gray-500 italic">
                 Define la disponibilidad del producto de forma manual cuando no estás llevando un
@@ -451,9 +454,9 @@
           @if (productForm.get('manageStock')?.value) {
             <div class="flex flex-col">
               <div class="flex items-center justify-between mb-4">
-                <label class="text-base font-semibold">Cantidades por Sucursal</label>
+                <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]">Cantidades por Sucursal</label>
                 @if (isEditMode) {
-                  <span class="text-[10px] font-semibold px-2 py-1 bg-amber-50 text-amber-600 rounded-lg uppercase tracking-wider border border-amber-300">
+                  <span class="text-[10px] font-semibold px-2 py-1 bg-amber-50 text-amber-600 rounded-lg tracking-wider border border-amber-300">
                     Solo lectura
                   </span>
                 }
@@ -471,11 +474,11 @@
               <div class="flex flex-col gap-4 mb-2" formArrayName="initialStocks">
                 @for (stock of initialStocks.controls; track stock.get('id')?.value; let i = $index) {
                   <div
-                    class="p-4 md:p-5 rounded-2xl md:rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col gap-4 md:gap-5 transition-all hover:bg-white hover:shadow-xl hover:shadow-gray-200/40 group"
+                    class="p-4 md:p-5 rounded-none md:rounded-lg border border-slate-200 bg-slate-50/50 flex flex-col gap-4 md:gap-5 transition-all hover:bg-white hover:shadow-xl hover:shadow-gray-200/40 group"
                     [formGroupName]="i">
                     <div class="flex items-center justify-between">
                       <div class="flex items-center gap-2">
-                        <span class="text-xs font-bold uppercase tracking-widest">Sucursal {{ i + 1 }}</span>
+                        <span class="text-xs font-semibold tracking-widest text-[#3B5B8A]">Sucursal {{ i + 1 }}</span>
                       </div>
                       @if (!isEditMode) {
                         <p-button
@@ -492,7 +495,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                       <!-- Branch Selection -->
                       <div class="flex flex-col gap-2 py-1 sm:py-3">
-                          <label class="text-xs font-medium text-gray-500 tracking-widest px-1">Sucursal de destino</label>
+                          <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]">Sucursal de destino</label>
                           <p-select
                           [options]="getAvailableBranchesForIndex(i)"
                           optionLabel="name"
@@ -519,7 +522,7 @@
 
                       <!-- Initial Stock Container with Color -->
                       <div class="flex flex-col gap-2 p-3 rounded-lg bg-indigo-50/50 border border-blue-200 transition-colors group-hover:bg-indigo-50">
-                        <label class="text-xs font-medium text-blue-600 tracking-widest px-1">Stock Inicial</label>
+                        <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]">Stock Inicial</label>
                         <p-inputnumber
                           formControlName="quantity"
                           mode="decimal"
@@ -557,7 +560,7 @@
               }
 
               @if (selectedUnit === undefined) {
-                <div class="px-4 py-3 mt-6 rounded-xl bg-amber-50 border border-amber-200 flex items-center gap-3">
+                <div class="px-4 py-3 mt-6 rounded-lg bg-amber-50 border border-amber-200 flex items-center gap-3">
                   <i class="pi pi-exclamation-triangle text-amber-500 text-xl!"></i>
                   <small class="text-amber-700 font-medium"
                     >Debe seleccionar una unidad de medida para configurar el stock.</small

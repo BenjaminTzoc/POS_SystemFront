@@ -12,6 +12,8 @@ import { Branch } from '../interfaces/branch.interface';
 import { AuthService } from '../../auth/auth.service';
 import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 
 @Component({
   selector: 'app-branches',
@@ -24,7 +26,9 @@ import { TagModule } from 'primeng/tag';
     ToggleSwitchModule,
     TooltipModule,
     InputTextModule,
-    TagModule
+    TagModule,
+    IconFieldModule,
+    InputIconModule
   ],
   templateUrl: './branches.component.html',
   styleUrl: './branches.component.css',

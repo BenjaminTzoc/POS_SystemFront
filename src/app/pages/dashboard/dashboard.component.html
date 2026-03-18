@@ -13,55 +13,399 @@
     }
   </section>
 
-  <!-- Stats Grid -->
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 mb-8">
-    <section class="col-span-1 lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div class="relative bg-amber-100 w-full border border-amber-200 rounded-xl px-6 pt-10 pb-8">
-        <div class="absolute right-5 top-5 w-14 aspect-square rounded-full bg-white flex items-center justify-center">
-          <i class="text-lg!" [class]="reportData?.total?.trend === 'up' ? 'text-emerald-500 pi pi-arrow-up-right' : 'text-rose-500 pi pi-arrow-down-left'"></i>
+  <!-- Main Layout Grid (Indicators, Consolidation, Recent Orders) -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 mb-8">
+    <!-- Indicators Section -->
+    <section class="col-span-1 lg:col-span-6 order-1">
+      <div class="grid grid-cols-2 gap-3 sm:gap-4 h-full">
+        <!-- Total Órdenes -->
+        <div class="relative bg-amber-100 w-full border border-amber-200 rounded-xl p-4 sm:px-6 sm:pt-10 sm:pb-8">
+          <div class="absolute right-3 top-3 w-8 h-8 sm:right-5 sm:top-5 sm:w-14 sm:h-14 rounded-full bg-white flex items-center justify-center">
+            <i class="text-xs! sm:text-lg!" [class]="reportData?.total?.trend === 'up' ? 'text-emerald-500 pi pi-arrow-up-right' : 'text-rose-500 pi pi-arrow-down-left'"></i>
+          </div>
+          <p class="font-medium mb-4 sm:mb-8 text-xs sm:text-base">Total Órdenes</p>
+          <p class="font-semibold text-xl sm:text-4xl mb-1 sm:mb-2">
+            {{ reportData?.total?.total || 0 }} 
+            <span class="font-medium text-xs sm:text-base">{{ reportData?.total?.total! === 1 ? 'orden' : 'ordenes' }}</span>
+          </p>
+          <p class="text-[10px] sm:text-sm text-gray-500">{{ reportData?.total?.percentageChange || 0 }}% respecto al día anterior</p>
         </div>
-        <p class="font-medium mb-8">Total Órdenes</p>
-        <p class="font-semibold text-2xl sm:text-4xl mb-2">
-          {{ reportData?.total?.total || 0 }} 
-          <span class="font-medium text-base">{{ reportData?.total?.total! === 1 ? 'orden' : 'ordenes' }}</span>
-        </p>
-        <p class="text-sm text-gray-500">{{ reportData?.total?.percentageChange || 0 }}% respecto al día anterior</p>
-      </div>
-      <div class="relative bg-emerald-100 w-full border border-emerald-200 rounded-xl px-6 pt-10 pb-8">
-        <div class="absolute right-5 top-5 w-14 aspect-square rounded-full bg-white flex items-center justify-center">
-          <i class="text-lg!" [class]="reportData?.pending?.trend === 'up' ? 'text-emerald-500 pi pi-arrow-up-right' : 'text-rose-500 pi pi-arrow-down-left'"></i>
+
+        <!-- Órdenes Pendientes -->
+        <div class="relative bg-emerald-100 w-full border border-emerald-200 rounded-xl p-4 sm:px-6 sm:pt-10 sm:pb-8">
+          <div class="absolute right-3 top-3 w-8 h-8 sm:right-5 sm:top-5 sm:w-14 sm:h-14 rounded-full bg-white flex items-center justify-center">
+            <i class="text-xs! sm:text-lg!" [class]="reportData?.pending?.trend === 'up' ? 'text-emerald-500 pi pi-arrow-up-right' : 'text-rose-500 pi pi-arrow-down-left'"></i>
+          </div>
+          <p class="font-medium mb-4 sm:mb-8 text-xs sm:text-base">Órdenes Pendientes</p>
+          <p class="font-semibold text-xl sm:text-4xl mb-1 sm:mb-2">
+            {{ reportData?.pending?.total || 0 }} 
+            <span class="font-medium text-xs sm:text-base">{{ reportData?.pending?.total! === 1 ? 'orden' : 'ordenes' }}</span>
+          </p>
+          <p class="text-[10px] sm:text-sm text-gray-500">{{ reportData?.pending?.percentageChange || 0 }}% respecto al día anterior</p>
         </div>
-        <p class="font-medium mb-8">Órdenes Pendientes</p>
-        <p class="font-semibold text-2xl sm:text-4xl mb-2">
-          {{ reportData?.pending?.total || 0 }} 
-          <span class="font-medium text-base">{{ reportData?.pending?.total! === 1 ? 'orden' : 'ordenes' }}</span>
-        </p>
-        <p class="text-sm text-gray-500">{{ reportData?.pending?.percentageChange || 0 }}% respecto al día anterior</p>
-      </div>
-      <div class="relative bg-violet-100 w-full border border-violet-200 rounded-xl px-6 pt-10 pb-8">
-        <div class="absolute right-5 top-5 w-14 aspect-square rounded-full bg-white flex items-center justify-center">
-          <i class="text-lg!" [class]="reportData?.completed?.trend === 'up' ? 'text-emerald-500 pi pi-arrow-up-right' : 'text-rose-500 pi pi-arrow-down-left'"></i>
+
+        <!-- Órdenes Completas -->
+        <div class="relative bg-violet-100 w-full border border-violet-200 rounded-xl p-4 sm:px-6 sm:pt-10 sm:pb-8">
+          <div class="absolute right-3 top-3 w-8 h-8 sm:right-5 sm:top-5 sm:w-14 sm:h-14 rounded-full bg-white flex items-center justify-center">
+            <i class="text-xs! sm:text-lg!" [class]="reportData?.completed?.trend === 'up' ? 'text-emerald-500 pi pi-arrow-up-right' : 'text-rose-500 pi pi-arrow-down-left'"></i>
+          </div>
+          <p class="font-medium mb-4 sm:mb-8 text-xs sm:text-base">Órdenes Completas</p>
+          <p class="font-semibold text-xl sm:text-4xl mb-1 sm:mb-2">
+            {{ reportData?.completed?.total || 0 }} 
+            <span class="font-medium text-xs sm:text-base">{{ reportData?.completed?.total! === 1 ? 'orden' : 'ordenes' }}</span>
+          </p>
+          <p class="text-[10px] sm:text-sm text-gray-500">{{ reportData?.completed?.percentageChange || 0 }}% respecto al día anterior</p>
         </div>
-        <p class="font-medium mb-8">Órdenes Completas</p>
-        <p class="font-semibold text-2xl sm:text-4xl mb-2">
-          {{ reportData?.completed?.total || 0 }} 
-          <span class="font-medium text-base">{{ reportData?.completed?.total! === 1 ? 'orden' : 'ordenes' }}</span>
-        </p>
-        <p class="text-sm text-gray-500">{{ reportData?.completed?.percentageChange || 0 }}% respecto al día anterior</p>
-      </div>
-      <div class="relative bg-blue-100 w-full border border-blue-200 rounded-xl px-6 pt-10 pb-8">
-        <div class="absolute right-5 top-5 w-14 aspect-square rounded-full bg-white flex items-center justify-center">
-          <i class="text-lg! text-blue-500 pi pi-box"></i>
+
+        <!-- Total Productos -->
+        <div class="relative bg-blue-100 w-full border border-blue-200 rounded-xl p-4 sm:px-6 sm:pt-10 sm:pb-8">
+          <div class="absolute right-3 top-3 w-8 h-8 sm:right-5 sm:top-5 sm:w-14 sm:h-14 rounded-full bg-white flex items-center justify-center">
+            <i class="text-xs! sm:text-blue-500 pi pi-box"></i>
+          </div>
+          <p class="font-medium mb-4 sm:mb-8 text-xs sm:text-base">Total Productos</p>
+          <p class="font-semibold text-xl sm:text-4xl mb-1 sm:mb-2">
+            {{ reportData?.products?.total || 0 }} 
+            <span class="font-medium text-xs sm:text-base">{{ reportData?.products?.total! === 1 ? 'producto' : 'productos' }}</span>
+          </p>
+          <p class="text-[10px] sm:text-sm text-gray-500">{{ reportData?.products?.newToday || 0 }} nuevos productos</p>
         </div>
-        <p class="font-medium mb-8">Total Productos</p>
-        <p class="font-semibold text-2xl sm:text-4xl mb-2">
-          {{ reportData?.products?.total || 0 }} 
-          <span class="font-medium text-base">{{ reportData?.products?.total! === 1 ? 'producto' : 'productos' }}</span>
-        </p>
-        <p class="text-sm text-gray-500">{{ reportData?.products?.newToday || 0 }} nuevos productos</p>
       </div>
     </section>
-    <section class="col-span-1 lg:col-span-6">
+
+    <!-- Consolidation Section (Inserted here for Mobile Order) -->
+    <div class="col-span-1 lg:col-span-12 order-2 lg:order-3 no-print">
+      <div class="bg-white p-4 sm:p-8 rounded-xl border border-slate-300 relative overflow-hidden">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-5 relative z-10 gap-2">
+          <div>
+            <div class="flex items-center gap-3">
+              @if (viewMode() === 'detailed') {
+                <button 
+                  pButton 
+                  icon="pi pi-arrow-left" 
+                  class="p-button-text p-button-rounded p-button-sm text-slate-500 hover:bg-slate-100"
+                  (click)="backToGeneralView()"
+                  pTooltip="Volver al Consolidado General"
+                ></button>
+              }
+              <h3 class="text-lg font-semibold tracking-tight">
+                {{ viewMode() === 'general' ? 'Consolidado Semanal' : 'Desglose Detallado de la Semana' }}
+              </h3>
+            </div>
+            <p class="hidden sm:block text-slate-500 text-[13px] mt-1">
+              @if (viewMode() === 'general') {
+                Matriz comparativa de rendimiento operativo entre sucursales.
+              } @else {
+                Análisis profundo por {{ detailTab() === 'products' ? 'Producto' : 'Cliente' }} para el periodo 
+                <span class="font-bold text-[#1B768E]">
+                  {{ getSelectedWeekDateRange() }}
+                </span>
+              }
+            </p>
+          </div>
+          
+          <div class="flex flex-col xl:flex-row items-stretch xl:items-center gap-4 w-full xl:w-auto">
+            @if (viewMode() === 'detailed') {
+              <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
+                @if (canFilterByBranch) {
+                  <p-select 
+                    [options]="branches" 
+                    [(ngModel)]="detailBranchId" 
+                    optionLabel="name" 
+                    optionValue="id" 
+                    placeholder="Todas las sucursales" 
+                    [showClear]="true"
+                    (onChange)="loadDetailedConsolidation()"
+                    styleClass="p-select-sm w-full sm:w-48"
+                    appendTo="body"
+                    [fluid]="true"
+                  >
+                    <ng-template pTemplate="selectedItem" let-selectedOption>
+                      <div class="flex items-center gap-2">
+                        <i class="pi pi-map-marker text-indigo-500"></i>
+                        <span>{{ selectedOption.name }}</span>
+                      </div>
+                    </ng-template>
+                    <ng-template pTemplate="item" let-option>
+                      <div class="flex items-center gap-2">
+                        <i class="pi pi-map-marker text-slate-400"></i>
+                        <span>{{ option.name }}</span>
+                      </div>
+                    </ng-template>
+                  </p-select>
+                }
+                <div class="flex items-center bg-slate-100/80 p-1 rounded-xl border border-slate-200 w-full sm:w-auto">
+                  <button 
+                    class="flex-1 sm:flex-none px-4 py-2 sm:py-1.5 rounded-lg text-xs font-bold transition-all"
+                    [class.bg-white]="detailTab() === 'products'"
+                    [class.shadow-sm]="detailTab() === 'products'"
+                    [class.text-[#1B768E]]="detailTab() === 'products'"
+                    [class.text-slate-500]="detailTab() !== 'products'"
+                    (click)="detailTab.set('products'); onDetailTabChange()"
+                  >Productos</button>
+                  <button 
+                    class="flex-1 sm:flex-none px-4 py-2 sm:py-1.5 rounded-lg text-xs font-bold transition-all"
+                    [class.bg-white]="detailTab() === 'customers'"
+                    [class.shadow-sm]="detailTab() === 'customers'"
+                    [class.text-[#1B768E]]="detailTab() === 'customers'"
+                    [class.text-slate-500]="detailTab() !== 'customers'"
+                    (click)="detailTab.set('customers'); onDetailTabChange()"
+                  >Clientes</button>
+                </div>
+              </div>
+            } @else {
+            <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2">
+                <p-datepicker 
+                  [ngModel]="weeklyDate()" 
+                  (ngModelChange)="weeklyDate.set($event)"
+                  view="month" 
+                  dateFormat="mm/yy" 
+                  placeholder="Seleccionar Mes/Año" 
+                  [showIcon]="true" 
+                  appendTo="body"
+                  (onMonthChange)="onWeeklyMonthChange($event)"
+                  (onSelect)="onWeeklyMonthChange($event)"
+                  [readonlyInput]="true"
+                  styleClass="p-datepicker-sm"
+                  fluid
+                ></p-datepicker>
+              </div>
+
+              <!-- Botón Imprimir (Integrado con filtros) -->
+              <button 
+                pButton 
+                icon="pi pi-print" 
+                class="p-button-outlined p-button-secondary !rounded-full sm:!rounded-xl font-bold w-10 h-10 sm:w-auto sm:h-[42px] flex items-center justify-center shrink-0"
+                (click)="printConsolidation()"
+                pTooltip="Imprimir Consolidado"
+              >
+                <span class="hidden sm:inline ml-2">Imprimir</span>
+              </button>
+            </div>
+            }
+          </div>
+        </div>
+
+        <div class="relative z-10">
+          <!-- Desktop View: Table (Unchanged) -->
+          <div class="hidden lg:block overflow-x-auto rounded-xl border border-slate-200">
+            @if (viewMode() === 'general') {
+              <table class="w-full text-left border-collapse table-fixed min-w-[1000px]">
+                <thead>
+                  <tr class="bg-slate-50/80 border-b border-slate-200">
+                    <th class="w-54 p-4 text-sm text-[#1B768E] font-semibold tracking-widest sticky left-0 bg-[#f4fcff] z-20">Sucursal</th>
+                    @for (week of weeklyWeeks; track week.week) {
+                      <th 
+                        class="p-4 text-[#1B768E] bg-[#f4fcff] font-semibold tracking-widest text-center border-l border-slate-200 cursor-pointer hover:bg-indigo-50 transition-all group/header"
+                        (click)="selectWeekForDetail(week.startDate)"
+                        pTooltip="Ver desempeño de productos y clientes"
+                        tooltipPosition="top"
+                      >
+                        <div class="text-sm group-hover/header:text-indigo-700 transition-colors uppercase tracking-wider">{{ week.label }}</div>
+                        <div class="text-[10px] font-bold opacity-60 group-hover/header:opacity-100 flex items-center justify-center">
+                          {{ week.dateRange }}
+                        </div>
+                      </th>
+                    }
+                    <th class="w-40 p-4 text-[11px] font-bold text-[#1B768E] uppercase tracking-widest text-center border-l border-slate-200 bg-[#f4fcff]">
+                      Total Acumulado
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (branch of weeklyConsolidation(); track branch.branchId) {
+                    <tr class="border-b border-slate-100 hover:bg-[#fff0f2] transition-colors group">
+                      <td class="p-4 font-semibold text-[#374375] bg-[#f3f5ff] sticky left-0 group-hover:bg-[#fff0f2] z-10">
+                        {{ branch.branchName }}
+                      </td>
+                      @for (week of weeklyWeeks; track week.week) {
+                        @let data = getWeekData(branch, week.week);
+                        <td class="p-4 border-l border-slate-100 text-center transition-all">
+                          @if (data) {
+                            <div class="flex flex-col items-center gap-1 group/cell">
+                              <div class="flex items-center gap-1">
+                                <span class="text-sm font-semibold tracking-wide">{{ data.total | currency:'GTQ' }}</span>
+                                @let trend = getWeekTrend(branch, week.week);
+                                @if (trend === 'up') {
+                                  <i class="pi pi-arrow-up-right text-[10px]! text-emerald-500 font-bold"></i>
+                                } @else if (trend === 'down') {
+                                  <i class="pi pi-arrow-down-left text-[10px]! text-rose-500 font-bold"></i>
+                                }
+                              </div>
+                              <div class="flex flex-col gap-0.5 pt-1 w-full items-center">
+                                <div class="flex items-center gap-1.5 cursor-help" pTooltip="Clientes atendidos" tooltipPosition="top">
+                                  <i class="pi pi-users text-[#3951b1] text-[8px]"></i>
+                                  <span class="text-[10px] font-bold text-[#3951b1] tracking-tight">{{ data.count }} Clientes</span>
+                                </div>
+                              </div>
+                            </div>
+                          } @else {
+                            <span class="text-slate-300 text-[10px] font-bold">—</span>
+                          }
+                        </td>
+                      }
+                      <td class="p-4 border-l border-slate-100 text-center bg-indigo-50/20">
+                        <span class="text-md font-semibold text-[#1B768E] tracking-wide">{{ branch.totalRevenue | currency:'GTQ' }}</span>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            } @else {
+              <!-- Detailed Desktop View -->
+              <table class="w-full text-left border-collapse min-w-[1200px]">
+                <thead>
+                  <tr class="bg-slate-50/80 border-b border-slate-200">
+                    <th class="w-72 p-4 text-sm text-[#1B768E] font-semibold tracking-widest sticky left-0 bg-[#f4fcff] z-20">
+                      {{ detailTab() === 'products' ? 'Producto' : 'Cliente' }}
+                    </th>
+                    @for (day of weekDays; track day) {
+                      <th class="p-4 text-sm text-[#1B768E] bg-[#f4fcff] font-semibold tracking-widest text-center border-l border-slate-200">
+                        {{ day }}
+                      </th>
+                    }
+                    <th class="w-40 p-4 text-[11px] font-bold text-[#1B768E] uppercase tracking-widest text-center border-l border-slate-200 bg-[#f3f5ff]">
+                      Total Semanal
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @let items = detailTab() === 'products' ? productsConsolidation() : customersConsolidation();
+                  @for (item of items; track ($any(item).sku || $any(item).id)) {
+                    <tr class="border-b border-slate-100 hover:bg-[#fff0f2] transition-colors group">
+                      <td class="p-4 font-semibold text-[#374375] bg-[#f3f5ff] sticky left-0 group-hover:bg-[#fff0f2] z-10">
+                        <div class="flex flex-col">
+                          <span class="text-sm">{{ item.name }}</span>
+                          @if ($any(item).sku) {
+                            <span class="text-[10px] text-slate-400 font-bold uppercase">{{ $any(item).sku }}</span>
+                          }
+                        </div>
+                      </td>
+                      @for (dayData of item.days; track dayData.day) {
+                        <td class="p-4 border-l border-slate-100 text-center">
+                          <span class="text-sm font-semibold tracking-wide" [class.text-slate-300]="dayData.total === 0">
+                            {{ dayData.total > 0 ? (dayData.total | currency:'GTQ') : '—' }}
+                          </span>
+                        </td>
+                      }
+                      <td class="p-4 border-l border-slate-100 text-center bg-indigo-50/20">
+                        <span class="text-md font-bold text-[#1B768E] tracking-tighter">{{ item.total | currency:'GTQ' }}</span>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          </div>
+
+          <!-- Mobile View: Premium Compact Cards -->
+          <div class="lg:hidden space-y-3">
+            @if (viewMode() === 'general') {
+              @for (branch of weeklyConsolidation(); track branch.branchId) {
+                <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm active:bg-slate-50 transition-colors">
+                  <div class="flex justify-between items-center mb-3 border-b border-slate-50 pb-2">
+                    <div class="flex items-center gap-2">
+                      <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-sm">
+                        <i class="pi pi-map-marker text-xs"></i>
+                      </div>
+                      <span class="font-bold text-slate-800 tracking-tight">{{ branch.branchName }}</span>
+                    </div>
+                    <div class="text-right">
+                      <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Total Semana</p>
+                      <p class="text-sm font-black text-indigo-600 tabular-nums">{{ branch.totalRevenue | currency:'GTQ' }}</p>
+                    </div>
+                  </div>
+
+                  <div class="flex overflow-x-auto gap-3 pb-2 scrollbar-hide snap-x -mx-1 px-1">
+                    @for (week of weeklyWeeks; track week.week) {
+                      @let data = getWeekData(branch, week.week);
+                      <div 
+                        class="min-w-[150px] flex-shrink-0 snap-start p-2.5 bg-slate-50/50 rounded-lg border border-slate-100 cursor-pointer active:scale-95 transition-all"
+                        (click)="selectWeekForDetail(week.startDate)"
+                      >
+                        <div class="flex justify-between items-start mb-0.5">
+                          <div class="flex flex-col">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase leading-tight">{{ week.label }}</span>
+                            <span class="text-[9px] font-bold text-indigo-400 tracking-tighter">{{ week.shortDateRange }}</span>
+                          </div>
+                          @let trend = getWeekTrend(branch, week.week);
+                          <div class="mt-0.5">
+                            @if (trend === 'up') {
+                              <i class="pi pi-arrow-up-right text-[8px] text-emerald-500 font-bold"></i>
+                            } @else if (trend === 'down') {
+                              <i class="pi pi-arrow-down-left text-[8px] text-rose-500 font-bold"></i>
+                            }
+                          </div>
+                        </div>
+                        <p class="text-[12px] font-black text-slate-700">
+                          {{ data ? (data.total | currency:'GTQ') : '—' }}
+                        </p>
+                        @if (data) {
+                          <p class="text-[9px] text-slate-500 font-bold">
+                            {{ data.count }} Clientes
+                          </p>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            } @else {
+              <!-- Detailed Mobile View: More Compact Cards -->
+              <!-- Detailed Mobile View: Premium Compact Cards -->
+              <div class="flex flex-col gap-3">
+                @let items = detailTab() === 'products' ? productsConsolidation() : customersConsolidation();
+                @for (item of items; track ($any(item).sku || $any(item).id)) {
+                  <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm active:bg-slate-50 transition-colors">
+                    <div class="flex justify-between items-start mb-3">
+                      <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-indigo-600 border border-slate-100 shrink-0">
+                          <i [class]="detailTab() === 'products' ? 'pi pi-box' : 'pi pi-user'" class="text-sm"></i>
+                        </div>
+                        <div class="flex flex-col min-w-0">
+                          <span class="text-[13px] font-bold text-slate-800 leading-tight truncate">{{ item.name }}</span>
+                          @if ($any(item).sku) {
+                            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{{ $any(item).sku }}</span>
+                          }
+                        </div>
+                      </div>
+                      <div class="text-right ml-2 leading-none">
+                        <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Total Semanal</p>
+                        <p class="text-[14px] font-black text-indigo-600 tabular-nums">{{ item.total | currency:'GTQ' }}</p>
+                      </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-50">
+                      @for (dayData of item.days; track dayData.day) {
+                        @if (dayData.total > 0) {
+                          <div class="flex flex-col px-2 py-1.5 bg-slate-50/80 rounded-lg border border-slate-100/50">
+                            <span class="text-[8px] font-bold text-indigo-500 uppercase tracking-tighter">{{ weekDays[$index] }}</span>
+                            <span class="text-[10px] font-black text-slate-700 mt-0.5">{{ dayData.total | currency:'Q' }}</span>
+                          </div>
+                        }
+                      }
+                    </div>
+                  </div>
+                } @empty {
+                  <div class="flex flex-col items-center justify-center py-16 px-6 bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400">
+                    <div class="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 shadow-sm border border-slate-100">
+                      <i class="pi pi-search text-2xl opacity-40"></i>
+                    </div>
+                    <p class="text-sm font-bold uppercase tracking-widest text-[#1B768E] text-center">No hay registros</p>
+                    <p class="text-[11px] text-center mt-2 text-slate-400 leading-relaxed max-w-[200px]">
+                      No se encontraron datos para {{ detailTab() === 'products' ? 'productos' : 'clientes' }} en esta semana.
+                    </p>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Orders Section -->
+    <section class="col-span-1 lg:col-span-6 order-3 lg:order-2">
       <div class="p-6 bg-white rounded-xl border border-slate-300 h-full">
         <p class="text-lg font-semibold mb-2">Últimas Ordenes de Hoy</p>
         <!-- Desktop Table View -->
@@ -142,7 +486,7 @@
                   <span class="w-1.5 h-1.5 rounded-full animate-pulse"
                     [ngClass]="{
                       'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]': order.status === 'confirmed' || order.status === 'delivered' || order.status === 'ready_for_pickup',
-                      'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]': order.status === 'pending' || order.status === 'preparing' || order.status === 'on_hold',
+                      'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]': order.status === 'pending' || order.status === 'preparing' || order.status === 'on_hold',
                       'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]': order.status === 'cancelled',
                       'bg-slate-500': !['confirmed','delivered','ready_for_pickup','pending','preparing','on_hold','cancelled'].includes(order.status)
                     }"></span>
@@ -380,264 +724,7 @@
       </div>
     </div>
   </div>
-  <!-- Trends Row -->
-  <div class="mb-8">
-    <app-product-trends-widget></app-product-trends-widget>
-  </div>
 
-  <!-- Consolidation Row -->
-  <div class="grid grid-cols-12 gap-8 mb-8 no-print">
-    <div class="col-span-12 bg-white p-8 rounded-xl border border-slate-300 relative overflow-hidden">
-      <!-- Decoración de fondo -->
-      <!-- <div class="absolute -right-20 -top-20 w-64 h-64 bg-emerald-50 rounded-full blur-3xl opacity-50"></div> -->
-      
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 relative z-10 gap-6">
-        <div>
-          <div class="flex items-center gap-3">
-            @if (viewMode() === 'detailed') {
-              <button 
-                pButton 
-                icon="pi pi-arrow-left" 
-                class="p-button-text p-button-rounded p-button-sm text-slate-500 hover:bg-slate-100"
-                (click)="backToGeneralView()"
-                pTooltip="Volver al Consolidado General"
-              ></button>
-            }
-            <h3 class="text-xl font-semibold tracking-tight">
-              {{ viewMode() === 'general' ? 'Consolidado Semanal por Sucursal' : 'Desglose Detallado de la Semana' }}
-            </h3>
-          </div>
-          <p class="text-slate-500 text-[13px] mt-1">
-            @if (viewMode() === 'general') {
-              Matriz comparativa de rendimiento operativo entre sucursales.
-            } @else {
-              Análisis profundo por {{ detailTab() === 'products' ? 'Producto' : 'Cliente' }} para el periodo 
-              <span class="font-bold text-[#1B768E]">
-                {{ getSelectedWeekDateRange() }}
-              </span>
-            }
-          </p>
-        </div>
-        
-        <div class="flex flex-col xl:flex-row items-start xl:items-center gap-4">
-          @if (viewMode() === 'detailed') {
-            <div class="flex items-center gap-3">
-              @if (canFilterByBranch) {
-                <p-select 
-                  [options]="branches" 
-                  [(ngModel)]="detailBranchId" 
-                  optionLabel="name" 
-                  optionValue="id" 
-                  placeholder="Todas las sucursales" 
-                  [showClear]="true"
-                  (onChange)="loadDetailedConsolidation()"
-                  styleClass="p-select-sm w-48"
-                  appendTo="body"
-                >
-                  <ng-template pTemplate="selectedItem" let-selectedOption>
-                    <div class="flex items-center gap-2">
-                      <i class="pi pi-map-marker text-indigo-500"></i>
-                      <span>{{ selectedOption.name }}</span>
-                    </div>
-                  </ng-template>
-                  <ng-template pTemplate="item" let-option>
-                    <div class="flex items-center gap-2">
-                      <i class="pi pi-map-marker text-slate-400"></i>
-                      <span>{{ option.name }}</span>
-                    </div>
-                  </ng-template>
-                </p-select>
-              }
-              <div class="flex items-center bg-slate-100/80 p-1 rounded-xl border border-slate-200">
-                <button 
-                  class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all"
-                  [class.bg-white]="detailTab() === 'products'"
-                  [class.shadow-sm]="detailTab() === 'products'"
-                  [class.text-[#1B768E]]="detailTab() === 'products'"
-                  [class.text-slate-500]="detailTab() !== 'products'"
-                  (click)="detailTab.set('products'); onDetailTabChange()"
-                >Productos</button>
-                <button 
-                  class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all"
-                  [class.bg-white]="detailTab() === 'customers'"
-                  [class.shadow-sm]="detailTab() === 'customers'"
-                  [class.text-[#1B768E]]="detailTab() === 'customers'"
-                  [class.text-slate-500]="detailTab() !== 'customers'"
-                  (click)="detailTab.set('customers'); onDetailTabChange()"
-                >Clientes</button>
-              </div>
-            </div>
-          } @else {
-            <div class="flex items-center gap-2">
-              <p-datepicker 
-                [ngModel]="weeklyDate()" 
-                (ngModelChange)="weeklyDate.set($event)"
-                view="month" 
-                dateFormat="mm/yy" 
-                placeholder="Seleccionar Mes/Año" 
-                [showIcon]="true" 
-                appendTo="body"
-                (onMonthChange)="onWeeklyMonthChange($event)"
-                (onSelect)="onWeeklyMonthChange($event)"
-                styleClass="p-datepicker-sm"
-              ></p-datepicker>
-            </div>
-          }
-          <button 
-            pButton 
-            label="Imprimir" 
-            icon="pi pi-print" 
-            class="p-button-outlined p-button-secondary !rounded-xl font-bold h-[42px]"
-            (click)="printConsolidation()"
-          ></button>
-        </div>
-      </div>
-
-      <div class="relative z-10 overflow-x-auto rounded-xl border border-slate-200">
-        @if (viewMode() === 'general') {
-          <table class="w-full text-left border-collapse table-fixed min-w-[1000px]">
-          <thead>
-            <tr class="bg-slate-50/80 border-b border-slate-200">
-              <th class="w-54 p-4 text-sm text-[#1B768E] font-semibold tracking-widest sticky left-0 bg-[#f4fcff] z-20">Sucursal</th>
-              @for (week of weeklyWeeks; track week.week) {
-                <th 
-                  class="p-4 text-[#1B768E] bg-[#f4fcff] font-semibold tracking-widest text-center border-l border-slate-200 cursor-pointer hover:bg-indigo-50 transition-all group/header"
-                  (click)="selectWeekForDetail(week.startDate)"
-                  pTooltip="Ver desempeño de productos y clientes"
-                  tooltipPosition="top"
-                >
-                  <div class="text-sm group-hover/header:text-indigo-700 transition-colors uppercase tracking-wider">{{ week.label }}</div>
-                  <div class="text-[10px] font-bold opacity-60 group-hover/header:opacity-100 flex items-center justify-center">
-                    {{ week.dateRange }}
-                  </div>
-                </th>
-              }
-              <th class="w-40 p-4 text-[11px] font-bold text-[#1B768E] uppercase tracking-widest text-center border-l border-slate-200 bg-[#f4fcff]">
-                Total Acumulado
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (branch of weeklyConsolidation(); track branch.branchId) {
-              <tr class="border-b border-slate-100 hover:bg-[#fff0f2] transition-colors group">
-                <td class="p-4 font-semibold text-[#374375] bg-[#f3f5ff] sticky left-0 group-hover:bg-[#fff0f2] z-10">
-                  {{ branch.branchName }}
-                </td>
-                @for (week of weeklyWeeks; track week.week) {
-                  @let data = getWeekData(branch, week.week);
-                  <td 
-                    class="p-4 border-l border-slate-100 text-center transition-all"
-                  >
-                    @if (data) {
-                      <div class="flex flex-col items-center gap-1 group/cell">
-                        <div class="flex items-center gap-1">
-                          <span class="text-sm font-semibold tracking-wide">{{ data.total | currency:'GTQ' }}</span>
-                          @let trend = getWeekTrend(branch, week.week);
-                          @if (trend === 'up') {
-                            <i class="pi pi-arrow-up-right text-[10px]! text-emerald-500 font-bold"></i>
-                          } @else if (trend === 'down') {
-                            <i class="pi pi-arrow-down-left text-[10px]! text-rose-500 font-bold"></i>
-                          }
-                        </div>
-                        <div class="flex flex-col gap-0.5 pt-1 w-full items-center">
-                          <div 
-                            class="flex items-center gap-1.5 cursor-help" 
-                            pTooltip="Cantidad total de clientes atendidos durante esta semana" 
-                            tooltipPosition="top" 
-                            [appendTo]="'body'"
-                            tooltipStyleClass="custom-tooltip-small"
-                          >
-                            <i class="pi pi-users text-[#3951b1] text-[8px]"></i>
-                            <span class="text-[10px] font-bold text-[#3951b1] tracking-tight">{{ data.count }} Clientes</span>
-                          </div>
-                          <div 
-                            class="flex items-center gap-1 text-[10px] font-medium cursor-help" 
-                            pTooltip="Gasto promedio por cada cliente durante esta semana" 
-                            tooltipPosition="top" 
-                            [appendTo]="'body'"
-                            tooltipStyleClass="custom-tooltip-small"
-                          >
-                            <span>Prom. venta {{ data.averageTicket | currency:'GTQ' }}</span>
-                          </div>
-                        </div>
-                      </div>
-                    } @else {
-                      <span class="text-slate-300 text-[10px] font-bold">—</span>
-                    }
-                  </td>
-                }
-                <td class="p-4 border-l border-slate-100 text-center bg-indigo-50/20">
-                  <span class="text-md font-semibold text-[#1B768E] tracking-wide">{{ branch.totalRevenue | currency:'GTQ' }}</span>
-                </td>
-              </tr>
-
-            }
-          </tbody>
-          </table>
-        } @else {
-          <!-- Detailed Product/Customer View -->
-          <table class="w-full text-left border-collapse min-w-[1200px]">
-            <thead>
-              <tr class="bg-slate-50/80 border-b border-slate-200">
-                <th class="w-72 p-4 text-sm text-[#1B768E] font-semibold tracking-widest sticky left-0 bg-[#f4fcff] z-20">
-                  {{ detailTab() === 'products' ? 'Producto' : 'Cliente' }}
-                </th>
-                @for (day of weekDays; track day) {
-                  <th class="p-4 text-sm text-[#1B768E] bg-[#f4fcff] font-semibold tracking-widest text-center border-l border-slate-200 w-32">
-                    {{ day }}
-                  </th>
-                }
-                <th class="w-40 p-4 text-[11px] font-bold text-[#1B768E] uppercase tracking-widest text-center border-l border-slate-200 bg-[#f3f5ff]">
-                  Total Semanal
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              @if (loadingDetail()) {
-                <tr>
-                  <td [attr.colspan]="weekDays.length + 2" class="p-20 text-center">
-                    <i class="pi pi-spin pi-spinner text-3xl text-indigo-500 mb-4"></i>
-                    <p class="text-slate-400 font-medium">Cargando desglose detallado...</p>
-                  </td>
-                </tr>
-              } @else {
-                @let items = detailTab() === 'products' ? productsConsolidation() : customersConsolidation();
-                @for (item of items; track ($any(item).sku || $any(item).id)) {
-                  <tr class="border-b border-slate-100 hover:bg-[#fff0f2] transition-colors group">
-                    <td class="p-4 font-semibold text-[#374375] bg-[#f3f5ff] sticky left-0 group-hover:bg-[#fff0f2] z-10 whitespace-normal">
-                      <div class="flex flex-col">
-                        <span class="text-sm">{{ item.name }}</span>
-                        @if ($any(item).sku) {
-                          <span class="text-[10px] text-slate-400 font-bold uppercase">{{ $any(item).sku }}</span>
-                        }
-                      </div>
-                    </td>
-                    @for (dayData of item.days; track dayData.day) {
-                      <td class="p-4 border-l border-slate-100 text-center">
-                        <span class="text-sm font-semibold tracking-wide" [class.text-slate-300]="dayData.total === 0">
-                          {{ dayData.total > 0 ? (dayData.total | currency:'GTQ') : '—' }}
-                        </span>
-                      </td>
-                    }
-                    <td class="p-4 border-l border-slate-100 text-center bg-indigo-50/20">
-                      <span class="text-md font-bold text-[#1B768E] tracking-tighter">{{ item.total | currency:'GTQ' }}</span>
-                    </td>
-                  </tr>
-                }
-                @if (items.length === 0) {
-                  <tr>
-                    <td [attr.colspan]="weekDays.length + 2" class="p-20 text-center text-slate-400">
-                      No se encontraron registros para este periodo.
-                    </td>
-                  </tr>
-                }
-              }
-            </tbody>
-          </table>
-        }
-      </div>
-    </div>
-  </div>
 
   <!-- Print View (Only visible during print) -->
   <div class="print-only hidden p-10">
