@@ -14,9 +14,11 @@ import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { AuthService } from '../../auth/auth.service';
+import { TagModule } from 'primeng/tag';
 
 @Component({
   selector: 'app-customers',
+  standalone: true,
   imports: [
     ButtonModule,
     TableModule,
@@ -29,6 +31,7 @@ import { AuthService } from '../../auth/auth.service';
     TooltipModule,
     IconFieldModule,
     InputIconModule,
+    TagModule,
   ],
   templateUrl: './customers.component.html',
   styleUrl: './customers.component.css',

@@ -83,6 +83,10 @@ export class OrdersService {
     return this.http.post<ApiResponse<ISaleOrderResponse>>(`${this.API_URL}`, body);
   }
 
+  quickSale(body: any): Observable<ApiResponse<ISaleOrderResponse>> {
+    return this.http.post<ApiResponse<ISaleOrderResponse>>(`${this.API_URL}/quick`, body);
+  }
+
   confirmSale(saleId: string): Observable<ApiResponse<ISaleOrderResponse>> {
     return this.http.post<ApiResponse<ISaleOrderResponse>>(`${this.API_URL}/${saleId}/confirm`, {});
   }

@@ -10,6 +10,9 @@ import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { CommonModule } from '@angular/common';
 import { TagModule } from 'primeng/tag';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-suppliers',
@@ -22,6 +25,9 @@ import { TagModule } from 'primeng/tag';
     InputTextModule,
     CommonModule,
     TagModule,
+    IconFieldModule,
+    InputIconModule,
+    TooltipModule,
   ],
   templateUrl: './suppliers.component.html',
   styleUrl: './suppliers.component.css',

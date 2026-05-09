@@ -1,4 +1,4 @@
-<div class="py-4 px-0 md:px-6 bg-gray-50/30 min-h-screen">
+<div class="py-4 px-0 md:px-6 bg-slate-50/50 min-h-screen">
   <!-- Header Section -->
   <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-6 md:mb-8">
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -6,7 +6,7 @@
         <h1 class="text-2xl md:text-4xl font-semibold text-gray-900 tracking-tight">
           {{ isEditMode ? 'Editar Producto' : 'Nuevo producto' }}
         </h1>
-        <p class="hidden md:block text-gray-500 mt-1 md:mt-2 text-sm md:text-md">
+        <p class="hidden md:block text-[#627ca7] mt-1 md:mt-2 text-sm md:text-md font-medium">
            Completa la información para {{ isEditMode ? 'actualizar' : 'añadir' }} un producto al catálogo.
         </p>
       </div>
@@ -19,7 +19,7 @@
             severity="danger" 
             (onClick)="onCancelProccess()" 
             icon="pi pi-times"
-            styleClass="border-rose-400!"
+            styleClass="border-rose-400! h-[44px] justify-center !rounded-lg"
             fluid
           />
         </div>
@@ -27,10 +27,11 @@
           <p-button 
             [label]="isEditMode ? 'Actualizar' : 'Crear'" 
             [raised]="true" 
-            severity="info" 
+            severity="success" 
             (onClick)="onSaveProduct()"
             icon="pi pi-check"
             [loading]="isSaving"
+            styleClass="h-[44px] justify-center !rounded-lg font-bold"
             fluid
           />
         </div>
@@ -82,13 +83,13 @@
               #nameInput
               id="name"
               formControlName="name"
-              class="w-full !rounded-lg"
+              class="w-full !rounded-lg font-medium"
               placeholder="Ej. Puyazo, Lomo de Res, Costilla de Cerdo..."
               autocomplete="off"
             />
             @if (productForm.get('name')?.invalid && productForm.get('name')?.touched) {
-              <small class="text-rose-500 text-xs font-medium flex items-center">
-                <i class="pi pi-exclamation-circle mr-1 text-xs!"></i>Ingrese el nombre del producto.
+              <small class="text-rose-500 text-[10px] font-medium flex items-center mt-1 px-1">
+                <i class="pi pi-exclamation-circle mr-1 text-[11px]!"></i>Ingrese el nombre del producto.
               </small>
             }
           </div>
@@ -392,7 +393,6 @@
           </div>
         </div>
       </div>
-
       <!-- Section for Inventory Management (always visible, disabled if master product) -->
       <div class="w-full p-5 md:p-8 bg-white border-y md:border border-slate-300 rounded-none md:rounded-lg shadow-sm">
         <div class="flex flex-col gap-4">
@@ -451,7 +451,8 @@
               </div>
             </div>
           }
-          @if (productForm.get('manageStock')?.value) {
+
+            @if (productForm.get('manageStock')?.value) {
             <div class="flex flex-col">
               <div class="flex items-center justify-between mb-4">
                 <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]">Cantidades por Sucursal</label>
@@ -471,75 +472,78 @@
                 </p-message>
               }
 
-              <div class="flex flex-col gap-4 mb-2" formArrayName="initialStocks">
+              <div class="flex flex-col gap-3 mb-2" formArrayName="initialStocks">
                 @for (stock of initialStocks.controls; track stock.get('id')?.value; let i = $index) {
                   <div
-                    class="p-4 md:p-5 rounded-none md:rounded-lg border border-slate-200 bg-slate-50/50 flex flex-col gap-4 md:gap-5 transition-all hover:bg-white hover:shadow-xl hover:shadow-gray-200/40 group"
+                    class="p-3 rounded-xl border border-slate-200 bg-slate-50/50 transition-all hover:bg-white hover:shadow-lg hover:shadow-gray-200/30 group"
                     [formGroupName]="i">
-                    <div class="flex items-center justify-between">
-                      <div class="flex items-center gap-2">
-                        <span class="text-xs font-semibold tracking-widest text-[#3B5B8A]">Sucursal {{ i + 1 }}</span>
-                      </div>
-                      @if (!isEditMode) {
-                        <p-button
-                          icon="pi pi-trash"
-                          [text]="true"
-                          severity="danger"
-                          (click)="removeStock(i)"
-                          pTooltip="Eliminar sucursal"
-                          styleClass="!p-0 !h-8 !w-8 hover:!bg-rose-50 !rounded-lg"
-                        ></p-button>
-                      }
-                    </div>
                     
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                      <!-- Branch Selection -->
-                      <div class="flex flex-col gap-2 py-1 sm:py-3">
-                          <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]">Sucursal de destino</label>
-                          <p-select
-                          [options]="getAvailableBranchesForIndex(i)"
-                          optionLabel="name"
-                          optionValue="id"
-                          formControlName="branchId"
-                          placeholder="Seleccionar sucursal..."
-                          styleClass="w-full !bg-white !rounded-lg placeholder:text-xs! order-gray-100"
-                          class="modern-select"
-                          fluid
-                          >
-                            <ng-template #selectedItem let-selectedOption>
-                              <div class="flex items-center gap-2">
-                                <i class="pi pi-building text-indigo-500"></i>
-                                <span class="font-bold text-gray-700">{{ selectedOption.name }}</span>
-                              </div>
-                            </ng-template>
-                          </p-select>
-                          @if (stock.get('branchId')?.invalid && stock.get('branchId')?.touched) {
-                            <small class="text-rose-500 text-[10px] font-medium flex items-center">
-                              <i class="pi pi-exclamation-circle mr-1 text-[10px]!"></i>Seleccione sucursal
-                            </small>
-                          }
-                      </div>
-
-                      <!-- Initial Stock Container with Color -->
-                      <div class="flex flex-col gap-2 p-3 rounded-lg bg-indigo-50/50 border border-blue-200 transition-colors group-hover:bg-indigo-50">
-                        <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]">Stock Inicial</label>
-                        <p-inputnumber
-                          formControlName="quantity"
-                          mode="decimal"
-                          [min]="0"
-                          [minFractionDigits]="selectedUnit?.allowsDecimals ? 2 : 0"
-                          [maxFractionDigits]="selectedUnit?.allowsDecimals ? 2 : 0"
-                          placeholder="0.00"
-                          [suffix]="' ' + (selectedUnit?.abbreviation || '')"
-                          styleClass="w-full !bg-white !rounded-xl !border-transparent group-hover:!border-indigo-100"
-                          fluid
-                        />
-                        @if (stock.get('quantity')?.invalid && stock.get('quantity')?.touched) {
-                          <small class="text-rose-500 text-[10px] font-medium flex items-center">
-                            <i class="pi pi-exclamation-circle mr-1 text-[10px]!"></i>Ingrese stock
-                          </small>
+                    <div class="flex flex-col gap-3">
+                      <!-- Header: Label + Delete -->
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                          <div class="w-6 h-6 rounded-md bg-[#D0E2F2] flex items-center justify-center">
+                            <i class="pi pi-building text-[#3B5B8A] text-[10px]"></i>
+                          </div>
+                          <span class="text-[10px] font-bold tracking-widest text-[#3B5B8A] uppercase">Asignación {{ i + 1 }}</span>
+                        </div>
+                        @if (!isEditMode) {
+                          <p-button
+                            icon="pi pi-times"
+                            [text]="true"
+                            severity="danger"
+                            (click)="removeStock(i)"
+                            pTooltip="Quitar sucursal"
+                            styleClass="!p-0 !h-7 !w-7 hover:!bg-rose-50 !rounded-lg"
+                          ></p-button>
                         }
                       </div>
+
+                      <!-- Inputs Row -->
+                      <div class="flex flex-col sm:flex-row gap-2">
+                        <!-- Branch Selection -->
+                        <div class="flex-1">
+                            <p-select
+                              [options]="getAvailableBranchesForIndex(i)"
+                              optionLabel="name"
+                              optionValue="id"
+                              formControlName="branchId"
+                              placeholder="Sucursal de destino..."
+                              styleClass="w-full !bg-white !rounded-lg !h-[38px] text-xs!"
+                              class="modern-select"
+                              fluid
+                            >
+                              <ng-template #selectedItem let-selectedOption>
+                                <div class="flex items-center gap-2">
+                                  <span class="font-semibold text-gray-700 text-xs truncate">{{ selectedOption.name }}</span>
+                                </div>
+                              </ng-template>
+                            </p-select>
+                        </div>
+
+                        <!-- Quantity -->
+                        <div class="w-full sm:w-[130px]">
+                          <p-inputnumber
+                            formControlName="quantity"
+                            mode="decimal"
+                            [min]="0"
+                            [minFractionDigits]="selectedUnit?.allowsDecimals ? 2 : 0"
+                            [maxFractionDigits]="selectedUnit?.allowsDecimals ? 2 : 0"
+                            [placeholder]="selectedUnit?.allowsDecimals ? '0.00' : '0'"
+                            [suffix]="' ' + (selectedUnit?.abbreviation || '')"
+                            styleClass="w-full !bg-white !rounded-lg"
+                            inputStyleClass="!h-[38px] !text-xs font-bold text-[#3B5B8A] text-center"
+                            fluid
+                          />
+                        </div>
+                      </div>
+
+                      @if ((stock.get('branchId')?.invalid && stock.get('branchId')?.touched) || (stock.get('quantity')?.invalid && stock.get('quantity')?.touched)) {
+                        <div class="flex items-center gap-2 text-rose-500 text-[10px] font-medium px-1">
+                          <i class="pi pi-exclamation-circle text-[10px]!"></i>
+                          <span>Datos requeridos para la asignación</span>
+                        </div>
+                      }
                     </div>
                   </div>
                 }
@@ -569,7 +573,7 @@
               }
             </div>
           }
-        </div>
+      </div>
     </div>
   </form>
 </div>

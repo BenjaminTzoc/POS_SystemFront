@@ -15,11 +15,27 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TooltipModule } from 'primeng/tooltip';
 import { AuthService } from '../../../auth/auth.service';
 import { Router, RouterModule } from '@angular/router';
+import { TagModule } from 'primeng/tag';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 
 @Component({
   selector: 'app-areas',
   standalone: true,
-  imports: [CommonModule, FormsModule, TableModule, ButtonModule, InputTextModule, SelectModule, ToggleSwitchModule, TooltipModule, RouterModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TableModule,
+    ButtonModule,
+    InputTextModule,
+    SelectModule,
+    ToggleSwitchModule,
+    TooltipModule,
+    RouterModule,
+    TagModule,
+    IconFieldModule,
+    InputIconModule,
+  ],
   templateUrl: './areas.component.html',
   styleUrl: './areas.component.css'
 })

@@ -6,7 +6,8 @@ import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
 import { ApiResponse } from '../core/models/api-response.model';
 import { User } from '../core/models/user.model';
-import { AuthResponse, LoginRequest } from '../core/models/auth.model';
+import { AuthResponse, LoginRequest, MenuResponse } from '../core/models/auth.model';
+import { MenuItem } from '../layout/sidebar/menu-items';
 
 @Injectable({
   providedIn: 'root',
@@ -19,8 +20,13 @@ export class AuthService {
   private authSubject = new BehaviorSubject<User | null>(this.getUserFromStorage());
   public user$ = this.authSubject.asObservable();
 
+  public recurrentMenuSignal = signal<MenuItem[]>(this.getMenuFromStorage().recurrent);
+  public mainMenuSignal = signal<MenuItem[]>(this.getMenuFromStorage().main);
+
   constructor() {
+    console.log('AuthService: Inicializando...');
     this.checkTokenExpiration();
+    this.loadMenu();
   }
 
   login(credentials: LoginRequest): Observable<ApiResponse<AuthResponse>> {
@@ -31,15 +37,42 @@ export class AuthService {
           if (response.statusCode === 200 && response.data?.accessToken) {
             this.setAuthData(response.data);
             this.authSubject.next(response.data.user ?? null);
+            this.loadMenu();
           }
         })
       );
   }
 
+  loadMenu(): void {
+    console.log('AuthService: Intentando cargar menú...', { isAuthenticated: this.isAuthenticated });
+    if (!this.isAuthenticated) return;
+    this.http.get<ApiResponse<MenuResponse>>(`${this.API_URL}/users/profile/menu`).subscribe({
+      next: (res) => {
+        console.log('AuthService: Menú cargado con éxito', res.data);
+        this.saveMenuToStorage(res.data);
+        this.recurrentMenuSignal.set(res.data.recurrent);
+        this.mainMenuSignal.set(res.data.main);
+      },
+      error: (err) => console.error('AuthService: Error cargando menú', err)
+    });
+  }
+
+  private saveMenuToStorage(menu: MenuResponse): void {
+    localStorage.setItem('sidebarMenu', JSON.stringify(menu));
+  }
+
+  private getMenuFromStorage(): MenuResponse {
+    const menuStr = localStorage.getItem('sidebarMenu');
+    return menuStr ? JSON.parse(menuStr) : { recurrent: [], main: [] };
+  }
+
   logout(): void {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('user');
+    localStorage.removeItem('sidebarMenu');
     this.authSubject.next(null);
+    this.recurrentMenuSignal.set([]);
+    this.mainMenuSignal.set([]);
     this.router.navigate(['/auth/login']);
   }
 

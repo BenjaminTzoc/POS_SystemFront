@@ -26,4 +26,5 @@ export interface ICustomerCategory {
   minPurchaseAmount: number;
   isActive: boolean;
   defaultCreditLimit: number;
+  deletedAt?: string | null;
 }

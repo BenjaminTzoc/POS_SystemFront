@@ -1,39 +1,47 @@
-<div class="py-4 px-0 md:px-6 bg-gray-50/30 min-h-screen">
+<div class="py-4 px-0 md:px-6 bg-slate-50/50 min-h-screen">
   <!-- Header Section -->
   <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-6 md:mb-8">
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
       <div class="w-full md:max-w-[60%]">
-        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Traslados de Inventario</h1>
-        <p class="text-gray-500 mt-1 md:mt-2 text-sm md:text-md">
+        <h1 class="text-2xl md:text-4xl font-semibold text-gray-900 tracking-tight">Traslados de Inventario</h1>
+        <p class="hidden md:block text-[#627ca7] mt-1 md:mt-2 text-sm md:text-md font-medium">
            Gestión de movimiento de mercadería entre sedes.
         </p>
       </div>
 
-      <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto">
-        <div class="group bg-white border border-slate-300 rounded-xl py-1.5 px-3 md:px-4 shadow-sm flex items-center gap-2 md:gap-3 transition-all focus-within:border-indigo-300 focus-within:shadow-md flex-1 md:w-80">
-          <i class="pi pi-search text-gray-400 text-sm"></i>
-          <input
-            pInputText
-            type="text"
-            [(ngModel)]="searchTerm"
-            (input)="loadTransfers()"
-            class="!border-none !shadow-none !bg-transparent w-full text-sm font-medium"
-            placeholder="No. Traslado, Sucursal..."
-            autocomplete="off"
-          />
+      <div class="flex items-center gap-2 w-full md:w-auto">
+        <div class="flex-1">
+          <p-iconfield>
+            <p-inputicon class="pi pi-search" />
+            <input 
+              [(ngModel)]="searchTerm"
+              (input)="loadTransfers()"
+              type="text" 
+              pInputText 
+              placeholder="Buscar traslado..."
+              autocomplete="off"
+              fluid
+            />
+          </p-iconfield>
         </div>
-
-        <p-button
-          label="Nuevo"
+        <p-button 
+          label="Nuevo Traslado"
+          severity="info"
           icon="pi pi-plus"
+          class="hidden md:block"
           (onClick)="goToNewTransfer()"
-          styleClass="!rounded-xl px-4 md:px-6 shadow-lg font-bold h-[44px] flex-none md:flex-none justify-center"
+        />
+        <p-button 
+          severity="info"
+          icon="pi pi-plus"
+          class="block md:hidden!"
+          (onClick)="goToNewTransfer()"
         />
       </div>
     </div>
   </div>
 
-  <div class="max-w-[1700px] mx-auto px-0 md:px-0">
+  <div class="max-w-[1700px] mx-auto">
     <!-- Filters Toolbar -->
     <div class="flex flex-col md:flex-row items-center gap-3 md:gap-4 mb-6 px-4 md:px-0">
       <div class="w-full md:w-auto">
@@ -75,7 +83,7 @@
     </div>
 
     <!-- Main Table Card -->
-    <div class="bg-transparent lg:bg-white lg:rounded-xl lg:border lg:border-slate-300 overflow-hidden lg:shadow-sm -mx-6 lg:mx-0">
+    <div class="bg-transparent lg:bg-white lg:rounded-xl lg:border lg:border-slate-300 overflow-hidden lg:shadow-sm">
       <p-table
         [value]="transfers"
         [loading]="loading"
@@ -88,14 +96,14 @@
         styleClass="p-datatable-modern"
       >
         <ng-template #header>
-          <tr class="!h-18 text-sm hidden lg:table-row">
+          <tr class="h-18! text-sm! bg-slate-50 hidden lg:table-row">
             <th style="width: 5rem"></th>
-            <th class="!pl-10 tracking-widest w-[140px]">Estado</th>
-            <th class="tracking-widest">Documento / Ruta</th>
-            <th class="tracking-widest text-center">Creado</th>
-            <th class="tracking-widest text-center">Últ. Cambio</th>
-            <th class="tracking-widest">Registrado por</th>
-            <th class="!pr-8 text-right">Acciones</th>
+            <th class="!pl-10 tracking-widest w-[140px] text-slate-400">Estado</th>
+            <th class="tracking-widest text-slate-400">Documento / Ruta</th>
+            <th class="tracking-widest text-center text-slate-400">Creado</th>
+            <th class="tracking-widest text-center text-slate-400">Últ. Cambio</th>
+            <th class="tracking-widest text-slate-400">Registrado por</th>
+            <th class="!pr-8 text-right text-slate-400">Acciones</th>
           </tr>
         </ng-template>
 
@@ -189,74 +197,73 @@
             </td>
 
             <!-- VISTA MÓVIL (Tarjeta) -->
-            <!-- VISTA MÓVIL (Tarjeta) -->
             <td class="lg:hidden !p-0 bg-transparent block w-full" colspan="7">
-              <div class="w-full bg-white border-b border-slate-100 flex flex-col p-4 transition-all active:bg-slate-50" [pRowToggler]="transfer">
-                 <!-- Top row: Status & Doc -->
-                 <div class="flex justify-between items-start mb-2">
-                    <div class="flex flex-col min-w-0">
-                      <span class="text-[9px] font-black text-indigo-500 uppercase tracking-widest leading-none mb-1">
-                        {{ transfer.transferNumber }}
-                      </span>
-                      <div class="flex items-center gap-1.5 min-w-0">
-                         <span class="text-sm font-bold text-slate-900 truncate">{{ transfer.originBranchName }}</span>
-                         <i class="pi pi-arrow-right text-[10px] text-emerald-500 flex-shrink-0"></i>
-                         <span class="text-sm font-bold text-slate-900 truncate">{{ transfer.destinationBranchName }}</span>
-                      </div>
-                    </div>
-
-                    <span
-                      class="inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border flex-shrink-0"
-                      [ngClass]="{
-                        'bg-amber-50 text-amber-600 border-amber-200': transfer.status === 'PENDING',
-                        'bg-blue-50 text-blue-600 border-blue-200': transfer.status === 'SHIPPED',
-                        'bg-emerald-50 text-emerald-600 border-emerald-200': transfer.status === 'RECEIVED',
-                        'bg-rose-50 text-rose-600 border-rose-200': transfer.status === 'CANCELLED'
-                      }"
-                    >
-                      {{ transfer.status | transferStatus }}
-                    </span>
+               <div class="bg-white rounded-2xl shadow-sm border border-slate-200 mx-4 my-2.5 flex flex-col overflow-hidden relative" [pRowToggler]="transfer">
+                 <div class="flex p-4 items-center gap-4">
+                   <div class="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden border border-[#4A7FA7] bg-[#D0E2F2] shadow-sm">
+                      <i class="pi pi-truck text-lg! text-[#3B5B8A]"></i>
+                   </div>
+                   <div class="flex-1 min-w-0">
+                     <div class="flex justify-between items-start gap-1">
+                       <div class="flex flex-col min-w-0">
+                         <span class="text-[10px] text-[#3B5B8A] font-semibold leading-none mb-1 truncate uppercase tracking-widest">{{ transfer.transferNumber }}</span>
+                         <h3 class="font-semibold text-slate-800 text-base leading-tight truncate">
+                           {{ transfer.originBranchName }} 
+                           <i class="pi pi-arrow-right text-[10px] mx-0.5 text-emerald-500"></i>
+                           {{ transfer.destinationBranchName }}
+                         </h3>
+                       </div>
+                       <span
+                         class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-widest border flex-shrink-0"
+                         [ngClass]="{
+                           'bg-amber-50 text-amber-600 border-amber-200': transfer.status === 'PENDING',
+                           'bg-blue-50 text-blue-600 border-blue-200': transfer.status === 'SHIPPED',
+                           'bg-emerald-50 text-emerald-600 border-emerald-200': transfer.status === 'RECEIVED',
+                           'bg-rose-50 text-rose-600 border-rose-200': transfer.status === 'CANCELLED'
+                         }"
+                       >
+                         {{ transfer.status | transferStatus }}
+                       </span>
+                     </div>
+                     <div class="flex items-center gap-4 text-slate-400 mt-2">
+                        <div class="flex items-center gap-1">
+                          <i class="pi pi-user text-[10px]"></i>
+                          <span class="text-[10px] font-semibold truncate max-w-[80px]">{{ transfer.createdBy || '---' }}</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                          <i class="pi pi-calendar text-[10px]"></i>
+                          <span class="text-[10px] font-semibold">{{ transfer.createdAt | date: 'dd/MM/yy' }}</span>
+                        </div>
+                        @if (transfer.items?.length) {
+                          <div class="flex items-center gap-1 ml-auto">
+                            <i class="pi pi-box text-[10px] text-indigo-400"></i>
+                            <span class="text-[10px] font-bold text-indigo-600">{{ transfer.items.length }} ítems</span>
+                          </div>
+                        }
+                     </div>
+                   </div>
                  </div>
 
-                 <!-- Users & Dates Row -->
-                 <div class="flex items-center gap-4 text-slate-400 mb-4">
-                    <div class="flex items-center gap-1">
-                      <i class="pi pi-user text-[10px]"></i>
-                      <span class="text-[10px] font-semibold truncate max-w-[80px]">{{ transfer.createdBy || '---' }}</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                      <i class="pi pi-calendar text-[10px]"></i>
-                      <span class="text-[10px] font-semibold">{{ transfer.createdAt | date: 'dd/MM/yy' }}</span>
-                    </div>
-                    @if (transfer.items?.length) {
-                      <div class="flex items-center gap-1 ml-auto">
-                        <i class="pi pi-box text-[10px] text-indigo-400"></i>
-                        <span class="text-[10px] font-bold text-indigo-600">{{ transfer.items.length }} ítems</span>
-                      </div>
-                    }
-                 </div>
-
-                 <!-- Actions Button Row (Full Width on mobile if needed or compact) -->
-                 <div class="flex items-center gap-2">
+                 <!-- Footer Actions Mobile -->
+                 <div class="bg-slate-50/50 border-t border-slate-100 p-2 px-3 flex items-center justify-between">
                     <div class="flex-1 flex gap-2">
-                      @if (transfer.status === 'PENDING') {
-                        <p-button label="Enviar" icon="pi pi-truck" (onClick)="confirmStatusChange(transfer, 'SHIPPED'); $event.stopPropagation()" styleClass="!text-[10px] !py-1.5 !px-3 font-bold !rounded-lg" severity="info" size="small" />
-                      }
-                      @if (transfer.status === 'SHIPPED') {
-                        <p-button label="Recibir" icon="pi pi-check" (onClick)="confirmStatusChange(transfer, 'RECEIVED'); $event.stopPropagation()" styleClass="!text-[10px] !py-1.5 !px-3 font-bold !rounded-lg" severity="success" size="small" />
-                      }
-                      @if (transfer.status === 'PENDING' || transfer.status === 'SHIPPED') {
-                        <p-button label="Anular" icon="pi pi-trash" (onClick)="confirmStatusChange(transfer, 'CANCELLED'); $event.stopPropagation()" styleClass="!text-[10px] !py-1.5 !px-3 font-bold !rounded-lg" severity="danger" variant="outlined" size="small" />
-                      }
+                       @if (transfer.status === 'PENDING') {
+                         <p-button label="Enviar" icon="pi pi-truck" (onClick)="confirmStatusChange(transfer, 'SHIPPED'); $event.stopPropagation()" styleClass="!text-[10px] !py-1.5 !px-3 font-bold !rounded-lg" severity="info" size="small" />
+                       }
+                       @if (transfer.status === 'SHIPPED') {
+                         <p-button label="Recibir" icon="pi pi-check" (onClick)="confirmStatusChange(transfer, 'RECEIVED'); $event.stopPropagation()" styleClass="!text-[10px] !py-1.5 !px-3 font-bold !rounded-lg" severity="success" size="small" />
+                       }
+                       @if (transfer.status === 'PENDING' || transfer.status === 'SHIPPED') {
+                         <p-button label="Anular" icon="pi pi-trash" (onClick)="confirmStatusChange(transfer, 'CANCELLED'); $event.stopPropagation()" styleClass="!text-[10px] !py-1.5 !px-3 font-bold !rounded-lg" severity="danger" variant="outlined" size="small" />
+                       }
                     </div>
-
                     <p-button 
                       [icon]="expanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" 
                       [text]="true"
                       severity="secondary"
-                      styleClass="!w-8 !h-8 !rounded-lg bg-slate-50! border border-slate-100!" />
+                      styleClass="!w-9 !h-9 !rounded-lg bg-white shadow-sm border border-slate-200" />
                  </div>
-              </div>
+               </div>
             </td>
           </tr>
         </ng-template>
@@ -396,10 +403,10 @@
           <tr>
             <td colspan="7" class="text-center !py-24">
               <div class="flex flex-col items-center justify-center gap-3">
-                <i class="pi pi-truck text-gray-200" style="font-size: 5rem"></i>
+                <i class="pi pi-truck text-[#95abce]" style="font-size: 5rem"></i>
                 <div class="flex flex-col items-center gap-1">
-                  <p class="text-gray-400 font-bold text-xl">No se encontraron traslados.</p>
-                  <p class="text-gray-400 text-sm font-medium">Prueba ajustando el rango de fechas o los filtros de búsqueda.</p>
+                  <p class="text-[#627ca7] font-bold text-xl">No se encontraron traslados.</p>
+                  <p class="text-[#627ca7] text-sm font-medium">Prueba ajustando el rango de fechas o los filtros de búsqueda.</p>
                 </div>
               </div>
             </td>

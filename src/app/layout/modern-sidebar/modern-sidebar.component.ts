@@ -1,7 +1,7 @@
-import { Component, EventEmitter, Input, Output, inject, OnInit, OnDestroy, HostBinding } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, OnInit, OnDestroy, HostBinding, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
-import { MENU_ITEMS, MenuItem } from '../sidebar/menu-items';
+import { MenuItem } from '../sidebar/menu-items';
 import { TooltipModule } from 'primeng/tooltip';
 import { filter, Subscription } from 'rxjs';
 import { AuthService } from '../../auth/auth.service';
@@ -35,7 +35,7 @@ export class ModernSidebarComponent implements OnInit, OnDestroy {
   @HostBinding('class.collapsed') get isCollapsed() { return this.collapsed; }
   @Output() toggle = new EventEmitter<boolean>();
 
-  menuItems: MenuItem[] = [...MENU_ITEMS];
+  menuItems = computed(() => this.authService.mainMenuSignal());
   expandedItems: Set<string> = new Set();
   activeRoute = '';
 
@@ -86,7 +86,7 @@ export class ModernSidebarComponent implements OnInit, OnDestroy {
   }
 
   expandActiveMenu() {
-    this.menuItems.forEach(item => {
+    this.menuItems().forEach(item => {
       if (item.children && item.children.some(child => child.route && this.activeRoute.startsWith(child.route))) {
         this.expandedItems.add(item.label);
       }

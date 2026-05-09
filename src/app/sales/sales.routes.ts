@@ -18,6 +18,18 @@ export const SALES_ROUTES: Routes = [
     component: CustomerFormComponent,
   },
   {
+    path: 'customer-categories',
+    loadComponent: () => import('./customer-categories/customer-categories.component').then(m => m.CustomerCategoriesComponent),
+  },
+  {
+    path: 'customer-categories/new',
+    loadComponent: () => import('./customer-categories/customer-category-form/customer-category-form.component').then(m => m.CustomerCategoryFormComponent),
+  },
+  {
+    path: 'customer-categories/edit/:id',
+    loadComponent: () => import('./customer-categories/customer-category-form/customer-category-form.component').then(m => m.CustomerCategoryFormComponent),
+  },
+  {
     path: 'orders',
     component: SaleOrdersComponent,
   },
@@ -53,5 +65,24 @@ export const SALES_ROUTES: Routes = [
       import('./quotations/quotation-form/quotation-form.component').then(
         (m) => m.QuotationFormComponent,
       ),
+  },
+  {
+    path: 'quick-sale',
+    loadComponent: () =>
+      import('./quick-sales/quick-sales.component').then(
+        (m) => m.QuickSaleComponent,
+      ),
+  },
+  {
+    path: 'payment-methods',
+    loadComponent: () => import('./payment-methods/payment-methods.component').then(m => m.PaymentMethodsComponent),
+  },
+  {
+    path: 'payment-methods/new',
+    loadComponent: () => import('./payment-methods/payment-method-form/payment-method-form.component').then(m => m.PaymentMethodFormComponent),
+  },
+  {
+    path: 'payment-methods/edit/:id',
+    loadComponent: () => import('./payment-methods/payment-method-form/payment-method-form.component').then(m => m.PaymentMethodFormComponent),
   },
 ];

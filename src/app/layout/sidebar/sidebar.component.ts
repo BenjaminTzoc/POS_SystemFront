@@ -11,7 +11,7 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { MENU_ITEMS, MenuItem, RECURRENT_MENU } from './menu-items';
+import { MenuItem } from './menu-items';
 import { filter, Subscription } from 'rxjs';
 import { AuthService } from '../../auth/auth.service';
 import { User } from '../../core/models/user.model';
@@ -34,14 +34,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
   @Input() sidebarCollapsed = false;
   @Output() toggleSidebar = new EventEmitter<boolean>();
 
-  menuItems = MENU_ITEMS;
+  menuItems = computed(() => this.authService.mainMenuSignal());
   activeSubmenu: string | null = null;
   private userSubscription!: Subscription;
   currentUser = signal<User | null>(null);
-  recurrentItems = computed(() => {
-    const user = this.currentUser();
-    return this.filterMenuItemsByPermission(RECURRENT_MENU, user);
-  });
+  
+  recurrentItems = computed(() => this.authService.recurrentMenuSignal());
 
   constructor(
     private router: Router,
@@ -82,40 +80,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.router.navigate(['/sales/cash-register']);
   }
 
-  private filterMenuItemsByPermission(items: MenuItem[], user: User | null): MenuItem[] {
-    if (!user) return [];
-
-    return items
-      .map((item) => {
-        // Si el item tiene hijos, filtrar también los hijos
-        if (item.children) {
-          const filteredChildren = this.filterMenuItemsByPermission(item.children, user);
-
-          // Si después de filtrar no hay hijos y el item principal no tiene ruta propia,
-          // ocultar el item principal también
-          if (filteredChildren.length === 0 && !item.route) {
-            return null;
-          }
-
-          return {
-            ...item,
-            children: filteredChildren,
-          };
-        }
-
-        // Si el item no tiene permiso requerido, mostrarlo siempre
-        if (!item.permission) {
-          return item;
-        }
-
-        // Verificar si el usuario tiene el permiso requerido
-        const hasPermission = this.authService.hasPermission(item.permission);
-
-        return hasPermission ? item : null;
-      })
-      .filter((item): item is MenuItem => item !== null);
-  }
-
   ngOnDestroy(): void {
     if (this.userSubscription) {
       this.userSubscription.unsubscribe();
@@ -131,7 +95,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   get filteredMenuItems(): MenuItem[] {
-    return this.menuItems;
+    return this.menuItems();
   }
 
   toggleSubmenu(item: MenuItem): void {
@@ -161,7 +125,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     const currentUrl = this.router.url;
 
     // Buscar en ambos menús
-    const allMenus = [...this.menuItems, ...RECURRENT_MENU];
+    const allMenus = [...this.menuItems(), ...this.recurrentItems()];
 
     // Buscar el padre que contiene la ruta actual en sus hijos
     const activeParent = allMenus.find(

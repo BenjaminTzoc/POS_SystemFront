@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { ApiResponse } from '../../core/models/api-response.model';
 import {
   IQuotation,
   IQuotationResponse,
@@ -41,11 +42,23 @@ export class QuotationsService {
     return this.http.post<IQuotationDetailResponse>(this.apiUrl, dto);
   }
 
+  updateQuotation(id: string, dto: CreateQuotationDto): Observable<IQuotationDetailResponse> {
+    return this.http.put<IQuotationDetailResponse>(`${this.apiUrl}/${id}`, dto);
+  }
+
   updateStatus(id: string, status: QuotationStatus): Observable<IQuotationDetailResponse> {
     return this.http.patch<IQuotationDetailResponse>(`${this.apiUrl}/${id}/status`, { status });
   }
 
   convertToSale(id: string): Observable<IQuotationConvertResponse> {
     return this.http.post<IQuotationConvertResponse>(`${this.apiUrl}/${id}/convert`, {});
+  }
+
+  downloadPdf(id: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${id}/pdf`, { responseType: 'blob' });
+  }
+
+  sendEmail(id: string, email: string): Observable<ApiResponse<void>> {
+    return this.http.post<ApiResponse<void>>(`${this.apiUrl}/${id}/send-email`, { email });
   }
 }

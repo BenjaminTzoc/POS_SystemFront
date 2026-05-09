@@ -1,10 +1,10 @@
-<div class="py-4 px-0 md:px-6 bg-gray-50/30 min-h-screen">
+<div class="py-4 px-0 md:px-6 bg-slate-50/50 min-h-screen">
   <!-- Header Section -->
   <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-6 md:mb-8">
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
       <div class="w-full md:max-w-[60%]">
-        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Registro de Traslado</h1>
-        <p class="text-gray-500 mt-1 md:mt-2 text-sm md:text-md">
+        <h1 class="text-2xl md:text-4xl font-semibold text-gray-900 tracking-tight">Registro de Traslado</h1>
+        <p class="hidden md:block text-[#627ca7] mt-1 md:mt-2 text-sm md:text-md font-medium">
            Movimiento controlado de stock entre sedes
         </p>
       </div>
@@ -16,16 +16,17 @@
           variant="outlined" 
           severity="danger" 
           icon="pi pi-times"
-          styleClass="!rounded-xl px-4 md:px-6 font-bold border-rose-400! h-[44px] flex-1 md:flex-none justify-center"
+          styleClass="!rounded-lg px-4 md:px-6 font-bold border-rose-400! h-[44px] flex-1 md:flex-none justify-center"
         />
         <p-button
           (onClick)="onSave()"
-          label="Generar Traslado"
-          severity="primary"
-          styleClass="!rounded-xl px-4 md:px-6 shadow-lg font-bold h-[44px] flex-1 md:flex-none justify-center"
+          label="Generar"
+          severity="success"
+          styleClass="!rounded-lg px-4 md:px-6 shadow-lg font-bold h-[44px] flex-1 md:flex-none justify-center"
           [loading]="loading"
           icon="pi pi-check"
           [disabled]="transferForm.invalid"
+          [raised]="true"
         />
       </div>
     </div>
@@ -39,7 +40,7 @@
             <h3 class="font-bold text-xl text-gray-800 mb-6 hidden md:block">Configuración</h3>
             <div class="flex flex-col gap-6">
                 <div class="flex flex-col gap-1.5 md:gap-1">
-                    <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0">
+                    <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]">
                         <i class="pi pi-map-marker mr-1 text-xs! text-blue-500"></i>Sucursal de Origen <span class="text-red-700">*</span>
                     </label>
                     <p-select
@@ -54,7 +55,7 @@
                     ></p-select>
                 </div>
                 <div class="flex flex-col gap-1.5 md:gap-1">
-                    <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0">
+                    <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]">
                         <i class="pi pi-directions mr-1 text-xs! text-blue-500"></i>Sucursal de Destino <span class="text-red-700">*</span>
                     </label>
                     <p-select
@@ -68,7 +69,7 @@
                     ></p-select>
                 </div>
                 <div class="flex flex-col gap-1.5 md:gap-1">
-                    <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0">
+                    <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]">
                         <i class="pi pi-align-left mr-1 text-xs! text-blue-500"></i>Notas / Observaciones
                     </label>
                     <textarea
@@ -85,7 +86,7 @@
       <div class="col-span-12 lg:col-span-8 flex flex-col gap-6 md:gap-8">
         <div class="rounded-none md:rounded-2xl bg-white border-y md:border border-slate-300 shadow-sm overflow-hidden">
             <div class="px-5 md:px-8 py-4 md:py-6 border-b border-gray-100 bg-gray-50/40 flex justify-between items-center">
-                <h3 class="font-bold text-xl text-gray-800">
+                <h3 class="font-bold text-xl text-[#3B5B8A]">
                     <i class="pi pi-box mr-1 text-xs! text-blue-500"></i>
                     Productos
                 </h3>
@@ -129,7 +130,7 @@
                           </div>
 
                           <div class="flex-1 min-w-0 flex flex-col gap-2 md:gap-1.5">
-                              <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-400 md:text-slate-700 tracking-widest md:tracking-normal">
+                              <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]">
                                 Producto
                               </label>
                               <p-select
@@ -167,7 +168,7 @@
                           </div>
 
                           <div class="w-full md:w-40 flex flex-col gap-2 md:gap-1.5">
-                              <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-400 md:text-slate-700 tracking-widest md:tracking-normal">
+                              <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]">
                                 Cantidad
                               </label>
                               <div class="relative">

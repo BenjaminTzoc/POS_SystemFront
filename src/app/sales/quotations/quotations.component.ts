@@ -9,6 +9,9 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { DialogModule } from 'primeng/dialog';
 
 import { QuotationsService } from '../services/quotations.service';
 import { IQuotation, QuotationStatus, IQuotationResponse } from '../interfaces/quotation.interface';
@@ -27,6 +30,9 @@ import { ApiResponse } from '../../core/models/api-response.model';
     ConfirmDialog,
     FormsModule,
     InputTextModule,
+    IconFieldModule,
+    InputIconModule,
+    DialogModule,
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './quotations.component.html',
@@ -41,6 +47,10 @@ export class QuotationsComponent implements OnInit {
   quotations: IQuotation[] = [];
   loading = false;
   searchTerm = '';
+  expandedRowsDesktop: { [key: string]: boolean } = {};
+  displayDetails = false;
+  selectedQuotation: IQuotation | null = null;
+  expandedRowsMobile: { [key: string]: boolean } = {};
 
   ngOnInit(): void {
     this.loadQuotations();
@@ -69,10 +79,19 @@ export class QuotationsComponent implements OnInit {
     this.router.navigate(['/sales/new-quotation']);
   }
 
+  onEditQuotation(id: string): void {
+    this.router.navigate(['/sales/edit-quotation', id]);
+  }
+
+  showDetails(quotation: IQuotation): void {
+    this.selectedQuotation = quotation;
+    this.displayDetails = true;
+  }
+
   confirmConvert(quotation: IQuotation): void {
     this.confirmationService.confirm({
       header: 'Convertir a Venta',
-      message: `¿Estás seguro de que deseas convertir la cotización ${quotation.quotationNumber} en una Órden de Venta? El stock se descontará en este momento.`,
+      message: `¿Estás seguro de que deseas convertir la cotización ${quotation.correlative} en una Órden de Venta? El stock se descontará en este momento.`,
       icon: 'pi pi-shopping-cart',
       acceptLabel: 'Sí, convertir',
       acceptButtonStyleClass: 'p-button-success',
@@ -92,14 +111,62 @@ export class QuotationsComponent implements OnInit {
           summary: 'Convertido',
           detail: 'Cotización convertida a venta exitosamente.',
         });
-        // Redirect to the sale orders list
         this.router.navigate(['/sales/orders']);
       },
       error: (err) => {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: `No se pudo realizar la conversión: ${err.error.message}`,
+          detail: `No se pudo realizar la conversión: ${err.error?.message || 'Error del servidor'}`,
+        });
+      },
+    });
+  }
+
+  downloadPdf(quotation: IQuotation): void {
+    this.quotationsService.downloadPdf(quotation.id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Cotizacion_${quotation.correlative}.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo generar el PDF.',
+        });
+      },
+    });
+  }
+
+  sendEmail(quotation: IQuotation): void {
+    const email = quotation.customer?.email || quotation.guestCustomer?.email;
+    if (!email) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Atención',
+        detail: 'El cliente no tiene un correo electrónico registrado.',
+      });
+      return;
+    }
+
+    this.quotationsService.sendEmail(quotation.id, email).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Enviado',
+          detail: `Cotización enviada a ${email} correctamente.`,
+        });
+      },
+      error: (err) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: err.error?.message || 'No se pudo enviar el correo.',
         });
       },
     });
@@ -108,7 +175,7 @@ export class QuotationsComponent implements OnInit {
   confirmCancel(quotation: IQuotation): void {
     this.confirmationService.confirm({
       header: 'Anular Cotización',
-      message: `¿Deseas anular la cotización ${quotation.quotationNumber}? Esta acción no se puede deshacer.`,
+      message: `¿Deseas anular la cotización ${quotation.correlative}? Esta acción no se puede deshacer.`,
       icon: 'pi pi-times-circle',
       acceptLabel: 'Sí, anular',
       acceptButtonStyleClass: 'p-button-danger',
@@ -186,5 +253,13 @@ export class QuotationsComponent implements OnInit {
     if (!imageUrl) return `${environment.baseUrl}/uploads/products/default-product.png`;
     if (imageUrl.startsWith('http')) return imageUrl;
     return `${environment.baseUrl}${imageUrl}`;
+  }
+
+  onExpandedRowKeysChangeDesktop(value: any): void {
+    this.expandedRowsDesktop = value;
+  }
+
+  onExpandedRowKeysChangeMobile(value: any): void {
+    this.expandedRowsMobile = value;
   }
 }

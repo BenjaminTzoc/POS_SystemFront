@@ -1,0 +1,153 @@
+<div class="py-4 px-0 md:px-6 bg-slate-50/50 min-h-screen">
+  <!-- Header Section -->
+  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-6 md:mb-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div class="w-full md:max-w-[60%]">
+        <h1 class="text-2xl md:text-4xl font-semibold text-gray-900 tracking-tight">
+          {{ isEditMode ? 'Editar Categoría' : 'Nueva Categoría' }}
+        </h1>
+        <p class="hidden md:block text-[#627ca7] mt-1 md:mt-2 text-sm md:text-md font-medium">
+           Completa la información para {{ isEditMode ? 'actualizar' : 'añadir' }} una categoría al catálogo de clientes.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto">
+        <div class="flex-1">
+          <p-button 
+            label="Cancelar" 
+            (onClick)="onCancel()" 
+            variant="outlined" 
+            severity="danger" 
+            icon="pi pi-times"
+            styleClass="border-rose-400! h-[44px] justify-center"
+            fluid
+          />
+        </div>
+        <div class="flex-1">
+          <p-button
+            (onClick)="onSave()"
+            [label]="isEditMode ? 'Guardar' : 'Crear'"
+            severity="success"
+            [raised]="true"
+            styleClass="shadow-lg h-[44px] justify-center font-bold"
+            [loading]="isSaving"
+            icon="pi pi-check"
+            [disabled]="categoryForm.invalid"
+            fluid
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <form class="max-w-[1100px] mx-auto pb-40" [formGroup]="categoryForm">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
+      <div class="col-span-12 flex flex-col gap-6">
+        <div class="p-5 md:p-8 rounded-none md:rounded-lg bg-white border-y md:border border-slate-300 shadow-sm relative overflow-hidden">
+          <!-- Background Decorative Icon -->
+          <div class="absolute top-0 right-0 p-4 opacity-[0.03]">
+            <i class="pi pi-id-card" style="font-size: 8rem"></i>
+          </div>
+
+          <div class="flex flex-col gap-y-6 md:gap-y-8 relative">
+            <!-- Name Field -->
+            <div class="flex flex-col gap-1.5 md:gap-1">
+              <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="name">
+                <i class="pi pi-tag mr-1 text-xs! text-blue-500"></i>
+                Nombre de la Categoría <span class="text-red-700">*</span>
+              </label>
+              <input
+                pInputText
+                id="name"
+                formControlName="name"
+                class="w-full !rounded-lg h-[44px] md:h-auto font-medium"
+                [ngClass]="{'ng-invalid ng-dirty': categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched}"
+                placeholder="Ej. VIP, Mayorista, Minorista, Regular..."
+                autocomplete="off"
+              />
+              @if (categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched) {
+                <small class="text-rose-500 text-[10px] font-medium flex items-center mt-1">
+                  <i class="pi pi-exclamation-circle mr-1 text-[10px]!"></i>El nombre es obligatorio.
+                </small>
+              }
+            </div>
+
+            <!-- Discount & Benefits Section -->
+            <div class="col-span-1 md:col-span-2">
+              <div class="p-4 md:p-6 rounded-xl bg-[#D0E2F2] border border-[#4A7FA7]">
+                <div class="flex flex-col lg:flex-row gap-6">
+                  <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-2">
+                       <i class="pi pi-percentage text-[#3B5B8A] font-bold"></i>
+                       <span class="text-sm font-bold text-[#3B5B8A]">Configuración de Beneficios</span>
+                    </div>
+                    <p class="text-[11px] text-[#3B5B8A] font-medium leading-relaxed opacity-80">
+                      Determine los parámetros financieros automáticos para los clientes de este nivel. El descuento se sugerirá en cada venta realizada.
+                    </p>
+                  </div>
+                  
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 grow">
+                    <div class="flex flex-col gap-1.5 md:gap-1">
+                      <label class="text-[10px] font-bold text-[#3B5B8A] uppercase tracking-wider" for="discountPercentage">Descuento (%)</label>
+                      <p-inputnumber
+                        id="discountPercentage"
+                        formControlName="discountPercentage"
+                        prefix="%"
+                        [min]="0"
+                        [max]="100"
+                        [minFractionDigits]="2"
+                        inputStyleClass="!rounded-lg border-slate-300 w-full h-[40px] font-bold text-[#3B5B8A]"
+                      />
+                    </div>
+                    <div class="flex flex-col gap-1.5 md:gap-1">
+                      <label class="text-[10px] font-bold text-[#3B5B8A] uppercase tracking-wider" for="minPurchaseAmount">Venta Mínima</label>
+                      <p-inputnumber
+                        id="minPurchaseAmount"
+                        formControlName="minPurchaseAmount"
+                        mode="currency"
+                        currency="GTQ"
+                        locale="es-GT"
+                        [min]="0"
+                        inputStyleClass="!rounded-lg border-slate-300 w-full h-[40px] font-bold text-[#3B5B8A]"
+                      />
+                    </div>
+                    <div class="flex flex-col gap-1.5 md:gap-1">
+                      <label class="text-[10px] font-bold text-[#3B5B8A] uppercase tracking-wider" for="defaultCreditLimit">Límite Crédito</label>
+                      <p-inputnumber
+                        id="defaultCreditLimit"
+                        formControlName="defaultCreditLimit"
+                        mode="currency"
+                        currency="GTQ"
+                        locale="es-GT"
+                        [min]="0"
+                        inputStyleClass="!rounded-lg border-slate-300 w-full h-[40px] font-bold text-[#3B5B8A]"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Description Field -->
+            <div class="flex flex-col gap-1.5 md:gap-1">
+              <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="description">
+                <i class="pi pi-align-left mr-1 text-xs! text-blue-500"></i>
+                Descripción (Opcional)
+              </label>
+              <textarea
+                rows="4"
+                pTextarea
+                id="description"
+                formControlName="description"
+                class="w-full !rounded-lg border-slate-300 p-4 font-medium resize-none text-sm md:text-base"
+                placeholder="Detalle los requisitos o beneficios adicionales de este nivel..."
+                autocomplete="off"
+              ></textarea>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>

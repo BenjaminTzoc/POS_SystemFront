@@ -10,11 +10,27 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { CustomerCategoriesService } from '../../services/customer-categories.service';
 import { CustomersService } from '../../services/customers.service';
 
-import { CurrencyPipe, DecimalPipe } from '@angular/common';
+import { CurrencyPipe, DecimalPipe, CommonModule } from '@angular/common';
+import { TooltipModule } from 'primeng/tooltip';
+import { TagModule } from 'primeng/tag';
+import { InputMaskModule } from 'primeng/inputmask';
 
 @Component({
   selector: 'app-customer-form',
-  imports: [ReactiveFormsModule, InputTextModule, SelectModule, ButtonModule, CurrencyPipe, InputNumberModule, DecimalPipe],
+  standalone: true,
+  imports: [
+    ReactiveFormsModule, 
+    InputTextModule, 
+    SelectModule, 
+    ButtonModule, 
+    CurrencyPipe, 
+    InputNumberModule, 
+    DecimalPipe, 
+    CommonModule,
+    TooltipModule,
+    TagModule,
+    InputMaskModule
+  ],
   templateUrl: './customer-form.component.html',
   styleUrl: './customer-form.component.css',
 })

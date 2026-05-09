@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -28,8 +28,7 @@ import { environment } from '../../../../environments/environment';
     InputNumberModule,
     DialogModule,
     FormsModule,
-    DatePipe,
-    CurrencyPipe
+    DatePipe
   ],
   templateUrl: './order-list.component.html'
 })

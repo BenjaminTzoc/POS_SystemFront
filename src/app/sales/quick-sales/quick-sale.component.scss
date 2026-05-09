@@ -1,0 +1,31 @@
+:host {
+  display: block;
+}
+
+.product-ribbon {
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+    
+    &:hover {
+      background: #cbd5e1;
+    }
+  }
+  
+  scrollbar-width: thin;
+  scrollbar-color: #e2e8f0 transparent;
+}
+
+::ng-deep {
+  .p-inputnumber-buttons-horizontal .p-inputnumber-input {
+     order: 2;
+  }
+}

@@ -15,7 +15,7 @@
   <!-- Sidebar Content -->
   <div class="sidebar-content">
     <nav class="nav-section">
-      @for (item of menuItems; track item.label) {
+      @for (item of menuItems(); track item.label) {
         <div class="menu-item-wrapper">
           @if (!item.children) {
             <a [routerLink]="item.route" 

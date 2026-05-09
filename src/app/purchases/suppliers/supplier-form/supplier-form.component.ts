@@ -7,10 +7,20 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SuppliersService } from '../../services/suppliers.service';
 import { TextareaModule } from 'primeng/textarea';
 import { Supplier } from '../../interfaces/supplier.interface';
+import { InputMaskModule } from 'primeng/inputmask';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-supplier-form',
-  imports: [ReactiveFormsModule, InputTextModule, ButtonModule, TextareaModule],
+  standalone: true,
+  imports: [
+    ReactiveFormsModule,
+    InputTextModule,
+    ButtonModule,
+    TextareaModule,
+    InputMaskModule,
+    CommonModule,
+  ],
   templateUrl: './supplier-form.component.html',
   styleUrl: './supplier-form.component.css',
 })
@@ -22,7 +32,6 @@ export class SupplierFormComponent implements OnInit {
   private supplierService = inject(SuppliersService);
   private route = inject(ActivatedRoute);
 
-  searchingNit = false;
   supplierId: string | null = null;
   selectedSupplier: Supplier | null = null; //SOLO PARA EDICION
   isEditMode: boolean = false;
@@ -52,43 +61,6 @@ export class SupplierFormComponent implements OnInit {
           summary: 'Error',
           detail: `No se pudo cargar el proveedor: ${err.error?.message || err.message}`,
         });
-      },
-    });
-  }
-
-  searchByNit(): void {
-    const nit = this.supplierForm.get('nit')?.value;
-    if (!nit) return;
-
-    this.searchingNit = true;
-    this.supplierService.getSupplierByNit(nit).subscribe({
-      next: (res) => {
-        if (res.statusCode === 200 && res.data) {
-          this.messageService.add({
-            severity: 'info',
-            summary: 'Encontrado',
-            detail: 'Se encontró un proveedor con este NIT.',
-          });
-          this.supplierForm.patchValue(res.data);
-        }
-      },
-      error: (err) => {
-        if (err.status === 404) {
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'No encontrado',
-            detail: 'No hay proveedores registrados con este NIT.',
-          });
-        } else {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Error al buscar por NIT.',
-          });
-        }
-      },
-      complete: () => {
-        this.searchingNit = false;
       },
     });
   }

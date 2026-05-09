@@ -26,6 +26,8 @@ import { Subscription } from 'rxjs';
 import { SaleStatusPipe } from '../../shared/pipes/sale-status.pipe';
 import { TicketPreviewComponent } from './ticket-preview/ticket-preview.component';
 import { CommonModule } from '@angular/common';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 
 @Component({
   selector: 'app-sale-orders',
@@ -47,7 +49,9 @@ import { CommonModule } from '@angular/common';
     SaleStatusPipe,
     TicketPreviewComponent,
     CommonModule,
-    RippleModule
+    RippleModule,
+    IconFieldModule,
+    InputIconModule
   ],
   templateUrl: './sale-orders.component.html',
   styleUrl: './sale-orders.component.css',

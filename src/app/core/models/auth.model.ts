@@ -1,4 +1,5 @@
 import { User } from './user.model';
+import { MenuItem } from '../../layout/sidebar/menu-items';
 
 export interface LoginRequest {
     email: string;
@@ -8,4 +9,9 @@ export interface LoginRequest {
 export interface AuthResponse {
     user: User;
     accessToken: string;
+}
+
+export interface MenuResponse {
+    recurrent: MenuItem[];
+    main: MenuItem[];
 }

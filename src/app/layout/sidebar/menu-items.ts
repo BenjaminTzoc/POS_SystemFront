@@ -41,6 +41,12 @@ export const RECURRENT_MENU: MenuItem[] = [
     permission: '',
   },
   {
+    label: 'Venta Rápida',
+    icon: 'pi pi-bolt',
+    route: '/sales/quick-sale',
+    permission: 'orders.create',
+  },
+  {
     label: 'Historial de Cajas',
     icon: 'pi pi-history',
     route: '/sales/cash-history',
@@ -102,6 +108,12 @@ export const MENU_ITEMS: MenuItem[] = [
         icon: 'pi pi-sync',
         route: '/inventory/inventory-transfers',
         permission: '',
+      },
+      {
+        label: 'Movimientos',
+        icon: 'pi pi-objects-column',
+        route: '/inventory/inventory-movements',
+        permission: '',
       }
     ],
   },
@@ -112,10 +124,10 @@ export const MENU_ITEMS: MenuItem[] = [
     permission: '',
     children: [
       {
-        label: 'Clientes',
-        icon: '',
-        route: '/sales/customers',
-        permission: '',
+        label: 'Venta Rápida',
+        icon: 'pi pi-bolt',
+        route: '/sales/quick-sale',
+        permission: 'orders.create',
       },
       {
         label: 'Órdenes de Venta',
@@ -149,7 +161,7 @@ export const MENU_ITEMS: MenuItem[] = [
         route: '/production/decomposition',
         permission: '',
       },
-      {
+      { 
         label: 'Manufactura',
         icon: 'pi pi-hammer',
         route: '/production/orders',
@@ -222,9 +234,15 @@ export const MENU_ITEMS: MenuItem[] = [
         permission: '',
       },
       {
-        label: 'Categorías',
+        label: 'Categorías de Productos',
         icon: 'pi pi-tags',
         route: '/inventory/product-categories',
+        permission: '',
+      },
+      {
+        label: 'Categorías de Clientes',
+        icon: 'pi pi-id-card',
+        route: '/sales/customer-categories',
         permission: '',
       },
       {
@@ -237,6 +255,18 @@ export const MENU_ITEMS: MenuItem[] = [
         label: 'Áreas de Preparación',
         icon: 'pi pi-map',
         route: '/logistics/areas',
+        permission: '',
+      },
+      {
+        label: 'Clientes',
+        icon: 'pi pi-users',
+        route: '/sales/customers',
+        permission: '',
+      },
+      {
+        label: 'Métodos de Pago',
+        icon: 'pi pi-wallet',
+        route: '/sales/payment-methods',
         permission: '',
       }
     ]

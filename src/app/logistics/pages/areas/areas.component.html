@@ -1,47 +1,51 @@
-<div class="py-4 px-6 bg-gray-50/30 min-h-screen">
+<div class="py-4 px-0 md:px-6 bg-slate-50/50 min-h-screen">
   <!-- Header Section -->
-  <div class="max-w-[1700px] mx-auto mb-8">
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
-      <div>
-        <h1 class="text-4xl font-bold text-gray-900 tracking-tight">Áreas de Preparación</h1>
-        <p class="text-gray-500 mt-2 text-md">
+  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-2 md:mb-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div class="w-full md:max-w-[50%]">
+        <h1 class="text-2xl md:text-4xl font-semibold text-gray-900 tracking-tight">Áreas de Preparación</h1>
+        <p class="hidden md:block text-[#627ca7] mt-1 md:mt-2 text-sm md:text-md font-medium">
            Gestione las zonas de trabajo de sus sucursales (Embutidos, Deshuese, etc.)
         </p>
       </div>
 
-      <div class="flex flex-wrap items-center gap-4">
-        <div class="group bg-white border border-slate-300 rounded-xl 
-                    py-1 px-4 shadow-sm flex items-center gap-3 transition-all 
-                    focus-within:border-indigo-300 focus-within:shadow-md">
-          <i class="pi pi-search text-gray-400"></i>
-          <input
-            pInputText
-            type="text"
-            (input)="areasDataTable.filterGlobal($event.target.value, 'contains')"
-            class="!border-none !shadow-none !bg-transparent w-48 md:w-64 text-sm"
-            placeholder="Buscar área..."
-            autocomplete="off"
-          />
+      <div class="flex items-center gap-2 w-full md:w-auto">
+        <div class="flex-1">
+          <p-iconfield>
+            <p-inputicon class="pi pi-search" />
+            <input 
+              (input)="areasDesktopTable.filterGlobal($event.target.value, 'contains'); areasMobileTable.filterGlobal($event.target.value, 'contains')"
+              type="text" 
+              pInputText 
+              placeholder="Buscar área..."
+              autocomplete="off"
+              fluid
+            />
+          </p-iconfield>
         </div>
-
-        <button
-          pButton
+        <p-button 
           label="Nueva Área"
+          severity="info"
           icon="pi pi-plus"
-          (click)="openNew()"
-          class="p-button-raised p-button-primary !rounded-xl !px-6 !py-3 shadow-lg hover:shadow-indigo-200 transition-all font-bold h-[48px]"
-        ></button>
+          class="hidden md:block font-bold"
+          (onClick)="openNew()"
+        />
+        <p-button 
+          severity="info"
+          icon="pi pi-plus"
+          class="block md:hidden! font-bold"
+          (onClick)="openNew()"
+        />
       </div>
     </div>
   </div>
 
-  <!-- Main Content Card -->
   <div class="max-w-[1700px] mx-auto">
-    <div class="flex mb-2">
+    <div class="flex mb-4 px-4 md:px-0">
       @if (canViewDeleted) {
-        <div class="group bg-white border border-slate-300 rounded-lg py-2 px-5 flex items-center gap-4 transition-all hover:border-indigo-200 hover:shadow-md">
+        <div class="group bg-white border border-slate-300 rounded-lg py-2 px-4 shadow-sm flex items-center gap-3 transition-all hover:border-indigo-200">
           <div class="flex flex-col">
-            <label for="showDeleted" class="text-sm font-medium cursor-pointer">Mostrar eliminados</label>
+            <label for="showDeleted" class="text-sm font-semibold text-[#3B5B8A]">Mostrar Eliminados</label>
           </div>
           <p-toggleSwitch
             [ngModel]="showDeleted()"
@@ -52,105 +56,226 @@
       }
     </div>
 
-    <div class="bg-white rounded-xl border border-slate-300 overflow-hidden">
-    <p-table 
-      #areasDataTable
-      [value]="areas()" 
-      [loading]="loading()" 
-      [paginator]="true"
-      [rows]="10"
-      [globalFilterFields]="['name', 'description', 'previousArea.name']"
-      styleClass="p-datatable-modern"
-    >
-      <ng-template pTemplate="header">
-        <tr class="h-18! text-sm!">
-          <th class="!pl-10 tracking-widest w-[110px]">Estado</th>
-          <th class="tracking-widest" pSortableColumn="name">Nombre <p-sortIcon class="w-3! h-3!" field="name" /></th>
-          <th class="tracking-widest">Descripción</th>
-          <th class="tracking-widest">Área Anterior (Pipeline)</th>
-          <th class="tracking-widest text-center">Creado</th>
-          <th class="tracking-widest text-center">Últ. Cambio</th>
-          <th class="tracking-widest pr-8! text-right!">Acciones</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-area>
-        <tr class="group hover:bg-slate-50/50 transition-colors" [ngClass]="{ 'opacity-60 grayscale-[0.5]': isDeleted(area) }">
-          <td class="!py-4 !pl-8">
-            @if (isDeleted(area)) {
-              <span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-lg bg-rose-50 text-rose-600 border border-rose-300">
-                <span class="w-1.5 h-1.5 rounded-full bg-rose-500 mr-2"></span> Eliminado
-              </span>
-            } @else {
-              <span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-300">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span> Activo
-              </span>
-            }
-          </td>
-          <td class="font-semibold">{{ area.name }}</td>
-          <td class="text-sm">{{ area.description || 'Sin descripción' }}</td>
-          <td>
-            @if (area.previousArea) {
-              <span class="text-sm">Esta área depende de: {{ area.previousArea.name }}</span>
-            } @else {
-              <span class="text-sm">No depende de otra área.</span>
-            }
-          </td>
-          <td class="!py-4 text-sm font-semibold text-center">
-            {{ area.createdAt | date: 'dd/MM/yyyy' }}
-            <p class="text-[11px]! opacity-80">{{ area.createdAt | date: 'hh:mm a' }}</p>
-          </td>
-          <td class="!py-4 text-sm font-semibold text-center">
-            {{ area.updatedAt | date: 'dd/MM/yyyy' }}
-            <p class="text-[11px]! opacity-80">{{ area.updatedAt | date: 'hh:mm a' }}</p>
-          </td>
-          <td class="pr-8! text-right!">
-            <div class="flex gap-1 justify-end">
-              @if (!isDeleted(area)) {
-                <button 
-                  pButton 
-                  icon="pi pi-pencil" 
-                  class="p-button-rounded p-button-text !text-amber-500 hover:!bg-amber-50 !transition-all hover:scale-110" 
-                  (click)="editArea(area)"
-                  pTooltip="Editar"
-                  tooltipPosition="bottom"
-                ></button>
-                <button 
-                  pButton 
-                  icon="pi pi-trash" 
-                  class="p-button-rounded p-button-text !text-rose-500 hover:!bg-rose-50 !transition-all hover:scale-110" 
-                  (click)="deleteArea(area)"
-                  pTooltip="Eliminar"
-                  tooltipPosition="bottom"
-                ></button>
-              } @else {
-                <button 
-                  pButton 
-                  icon="pi pi-refresh" 
-                  class="p-button-rounded p-button-text !text-emerald-500 hover:!bg-emerald-50 !transition-all hover:scale-110" 
-                  (click)="restoreArea(area)"
-                  pTooltip="Restaurar"
-                  tooltipPosition="bottom"
-                ></button>
-              }
-            </div>
-          </td>
-        </tr>
-      </ng-template>
+    <!-- VISTA ESCRITORIO -->
+    <div class="hidden lg:block bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm">
+      <p-table
+        #areasDesktopTable
+        [value]="areas()"
+        [loading]="loading()"
+        [paginator]="true"
+        [rows]="10"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
+        [rowsPerPageOptions]="[10, 20, 50]"
+        [globalFilterFields]="['name', 'description', 'previousArea.name']"
+        dataKey="id"
+        styleClass="p-datatable-modern"
+      >
+        <ng-template pTemplate="header">
+          <tr class="h-18! text-sm! bg-slate-50">
+            <th class="!pl-10 tracking-widest text-slate-400 w-[110px]">Estado</th>
+            <th class="tracking-widest text-slate-400" pSortableColumn="name">Nombre <p-sortIcon class="w-3! h-3!" field="name" /></th>
+            <th class="tracking-widest text-slate-400">Descripción</th>
+            <th class="tracking-widest text-slate-400">Pipeline</th>
+            <th class="tracking-widest text-slate-400 text-center">Creado / Úl. Cambio</th>
+            <th class="!pr-10 tracking-widest text-slate-400 text-right">Acciones</th>
+          </tr>
+        </ng-template>
 
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="7" class="text-center !py-24">
-            <div class="flex flex-col items-center justify-center gap-3">
-              <i class="pi pi-map text-gray-200" style="font-size: 5rem"></i>
-              <div class="flex flex-col items-center gap-1">
-                <p class="text-gray-400 font-bold text-xl">No se encontraron áreas.</p>
-                <p class="text-gray-400 text-sm font-medium">Prueba ajustando los filtros de búsqueda o el estado de eliminación.</p>
+        <ng-template pTemplate="body" let-area>
+          <tr class="group hover:bg-slate-50 transition-all border-b border-slate-100 last:border-0"
+              [ngClass]="{ 'opacity-60 grayscale-[0.5]': isDeleted(area) }">
+            <td class="!pl-10 py-4">
+              @if (isDeleted(area)) {
+                <span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-lg bg-rose-50 text-rose-600 border border-rose-300">
+                  <span class="w-1.5 h-1.5 rounded-full bg-rose-500 mr-2"></span> Eliminado
+                </span>
+              } @else {
+                <span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-300">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span> Activo
+                </span>
+              }
+            </td>
+            <td>
+              <span class="font-bold text-slate-700 text-base">{{ area.name }}</span>
+            </td>
+            <td>
+              <span class="text-sm text-slate-600 line-clamp-1 max-w-xs">{{ area.description || 'Sin descripción' }}</span>
+            </td>
+            <td>
+              @if (area.previousArea) {
+                <div class="flex items-center gap-2">
+                  <div class="flex flex-col">
+                    <span class="text-[10px] text-[#3B5B8A] font-bold uppercase tracking-wider">Depende de:</span>
+                    <span class="text-sm font-semibold text-slate-700 underline decoration-indigo-200 underline-offset-4 decoration-2">
+                      {{ area.previousArea.name }}
+                    </span>
+                  </div>
+                </div>
+              } @else {
+                <span class="text-xs text-slate-400 italic">Área raíz (Sin dependencias)</span>
+              }
+            </td>
+            <td class="text-center">
+              <div class="flex flex-col items-center">
+                <span class="text-xs font-bold text-slate-600">{{ area.createdAt | date:'dd/MM/yyyy' }}</span>
+                <span class="text-[10px] text-slate-400">{{ area.updatedAt | date:'dd/MM/yyyy' }}</span>
               </div>
-            </div>
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
+            </td>
+            <td class="!pr-10 text-right">
+              <div class="flex justify-end gap-1">
+                @if (!isDeleted(area)) {
+                  <button
+                    pButton
+                    icon="pi pi-pencil"
+                    class="p-button-rounded p-button-text !text-amber-500 hover:!bg-amber-50"
+                    (click)="editArea(area)"
+                    pTooltip="Editar"
+                    tooltipPosition="bottom"
+                  ></button>
+                  <button
+                    pButton
+                    icon="pi pi-trash"
+                    class="p-button-rounded p-button-text !text-rose-500 hover:!bg-rose-50"
+                    (click)="deleteArea(area)"
+                    pTooltip="Eliminar"
+                    tooltipPosition="bottom"
+                  ></button>
+                } @else {
+                  <button
+                    pButton
+                    icon="pi pi-refresh"
+                    class="p-button-rounded p-button-text !text-emerald-500 hover:!bg-emerald-50"
+                    (click)="restoreArea(area)"
+                    pTooltip="Restaurar"
+                    tooltipPosition="bottom"
+                  ></button>
+                }
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="6" class="text-center !py-32">
+              <div class="flex flex-col items-center justify-center gap-3 w-full h-full">
+                <i class="pi pi-map text-[#95abce]" style="font-size: 5rem"></i>
+                <div class="flex flex-col items-center gap-1">
+                  <p class="text-[#627ca7] font-bold text-xl">No se encontraron áreas de preparación.</p>
+                  <p class="text-[#627ca7] text-sm font-medium">Prueba ajustando los filtros de búsqueda.</p>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <!-- VISTA MÓVIL (Tarjetas) -->
+    <div class="lg:hidden block">
+      <p-table
+        #areasMobileTable
+        [value]="areas()"
+        [loading]="loading()"
+        [paginator]="true"
+        [rows]="10"
+        [globalFilterFields]="['name', 'description', 'previousArea.name']"
+        styleClass="p-datatable-modern bg-transparent w-full"
+        [showCurrentPageReport]="false"
+        [tableStyle]="{'table-layout': 'fixed', 'width': '100%'}"
+        [breakpoint]="'0px'"
+      >
+        <ng-template pTemplate="body" let-area>
+          <tr class="bg-transparent border-none block" [ngClass]="{ 'opacity-60 grayscale-[0.5]': isDeleted(area) }">
+            <td class="block !p-0 border-none bg-transparent">
+              <div class="bg-white rounded-2xl shadow-sm border border-slate-200 mx-4 my-2.5 flex flex-col overflow-hidden relative">
+                <div class="flex p-4 items-center gap-4">
+                  <div class="flex items-center justify-center shrink-0">
+                    <span class="w-10 h-10 rounded-xl bg-[#D0E2F2] text-[#3B5B8A] flex items-center justify-center border border-[#4A7FA7] shadow-sm">
+                        <i class="pi pi-map text-lg!"></i>
+                    </span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-start gap-1">
+                      <div class="flex flex-col min-w-0">
+                        <h3 class="font-bold text-slate-800 text-lg leading-tight truncate">{{ area.name }}</h3>
+                        <p class="text-[11px] text-[#627ca7] font-medium truncate">{{ area.description || 'Sin descripción' }}</p>
+                      </div>
+                      @if (isDeleted(area)) {
+                        <p-tag severity="danger" value="Eliminado" styleClass="!text-[10px] !font-bold px-1.5 py-0.5 rounded-md" />
+                      } @else {
+                        <p-tag value="Activo" severity="success" styleClass="!text-[10px] !font-bold px-1.5 py-0.5 rounded-md" />
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <div class="px-4 pb-4 flex flex-col gap-2.5">
+                  <div class="flex items-center gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                    <i class="pi pi-share-alt text-[#4A7FA7]" style="font-size: 0.75rem"></i>
+                    <div class="flex flex-col">
+                       <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Pipeline / Dependencia</span>
+                       <p class="text-[11px] text-[#3B5B8A] font-bold line-clamp-1 flex-1 leading-relaxed">
+                          {{ area.previousArea ? 'Proviene de: ' + area.previousArea.name : 'Área de inicio de flujo' }}
+                       </p>
+                    </div>
+                  </div>
+                  <div class="flex items-center justify-between px-1">
+                    <div class="flex flex-col">
+                      <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Creado</span>
+                      <span class="text-[10px] text-slate-600 font-bold">{{ area.createdAt | date:'dd/MM/yyyy' }}</span>
+                    </div>
+                    <div class="flex flex-col items-end">
+                      <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Últ. Cambio</span>
+                      <span class="text-[10px] text-slate-600 font-bold">{{ area.updatedAt | date:'dd/MM/yyyy' }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="bg-slate-50/50 border-t border-slate-100 p-2 px-4 flex items-center justify-end">
+                  <div class="flex items-center gap-1">
+                    @if (!isDeleted(area)) {
+                      <p-button
+                        icon="pi pi-pencil"
+                        styleClass="p-button-text !text-amber-600 hover:!bg-amber-50 !w-9 !h-9 !rounded-lg !p-0"
+                        (onClick)="editArea(area)"
+                      />
+                      <p-button
+                        icon="pi pi-trash"
+                        styleClass="p-button-text !text-rose-600 hover:!bg-rose-50 !w-9 !h-9 !rounded-lg !p-0"
+                        (onClick)="deleteArea(area)"
+                      />
+                    } @else {
+                      <p-button
+                        label="Restaurar"
+                        icon="pi pi-refresh"
+                        styleClass="p-button-text !text-emerald-500 hover:!bg-emerald-50 text-[10px] font-bold !py-1.5 !px-3 rounded-lg border border-emerald-100 bg-white shadow-sm"
+                        (onClick)="restoreArea(area)"
+                      />
+                    }
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template #emptymessage>
+          <tr>
+            <td class="block !p-0 border-none bg-transparent">
+              <div class="bg-white rounded-lg border border-slate-300 mx-4 my-8 p-10 flex flex-col items-center gap-4 text-center">
+                <i class="pi pi-map text-[#95abce]" style="font-size: 4rem"></i>
+                <div class="flex flex-col gap-1">
+                  <p class="text-[#627ca7] font-semibold">No se encontraron áreas.</p>
+                  <p class="text-[#627ca7] text-xs">Prueba ajustando los filtros.</p>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
   </div>
 </div>
 

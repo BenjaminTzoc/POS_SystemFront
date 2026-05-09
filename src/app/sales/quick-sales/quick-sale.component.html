@@ -1,0 +1,396 @@
+<div class="py-4 px-0 md:px-6 bg-gray-50/30 min-h-screen pb-[500px]">
+  
+  <!-- Header Section -->
+  <div class="max-w-[1700px] mx-auto mb-6 md:mb-8 px-4 md:px-0">
+    <div class="flex flex-col md:flex-row items-stretch md:items-end justify-between gap-4">
+      <div>
+      <div class="flex flex-col md:flex-row items-baseline gap-2 md:gap-4">
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
+          Venta Rápida
+        </h1>
+        @if (nextInvoiceNumber()) {
+           <p-tag severity="secondary" [value]="'Próxima: ' + nextInvoiceNumber()" styleClass="!bg-slate-200 !text-slate-700 !font-mono !px-3"></p-tag>
+        }
+      </div>
+        <p class="text-gray-500 mt-1 md:mt-2 text-sm md:text-md">
+          Procese ventas de forma ágil y sencilla.
+        </p>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <p-button 
+          label="Cancelar" 
+          (onClick)="onCancel()"
+          variant="outlined" 
+          severity="danger" 
+          icon="pi pi-times"
+          styleClass="font-bold border-rose-400! w-full sm:w-auto justify-center"
+          [disabled]="saving()"
+        />
+        <p-button
+          (onClick)="onSave()"
+          label="Finalizar Venta"
+          severity="primary"
+          styleClass="!rounded-lg w-full sm:w-auto shadow-lg !py-2 font-bold justify-center"
+          [loading]="saving()"
+          icon="pi pi-check"
+          [disabled]="saleForm.invalid || details.length === 0"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-[1700px] mx-auto px-4 md:px-0">
+    <div class="grid grid-cols-12 gap-6 md:gap-8">
+      
+      <!-- Left Column: Product Selection & Cart -->
+      <div class="col-span-12 lg:col-span-8 flex flex-col gap-6">
+        
+        <!-- Product Selector Card -->
+        <div class="px-5 md:px-8 py-6 rounded-2xl bg-white border border-slate-300 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <h3 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+              <i class="pi pi-th-large text-indigo-500"></i>
+              Catálogo de Productos
+            </h3>
+            
+            <p-iconfield class="w-full sm:w-72">
+              <p-inputicon class="pi pi-search" />
+              <input 
+                pInputText 
+                type="text" 
+                placeholder="Buscar por nombre o SKU..." 
+                class="w-full !rounded-xl border-slate-200 h-10 text-sm"
+                (input)="searchTerm.set($any($event.target).value)" 
+              />
+            </p-iconfield>
+          </div>
+          
+          <div class="product-ribbon overflow-x-auto pb-4 -mx-2 px-2 flex gap-4 scroll-smooth">
+            @if (loadingProducts()) {
+              @for (i of [1,2,3,4,5,6]; track i) {
+                <div class="flex-shrink-0 w-36 h-auto p-3 rounded-2xl border border-slate-100 bg-white flex flex-col items-center gap-2">
+                  <p-skeleton width="100%" height="100px" borderRadius="12px"></p-skeleton>
+                  <p-skeleton width="80%" height="12px" styleClass="mt-2"></p-skeleton>
+                  <p-skeleton width="50%" height="10px"></p-skeleton>
+                  <div class="w-full mt-2 flex justify-between">
+                    <p-skeleton width="30%" height="15px"></p-skeleton>
+                    <p-skeleton shape="circle" size="20px"></p-skeleton>
+                  </div>
+                </div>
+              }
+            } @else {
+              @for (p of filteredProducts(); track p.id) {
+              <div 
+                (click)="addProduct(p)"
+                class="flex-shrink-0 w-36 h-auto p-3 rounded-2xl border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/30 transition-all cursor-pointer group flex flex-col items-center text-center gap-2 bg-white shadow-sm hover:shadow-md"
+              >
+                <div class="w-full aspect-square rounded-xl overflow-hidden bg-slate-50 border border-slate-100 mb-1">
+                  @if (p.imageUrl) {
+                    <img [src]="getProductImageUrl(p.imageUrl)" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  } @else {
+                    <div class="w-full h-full flex items-center justify-center">
+                      <i class="pi pi-image text-2xl text-slate-200"></i>
+                    </div>
+                  }
+                </div>
+                <div class="flex flex-col gap-0.5 w-full">
+                  <span class="text-[11px] font-bold text-slate-800 line-clamp-2 min-h-[32px] leading-tight">
+                    {{ p.name }}
+                  </span>
+                  <span class="text-[9px] text-slate-400 font-mono tracking-wider uppercase truncate">{{ p.sku }}</span>
+                </div>
+                <div class="mt-auto pt-1 w-full border-t border-slate-100 flex items-center justify-between">
+                  <div class="flex flex-col items-start">
+                    <span class="text-xs font-bold text-indigo-600">{{ p.price | currency:'Q ' }}</span>
+                    @if (p.stock !== undefined) {
+                      <span class="text-[9px] font-bold" [ngClass]="p.stock > 0 ? 'text-emerald-500' : 'text-rose-500'">
+                        {{ p.stock }} disp.
+                      </span>
+                    }
+                  </div>
+                  <div class="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center scale-0 group-hover:scale-100 transition-transform">
+                    <i class="pi pi-plus text-[10px] text-indigo-600"></i>
+                  </div>
+                </div>
+              </div>
+            } @empty {
+              <div class="w-full py-12 flex flex-col items-center justify-center gap-3 text-slate-400">
+                <i class="pi pi-search text-3xl"></i>
+                <p class="text-sm font-medium">No se encontraron productos</p>
+              </div>
+            }
+          }
+          </div>
+        </div>
+
+        <!-- Cart Table Card -->
+        <div class="bg-white rounded-2xl border border-slate-300 flex flex-col shadow-sm">
+          <div class="p-4 md:p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 rounded-t-2xl">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                <i class="pi pi-shopping-cart text-indigo-600"></i>
+              </div>
+              <h3 class="text-lg font-semibold text-slate-800">Detalle de Venta</h3>
+            </div>
+            <p-tag 
+              severity="info" 
+              [value]="details.length + ' Items'"
+              styleClass="!text-[13px] !px-4 !py-1 !font-semibold tracking-wide rounded-full"
+            />
+          </div>
+
+          <div class="overflow-x-auto w-full">
+            <p-table [value]="details.controls" styleClass="p-datatable-modern block w-full">
+              <ng-template pTemplate="header">
+                <tr class="h-12 text-[11px] uppercase tracking-widest text-slate-400 font-bold bg-slate-50/30 hidden lg:table-row">
+                  <th class="!pl-8">Producto</th>
+                  <th class="text-center">Precio</th>
+                  <th class="text-center" style="width: 140px;">Cantidad</th>
+                  <th class="text-center" style="width: 100px;">Desc %</th>
+                  <th class="text-center">Subtotal</th>
+                  <th class="text-right !pr-8">Acciones</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-control let-i="rowIndex">
+                <tr class="hover:bg-slate-50 transition-all border-b border-slate-100 lg:table-row flex flex-col lg:flex-row">
+                  
+                  <!-- Producto -->
+                  <td class="!pl-8 py-4">
+                    <div class="flex flex-col">
+                      <span class="font-semibold text-slate-800 text-sm">{{ control.get('productName').value }}</span>
+                      <span class="text-[11px] text-slate-500 font-medium tracking-widest uppercase">{{ control.get('sku').value }}</span>
+                    </div>
+                  </td>
+
+                  <!-- Precio -->
+                  <td class="text-center py-4">
+                    <span class="text-sm font-medium text-slate-600">
+                      {{ control.get('unitPrice').value | currency:'Q ' }}
+                    </span>
+                  </td>
+
+                  <!-- Cantidad -->
+                  <td class="text-center py-4">
+                    <div class="flex justify-center">
+                      <p-inputnumber 
+                        [formControl]="$any(control.get('quantity'))"
+                        [showButtons]="true" 
+                        buttonLayout="horizontal" 
+                        spinnerMode="horizontal"
+                        mode="decimal"
+                        [min]="0.001"
+                        [minFractionDigits]="control.get('allowsDecimals')?.value ? 2 : 0"
+                        [maxFractionDigits]="control.get('allowsDecimals')?.value ? 3 : 0"
+                        decrementButtonClass="p-button-secondary p-button-text !p-1"
+                        incrementButtonClass="p-button-secondary p-button-text !p-1"
+                        incrementButtonIcon="pi pi-plus" 
+                        decrementButtonIcon="pi pi-minus"
+                        [suffix]="' ' + control.get('unitAbbreviation')?.value"
+                        inputStyleClass="w-20 text-center border-none font-bold text-slate-700 bg-slate-100/50 !rounded-lg mx-1"
+                        (onInput)="updatePaymentAmount()"
+                      />
+                    </div>
+                  </td>
+
+                  <!-- Descuento % -->
+                  <td class="text-center py-4">
+                    <div class="flex justify-center">
+                      <p-inputnumber 
+                        [formControl]="$any(control.get('discount'))"
+                        mode="decimal"
+                        [min]="0"
+                        [max]="100"
+                        suffix="%"
+                        inputStyleClass="w-16 text-center border-none font-medium text-rose-600 bg-rose-50/50 !rounded-lg"
+                        (onInput)="updatePaymentAmount()"
+                      />
+                    </div>
+                  </td>
+
+                  <!-- Subtotal -->
+                  <td class="text-center py-4">
+                    <span class="text-md font-bold text-slate-800">
+                       {{ salesTotals()?.lines?.[i]?.subtotalAfterLineDiscount || 0 | currency:'Q ' }}
+                    </span>
+                  </td>
+
+                  <!-- Acciones -->
+                  <td class="text-right !pr-8 py-4">
+                    <p-button 
+                      icon="pi pi-trash" 
+                      severity="danger" 
+                      variant="text"
+                      rounded="true"
+                      (onClick)="removeDetail(i)"
+                    />
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="5" class="py-12 text-center">
+                    <div class="flex flex-col items-center gap-2">
+                       <i class="pi pi-shopping-bag text-4xl text-slate-200"></i>
+                       <span class="text-slate-400 font-medium">No hay productos agregados</span>
+                    </div>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Totals & Payments -->
+      <div class="col-span-12 lg:col-span-4 flex flex-col gap-6">
+        
+        <!-- Totals Card -->
+        <div class="p-8 rounded-3xl bg-indigo-900 text-white shadow-xl relative overflow-hidden">
+          <div class="relative z-10 flex flex-col gap-6">
+              <div class="flex flex-col gap-1">
+                <span class="text-[11px] font-semibold text-indigo-300 uppercase tracking-widest">Total a Pagar</span>
+                <div class="flex items-baseline gap-2">
+                  <span class="text-5xl font-bold tracking-tight">{{ grandTotal() | currency:'Q ' }}</span>
+                </div>
+              </div>
+              
+              <div class="h-px bg-indigo-800/50 w-full"></div>
+              
+              <div class="flex flex-col gap-3">
+                <div class="flex justify-between items-center text-indigo-200">
+                  <span class="text-sm font-medium">Subtotal</span>
+                  <span class="text-lg font-semibold text-white">{{ totalAmount() | currency:'Q ' }}</span>
+                </div>
+                @if (applyTax()) {
+                  <div class="flex justify-between items-center text-indigo-200">
+                    <span class="text-sm font-medium">Impuestos (12%)</span>
+                    <span class="text-lg font-semibold text-white">{{ taxAmount() | currency:'Q ' }}</span>
+                  </div>
+                }
+                <div class="flex justify-between items-center text-indigo-200">
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium">Descuentos</span>
+                    @if (discountTotal() > 0) {
+                      <button 
+                        (click)="showDiscountDialog.set(true)"
+                        class="text-[10px] bg-indigo-500/30 hover:bg-indigo-500/50 px-1.5 py-0.5 rounded text-indigo-100 transition-colors"
+                      >
+                        Ver todos
+                      </button>
+                    }
+                  </div>
+                  <span class="text-lg font-semibold text-rose-300">- {{ discountTotal() | currency:'Q ' }}</span>
+                </div>
+
+                <div class="mt-2">
+                  <button 
+                    (click)="showDiscountDialog.set(true)"
+                    class="w-full py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-xs font-semibold text-white transition-all flex items-center justify-center gap-2"
+                  >
+                    <i class="pi pi-percentage"></i>
+                    Gestionar Descuentos
+                  </button>
+                </div>
+
+                <div class="flex justify-between items-center text-indigo-200 mt-2 pt-2 border-t border-indigo-800/30">
+                  <div class="flex flex-col">
+                    <span class="text-sm font-medium">Aplicar Impuestos (IVA)</span>
+                    <span class="text-[10px] text-indigo-300">Incluir en el precio</span>
+                  </div>
+                  <p-toggleswitch
+                    [ngModel]="applyTax()"
+                    (ngModelChange)="applyTax.set($event)"
+                    styleClass="scale-90"
+                  />
+                </div>
+              </div>
+            </div>
+          
+          <!-- Background decoration -->
+          <i class="pi pi-receipt absolute -right-6 -bottom-6 text-9xl text-indigo-800/40 -rotate-12"></i>
+        </div>
+
+        <!-- Global Discounts Dialog Component -->
+        <app-sale-discounts 
+          [discounts]="discounts()" 
+          [(visible)]="showDiscountDialog"
+          (discountsChanged)="onDiscountsUpdated($event)" 
+        />
+
+        <!-- Payments Section -->
+        <div class="px-5 md:px-8 py-6 rounded-2xl bg-white border border-slate-300 shadow-sm" [formGroup]="saleForm">
+          <h3 class="text-lg font-semibold text-slate-800 mb-6 flex items-center gap-2">
+            <i class="pi pi-wallet text-indigo-500"></i>
+            Medio de Pago
+          </h3>
+          
+          <div formArrayName="payments" class="flex flex-col gap-4">
+            @for (p of payments.controls; track i; let i = $index) {
+              <div [formGroupName]="i" class="flex flex-col gap-4">
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700">Método <span class="text-red-700">*</span></label>
+                  <p-select
+                    formControlName="paymentMethodId"
+                    [options]="paymentMethods()"
+                    optionLabel="name"
+                    optionValue="id"
+                    placeholder="Seleccione método..."
+                    styleClass="w-full !rounded-xl border-slate-200 h-11"
+                    appendTo="body"
+                  />
+                </div>
+
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700">Monto <span class="text-red-700">*</span></label>
+                  <p-inputnumber
+                    formControlName="amount"
+                    mode="currency"
+                    currency="GTQ"
+                    locale="es-GT"
+                    placeholder="0.00"
+                    styleClass="w-full"
+                    inputStyleClass="w-full !rounded-xl border-slate-200 h-12 font-bold text-2xl px-4 text-emerald-600 bg-emerald-50/30"
+                  />
+                </div>
+
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700">No. Referencia</label>
+                  <p-iconfield class="w-full">
+                    <p-inputicon class="pi pi-hashtag" />
+                    <input 
+                      pInputText 
+                      formControlName="referenceNumber"
+                      type="text" 
+                      placeholder="Ej: TRANS-1234" 
+                      class="w-full !rounded-xl border-slate-200 h-11 text-sm"
+                    />
+                  </p-iconfield>
+                </div>
+
+                @if (remainingAmount() > 0) {
+                  <div class="flex flex-col gap-1.5">
+                    <div class="p-3 rounded-xl bg-orange-50 border border-orange-100 flex items-center gap-2">
+                        <i class="pi pi-info-circle text-orange-500"></i>
+                        <span class="text-xs font-semibold text-orange-700">Faltan {{ remainingAmount() | currency:'Q ' }} por cubrir</span>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="mt-8">
+            <label class="text-sm font-semibold text-slate-700 block mb-2">Notas / Comentarios</label>
+            <textarea 
+              pTextarea
+              formControlName="notes"
+              class="w-full !rounded-xl border-slate-200 p-4 text-sm resize-none h-24"
+              placeholder="Notas internas opcionales..."
+            ></textarea>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

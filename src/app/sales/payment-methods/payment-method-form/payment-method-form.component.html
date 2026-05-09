@@ -1,0 +1,123 @@
+<div class="py-4 px-0 md:px-6 bg-slate-50/50 min-h-screen">
+  
+  <!-- Header Section -->
+  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-6 md:mb-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div class="w-full md:max-w-[60%]">
+        <h1 class="text-2xl md:text-4xl font-semibold text-gray-900 tracking-tight">
+          {{ isEditMode ? 'Editar Método de Pago' : 'Nuevo Método de Pago' }}
+        </h1>
+        <p class="hidden md:block text-[#627ca7] mt-1 md:mt-2 text-sm md:text-md font-medium">
+           {{ isEditMode ? 'Actualice la configuración del' : 'Configure un nuevo' }} método de pago para el sistema.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto">
+        <div class="flex-1">
+          <p-button 
+            label="Cancelar" 
+            (onClick)="onCancel()" 
+            variant="outlined" 
+            severity="danger" 
+            icon="pi pi-times"
+            styleClass="border-rose-400! h-[44px] justify-center !rounded-xl"
+            fluid
+          />
+        </div>
+        <div class="flex-1">
+          <p-button
+            (onClick)="onSave()"
+            [label]="isEditMode ? 'Guardar' : 'Crear'"
+            severity="success"
+            [raised]="true"
+            styleClass="shadow-lg h-[44px] justify-center font-bold !rounded-xl"
+            [loading]="isSaving"
+            icon="pi pi-check"
+            [disabled]="paymentForm.invalid"
+            fluid
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <form class="max-w-[1000px] mx-auto pb-40" [formGroup]="paymentForm">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
+      <div class="col-span-12 flex flex-col gap-6">
+        <div class="p-5 md:p-8 rounded-2xl bg-white border border-slate-300 shadow-sm relative overflow-hidden">
+          
+          <div class="flex flex-col gap-y-6 md:gap-y-8 relative">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Name Field -->
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="name">
+                  <i class="pi pi-wallet mr-1 text-xs! text-indigo-500"></i>
+                  Nombre del Método <span class="text-red-700">*</span>
+                </label>
+                <input
+                  pInputText
+                  id="name"
+                  formControlName="name"
+                  class="w-full !rounded-xl h-[44px] font-medium"
+                  placeholder="Ej. Efectivo, Tarjeta Visa, Transferencia..."
+                  autocomplete="off"
+                />
+              </div>
+
+              <!-- Code Field -->
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="code">
+                  <i class="pi pi-code mr-1 text-xs! text-indigo-500"></i>
+                  Código Interno <span class="text-red-700">*</span>
+                </label>
+                <input
+                  pInputText
+                  id="code"
+                  formControlName="code"
+                  class="w-full !rounded-xl h-[44px] font-mono font-bold"
+                  placeholder="Ej. CASH, CARD, BANK_TRANSFER..."
+                  autocomplete="off"
+                />
+              </div>
+            </div>
+            <!-- Description Field -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="description">
+                <i class="pi pi-align-left mr-1 text-xs! text-indigo-500"></i>
+                Descripción
+              </label>
+              <textarea
+                pTextarea
+                id="description"
+                formControlName="description"
+                class="w-full !rounded-xl border-slate-200 p-4 text-sm"
+                placeholder="Describa brevemente este método de pago..."
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div class="p-6 rounded-2xl bg-slate-50 border border-slate-200">
+               <h4 class="text-sm font-bold text-slate-700 mb-6 flex items-center gap-2">
+                 <i class="pi pi-cog text-indigo-500"></i>
+                 Configuración de Flags
+               </h4>
+
+               <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 mt-4">
+                 
+                 <!-- Requires Bank -->
+                 <div class="flex flex-col items-center gap-3 p-4 bg-white rounded-xl border border-slate-200 shadow-sm sm:col-span-1">
+                   <span class="text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Requiere Banco</span>
+                   <p-toggleSwitch formControlName="requiresBankAccount" />
+                   <span class="text-[10px] font-medium text-slate-400 text-center">Indica si el depósito va a una cuenta bancaria.</span>
+                 </div>
+
+               </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
