@@ -13,6 +13,8 @@ import { AuthService } from '../../auth/auth.service';
 import { BranchesService } from '../services/branches.service';
 import { Branch } from '../interfaces/branch.interface';
 import { InputTextModule } from 'primeng/inputtext';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 
 @Component({
   selector: 'app-inventories',
@@ -25,6 +27,8 @@ import { InputTextModule } from 'primeng/inputtext';
     FormsModule,
     CommonModule,
     InputTextModule,
+    IconFieldModule,
+    InputIconModule,
   ],
   templateUrl: './inventories.component.html',
   styleUrl: './inventories.component.css',

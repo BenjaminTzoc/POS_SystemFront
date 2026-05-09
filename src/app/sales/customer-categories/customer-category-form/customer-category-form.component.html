@@ -49,100 +49,102 @@
             <i class="pi pi-id-card" style="font-size: 8rem"></i>
           </div>
 
-          <div class="flex flex-col gap-y-6 md:gap-y-8 relative">
-            <!-- Name Field -->
-            <div class="flex flex-col gap-1.5 md:gap-1">
-              <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="name">
-                <i class="pi pi-tag mr-1 text-xs! text-blue-500"></i>
-                Nombre de la Categoría <span class="text-red-700">*</span>
-              </label>
-              <input
-                pInputText
-                id="name"
-                formControlName="name"
-                class="w-full !rounded-lg h-[44px] md:h-auto font-medium"
-                [ngClass]="{'ng-invalid ng-dirty': categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched}"
-                placeholder="Ej. VIP, Mayorista, Minorista, Regular..."
-                autocomplete="off"
-              />
-              @if (categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched) {
-                <small class="text-rose-500 text-[10px] font-medium flex items-center mt-1">
-                  <i class="pi pi-exclamation-circle mr-1 text-[10px]!"></i>El nombre es obligatorio.
-                </small>
-              }
-            </div>
+          <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 lg:gap-8 relative z-10">
+            <!-- Left Column: Name & Description -->
+            <div class="xl:col-span-7 flex flex-col gap-6 md:gap-8">
+              <!-- Name Field -->
+              <div class="flex flex-col gap-1.5 md:gap-1">
+                <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="name">
+                  <i class="pi pi-tag mr-1 text-xs! text-blue-500"></i>
+                  Nombre de la Categoría <span class="text-red-700">*</span>
+                </label>
+                <input
+                  pInputText
+                  id="name"
+                  formControlName="name"
+                  class="w-full !rounded-lg h-[44px] md:h-auto font-medium"
+                  [ngClass]="{'ng-invalid ng-dirty': categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched}"
+                  placeholder="Ej. VIP, Mayorista, Minorista, Regular..."
+                  autocomplete="off"
+                />
+                @if (categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched) {
+                  <small class="text-rose-500 text-[10px] font-medium flex items-center mt-1">
+                    <i class="pi pi-exclamation-circle mr-1 text-[10px]!"></i>El nombre es obligatorio.
+                  </small>
+                }
+              </div>
 
-            <!-- Discount & Benefits Section -->
-            <div class="col-span-1 md:col-span-2">
-              <div class="p-4 md:p-6 rounded-xl bg-[#D0E2F2] border border-[#4A7FA7]">
-                <div class="flex flex-col lg:flex-row gap-6">
-                  <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-2">
-                       <i class="pi pi-percentage text-[#3B5B8A] font-bold"></i>
-                       <span class="text-sm font-bold text-[#3B5B8A]">Configuración de Beneficios</span>
-                    </div>
-                    <p class="text-[11px] text-[#3B5B8A] font-medium leading-relaxed opacity-80">
-                      Determine los parámetros financieros automáticos para los clientes de este nivel. El descuento se sugerirá en cada venta realizada.
-                    </p>
-                  </div>
-                  
-                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 grow">
-                    <div class="flex flex-col gap-1.5 md:gap-1">
-                      <label class="text-[10px] font-bold text-[#3B5B8A] uppercase tracking-wider" for="discountPercentage">Descuento (%)</label>
-                      <p-inputnumber
-                        id="discountPercentage"
-                        formControlName="discountPercentage"
-                        prefix="%"
-                        [min]="0"
-                        [max]="100"
-                        [minFractionDigits]="2"
-                        inputStyleClass="!rounded-lg border-slate-300 w-full h-[40px] font-bold text-[#3B5B8A]"
-                      />
-                    </div>
-                    <div class="flex flex-col gap-1.5 md:gap-1">
-                      <label class="text-[10px] font-bold text-[#3B5B8A] uppercase tracking-wider" for="minPurchaseAmount">Venta Mínima</label>
-                      <p-inputnumber
-                        id="minPurchaseAmount"
-                        formControlName="minPurchaseAmount"
-                        mode="currency"
-                        currency="GTQ"
-                        locale="es-GT"
-                        [min]="0"
-                        inputStyleClass="!rounded-lg border-slate-300 w-full h-[40px] font-bold text-[#3B5B8A]"
-                      />
-                    </div>
-                    <div class="flex flex-col gap-1.5 md:gap-1">
-                      <label class="text-[10px] font-bold text-[#3B5B8A] uppercase tracking-wider" for="defaultCreditLimit">Límite Crédito</label>
-                      <p-inputnumber
-                        id="defaultCreditLimit"
-                        formControlName="defaultCreditLimit"
-                        mode="currency"
-                        currency="GTQ"
-                        locale="es-GT"
-                        [min]="0"
-                        inputStyleClass="!rounded-lg border-slate-300 w-full h-[40px] font-bold text-[#3B5B8A]"
-                      />
-                    </div>
-                  </div>
-                </div>
+              <!-- Description Field -->
+              <div class="flex flex-col gap-1.5 md:gap-1 h-full">
+                <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="description">
+                  <i class="pi pi-align-left mr-1 text-xs! text-blue-500"></i>
+                  Descripción (Opcional)
+                </label>
+                <textarea
+                  rows="6"
+                  pTextarea
+                  id="description"
+                  formControlName="description"
+                  class="w-full !rounded-lg border-slate-300 p-4 font-medium resize-none text-sm md:text-base flex-grow"
+                  placeholder="Detalle los requisitos o beneficios adicionales de este nivel..."
+                  autocomplete="off"
+                ></textarea>
               </div>
             </div>
 
-            <!-- Description Field -->
-            <div class="flex flex-col gap-1.5 md:gap-1">
-              <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="description">
-                <i class="pi pi-align-left mr-1 text-xs! text-blue-500"></i>
-                Descripción (Opcional)
-              </label>
-              <textarea
-                rows="4"
-                pTextarea
-                id="description"
-                formControlName="description"
-                class="w-full !rounded-lg border-slate-300 p-4 font-medium resize-none text-sm md:text-base"
-                placeholder="Detalle los requisitos o beneficios adicionales de este nivel..."
-                autocomplete="off"
-              ></textarea>
+            <!-- Right Column: Discount & Benefits Section -->
+            <div class="xl:col-span-5 flex flex-col">
+              <div class="p-5 md:p-6 rounded-xl bg-[#D0E2F2] border border-[#4A7FA7] h-full flex flex-col">
+                <div class="flex items-center gap-2 mb-2">
+                   <i class="pi pi-percentage text-[#3B5B8A] font-bold"></i>
+                   <span class="text-sm font-bold text-[#3B5B8A]">Configuración de Beneficios</span>
+                </div>
+                <p class="text-[11px] text-[#3B5B8A] font-medium leading-relaxed opacity-80 mb-6">
+                  Determine los parámetros financieros automáticos para los clientes de este nivel. El descuento se sugerirá en cada venta realizada.
+                </p>
+                
+                <div class="flex flex-col gap-5 mt-auto">
+                  <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-bold text-[#3B5B8A] uppercase tracking-wider" for="discountPercentage">Descuento (%)</label>
+                    <p-inputnumber
+                      id="discountPercentage"
+                      formControlName="discountPercentage"
+                      prefix="%"
+                      [min]="0"
+                      [max]="100"
+                      [minFractionDigits]="2"
+                      inputStyleClass="!rounded-lg border-slate-300 w-full h-[40px] font-bold text-[#3B5B8A]"
+                      [fluid]="true"
+                    />
+                  </div>
+                  <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-bold text-[#3B5B8A] uppercase tracking-wider" for="minPurchaseAmount">Venta Mínima</label>
+                    <p-inputnumber
+                      id="minPurchaseAmount"
+                      formControlName="minPurchaseAmount"
+                      mode="currency"
+                      currency="GTQ"
+                      locale="es-GT"
+                      [min]="0"
+                      inputStyleClass="!rounded-lg border-slate-300 w-full h-[40px] font-bold text-[#3B5B8A]"
+                      [fluid]="true"
+                    />
+                  </div>
+                  <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-bold text-[#3B5B8A] uppercase tracking-wider" for="defaultCreditLimit">Límite Crédito</label>
+                    <p-inputnumber
+                      id="defaultCreditLimit"
+                      formControlName="defaultCreditLimit"
+                      mode="currency"
+                      currency="GTQ"
+                      locale="es-GT"
+                      [min]="0"
+                      inputStyleClass="!rounded-lg border-slate-300 w-full h-[40px] font-bold text-[#3B5B8A]"
+                      [fluid]="true"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
           </div>

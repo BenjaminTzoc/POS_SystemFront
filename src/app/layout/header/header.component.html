@@ -106,7 +106,7 @@
               </div>
               
               @if (isExpanded(item.label)) {
-                <div class="submenu" @submenuAnimation>
+                <div class="submenu">
                   @for (child of item.children; track child.label) {
                     <a [routerLink]="child.route" 
                        routerLinkActive="active" 

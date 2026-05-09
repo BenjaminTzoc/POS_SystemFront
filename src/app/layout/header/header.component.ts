@@ -42,7 +42,7 @@ export class HeaderComponent {
   @Output() toggleSidebar = new EventEmitter<boolean>();
   mobileMenuVisible = signal(false);
   menuItems: MenuItem[] = [...MENU_ITEMS];
-  expandedItems: Set<string> = new Set();
+  expandedItem: string | null = null;
   activeRoute = '';
   private routerSub?: Subscription;
 
@@ -53,10 +53,13 @@ export class HeaderComponent {
   ngOnInit() {
     this.cashService.getStatus().subscribe();
     this.activeRoute = this.router.url;
+    this.autoExpandActiveRoute();
+    
     this.routerSub = this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
       this.activeRoute = (event as NavigationEnd).urlAfterRedirects;
+      this.autoExpandActiveRoute();
     });
   }
 
@@ -64,17 +67,25 @@ export class HeaderComponent {
     this.routerSub?.unsubscribe();
   }
 
+  autoExpandActiveRoute() {
+    for (const item of this.menuItems) {
+      if (item.children && item.children.some(child => child.route && this.activeRoute.startsWith(child.route))) {
+        this.expandedItem = item.label;
+        break;
+      }
+    }
+  }
+
   toggleExpand(label: string) {
-    if (this.expandedItems.has(label)) {
-      this.expandedItems.delete(label);
+    if (this.expandedItem === label) {
+      this.expandedItem = null;
     } else {
-      this.expandedItems.clear(); // Cerrar los demás
-      this.expandedItems.add(label);
+      this.expandedItem = label;
     }
   }
 
   isExpanded(label: string): boolean {
-    return this.expandedItems.has(label);
+    return this.expandedItem === label;
   }
 
   isActive(item: MenuItem): boolean {
