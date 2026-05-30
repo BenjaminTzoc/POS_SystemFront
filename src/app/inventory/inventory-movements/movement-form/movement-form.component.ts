@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Location } from '@angular/common';
 import { ProductsService } from '../../services/products.service';
 import { BranchesService } from '../../services/branches.service';
 import { MessageService } from 'primeng/api';
@@ -28,6 +29,7 @@ export class MovementFormComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
 
   movementForm: FormGroup;
   products: Product[] = [];
@@ -213,6 +215,10 @@ export class MovementFormComponent implements OnInit {
 
   onCancel() {
     this.router.navigate(['/inventory/inventory-movements']);
+  }
+
+  goBack() {
+    this.location.back();
   }
 
   onSave() {

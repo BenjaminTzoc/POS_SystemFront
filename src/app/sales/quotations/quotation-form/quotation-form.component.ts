@@ -13,6 +13,10 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TableModule } from 'primeng/table';
 import { TextareaModule } from 'primeng/textarea';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { DrawerModule } from 'primeng/drawer';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { TooltipModule } from 'primeng/tooltip';
 
 // Services & Interfaces
 import { QuotationsService } from '../../services/quotations.service';
@@ -43,11 +47,14 @@ import { CashRegisterService } from '../../../inventory/services/cash-register.s
     TableModule,
     TextareaModule,
     ConfirmDialogModule,
+    DrawerModule,
+    IconFieldModule,
+    InputIconModule,
+    TooltipModule,
     CurrencyPipe
   ],
   templateUrl: './quotation-form.component.html',
-  styleUrls: ['./quotation-form.component.css'],
-  providers: [MessageService, ConfirmationService]
+  styleUrls: ['./quotation-form.component.css']
 })
 export class QuotationFormComponent implements OnInit {
   private fb = inject(FormBuilder);
@@ -71,6 +78,10 @@ export class QuotationFormComponent implements OnInit {
   customers: ICustomer[] = [];
   customerType: 'registered' | 'guest' = 'registered';
   correlative = '';
+
+  // Drawer-related state
+  drawerVisible = false;
+  searchProductQuery = '';
 
   total = 0;
   subtotal = 0;
@@ -100,8 +111,6 @@ export class QuotationFormComponent implements OnInit {
     if (id) {
       this.isEditMode = true;
       this.loadQuotation(id);
-    } else {
-      this.addItem();
     }
   }
 
@@ -115,7 +124,7 @@ export class QuotationFormComponent implements OnInit {
 
   loadInitialData(): void {
     this.branchesService.getBranches().subscribe(res => this.branches = res.data);
-    this.productsService.getProducts().subscribe(res => {
+    this.productsService.getProducts(undefined, false, undefined, undefined, false).subscribe(res => {
       this.products = res.data;
     });
     this.customersService.getCustomers().subscribe(res => this.customers = res.data);
@@ -159,7 +168,7 @@ export class QuotationFormComponent implements OnInit {
             productId: [item.productId, Validators.required],
             quantity: [item.quantity, [Validators.required, Validators.min(1)]],
             unitPrice: [item.unitPrice, [Validators.required, Validators.min(0)]],
-            discount: [item.discount || 0],
+            discount: [item.discountType === 'fixed_amount' ? (item.discountAmount || 0) : (item.discount || 0)],
             discountType: [item.discountType || 'percentage'],
             taxPercentage: [item.taxPercentage || 12],
             notes: [item.notes || ''],
@@ -227,10 +236,48 @@ export class QuotationFormComponent implements OnInit {
   }
 
   removeItem(index: number) {
-    if (this.items.length > 1) {
-      this.items.removeAt(index);
-      this.calculateTotals();
+    this.items.removeAt(index);
+    this.calculateTotals();
+  }
+
+  get filteredProducts(): Product[] {
+    if (!this.searchProductQuery) return this.products;
+    const q = this.searchProductQuery.toLowerCase();
+    return this.products.filter(p => 
+      p.name.toLowerCase().includes(q) || 
+      (p.sku && p.sku.toLowerCase().includes(q))
+    );
+  }
+
+  addProductFromDrawer(product: Product) {
+    const existingIndex = this.items.controls.findIndex(c => c.get('productId')?.value === product.id);
+    if (existingIndex !== -1) {
+      const qtyControl = this.items.at(existingIndex).get('quantity');
+      qtyControl?.setValue(Number(qtyControl.value || 0) + 1);
+      this.messageService.add({ 
+        severity: 'info', 
+        summary: 'Cantidad Actualizada', 
+        detail: `Se incrementó la cantidad de ${product.name}` 
+      });
+    } else {
+      const itemGroup = this.fb.group({
+        productId: [product.id, Validators.required],
+        quantity: [1, [Validators.required, Validators.min(1)]],
+        unitPrice: [Number(product.price), [Validators.required, Validators.min(0)]],
+        discount: [0],
+        discountType: ['percentage'],
+        taxPercentage: [12],
+        notes: [''],
+        lineTotal: [Number(product.price)]
+      });
+      this.items.push(itemGroup);
+      this.messageService.add({ 
+        severity: 'success', 
+        summary: 'Producto Añadido', 
+        detail: `${product.name} agregado a la lista` 
+      });
     }
+    this.calculateTotals();
   }
 
   calculateTotals() {
@@ -280,29 +327,72 @@ export class QuotationFormComponent implements OnInit {
 
   onSave() {
     this.quotationForm.markAllAsTouched();
+    
+    // 1. Check general Reactive Form fields (e.g. branchId, validityDays)
     if (this.quotationForm.invalid) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Por favor, completa todos los campos requeridos' });
+      this.messageService.add({ 
+        severity: 'warn', 
+        summary: 'Atención', 
+        detail: 'Por favor, completa todos los campos obligatorios del formulario.' 
+      });
       return;
     }
 
-    this.loading = true;
-    const body = { ...this.quotationForm.value };
-    
+    // Explicitly map body values to parse numbers, discounts and quantities correctly
+    const body = { 
+       ...this.quotationForm.getRawValue(),
+       items: this.items.getRawValue().map((item: any) => ({
+          productId: item.productId,
+          quantity: Number(item.quantity || 0),
+          unitPrice: Number(item.unitPrice || 0),
+          discount: Number(item.discount || 0),
+          discountType: item.discountType,
+          discountAmount: item.discountType === 'fixed_amount' ? Number(item.discount || 0) : 0,
+          taxPercentage: Number(item.taxPercentage || 12),
+          notes: item.notes || ''
+       })),
+       adjustments: this.adjustments.getRawValue().map((adj: any) => ({
+          adjustmentType: adj.adjustmentType,
+          valueType: adj.valueType,
+          value: Number(adj.value || 0),
+          reason: adj.reason || ''
+       }))
+    };
+
+    // 2. Validate client selection / details based on customerType
     if (this.customerType === 'registered') {
        delete body.guestCustomer;
        if (!body.customerId) {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Debe seleccionar un cliente registrado' });
-          this.loading = false;
+          this.messageService.add({ 
+             severity: 'warn', 
+             summary: 'Atención', 
+             detail: 'Debe seleccionar un cliente registrado para continuar.' 
+          });
           return;
        }
     } else {
        delete body.customerId;
-       if (!body.guestCustomer?.name) {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Debe ingresar al nombre del invitado' });
-          this.loading = false;
+       if (!body.guestCustomer?.name || !body.guestCustomer.name.trim()) {
+          this.messageService.add({ 
+             severity: 'warn', 
+             summary: 'Atención', 
+             detail: 'Debe ingresar el nombre del cliente invitado.' 
+          });
           return;
        }
     }
+
+    // 3. Validate items list (must not be empty)
+    if (body.items.length === 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Atención',
+        detail: 'Debes añadir al menos un producto al detalle de la cotización.'
+      });
+      return;
+    }
+
+    this.loading = true;
 
     const request = this.isEditMode 
       ? this.quotationsService.updateQuotation(this.route.snapshot.params['id'], body)

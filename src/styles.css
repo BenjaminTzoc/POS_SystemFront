@@ -3,6 +3,36 @@
 @import "primeicons/primeicons.css";
 @import "tailwindcss";
 
+@theme {
+  --color-heart-of-ice: #F7FCFF;
+  --color-congressional-navy: #100438;
+  --color-bath-water: #88EEEE;
+  --color-marionberry: #380282;
+  --color-cyberpink: #FF2077;
+  --color-spiced-purple: #BB1166;
+  --color-spiced-purple-pale: #E8AFCC;
+  --color-spiced-purple-palest: #F7E4EE;
+  --color-marionberry-pale: #7A56AB;
+  --color-marionberry-palest: #D2C6E3;
+  --color-royal-velvet: #2A0845;
+  --color-soft-slate: #5F7C8A;
+  --color-slate-shadow: #34495E;
+  --color-brand-accent: #2E5B82;
+  
+  /* Premium vibrant and striking theme colors mapped from the uploaded palette (Row 14 & 15) */
+  --color-title-primary: #1A273A;      /* Row 15, Col 1: Deep slate blue for major titles */
+  --color-title-secondary: #3B4A6B;    /* Row 14, Col 1: Lively dark blue for card headers */
+  --color-text-body: #3E4A62;          /* Row 15, Col 1: Elegant medium dark slate-blue for body text */
+  --color-text-muted: #627CA7;         /* Slate-blue for labels and secondary text */
+  
+  --color-brand-deep: #0C8ABC;         /* Row 14, Col 3: Vibrant ocean blue for primary actions */
+  --color-brand-royal: #124E96;        /* Row 14, Col 3: Rich blue accent for hover and active items */
+  --color-accent-rust: #C24D2C;        /* Row 15, Col 1: Vibrant rust orange for highlights and totals */
+  --color-cancel-red: #F23456;         /* Row 14, Col 1: Coral red for Cancel buttons */
+  
+  --color-border-elegant: #DAEAF7;     /* Row 14, Col 3: Bright elegant light blue for clean borders */
+}
+
 @import '@fontsource-variable/montserrat';
 
 /* You can add global styles to this file, and also import other style files */

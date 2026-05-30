@@ -1,6 +1,9 @@
 <section class="px-4 md:px-16 py-6 md:py-10 overflow-x-hidden">
   <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 md:mb-8 gap-4">
-    <h1 class="text-2xl font-semibold m-0">Movimientos de inventario</h1>
+    <div class="flex items-center gap-3">
+      <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" severity="secondary" (onClick)="goBack()" />
+      <h1 class="text-2xl font-semibold m-0">Movimientos de inventario</h1>
+    </div>
     <div class="w-full md:w-auto">
       <div class="flex flex-col md:flex-row gap-2 w-full">
         <p-button

@@ -3,7 +3,7 @@ import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { InventoryMovement } from '../interfaces/inventory-movement.interface';
 import { InventoryMovementsService } from '../services/inventory-movements.service';
-import { DatePipe } from '@angular/common';
+import { DatePipe, Location } from '@angular/common';
 import { InventoryMovementTypePipe } from '../../shared/pipes/inventory-movement-type.pipe';
 import { TagModule } from 'primeng/tag';
 import { environment } from '../../../environments/environment';
@@ -53,7 +53,8 @@ export class InventoryMovementsComponent implements OnInit {
     private inventoryMovementsService: InventoryMovementsService,
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
-    private router: Router
+    private router: Router,
+    private location: Location
   ) {}
 
   ngOnInit(): void {
@@ -86,6 +87,10 @@ export class InventoryMovementsComponent implements OnInit {
 
   recordMovement(): void {
     this.router.navigate(['/inventory/new-movement']);
+  }
+
+  goBack(): void {
+    this.location.back();
   }
 
   confirmComplete(movement: InventoryMovement) {

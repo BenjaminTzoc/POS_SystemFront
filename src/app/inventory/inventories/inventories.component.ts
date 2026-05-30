@@ -178,6 +178,10 @@ export class InventoriesComponent implements OnInit {
     this.router.navigate(['inventory/new-inventory']);
   }
 
+  goToMovements() {
+    this.router.navigate(['inventory/inventory-movements']);
+  }
+
   getProductImageUrl(imageUrl: string | null | undefined): string {
     if (!imageUrl) {
       return `${environment.baseUrl}/uploads/products/default-product.png`;

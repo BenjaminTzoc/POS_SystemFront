@@ -1,10 +1,10 @@
 <div class="py-4 px-0 md:px-6 bg-slate-50/50 min-h-screen">
   <!-- Header Section -->
-  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-6 md:mb-8">
+  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-2 md:mb-8">
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
       <div class="w-full md:max-w-[50%]">
-        <h1 class="text-2xl md:text-4xl font-semibold text-gray-900 tracking-tight">Cotizaciones</h1>
-        <p class="hidden md:block text-[#627ca7] mt-1 md:mt-2 text-sm md:text-md font-medium">
+        <h1 class="text-2xl md:text-3xl font-semibold text-gray-900 tracking-tight">Cotizaciones</h1>
+        <p class="hidden md:block text-[#627ca7] mt-1 text-sm md:text-md font-medium">
           Gestión de pro-formas y presupuestos para clientes.
         </p>
       </div>
@@ -21,27 +21,22 @@
               placeholder="Buscar por No. o Cliente..."
               autocomplete="off"
               fluid
-              styleClass="!rounded-xl"
             />
           </p-iconfield>
         </div>
-        <div class="hidden md:block">
-          <p-button 
-            label="Nueva Cotización"
-            severity="info"
-            icon="pi pi-plus"
-            styleClass="!rounded-xl px-6 h-11"
-            (onClick)="goToNewQuotation()"
-          />
-        </div>
-        <div class="md:hidden">
-          <p-button 
-            severity="info"
-            icon="pi pi-plus"
-            styleClass="!rounded-xl w-11 h-11 p-0 flex items-center justify-center"
-            (onClick)="goToNewQuotation()"
-          />
-        </div>
+        <p-button 
+          label="Nueva Cotización"
+          severity="info"
+          icon="pi pi-plus"
+          class="hidden md:block"
+          (onClick)="goToNewQuotation()"
+        />
+        <p-button 
+          severity="info"
+          icon="pi pi-plus"
+          class="block md:hidden"
+          (onClick)="goToNewQuotation()"
+        />
       </div>
     </div>
   </div>
@@ -49,13 +44,13 @@
   <div class="max-w-[1700px] mx-auto">
     
     <!-- DESKTOP VIEW -->
-    <div class="hidden lg:block bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm uppercase tracking-widest text-[10px]">
+    <div class="hidden lg:block bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm">
       <p-table
         [value]="quotations"
         [loading]="loading"
         [paginator]="true"
-        [rows]="15"
-        [rowsPerPageOptions]="[10, 20, 50]"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 20, 30]"
         dataKey="id"
         [expandedRowKeys]="expandedRowsDesktop"
         (expandedRowKeysChange)="onExpandedRowKeysChangeDesktop($event)"
@@ -64,20 +59,18 @@
       >
         <ng-template pTemplate="header">
           <tr class="h-18! text-sm! bg-slate-50">
-            <th style="width: 3rem" class="!pl-6"></th>
-            <th class="!py-5 text-slate-400 w-[130px]">Estado</th>
-            <th class="!py-5 text-slate-400">Número</th>
-            <th class="!py-5 text-slate-400 w-1/3">Cliente / Sucursal</th>
-            <th class="!py-5 text-slate-400 text-center">Items</th>
-            <th class="!py-5 text-slate-400 text-right">Total</th>
-            <th class="!py-5 text-slate-400 text-center">Vencimiento</th>
-            <th class="!py-5 !pr-10 text-slate-400 text-right">Acciones</th>
+            <th style="width: 3.5rem" class="!pl-6"></th>
+            <th class="tracking-widest text-slate-400 w-[140px]">Estado</th>
+            <th class="tracking-widest text-slate-400 w-[180px]">Cotización</th>
+            <th class="tracking-widest text-slate-400">Cliente / Sucursal</th>
+            <th class="tracking-widest text-slate-400 text-right w-[150px]">Total</th>
+            <th class="!pr-10 tracking-widest text-slate-400 text-right w-[200px]">Acciones</th>
           </tr>
         </ng-template>
 
         <ng-template pTemplate="body" let-quotation let-expanded="expanded">
-          <tr class="group hover:bg-transparent lg:hover:bg-indigo-50/10 transition-colors border-b border-slate-100 uppercase tracking-widest text-[10px]">
-            <td class="!pl-6">
+          <tr [ngClass]="{ 'bg-slate-50/50': expanded }" class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 text-sm">
+            <td class="!pl-6 py-4">
               <p-button
                 type="button"
                 pRipple
@@ -86,75 +79,89 @@
                 severity="secondary"
                 [rounded]="true"
                 [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
-                class="!h-8 !w-8"
+                styleClass="!w-7 !h-7 !p-0"
               />
             </td>
-            <td class="!py-5">
+            <td class="py-4">
               <span
-                class="inline-flex items-center px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-sm"
+                class="inline-flex items-center px-2.5 py-1 text-[11px] font-semibold rounded-lg border shadow-sm"
                 [ngClass]="{
-                  'bg-blue-50 text-blue-600 border-blue-100': quotation.status === 'PENDING',
-                  'bg-emerald-50 text-emerald-600 border-emerald-100':
+                  'bg-blue-50 text-blue-600 border-blue-200': quotation.status === 'PENDING',
+                  'bg-emerald-50 text-emerald-600 border-emerald-200':
                     quotation.status === 'CONVERTED',
-                  'bg-amber-50 text-amber-600 border-amber-100': quotation.status === 'EXPIRED',
-                  'bg-rose-50 text-rose-600 border-rose-100': quotation.status === 'CANCELLED',
+                  'bg-amber-50 text-amber-600 border-amber-200': quotation.status === 'EXPIRED',
+                  'bg-rose-50 text-rose-600 border-rose-200': quotation.status === 'CANCELLED',
                 }"
               >
-                <i [class]="getIcon(quotation.status) + ' mr-1.5'"></i>
+                <span class="w-1.5 h-1.5 rounded-full mr-2 animate-pulse"
+                  [ngClass]="{
+                    'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]': quotation.status === 'PENDING',
+                    'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]': quotation.status === 'CONVERTED',
+                    'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]': quotation.status === 'EXPIRED',
+                    'bg-rose-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]': quotation.status === 'CANCELLED'
+                  }"
+                ></span>
                 {{ getStatusLabel(quotation.status) }}
               </span>
             </td>
-            <td class="!py-5 text-xs font-black text-indigo-500 uppercase tracking-tighter">
-              {{ quotation.correlative }}
+            <td class="py-4">
+              <div class="flex flex-col gap-1 items-start">
+                <code class="px-2 py-1 bg-marionberry-palest text-marionberry rounded-md text-sm font-bold border border-marionberry-pale font-mono">
+                  {{ quotation.correlative }}
+                </code>
+                <span class="text-[11px] font-medium leading-tight inline-flex items-center gap-1"
+                      [ngClass]="quotation.status === 'EXPIRED' ? 'text-rose-500 font-semibold' : 'text-slate-400'">
+                   <i class="pi pi-calendar-times text-[10px]" *ngIf="quotation.status === 'EXPIRED'"></i>
+                   Vence: {{ quotation.validUntil | date: 'dd/MM/yyyy' }}
+                </span>
+              </div>
             </td>
-            <td class="!py-5 uppercase tracking-widest text-[10px]">
-              <div class="flex flex-col tracking-widest text-[10px]">
-                <span class="text-sm font-bold text-slate-800 tracking-normal">{{
+            <td class="py-4 text-left">
+              <div class="flex flex-col">
+                <span class="font-semibold text-slate-800 leading-tight">{{
                   quotation.customerName || quotation.guestCustomer?.name || 'Venta al Público'
                 }}</span>
-                <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{{
+                <span class="text-xs text-slate-400 mt-1 font-medium">{{
                   quotation.branchName
                 }}</span>
               </div>
             </td>
-            <td class="!py-5 text-center">
-              <span
-                class="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg text-[10px] font-black border border-slate-200/50"
-              >
-                {{ quotation.items?.length || 0 }} Items
-              </span>
-            </td>
-            <td class="!py-5 text-right font-black text-slate-800 text-sm tabular-nums">
+            <td class="py-4 text-right font-semibold text-marionberry tabular-nums text-base">
               {{ quotation.total | currency: 'Q ' }}
             </td>
-            <td
-              class="!py-5 text-[10px] font-bold text-center"
-              [ngClass]="quotation.status === 'EXPIRED' ? 'text-rose-400' : 'text-slate-400'"
-            >
-              <div class="flex items-center gap-1.5 justify-center">
-                 <i class="pi pi-calendar-times" *ngIf="quotation.status === 'EXPIRED'"></i>
-                 {{ quotation.validUntil | date: 'dd MMM, yyyy' }}
-              </div>
-            </td>
-            <td class="!py-5 !pr-10 text-right">
-              <div class="flex justify-end gap-1.5">
+            <td class="py-4 !pr-10 text-right">
+              <div class="flex justify-end gap-1">
                 @if (quotation.status === 'PENDING') {
-                  <p-button icon="pi pi-shopping-cart" styleClass="p-button-text !text-emerald-500 hover:!bg-emerald-50 !w-9 !h-9 !p-0 !rounded-xl" (onClick)="confirmConvert(quotation)" pTooltip="Convertir a Venta" />
-                  <p-button icon="pi pi-pencil" styleClass="p-button-text !text-amber-500 hover:!bg-amber-50 !w-9 !h-9 !p-0 !rounded-xl" (onClick)="onEditQuotation(quotation.id)" pTooltip="Editar" />
-                  <p-button icon="pi pi-trash" styleClass="p-button-text !text-rose-500 hover:!bg-rose-50 !w-9 !h-9 !p-0 !rounded-xl" (onClick)="confirmCancel(quotation)" pTooltip="Anular" />
+                  <p-button icon="pi pi-shopping-cart" [text]="true" [rounded]="true" severity="success" (onClick)="confirmConvert(quotation)" pTooltip="Convertir a Venta" tooltipPosition="bottom" styleClass="!w-9 !h-9" />
+                  <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="warn" (onClick)="onEditQuotation(quotation.id)" pTooltip="Editar" tooltipPosition="bottom" styleClass="!w-9 !h-9" />
+                  <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" (onClick)="confirmCancel(quotation)" pTooltip="Anular" tooltipPosition="bottom" styleClass="!w-9 !h-9" />
                 }
-                <p-button icon="pi pi-file-pdf" styleClass="p-button-text !text-rose-600 hover:!bg-rose-50 !w-9 !h-9 !p-0 !rounded-xl" (onClick)="downloadPdf(quotation)" pTooltip="Descargar PDF" />
-                <p-button icon="pi pi-envelope" styleClass="p-button-text !text-indigo-500 hover:!bg-indigo-50 !w-9 !h-9 !p-0 !rounded-xl" (onClick)="sendEmail(quotation)" pTooltip="Enviar Correo" />
+                <p-button icon="pi pi-file-pdf" [text]="true" [rounded]="true" severity="danger" (onClick)="downloadPdf(quotation)" pTooltip="Descargar PDF" tooltipPosition="bottom" styleClass="!w-9 !h-9" />
+                <p-button icon="pi pi-envelope" [text]="true" [rounded]="true" severity="info" (onClick)="sendEmail(quotation)" pTooltip="Enviar Correo" tooltipPosition="bottom" styleClass="!w-9 !h-9" />
               </div>
             </td>
           </tr>
         </ng-template>
 
-        <ng-template pTemplate="rowexpansion" let-quotation>
+        <ng-template #expandedrow let-quotation>
           <tr>
-            <td colspan="8" class="!p-0 border-none bg-transparent">
-              <div class="p-10 bg-slate-50/50 border-t border-slate-100">
+            <td colspan="6" class="!p-0 border-none bg-transparent">
+              <div class="p-6 bg-slate-50/50 border-t border-slate-100">
                 <ng-container *ngTemplateOutlet="expandedDetails; context: { $implicit: quotation }"></ng-container>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="text-center !py-32">
+              <div class="flex flex-col items-center justify-center gap-3 w-full h-full">
+                <i class="pi pi-file-edit text-[#95abce]" style="font-size: 5rem"></i>
+                <div class="flex flex-col items-center gap-1">
+                  <p class="text-[#627ca7] font-bold text-xl">No se encontraron cotizaciones.</p>
+                  <p class="text-[#627ca7] text-sm font-medium">Prueba ajustando los filtros de búsqueda o crea una nueva.</p>
+                </div>
               </div>
             </td>
           </tr>
@@ -168,42 +175,49 @@
         [value]="quotations"
         [loading]="loading"
         [paginator]="true"
-        [rows]="15"
+        [rows]="10"
         dataKey="id"
         styleClass="bg-transparent w-full border-none"
         [breakpoint]="'0px'"
       >
         <ng-template pTemplate="body" let-quotation>
           <tr class="bg-transparent border-none block" [ngClass]="{ 'opacity-60 grayscale-[0.5]': quotation.status === 'CANCELLED' }">
-            <td class="block !p-0 border-none bg-transparent">
+            <td class="block !p-0 border-none bg-transparent w-full">
               <div class="bg-white rounded-2xl shadow-sm border border-slate-200 mx-4 my-2.5 flex flex-col overflow-hidden relative">
                 <div class="flex p-4 items-center gap-3">
-                  <div class="w-12 h-12 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden border border-[#4A7FA7] bg-[#D0E2F2] shadow-sm">
-                    <i class="pi pi-file-edit text-xl text-[#3B5B8A]"></i>
+                  <div class="w-12 h-12 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden border border-[#4A7FA7] bg-[#D0E2F2] shadow-sm text-[#3B5B8A]">
+                    <i class="pi pi-file-edit text-lg!"></i>
                   </div>
                   <div class="flex-1 min-w-0">
                     <div class="flex justify-between items-start gap-1">
                       <div class="flex flex-col min-w-0">
-                        <span class="text-[10px] text-[#3B5B8A] font-semibold leading-none truncate tracking-wide uppercase">{{ quotation.correlative }}</span>
-                        <h3 class="font-semibold text-slate-800 text-lg leading-tight truncate">
+                        <span class="inline-flex text-[11px] bg-marionberry-palest text-marionberry font-semibold px-2 py-0.5 rounded border border-marionberry-pale tracking-wide font-mono w-fit">{{ quotation.correlative }}</span>
+                        <h3 class="font-semibold text-slate-800 text-base leading-tight truncate mt-1.5">
                           {{ quotation.customerName || quotation.guestCustomer?.name || 'Venta al Público' }}
                         </h3>
                       </div>
-                      <p-tag 
-                        [value]="getStatusLabel(quotation.status)" 
-                        [severity]="getSeverity(quotation.status)"
-                        styleClass="!text-[10px] !font-semibold px-1.5 py-0.5 rounded-md"
-                      />
+                      <span
+                        class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-md border shadow-sm"
+                        [ngClass]="{
+                          'bg-blue-50 text-blue-600 border-blue-200': quotation.status === 'PENDING',
+                          'bg-emerald-50 text-emerald-600 border-emerald-200':
+                            quotation.status === 'CONVERTED',
+                          'bg-amber-50 text-amber-600 border-amber-200': quotation.status === 'EXPIRED',
+                          'bg-rose-50 text-rose-600 border-rose-200': quotation.status === 'CANCELLED',
+                        }"
+                      >
+                        {{ getStatusLabel(quotation.status) }}
+                      </span>
                     </div>
-                    <div class="flex items-center gap-2 mt-2">
+                    <div class="flex items-center gap-4 mt-2">
                       <div>
-                        <p class="text-[9px] font-medium text-[#3B5B8A]">Total Cotizado</p>
-                        <p class="text-[18px] font-bold text-[#4878c0] leading-none">{{ quotation.total | currency: 'Q ' }}</p>
+                        <p class="text-[9px] font-semibold text-[#3B5B8A] tracking-wider">Total Cotizado</p>
+                        <p class="text-[18px] font-bold text-marionberry leading-none mt-0.5">{{ quotation.total | currency: 'Q ' }}</p>
                       </div>
-                      <div class="flex flex-col ml-1">
-                        <p class="text-[9px] font-medium text-[#3B5B8A]">Vencimiento</p>
-                        <span class="text-[11px] font-bold" [ngClass]="{'text-rose-500': quotation.status === 'EXPIRED', 'text-slate-500': quotation.status !== 'EXPIRED'}">
-                          {{ quotation.validUntil | date: 'dd/MM/yy' }}
+                      <div class="flex flex-col">
+                        <p class="text-[9px] font-semibold text-[#3B5B8A] tracking-wider">Vencimiento</p>
+                        <span class="text-xs font-bold mt-0.5" [ngClass]="{'text-rose-500': quotation.status === 'EXPIRED', 'text-slate-500': quotation.status !== 'EXPIRED'}">
+                          {{ quotation.validUntil | date: 'dd/MM/yyyy' }}
                         </span>
                       </div>
                     </div>
@@ -211,10 +225,10 @@
                 </div>
 
                 <div class="px-4 pb-4 flex items-center gap-2 overflow-x-auto no-scrollbar">
-                  <span class="inline-flex text-[11px] bg-slate-100 text-slate-500 font-semibold px-2 py-0.5 rounded border border-slate-200">
+                  <span class="inline-flex items-center text-[11px] bg-slate-100 text-slate-500 font-semibold px-2 py-0.5 rounded border border-slate-200">
                     <i class="pi pi-building text-[10px] mr-1"></i> {{ quotation.branchName }}
                   </span>
-                  <span class="inline-flex text-[11px] bg-indigo-50 text-indigo-600 font-semibold px-2 py-0.5 rounded border border-indigo-100">
+                  <span class="inline-flex items-center text-[11px] bg-[#D0E2F2] text-[#3B5B8A] font-semibold px-2 py-0.5 rounded border border-[#4A7FA7]">
                     {{ quotation.items?.length || 0 }} Items
                   </span>
                 </div>
@@ -225,15 +239,15 @@
                       label="Detalles" 
                       icon="pi pi-external-link" 
                       (onClick)="showDetails(quotation)"
-                      styleClass="p-button-text p-button-sm !text-indigo-600 font-bold text-[10px] tracking-widest uppercase !py-1 !px-2.5 rounded-lg border border-indigo-100 bg-white shadow-sm"
+                      styleClass="p-button-text p-button-sm !text-[#3B5B8A] font-semibold text-xs !py-1 !px-2.5 rounded-lg border border-[#4A7FA7] bg-[#D0E2F2] shadow-sm"
                     />
                   </div>
                   <div class="flex items-center gap-1">
                     @if (quotation.status === 'PENDING') {
-                      <p-button icon="pi pi-shopping-cart" styleClass="p-button-text !text-emerald-500 hover:!bg-emerald-50 !w-9 !h-9 !rounded-lg !p-0" (onClick)="confirmConvert(quotation)" />
+                      <p-button icon="pi pi-shopping-cart" [text]="true" [rounded]="true" severity="success" (onClick)="confirmConvert(quotation)" styleClass="!w-9 !h-9 !p-0" />
                     }
-                    <p-button icon="pi pi-file-pdf" styleClass="p-button-text !text-rose-600 hover:!bg-rose-50 !w-9 !h-9 !rounded-lg !p-0" (onClick)="downloadPdf(quotation)" />
-                    <p-button icon="pi pi-envelope" styleClass="p-button-text !text-indigo-500 hover:!bg-indigo-50 !w-9 !h-9 !rounded-lg !p-0" (onClick)="sendEmail(quotation)" />
+                    <p-button icon="pi pi-file-pdf" [text]="true" [rounded]="true" severity="danger" (onClick)="downloadPdf(quotation)" styleClass="!w-9 !h-9 !p-0" />
+                    <p-button icon="pi pi-envelope" [text]="true" [rounded]="true" severity="info" (onClick)="sendEmail(quotation)" styleClass="!w-9 !h-9 !p-0" />
                   </div>
                 </div>
               </div>
@@ -243,8 +257,14 @@
 
         <ng-template pTemplate="emptymessage">
            <tr>
-             <td class="block !p-0 border-none bg-transparent">
-               <ng-container *ngTemplateOutlet="emptyState"></ng-container>
+             <td class="block !p-0 border-none bg-transparent w-full">
+               <div class="bg-white rounded-lg border border-slate-200 mx-4 my-8 p-10 flex flex-col items-center gap-4 text-center">
+                 <i class="pi pi-file-edit text-[#95abce]" style="font-size: 4rem"></i>
+                 <div class="flex flex-col gap-1">
+                   <p class="text-[#627ca7] font-bold text-lg">No se encontraron cotizaciones</p>
+                   <p class="text-[#627ca7] text-xs font-medium">Prueba ajustando los filtros de búsqueda o crea una nueva.</p>
+                 </div>
+               </div>
              </td>
            </tr>
         </ng-template>
@@ -275,39 +295,29 @@
 
     <!-- REUSABLE TEMPLATE FOR EXPANDED DETAILS -->
     <ng-template #expandedDetails let-quotation>
-      <div class="flex flex-col lg:grid lg:grid-cols-12 gap-8">
+      <div class="flex flex-col lg:grid lg:grid-cols-12 gap-6 text-left">
         <div class="col-span-12 lg:col-span-8 flex flex-col gap-4">
-          <div class="flex items-center gap-2 mb-2 lg:ml-2">
-            <i class="pi pi-list text-indigo-500 text-xs"></i>
-            <span class="text-[9px] font-black text-indigo-900 uppercase tracking-widest">Desglose de Cotización</span>
-          </div>
-          
-          <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+          <div class="bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm">
             <!-- Table for items (Desktop) -->
             <div class="hidden lg:block">
               <table class="w-full text-left text-sm">
-                <thead class="bg-slate-50/50 border-b border-slate-100">
-                  <tr>
-                    <th class="px-8 py-4 font-black text-slate-500 uppercase text-[9px] tracking-widest">Producto</th>
-                    <th class="px-8 py-4 font-black text-slate-500 uppercase text-[9px] tracking-widest text-center">Cant.</th>
-                    <th class="px-8 py-4 font-black text-slate-500 uppercase text-[9px] tracking-widest text-right">Precio</th>
-                    <th class="px-8 py-4 font-black text-slate-500 uppercase text-[9px] tracking-widest text-right">Subtotal</th>
+                <thead class="bg-slate-50 border-b border-slate-300">
+                  <tr class="h-11 text-[11px] font-semibold text-[#3B5B8A]">
+                    <th class="px-6 py-2.5">Producto</th>
+                    <th class="px-6 py-2.5 text-center">Cant.</th>
+                    <th class="px-6 py-2.5 text-right">Precio</th>
+                    <th class="px-6 py-2.5 text-right">Subtotal</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-50">
+                <tbody class="divide-y divide-slate-100">
                   @for (item of quotation.items; track $index) {
-                    <tr class="hover:bg-slate-50/30 transition-colors">
-                      <td class="px-8 py-5">
-                        <div class="flex items-center gap-4">
-                          <div class="w-10 h-10 rounded-xl border border-slate-100 bg-slate-50 flex items-center justify-center text-slate-300">
-                            <i class="pi pi-box"></i>
-                          </div>
-                          <span class="font-bold text-slate-800">{{ item.productName }}</span>
-                        </div>
+                    <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0">
+                      <td class="px-6 py-2">
+                        <span class="font-medium text-[#3B5B8A] text-xs">{{ item.productName }}</span>
                       </td>
-                      <td class="px-8 py-5 text-center font-black text-indigo-500 tabular-nums">{{ item.quantity }}</td>
-                      <td class="px-8 py-5 text-right text-slate-600 font-bold tabular-nums">{{ item.unitPrice | currency: 'Q ' }}</td>
-                      <td class="px-8 py-5 text-right text-slate-900 font-black tabular-nums">{{ item.subtotal | currency: 'Q ' }}</td>
+                      <td class="px-6 py-2 text-center font-semibold text-[#627ca7] text-xs tabular-nums">{{ item.quantity }}</td>
+                      <td class="px-6 py-2 text-right text-slate-500 font-medium text-xs tabular-nums">{{ item.unitPrice | currency: 'Q ' }}</td>
+                      <td class="px-6 py-2 text-right text-slate-800 font-bold text-xs tabular-nums">{{ item.subtotal | currency: 'Q ' }}</td>
                     </tr>
                   }
                 </tbody>
@@ -317,15 +327,12 @@
             <!-- Mobile cards for items (Mobile) -->
             <div class="lg:hidden flex flex-col divide-y divide-slate-100">
               @for (item of quotation.items; track $index) {
-                <div class="p-4 flex gap-4 items-center">
-                  <div class="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-300 flex-shrink-0">
-                    <i class="pi pi-box text-lg"></i>
-                  </div>
+                <div class="p-2.5 flex gap-3 items-center">
                   <div class="flex-1 min-w-0">
-                     <h5 class="font-bold text-slate-800 text-sm truncate uppercase tracking-tight leading-tight mb-1">{{ item.productName }}</h5>
+                     <h5 class="font-semibold text-[#3B5B8A] text-xs truncate leading-tight mb-1">{{ item.productName }}</h5>
                      <div class="flex justify-between items-end">
-                        <span class="text-[9px] font-black text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-md">{{ item.quantity }} UNIDADES</span>
-                        <span class="text-sm font-black text-slate-800 tabular-nums">{{ item.subtotal | currency: 'Q ' }}</span>
+                        <span class="text-[9px] font-semibold text-[#3B5B8A] bg-[#D0E2F2] border border-[#4A7FA7] px-2 py-0.5 rounded-md">{{ item.quantity }} unidades</span>
+                        <span class="text-xs font-bold text-slate-800 tabular-nums">{{ item.subtotal | currency: 'Q ' }}</span>
                      </div>
                   </div>
                 </div>
@@ -333,47 +340,34 @@
             </div>
 
             <!-- Footer totals -->
-            <div class="bg-slate-50/50 border-t border-slate-200 p-6 px-8 flex flex-col gap-3">
-               <div class="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase tracking-[2px]">
+            <div class="bg-slate-50/50 border-t border-slate-200 p-3 px-6 flex flex-col gap-1.5">
+               <div class="flex justify-between items-center text-[11px] font-semibold text-[#627ca7]">
                   <span>Subtotal Base</span>
                   <span class="text-slate-700 tabular-nums">{{ quotation.subtotal | currency: 'Q ' }}</span>
                </div>
-               <div class="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase tracking-[2px]">
+               <div class="flex justify-between items-center text-[11px] font-semibold text-[#627ca7]">
                   <span>Impuestos IVA</span>
                   <span class="text-slate-700 tabular-nums">{{ quotation.taxAmount | currency: 'Q ' }}</span>
                </div>
-               <div class="flex justify-between items-center mt-2 pt-4 border-t border-slate-200/50">
-                  <span class="text-[10px] font-black text-indigo-600 uppercase tracking-[3px]">Total Cotizado</span>
-                  <span class="text-2xl font-black text-indigo-600 tabular-nums">{{ quotation.total | currency: 'Q ' }}</span>
+               <div class="flex justify-between items-center mt-1 pt-2.5 border-t border-slate-200">
+                  <span class="text-[11px] font-semibold text-[#3B5B8A]">Total Cotizado</span>
+                  <span class="text-sm font-semibold text-slate-800 tabular-nums">{{ quotation.total | currency: 'Q ' }}</span>
                </div>
             </div>
           </div>
         </div>
 
         <div class="col-span-12 lg:col-span-4 flex flex-col gap-4">
-          <div class="p-6 bg-white rounded-3xl border border-slate-200 shadow-sm">
-            <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Notas & Seguimiento</h4>
+          <div class="p-4 bg-white rounded-xl border border-slate-300 shadow-sm">
+            <h4 class="text-[11px] font-bold text-[#3B5B8A] mb-3">Notas & Seguimiento</h4>
             <p class="text-xs text-slate-600 leading-relaxed italic">
                "{{ quotation.notes || 'Sin observaciones registradas.' }}"
             </p>
-            <div class="mt-4 pt-4 border-t border-slate-50 flex items-center gap-2">
-               <span class="text-[9px] font-bold text-slate-400 uppercase">Creado por:</span>
-               <span class="text-[9px] font-black text-indigo-600 uppercase">{{ quotation.createdBy }}</span>
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2">
+               <span class="text-[11px] font-semibold text-[#627ca7]">Creado por:</span>
+               <span class="text-[11px] font-bold text-[#3B5B8A]">{{ quotation.createdBy }}</span>
             </div>
           </div>
-        </div>
-      </div>
-    </ng-template>
-
-    <!-- Empty Message -->
-    <ng-template #emptyState>
-      <div class="flex flex-col items-center gap-5 py-32">
-        <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 border border-slate-100 mx-auto transition-transform hover:scale-110">
-           <i class="pi pi-file-edit text-5xl"></i>
-        </div>
-        <div class="flex flex-col items-center gap-2 text-center">
-          <p class="text-slate-600 font-black text-2xl tracking-tighter">Sin cotizaciones</p>
-          <p class="text-slate-400 text-sm font-bold max-w-xs mx-auto uppercase tracking-widest text-[10px]">Utiliza el botón de arriba para iniciar un presupuesto</p>
         </div>
       </div>
     </ng-template>
@@ -382,3 +376,5 @@
 </div>
 
 <p-confirmDialog />
+
+

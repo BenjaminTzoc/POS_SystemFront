@@ -15,6 +15,7 @@ export interface IQuotationItem {
   quantity: number;
   unitPrice: number;
   discount: number;
+  discountAmount?: number;
   discountType: DiscountType;
   taxPercentage: number;
   notes?: string;

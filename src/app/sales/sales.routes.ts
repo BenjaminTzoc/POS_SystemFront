@@ -67,6 +67,13 @@ export const SALES_ROUTES: Routes = [
       ),
   },
   {
+    path: 'edit-quotation/:id',
+    loadComponent: () =>
+      import('./quotations/quotation-form/quotation-form.component').then(
+        (m) => m.QuotationFormComponent,
+      ),
+  },
+  {
     path: 'quick-sale',
     loadComponent: () =>
       import('./quick-sales/quick-sales.component').then(

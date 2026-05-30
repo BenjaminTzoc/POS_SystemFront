@@ -1,335 +1,411 @@
-<div class="grid grid-cols-12 gap-x-3 lg:gap-x-6 gap-y-4 lg:gap-y-6 px-0 md:px-6 py-4 md:py-6 bg-gray-50/30 md:bg-transparent min-h-screen md:min-h-0" [formGroup]="quotationForm">
-  <!-- HEADER -->
-  <div class="col-span-12 flex flex-col md:flex-row md:justify-between px-4 md:px-0 gap-4 md:gap-0">
-    <div class="flex items-center justify-between font-medium">
+<div class="py-4 px-0 md:px-6 bg-slate-50/50 min-h-screen">
+  <!-- HEADER SECTION -->
+  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-4 md:mb-6">
+    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4" [formGroup]="quotationForm">
       <div class="flex flex-col">
-        <h1 class="text-xl font-semibold text-gray-900">
-          {{ isEditMode ? 'Cotización: ' + correlative : 'Nueva Cotización' }}
+        <h1 class="text-xl md:text-2xl font-semibold text-title-primary tracking-tight">
+          {{ isEditMode ? 'Cotización: ' + correlative : 'Nueva cotización' }}
         </h1>
-        <p class="text-sm font-medium text-[#627ca7] mt-1">
+        <p class="text-xs font-medium text-text-muted mt-0.5">
           Presupuesto formal de productos para clientes.
         </p>
         
-        <div class="mt-4 flex items-center gap-4">
-          <div class="flex items-center gap-2">
-            <span class="text-xs font-medium text-gray-500">Sucursal de origen:</span>
-            <p-select
-              [options]="branches"
-              formControlName="branchId"
-              optionLabel="name"
-              optionValue="id"
-              placeholder="Seleccionar sucursal"
-              [filter]="true"
-              filterBy="name"
-              styleClass="w-60"
-              size="small"
-              appendTo="body"
-            />
-          </div>
+        <div class="mt-3 flex items-center gap-2 flex-wrap text-xs">
+          <span class="font-semibold text-text-body">Sucursal de origen <span class="text-red-600 font-bold">*</span>:</span>
+          <p-select
+            [options]="branches"
+            formControlName="branchId"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Seleccionar sucursal"
+            [filter]="true"
+            filterBy="name"
+            styleClass="w-52 border-slate-300 h-8! text-xs! py-0!"
+            size="small"
+            appendTo="body"
+          />
         </div>
       </div>
-    </div>
 
-    <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto mt-4 md:mt-0">
-      <p-button 
-        label="Cancelar" 
-        variant="outlined" 
-        severity="danger" 
-        (onClick)="onCancel()" 
-        icon="pi pi-times"
-        styleClass="!rounded-xl !px-6 font-bold h-[44px] shadow-sm hover:bg-slate-50 transition-all w-full md:w-auto"
-      />
-      <p-button 
-        [label]="isEditMode ? 'Actualizar Cotización' : 'Generar Cotización'" 
-        [raised]="true" 
-        severity="success" 
-        (onClick)="onSave()"
-        icon="pi pi-check"
-        [loading]="loading"
-        styleClass="p-button-raised !rounded-xl !px-6 shadow-lg transition-all font-bold h-[44px] w-full md:w-auto justify-center"
-      />
+      <div class="flex flex-col sm:flex-row gap-2.5 w-full md:w-auto">
+        <p-button 
+          label="Cancelar" 
+          [outlined]="true" 
+          severity="danger" 
+          (onClick)="onCancel()" 
+          icon="pi pi-times"
+          styleClass="!rounded-lg !px-4 font-semibold h-8! hover:bg-cancel-red/5 transition-all w-full md:w-auto text-xs border-cancel-red! text-cancel-red!"
+        />
+        <p-button 
+          [label]="isEditMode ? 'Actualizar cotización' : 'Generar cotización'" 
+          (onClick)="onSave()"
+          [loading]="loading"
+          icon="pi pi-check"
+          styleClass="!rounded-lg !px-5 shadow-sm transition-all font-semibold h-8! w-full md:w-auto justify-center text-xs bg-brand-deep! text-white border-brand-deep! hover:bg-brand-royal!"
+        />
+      </div>
     </div>
   </div>
 
-  <div class="col-span-12 lg:col-span-8 flex flex-col gap-4">
-    <div class="bg-white rounded-md border border-gray-200 overflow-hidden shadow-sm">
-      <div class="p-6">
-        <div class="flex items-center justify-between mb-6">
-          <div class="flex items-center gap-3">
-             <div class="w-10 h-10 rounded-md border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-400 shadow-sm">
-                <i class="pi pi-user"></i>
+  <!-- MAIN CONTENT GRID -->
+  <div class="grid grid-cols-12 gap-4 max-w-[1700px] mx-auto" [formGroup]="quotationForm">
+    <div class="col-span-12 lg:col-span-8 flex flex-col gap-4">
+      <!-- CLIENT INFO CARD -->
+      <div class="bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm">
+        <div class="p-4 px-5">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            <div class="flex flex-col">
+               <span class="text-sm font-semibold text-title-secondary leading-none">Información del cliente</span>
+               <span class="text-[10px] font-medium text-text-muted mt-1">Registrado o venta al público</span>
+            </div>
+
+            <!-- Tab switch with customized brand colors -->
+            <div class="p-1 bg-brand-royal/5 rounded-lg hidden md:flex border border-brand-royal/10 self-start sm:self-auto">
+              <button type="button" (click)="customerType = 'registered'" [class]="customerType === 'registered' ? 'bg-brand-royal text-white shadow-sm border border-brand-royal/10' : 'text-text-muted hover:text-brand-royal'" class="px-4 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer">Registrado</button>
+              <button type="button" (click)="customerType = 'guest'" [class]="customerType === 'guest' ? 'bg-brand-royal text-white shadow-sm border border-brand-royal/10' : 'text-text-muted hover:text-brand-royal'" class="px-4 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer">Invitado</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 p-1 bg-brand-royal/5 rounded-lg md:hidden mb-4 border border-brand-royal/10">
+             <button type="button" (click)="customerType = 'registered'" [class]="customerType === 'registered' ? 'bg-brand-royal text-white shadow-sm border border-brand-royal/10' : 'text-text-muted'" class="py-2 rounded-md text-xs font-semibold transition-all cursor-pointer">Registrado</button>
+             <button type="button" (click)="customerType = 'guest'" [class]="customerType === 'guest' ? 'bg-brand-royal text-white shadow-sm border border-brand-royal/10' : 'text-text-muted'" class="py-2 rounded-md text-xs font-semibold transition-all cursor-pointer">Invitado</button>
+          </div>
+
+          <div *ngIf="customerType === 'registered'" class="flex flex-col gap-3 animate-in fade-in slide-in-from-top-1">
+             <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-text-body">Buscar cliente <span class="text-red-600 font-bold">*</span></label>
+                <p-select
+                  [options]="customers"
+                  formControlName="customerId"
+                  optionLabel="name"
+                  optionValue="id"
+                  placeholder="Escribe el nombre del cliente..."
+                  [filter]="true"
+                  filterBy="name"
+                  [showClear]="true"
+                  styleClass="w-full border-slate-300 h-8! text-xs! py-0!"
+                  size="small"
+                  appendTo="body"
+                  [fluid]="true"
+                />
              </div>
-             <div class="flex flex-col">
-                <span class="text-lg font-semibold text-gray-900 leading-none">Información del Cliente</span>
-                <span class="text-xs font-medium text-gray-500 mt-1">Registrado o venta al público</span>
+             
+             <!-- Selected client detail card styled with premium palette -->
+             <div *ngIf="quotationForm.get('customerId')?.value" class="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 bg-brand-royal/5 rounded-lg border border-brand-royal/20 border-dashed">
+                @let customer = getCustomerById(quotationForm.get('customerId')?.value);
+                <div class="flex flex-col gap-0.5">
+                   <span class="text-[10px] font-semibold text-text-muted">Nit</span>
+                   <span class="text-xs font-semibold text-brand-deep">{{ customer?.nit || '---' }}</span>
+                </div>
+                <div class="flex flex-col gap-0.5 md:col-span-2">
+                   <span class="text-[10px] font-semibold text-text-muted">Correo electrónico</span>
+                   <span class="text-xs font-semibold text-brand-deep">{{ customer?.email || '---' }}</span>
+                </div>
              </div>
           </div>
 
-          <div class="p-1 bg-gray-100 rounded-lg hidden md:flex">
-           <button type="button" (click)="customerType = 'registered'" [class]="customerType === 'registered' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400'" class="px-5 py-1 rounded-md text-xs font-semibold transition-all">Registrado</button>
-           <button type="button" (click)="customerType = 'guest'" [class]="customerType === 'guest' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-400'" class="px-5 py-1 rounded-md text-xs font-semibold transition-all">Invitado</button>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 p-1 bg-gray-100 rounded-lg md:hidden mb-4">
-         <button type="button" (click)="customerType = 'registered'" [class]="customerType === 'registered' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400'" class="py-2.5 rounded-md text-xs font-semibold transition-all">Registrado</button>
-         <button type="button" (click)="customerType = 'guest'" [class]="customerType === 'guest' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-400'" class="py-2.5 rounded-md text-xs font-semibold transition-all">Invitado</button>
-      </div>
-
-        <div *ngIf="customerType === 'registered'" class="flex flex-col gap-4 animate-in fade-in slide-in-from-top-1">
-           <div class="flex flex-col gap-1.5">
-              <label class="text-sm font-medium text-gray-700">Buscar Cliente</label>
-              <p-select
-                [options]="customers"
-                formControlName="customerId"
-                optionLabel="name"
-                optionValue="id"
-                placeholder="Escribe nombre del cliente..."
-                [filter]="true"
-                filterBy="name"
-                [showClear]="true"
-                styleClass="w-full"
-                size="small"
-                appendTo="body"
-                [fluid]="true"
-              />
-           </div>
-           
-           <div *ngIf="quotationForm.get('customerId')?.value" class="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 bg-gray-50 rounded-md border border-gray-200 border-dashed">
-              @let customer = getCustomerById(quotationForm.get('customerId')?.value);
-              <div class="flex flex-col gap-1">
-                 <span class="text-xs font-medium text-gray-500">NIT</span>
-                 <span class="text-sm font-semibold text-gray-700">{{ customer?.nit || '---' }}</span>
-              </div>
-              <div class="flex flex-col gap-1 md:col-span-2">
-                 <span class="text-xs font-medium text-gray-500">Correo Electrónico</span>
-                 <span class="text-sm font-semibold text-gray-700">{{ customer?.email || '---' }}</span>
-              </div>
-           </div>
-        </div>
-
-        <div *ngIf="customerType === 'guest'" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 animate-in fade-in slide-in-from-top-1" formGroupName="guestCustomer">
-           <div class="flex flex-col gap-1.5">
-              <label class="text-sm font-medium text-gray-700">Nombre Completo</label>
-              <input pInputText formControlName="name" placeholder="Ej. Juan Pérez" class="w-full" size="small" />
-           </div>
-           <div class="flex flex-col gap-1.5">
-              <label class="text-sm font-medium text-gray-700">NIT / Facturación</label>
-              <input pInputText formControlName="nit" placeholder="C/F o Número" class="w-full" size="small" />
-           </div>
-           <div class="flex flex-col gap-1.5">
-              <label class="text-sm font-medium text-gray-700">Correo Electrónico</label>
-              <input pInputText formControlName="email" placeholder="cliente@correo.com" class="w-full" size="small" />
-           </div>
-           <div class="flex flex-col gap-1.5">
-              <label class="text-sm font-medium text-gray-700">Teléfono</label>
-              <input pInputText formControlName="phone" placeholder="7766-5544" class="w-full" size="small" />
-           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ITEMS SECTION -->
-    <div class="bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden min-h-[300px]">
-      <div class="p-4 md:px-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-md bg-white border border-gray-200 flex items-center justify-center text-gray-400 shadow-sm">
-             <i class="pi pi-briefcase text-xs"></i>
+          <div *ngIf="customerType === 'guest'" class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 animate-in fade-in slide-in-from-top-1" formGroupName="guestCustomer">
+             <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-text-body">Nombre completo <span class="text-red-600 font-bold">*</span></label>
+                <input pInputText formControlName="name" placeholder="Ej. Juan Pérez" class="w-full h-8! py-1! px-2.5! text-xs! border-slate-300! focus:border-brand-deep!" size="small" />
+             </div>
+             <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-text-body">Nit / Facturación</label>
+                <input pInputText formControlName="nit" placeholder="C/F o número" class="w-full h-8! py-1! px-2.5! text-xs! border-slate-300! focus:border-brand-deep!" size="small" />
+             </div>
+             <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-text-body">Correo electrónico</label>
+                <input pInputText formControlName="email" placeholder="cliente@correo.com" class="w-full h-8! py-1! px-2.5! text-xs! border-slate-300! focus:border-brand-deep!" size="small" />
+             </div>
+             <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-text-body">Teléfono</label>
+                <input pInputText formControlName="phone" placeholder="7766-5544" class="w-full h-8! py-1! px-2.5! text-xs! border-slate-300! focus:border-brand-deep!" size="small" />
+             </div>
           </div>
-          <h2 class="text-md font-semibold text-gray-900 tracking-tight">Ítems de la Cotización</h2>
         </div>
-        <p-button 
-          icon="pi pi-plus" 
-          severity="info" 
-          variant="outlined"
-          size="small"
-          (onClick)="addItem()" 
-          styleClass="!px-3 md:!px-4"
-        >
-          <span class="hidden md:inline ml-2">Añadir Producto</span>
-        </p-button>
       </div>
 
-      <div class="overflow-x-auto w-full">
-        <!-- DESKTOP VIEW -->
-        <div class="hidden md:block">
-          <p-table [value]="items.controls" styleClass="p-datatable-striped p-datatable-sm p-datatable-gridless">
-            <ng-template pTemplate="header">
-              <tr>
-                <th class="min-w-[300px]"><div class="text-left text-sm font-medium px-4">Producto</div></th>
-                <th class="w-32"><div class="text-right text-sm font-medium">Precio</div></th>
-                <th class="w-36"><div class="text-left text-sm font-medium px-4">Cantidad</div></th>
-                <th class="w-32"><div class="text-center text-sm font-medium">Descuento</div></th>
-                <th class="w-32"><div class="text-right text-sm font-medium px-4 text-indigo-600">Subtotal</div></th>
-                <th class="w-12"></th>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="body" let-control let-i="rowIndex">
-              <tr [formGroup]="asGroup(control)">
-                @let product = getProductById(control.get('productId')?.value);
-                <td class="!px-4">
-                  <p-select 
-                    [options]="products"
-                    formControlName="productId"
-                    optionLabel="name"
-                    optionValue="id"
-                    placeholder="Seleccionar..."
-                    [filter]="true"
-                    class="w-full"
-                    size="small"
-                    appendTo="body"
-                    [fluid]="true"
-                    (onChange)="calculateTotals()"
-                  />
-                </td>
-                <td class="text-right">
-                  <p-inputnumber 
-                    formControlName="unitPrice" 
-                    mode="currency" 
-                    currency="GTQ" 
-                    locale="es-GT" 
-                    class="w-full"
-                    inputStyleClass="!text-right font-medium text-gray-700"
-                    size="small"
-                    [fluid]="true"
-                    (onInput)="calculateTotals()"
-                  />
-                </td>
-                <td class="!px-4">
-                  <p-inputnumber 
-                    formControlName="quantity" 
-                    [min]="0.001" 
-                    [minFractionDigits]="product?.unit?.allowsDecimals ? 2 : 0"
-                    [maxFractionDigits]="product?.unit?.allowsDecimals ? 2 : 0"
-                    class="w-full"
-                    size="small"
-                    [fluid]="true"
-                    [showButtons]="false"
-                    (onInput)="calculateTotals()"
-                  />
-                </td>
-                <td class="text-center">
-                  <div class="flex items-center justify-center gap-1">
-                    <p-inputnumber formControlName="discount" [min]="0" styleClass="w-16" size="small" (onInput)="calculateTotals()" inputStyleClass="!text-center" [fluid]="true" />
-                    <select formControlName="discountType" class="text-xs bg-gray-100 rounded border-none p-1 font-semibold text-gray-500" (change)="calculateTotals()">
-                      <option value="percentage">%</option>
-                      <option value="fixed_amount">Q</option>
-                    </select>
-                  </div>
-                </td>
-                <td class="text-right font-semibold text-indigo-600 text-sm !px-4">
-                  {{ control.get('lineTotal')?.value | currency: 'Q ' }}
-                </td>
-                <td class="text-center">
-                  <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small" (onClick)="removeItem(i)" />
-                </td>
-              </tr>
-            </ng-template>
-          </p-table>
+      <!-- ITEMS SECTION WITH DYNAMIC HEIGHT -->
+      <div class="bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm">
+        <div class="p-3 md:px-5 border-b border-slate-300 flex items-center justify-between bg-brand-royal/5">
+          <div class="flex flex-col">
+             <h2 class="text-sm font-semibold text-title-secondary tracking-tight">Ítems de la cotización</h2>
+          </div>
+          <p-button 
+            label="Añadir producto"
+            severity="info" 
+            [outlined]="true"
+            size="small"
+            icon="pi pi-plus"
+            (onClick)="drawerVisible = true" 
+            class="hidden sm:block"
+            styleClass="!px-3 h-8! !rounded-lg whitespace-nowrap flex-shrink-0 text-xs border-brand-royal/50! text-brand-royal! hover:bg-brand-royal/10"
+          />
+          <p-button 
+            label="Añadir"
+            severity="info" 
+            [outlined]="true"
+            size="small"
+            icon="pi pi-plus"
+            (onClick)="drawerVisible = true" 
+            class="block sm:hidden"
+            styleClass="!px-2.5 h-8! !rounded-lg flex-shrink-0 text-xs border-brand-royal/50! text-brand-royal! hover:bg-brand-royal/10"
+          />
         </div>
 
-        <!-- MOBILE VIEW -->
-        <div class="md:hidden flex flex-col p-4 gap-4">
-           <div *ngFor="let control of items.controls; let i = index" [formGroup]="asGroup(control)" class="bg-gray-50/50 rounded-lg border border-gray-200 p-4 flex flex-col gap-4">
-              @let productMobile = getProductById(control.get('productId')?.value);
-              <div class="flex justify-between items-center">
-                 <span class="text-xs font-semibold text-gray-500">Ítem #{{ i + 1 }}</span>
-                 <p-button icon="pi pi-trash" [text]="true" severity="danger" size="small" (onClick)="removeItem(i)" />
-              </div>
-              <div class="flex flex-col gap-1.5">
-                 <label class="text-xs font-medium text-gray-700">Producto</label>
-                 <p-select 
-                   [options]="products"
-                   formControlName="productId"
-                   optionLabel="name"
-                   optionValue="id"
-                   placeholder="Elegir producto..."
-                   [filter]="true"
-                   size="small"
-                   [fluid]="true"
-                   appendTo="body"
-                   (onChange)="calculateTotals()"
-                 />
-              </div>
-              <div class="grid grid-cols-2 gap-4">
-                 <div class="flex flex-col gap-1.5">
-                    <label class="text-xs font-medium text-gray-700">Cant.</label>
+        <!-- Empty list state -->
+        <div *ngIf="items.controls.length === 0" class="flex flex-col items-center justify-center py-16 gap-3 bg-slate-50/20 text-center">
+          <div class="w-12 h-12 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+            <i class="pi pi-shopping-bag text-text-muted text-lg"></i>
+          </div>
+          <div class="flex flex-col gap-1 max-w-[280px]">
+            <span class="text-xs font-semibold text-title-secondary">Lista de productos vacía</span>
+            <span class="text-[10px] text-text-muted leading-relaxed">
+              Haz clic en "Añadir producto" para desplegar el catálogo y armar tu presupuesto formal.
+            </span>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto w-full" *ngIf="items.controls.length > 0">
+          <!-- DESKTOP VIEW -->
+          <div class="hidden md:block">
+            <p-table [value]="items.controls" styleClass="p-datatable-striped p-datatable-sm p-datatable-gridless">
+              <ng-template pTemplate="header">
+                <tr class="h-11 bg-brand-royal/10 text-brand-royal text-[11px] font-semibold border-b border-brand-royal/20">
+                  <th class="w-[210px] !pl-6 text-left">Producto</th>
+                  <th class="w-28 text-right">Precio</th>
+                  <th class="w-32 text-left !pl-4">Cantidad</th>
+                  <th class="w-40 text-center">Descuento</th>
+                  <th class="w-28 text-right !pr-6">Subtotal</th>
+                  <th class="w-16 !pr-6"></th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-control let-i="rowIndex">
+                <tr [formGroup]="asGroup(control)" class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 text-xs">
+                  @let product = getProductById(control.get('productId')?.value);
+                  <td class="py-2.5 !pl-6 align-middle">
+                    <div class="flex flex-col py-0.5 max-w-[190px] min-w-0">
+                      <span class="font-semibold text-text-body leading-tight truncate block" [pTooltip]="product?.name" tooltipPosition="top">{{ product?.name || 'Cargando producto...' }}</span>
+                      <span class="text-[9px] font-mono text-text-muted mt-0.5 truncate block">{{ product?.sku || 'SIN SKU' }}</span>
+                    </div>
+                  </td>
+                  <td class="py-2.5 text-right align-middle font-medium text-text-muted tabular-nums text-xs pr-2">
+                    {{ control.get('unitPrice')?.value | currency: 'Q ' }}
+                  </td>
+                  <td class="py-2.5 !pl-4">
                     <p-inputnumber 
                       formControlName="quantity" 
                       [min]="0.001" 
-                      [minFractionDigits]="productMobile?.unit?.allowsDecimals ? 2 : 0"
-                      [maxFractionDigits]="productMobile?.unit?.allowsDecimals ? 2 : 0"
-                      size="small" 
-                      [fluid]="true" 
-                      [showButtons]="false" 
-                      (onInput)="calculateTotals()" 
+                      [minFractionDigits]="product?.unit?.allowsDecimals ? 2 : 0"
+                      [maxFractionDigits]="product?.unit?.allowsDecimals ? 2 : 0"
+                      class="w-full"
+                      styleClass="border-slate-300! h-8!"
+                      size="small"
+                      [fluid]="true"
+                      [showButtons]="false"
+                      inputStyleClass="text-xs h-8! py-1! px-2.5! text-center border-slate-300! focus:border-brand-deep!"
+                      (onInput)="calculateTotals()"
                     />
-                 </div>
-                 <div class="flex flex-col gap-1.5">
-                    <label class="text-xs font-medium text-gray-700">Precio</label>
-                    <p-inputnumber formControlName="unitPrice" mode="currency" currency="GTQ" locale="es-GT" size="small" [fluid]="true" (onInput)="calculateTotals()" />
-                 </div>
-              </div>
-              <div class="flex items-center justify-between border-t border-gray-200 pt-3 mt-1">
-                 <div class="flex items-center gap-2 flex-1">
-                    <span class="text-xs text-gray-500">Desc:</span>
-                    <p-inputnumber formControlName="discount" [min]="0" styleClass="w-full max-w-[60px]" size="small" (onInput)="calculateTotals()" [fluid]="true" />
-                    <select formControlName="discountType" class="text-xs bg-gray-100 rounded border-none p-1 font-semibold text-gray-500">
-                      <option value="percentage">%</option>
-                      <option value="fixed_amount">Q</option>
-                    </select>
-                 </div>
-                 <span class="font-bold text-indigo-600 ml-4">{{ control.get('lineTotal')?.value | currency: 'Q ' }}</span>
-              </div>
-           </div>
+                  </td>
+                  <td class="py-2.5 text-center">
+                    <div class="flex items-center justify-center gap-1.5">
+                      <p-inputnumber 
+                        formControlName="discount" 
+                        [min]="0" 
+                        [minFractionDigits]="0"
+                        [maxFractionDigits]="2"
+                        styleClass="w-16 border-slate-300! h-8!" 
+                        size="small" 
+                        (onInput)="calculateTotals()" 
+                        inputStyleClass="!text-center text-xs h-8! py-1! px-1.5! border-slate-300! focus:border-brand-deep!" 
+                        [fluid]="true" 
+                      />
+                      <select formControlName="discountType" class="text-[10px] bg-brand-royal/10 rounded-md border-none p-1 font-semibold text-brand-royal hover:bg-brand-royal/20 transition-colors cursor-pointer h-8! px-2!" (change)="calculateTotals()">
+                        <option value="percentage">%</option>
+                        <option value="fixed_amount">Q</option>
+                      </select>
+                    </div>
+                  </td>
+                  <td class="py-2.5 text-right font-bold text-accent-rust text-sm tabular-nums !pr-6">
+                    {{ control.get('lineTotal')?.value | currency: 'Q ' }}
+                  </td>
+                  <td class="py-2.5 text-center !pr-6">
+                    <p-button icon="pi pi-trash" [text]="true" severity="danger" size="small" (onClick)="removeItem(i)" styleClass="!text-cancel-red hover:!bg-rose-50 !w-8 !h-8" />
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+
+          <!-- MOBILE VIEW -->
+          <div class="md:hidden flex flex-col p-3 gap-3 bg-slate-50/50">
+             <div *ngFor="let control of items.controls; let i = index" [formGroup]="asGroup(control)" class="bg-white rounded-xl border border-slate-200 p-3.5 flex flex-col gap-3 shadow-sm">
+                @let productMobile = getProductById(control.get('productId')?.value);
+                <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+                   <span class="text-[10px] font-semibold text-text-muted">Ítem #{{ i + 1 }}</span>
+                   <p-button icon="pi pi-trash" [text]="true" severity="danger" size="small" (onClick)="removeItem(i)" styleClass="!text-cancel-red hover:!bg-rose-50 !w-8 !h-8 !p-0" />
+                </div>
+                <div class="flex flex-col gap-1 py-1">
+                   <span class="text-[10px] font-semibold text-text-muted">Producto</span>
+                   <span class="text-xs font-semibold text-text-body truncate block max-w-[280px]" [pTooltip]="productMobile?.name" tooltipPosition="top">{{ productMobile?.name }}</span>
+                   <span class="text-[9px] font-mono text-text-muted mt-0.5 truncate block">{{ productMobile?.sku || 'SIN SKU' }}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                   <div class="flex flex-col gap-1">
+                      <label class="text-[10px] font-semibold text-text-muted">Cantidad</label>
+                      <p-inputnumber 
+                        formControlName="quantity" 
+                        [min]="0.001" 
+                        [minFractionDigits]="productMobile?.unit?.allowsDecimals ? 2 : 0"
+                        [maxFractionDigits]="productMobile?.unit?.allowsDecimals ? 2 : 0"
+                        size="small" 
+                        styleClass="border-slate-300! h-8!"
+                        [fluid]="true" 
+                        [showButtons]="false" 
+                        inputStyleClass="text-xs h-8! py-1! px-2.5! text-center border-slate-300! focus:border-brand-deep!"
+                        (onInput)="calculateTotals()" 
+                      />
+                   </div>
+                   <div class="flex flex-col gap-1">
+                      <label class="text-[10px] font-semibold text-text-muted">Precio (Fijo)</label>
+                      <span class="text-xs font-semibold text-text-muted mt-1 leading-8">{{ control.get('unitPrice')?.value | currency: 'Q ' }}</span>
+                   </div>
+                </div>
+                <div class="flex items-center justify-between border-t border-slate-100 pt-2.5 mt-0.5">
+                   <div class="flex items-center gap-1.5 flex-1 text-xs">
+                      <span class="text-[10px] font-semibold text-text-muted">Desc:</span>
+                      <p-inputnumber 
+                        formControlName="discount" 
+                        [min]="0" 
+                        [minFractionDigits]="0"
+                        [maxFractionDigits]="2"
+                        styleClass="w-full max-w-[55px] border-slate-300! h-8!" 
+                        size="small" 
+                        (onInput)="calculateTotals()" 
+                        [fluid]="true" 
+                        inputStyleClass="text-xs h-8! py-1! px-1.5! text-center border-slate-300! focus:border-brand-deep!" 
+                      />
+                      <select formControlName="discountType" class="text-[10px] bg-brand-royal/10 rounded border-none p-1 font-semibold text-brand-royal h-8! px-2!">
+                        <option value="percentage">%</option>
+                        <option value="fixed_amount">Q</option>
+                      </select>
+                   </div>
+                   <span class="font-bold text-accent-rust ml-4 tabular-nums text-sm">{{ control.get('lineTotal')?.value | currency: 'Q ' }}</span>
+                </div>
+             </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- RIGHT COLUMN: TOTALS -->
-  <div class="col-span-12 lg:col-span-4 flex flex-col gap-4">
-    <div class="bg-white rounded-md border border-gray-200 p-5 shadow-sm flex flex-col gap-4">
-       <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-md border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-400 shadow-sm">
-             <i class="pi pi-cog"></i>
-          </div>
-          <h3 class="font-semibold text-gray-900">Configuración</h3>
-       </div>
+    <!-- RIGHT COLUMN: CONFIGURATION & TOTALS -->
+    <div class="col-span-12 lg:col-span-4 flex flex-col gap-4">
+      <div class="bg-white rounded-xl border border-slate-300 p-4 px-5 shadow-sm flex flex-col gap-4">
+         <div class="flex flex-col">
+            <h3 class="font-semibold text-title-secondary text-sm">Configuración</h3>
+         </div>
 
-       <div class="flex items-center justify-between bg-gray-50 p-4 rounded-md border border-gray-200 border-dashed">
-           <div class="flex flex-col">
-             <span class="text-sm font-medium text-gray-700">Impuesto IVA (12%)</span>
-           </div>
-          <p-toggleswitch formControlName="applyTax" (onChange)="calculateTotals()" />
-       </div>
+         <!-- Toggle card styled in premium brand palette -->
+         <div class="flex items-center justify-between bg-brand-royal/5 p-3 rounded-lg border border-brand-royal/20 border-dashed">
+              <div class="flex flex-col">
+                <span class="text-xs font-semibold text-text-body">Impuesto IVA (12%)</span>
+              </div>
+            <p-toggleswitch formControlName="applyTax" (onChange)="calculateTotals()" />
+         </div>
 
-       <div class="flex flex-col gap-2">
-          <label class="text-sm font-medium text-gray-700">Días de Validez</label>
-          <p-inputnumber formControlName="validityDays" [min]="1" size="small" [fluid]="true" suffix=" días" />
-       </div>
+         <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold text-text-body">Días de validez <span class="text-red-600 font-bold">*</span></label>
+            <p-inputnumber formControlName="validityDays" [min]="1" size="small" [fluid]="true" suffix=" días" styleClass="border-slate-300! w-full h-8!" inputStyleClass="text-xs h-8! py-1! px-2.5! border-slate-300! focus:border-brand-deep!" />
+         </div>
 
-       <div class="flex flex-col gap-2">
-          <label class="text-sm font-medium text-gray-700">Observaciones</label>
-          <textarea pTextarea formControlName="notes" rows="3" placeholder="Nota para el cliente..." class="text-sm"></textarea>
-       </div>
+         <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold text-text-body">Observaciones</label>
+            <textarea pTextarea formControlName="notes" rows="3" placeholder="Nota para el cliente..." class="text-xs border-slate-300! focus:border-brand-deep! w-full p-2 rounded-lg"></textarea>
+         </div>
 
-       <div class="border-t border-gray-100 pt-4 flex flex-col gap-2">
-          <div class="flex justify-between text-sm">
-             <span class="text-gray-500">Subtotal:</span>
-             <span class="font-medium text-gray-700">{{ subtotal | currency: 'Q ' }}</span>
-          </div>
-          <div class="flex justify-between text-sm">
-             <span class="text-gray-500">IVA (12%):</span>
-             <span class="font-medium text-gray-700">{{ tax | currency: 'Q ' }}</span>
-          </div>
-          <div class="flex justify-between items-center mt-1 pt-3 border-t border-gray-100">
-             <span class="text-lg font-bold text-gray-900">Total:</span>
-             <span class="text-2xl font-bold text-indigo-600">{{ total | currency: 'Q ' }}</span>
-          </div>
-       </div>
+         <!-- Rich summary section styled in customized background -->
+         <div class="bg-brand-royal/5 border border-brand-royal/20 p-3.5 rounded-lg flex flex-col gap-2">
+            <div class="flex justify-between text-xs font-medium text-text-muted">
+               <span>Subtotal:</span>
+               <span class="text-text-body tabular-nums text-xs font-semibold">{{ subtotal | currency: 'Q ' }}</span>
+            </div>
+            <div class="flex justify-between text-xs font-medium text-text-muted">
+                 <span>IVA (12%):</span>
+               <span class="text-text-body tabular-nums text-xs font-semibold">{{ tax | currency: 'Q ' }}</span>
+            </div>
+            <div class="flex justify-between items-center mt-1 pt-2.5 border-t border-brand-royal/20">
+               <span class="text-xs font-bold text-title-secondary">Total:</span>
+               <span class="text-base font-bold text-accent-rust tabular-nums">{{ total | currency: 'Q ' }}</span>
+            </div>
+         </div>
+      </div>
     </div>
   </div>
 </div>
+
+<!-- COMPRESSED AND BRANDED PRODUCT SLIDER SELECTOR (DRAWER) -->
+<p-drawer 
+  [(visible)]="drawerVisible" 
+  position="right" 
+  header="Catálogo de Productos" 
+  styleClass="w-full sm:w-[450px] border-l border-border-elegant! bg-white shadow-xl"
+  [modal]="true"
+>
+  <div class="flex flex-col h-full gap-4 p-1">
+    <p class="text-[11px] text-text-muted -mt-2">
+      Haz clic en el botón '+' para agregar el producto a la lista o incrementar su cantidad.
+    </p>
+
+    <!-- Search Input -->
+    <div class="w-full">
+      <p-iconfield>
+        <p-inputicon class="pi pi-search text-text-muted" />
+        <input 
+          type="text" 
+          pInputText 
+          [(ngModel)]="searchProductQuery" 
+          placeholder="Buscar por nombre o SKU..." 
+          class="w-full h-8! py-1! px-8! text-xs! border-slate-300! focus:border-brand-deep!"
+        />
+      </p-iconfield>
+    </div>
+
+    <!-- Scrollable Product List -->
+    <div class="flex-1 overflow-y-auto flex flex-col gap-2 pr-1 max-h-[calc(100vh-180px)]">
+      <div 
+        *ngFor="let p of filteredProducts" 
+        class="flex items-center justify-between p-2 rounded-lg border border-slate-100 hover:border-brand-royal/30 hover:bg-brand-royal/5 transition-all text-xs"
+      >
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-8 h-8 rounded border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0 bg-slate-50">
+            <img *ngIf="p.imageUrl" [src]="getProductImageUrl(p.imageUrl)" class="w-full h-full object-cover" />
+            <i *ngIf="!p.imageUrl" class="pi pi-image text-slate-300 text-sm"></i>
+          </div>
+          <div class="flex flex-col min-w-0">
+            <span class="font-semibold text-text-body truncate leading-tight">{{ p.name }}</span>
+            <span class="text-[9px] text-text-muted font-mono tracking-wider mt-0.5">{{ p.sku || 'SIN SKU' }}</span>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-accent-rust whitespace-nowrap">{{ p.price | currency:'Q ' }}</span>
+          <p-button 
+            icon="pi pi-plus" 
+            [rounded]="true" 
+            [text]="true" 
+            severity="info" 
+            size="small" 
+            (onClick)="addProductFromDrawer(p)"
+            styleClass="!w-7 !h-7 hover:!bg-brand-royal/10 !p-0 text-brand-royal!"
+          />
+        </div>
+      </div>
+      
+      <div *ngIf="filteredProducts.length === 0" class="text-center py-8 text-text-muted text-xs">
+        Ningún producto encontrado.
+      </div>
+    </div>
+  </div>
+</p-drawer>
 
 <p-confirmDialog />
