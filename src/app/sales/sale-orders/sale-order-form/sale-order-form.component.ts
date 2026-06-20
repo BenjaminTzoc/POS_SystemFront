@@ -18,7 +18,8 @@ import { Product } from '../../../inventory/interfaces/product.interface';
 import { environment } from '../../../../environments/environment';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { CommonModule, CurrencyPipe } from '@angular/common';
-import { ICustomer } from '../../interfaces/customer.interface';
+import { ICustomer, ICustomerCategory } from '../../interfaces/customer.interface';
+import { CustomerCategoriesService } from '../../services/customer-categories.service';
 import { CustomersService } from '../../services/customers.service';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { FloatLabelModule } from 'primeng/floatlabel';
@@ -27,7 +28,6 @@ import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { TagModule } from 'primeng/tag';
-import { ProductSearchComponent } from '../../../components/product-search/product-search.component';
 import { SaleDiscountsComponent } from '../../../components/sale-discounts/sale-discounts.component';
 import { SaleCalculatorService, SaleTotals } from '../../services/sale-calculator.service';
 import { SaleDetailManagerService } from '../../services/sale-detail-manager.service';
@@ -47,11 +47,16 @@ import { TicketTemplateComponent } from '../../../shared/components/ticket-templ
 import { PrintService } from '../../../shared/services/print.service';
 import { BankAccountsService } from '../../services/bank-accounts.service';
 import { IBankAccount } from '../../interfaces/bank-account.interface';
+import { ProductsService } from '../../../inventory/services/products.service';
+import { DrawerModule } from 'primeng/drawer';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { CashSessionDialogComponent } from '../../../shared/components/cash-session-dialog/cash-session-dialog.component';
 
 @Component({
   selector: 'app-sale-order-form',
   //prettier-ignore
-  imports: [ReactiveFormsModule, FormsModule, RadioButtonModule, FloatLabelModule, InputTextModule, CurrencyPipe, ButtonModule, DatePickerModule, TableModule, DialogModule, SelectModule, ToggleSwitchModule, InputNumberModule, TextareaModule, CommonModule, AutoCompleteModule, ProductSearchComponent, SaleDiscountsComponent, SaleStatusPipe, PaymentStatusPipe, TooltipModule, ConfirmDialogModule, TagModule, TicketPreviewComponent, TicketTemplateComponent],
+  imports: [ReactiveFormsModule, FormsModule, RadioButtonModule, FloatLabelModule, InputTextModule, CurrencyPipe, ButtonModule, DatePickerModule, TableModule, DialogModule, SelectModule, ToggleSwitchModule, InputNumberModule, TextareaModule, CommonModule, AutoCompleteModule, SaleDiscountsComponent, SaleStatusPipe, PaymentStatusPipe, TooltipModule, ConfirmDialogModule, TagModule, TicketPreviewComponent, TicketTemplateComponent, DrawerModule, IconFieldModule, InputIconModule, CashSessionDialogComponent],
   templateUrl: './sale-order-form.component.html',
   styleUrl: './sale-order-form.component.css',
   providers: [ConfirmationService],
@@ -62,11 +67,13 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   confirmedSaleData: ISaleOrderResponse | null = null;
   isGeneratingTicket = false;
   isSendingTicketEmail = false;
+  showOpenCashDialog = false;
 
   private saleCalculator = inject(SaleCalculatorService);
   private detailManager = inject(SaleDetailManagerService);
   private ordersService = inject(OrdersService);
   private customersService = inject(CustomersService);
+  private customerCategoriesService = inject(CustomerCategoriesService);
   private printService = inject(PrintService);
   private paymentMethodsService = inject(PaymentMethodsService);
   private salePaymentsService = inject(SalePaymentsService);
@@ -80,11 +87,30 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private confirmationService = inject(ConfirmationService);
   private cashService = inject(CashRegisterService);
+  private productsService = inject(ProductsService);
   private destroy$ = new Subject<void>();
 
+  // Product Catalog Drawer State
+  products: Product[] = [];
+  drawerVisible = false;
+  searchProductQuery = '';
+  loadingProducts = false;
+
   // Cash status
-  currentCashSession: CashSession | null = null;
+  get currentCashSession(): CashSession | null {
+    return this.cashService.currentSession();
+  }
   isLoadingCashStatus = false;
+
+  // Customer Manager Modal State
+  showCustomerManager = false;
+  isSavingCustomer = false;
+  searchCustomerQuery = '';
+  newCustomerForm!: FormGroup;
+  customerCategories: ICustomerCategory[] = [];
+  showCustomerCategoryManager = false;
+  isSavingCustomerCategory = false;
+  newCustomerCategoryForm!: FormGroup;
 
   selectedCustomerType: any = null;
   customerTypes: any[] = [
@@ -177,6 +203,17 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
     return this.isEditing;
   }
 
+  get filteredCustomers(): ICustomer[] {
+    if (!this.searchCustomerQuery) return this.customers;
+    const query = this.searchCustomerQuery.toLowerCase();
+    return this.customers.filter(
+      (c) =>
+        c.name.toLowerCase().includes(query) ||
+        (c.nit && c.nit.toLowerCase().includes(query)) ||
+        (c.phone && c.phone.toLowerCase().includes(query))
+    );
+  }
+
   ngOnInit(): void {
     this.detailManager.clear();
     this.initializeForm();
@@ -203,11 +240,17 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
     this.isLoadingCashStatus = true;
     this.cashService.getStatus().subscribe({
       next: (res) => {
-        this.currentCashSession = res.data;
+        this.isLoadingCashStatus = false;
+        this.checkUserRole();
+      },
+      error: () => {
         this.isLoadingCashStatus = false;
       },
-      error: () => (this.isLoadingCashStatus = false),
     });
+  }
+
+  onCashSessionOpened() {
+    this.checkCashStatus();
   }
 
   get isCashClosed(): boolean {
@@ -270,12 +313,30 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
       this.isSuperAdmin = true;
     }
 
-    if (this.isSuperAdmin && this.branches.length > 0 && !this.isEditing) {
-      this.orderForm.get('branchId')?.setValue(this.branches[0].id);
-      this.previousBranchId = this.branches[0].id;
+    if (!this.branches || this.branches.length === 0) return;
+
+    if (this.isEditing) return;
+
+    let selectedBranchId: string | null = null;
+
+    // Buscar sucursal con caja abierta primero
+    if (this.currentCashSession?.branchId) {
+      selectedBranchId = this.currentCashSession.branchId;
     }
 
-    if (!this.isSuperAdmin && !this.isEditing) {
+    if (this.isSuperAdmin) {
+      // Si no hay caja abierta, buscar la sucursal central
+      if (!selectedBranchId) {
+        const centralBranch = this.branches.find((b: any) => b.isCentral);
+        selectedBranchId = centralBranch ? centralBranch.id : this.branches[0].id;
+      }
+
+      if (selectedBranchId) {
+        this.orderForm.get('branchId')?.setValue(selectedBranchId);
+        this.previousBranchId = selectedBranchId;
+      }
+    } else {
+      // Usuario Normal
       let userBranchId: string | undefined;
       if (user.branchId) {
         userBranchId = user.branchId;
@@ -286,6 +347,11 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
       if (userBranchId && this.orderForm) {
         this.orderForm.get('branchId')?.setValue(userBranchId);
         this.orderForm.get('branchId')?.disable();
+      }
+
+      // Si no tiene caja activa para su sucursal, mostrar modal de abrir caja
+      if (!this.currentCashSession && !this.isLoadingCashStatus) {
+        this.showOpenCashDialog = true;
       }
     }
   }
@@ -483,6 +549,12 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   // -------------------- FIN WEBSOCKET NUMERO ORDEN ---------------------
 
   // -------------------- INICIO CATALOGOS ----------------------
+  setCustomerType(type: 'registered' | 'guest') {
+    this.selectedCustomerType = type === 'registered' ? this.customerTypes[0] : this.customerTypes[1];
+    this.onCustomerTypeChange();
+    this.markAsChanged();
+  }
+
   onCustomerTypeChange() {
     this.orderForm.get('customerId')?.markAsUntouched();
     if (this.selectedCustomerType?.value === 'R') {
@@ -541,6 +613,240 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
           severity: 'error',
           summary: 'Error',
           detail: `Error obteniendo datos del cliente: ${err.error.message}`,
+        });
+      },
+    });
+  }
+
+  openCustomerManager(): void {
+    this.customerCategoriesService.getCategories().subscribe({
+      next: (res) => {
+        if (res.statusCode === 200) {
+          this.customerCategories = res.data;
+        }
+      },
+      error: (err) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error al obtener categorías de clientes: ${err.error.message}`,
+        });
+      }
+    });
+
+    this.newCustomerForm.reset({
+      name: '',
+      nit: '',
+      contactName: '',
+      email: '',
+      phone: '',
+      address: '',
+      categoryId: '',
+      creditLimit: 0
+    });
+    this.searchCustomerQuery = '';
+    this.showCustomerManager = true;
+  }
+
+  saveCustomer(): void {
+    if (this.newCustomerForm.invalid) {
+      this.newCustomerForm.markAllAsTouched();
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Por favor, completa todos los campos requeridos',
+      });
+      return;
+    }
+
+    this.isSavingCustomer = true;
+    const body = this.newCustomerForm.value;
+    this.customersService.createCustomer(body).subscribe({
+      next: (res) => {
+        if (res.statusCode === 201) {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'El cliente se ha creado correctamente.',
+          });
+          
+          this.customersService.getCustomers().subscribe({
+            next: (cRes) => {
+              if (cRes.statusCode === 200) {
+                this.customers = cRes.data;
+                this.orderForm.get('customerId')?.setValue(res.data.id);
+                this.onCustomerChange({ value: res.data.id });
+              }
+            }
+          });
+
+          this.showCustomerManager = false;
+        }
+      },
+      error: (err) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error creando el cliente: ${err.error.message}`,
+        });
+        this.isSavingCustomer = false;
+      },
+      complete: () => (this.isSavingCustomer = false),
+    });
+  }
+
+  deleteCustomer(customerId: string, event: Event): void {
+    this.confirmationService.confirm({
+      target: event.target as HTMLElement,
+      message: '¿Estás seguro de eliminar este cliente?',
+      header: 'Confirmar eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      rejectLabel: 'No',
+      acceptLabel: 'Sí',
+      rejectButtonProps: {
+        severity: 'secondary',
+        outlined: true,
+      },
+      acceptButtonProps: {
+        severity: 'danger',
+      },
+      accept: () => {
+        this.customersService.deleteCustomer(customerId).subscribe({
+          next: (res) => {
+            if (res.statusCode === 200) {
+              this.messageService.add({
+                severity: 'success',
+                summary: 'Eliminado',
+                detail: 'El cliente ha sido eliminado.',
+              });
+              
+              this.customersService.getCustomers().subscribe({
+                next: (cRes) => {
+                  if (cRes.statusCode === 200) {
+                    this.customers = cRes.data;
+                  }
+                }
+              });
+
+              if (this.orderForm.get('customerId')?.value === customerId) {
+                this.orderForm.get('customerId')?.setValue(null);
+                this.selectedCustomer = null;
+              }
+            }
+          },
+          error: (err) => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: `No se pudo eliminar el cliente: ${err.error.message}`,
+            });
+          },
+        });
+      },
+    });
+  }
+
+  openCustomerCategoryManager(): void {
+    this.newCustomerCategoryForm.reset({
+      name: '',
+      description: '',
+      discountPercentage: 0,
+      minPurchaseAmount: 0,
+      defaultCreditLimit: 0,
+      isActive: true
+    });
+    this.showCustomerCategoryManager = true;
+  }
+
+  saveCustomerCategory(): void {
+    if (this.newCustomerCategoryForm.invalid) {
+      this.newCustomerCategoryForm.markAllAsTouched();
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Por favor, completa todos los campos requeridos',
+      });
+      return;
+    }
+
+    this.isSavingCustomerCategory = true;
+    const body = this.newCustomerCategoryForm.value;
+    this.customerCategoriesService.createCategory(body).subscribe({
+      next: (res) => {
+        if (res.statusCode === 201 || res.statusCode === 200) {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'La categoría de clientes se ha creado correctamente.',
+          });
+          
+          this.customerCategoriesService.getCategories().subscribe({
+            next: (catRes) => {
+              if (catRes.statusCode === 200) {
+                this.customerCategories = catRes.data;
+                this.newCustomerForm.get('categoryId')?.setValue(res.data.id);
+              }
+            }
+          });
+
+          this.showCustomerCategoryManager = false;
+        }
+      },
+      error: (err) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error creando la categoría: ${err.error.message}`,
+        });
+        this.isSavingCustomerCategory = false;
+      },
+      complete: () => (this.isSavingCustomerCategory = false),
+    });
+  }
+
+  deleteCustomerCategory(id: string, event: Event): void {
+    this.confirmationService.confirm({
+      target: event.target as HTMLElement,
+      message: '¿Estás seguro de eliminar esta categoría de cliente?',
+      header: 'Confirmar eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      rejectLabel: 'No',
+      acceptLabel: 'Sí',
+      rejectButtonProps: {
+        severity: 'secondary',
+        outlined: true,
+      },
+      acceptButtonProps: {
+        severity: 'danger',
+      },
+      accept: () => {
+        this.customerCategoriesService.deleteCategory(id).subscribe({
+          next: (res) => {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Eliminado',
+              detail: 'La categoría ha sido eliminada.',
+            });
+            
+            this.customerCategoriesService.getCategories().subscribe({
+              next: (catRes) => {
+                if (catRes.statusCode === 200) {
+                  this.customerCategories = catRes.data;
+                }
+              }
+            });
+
+            if (this.newCustomerForm.get('categoryId')?.value === id) {
+              this.newCustomerForm.get('categoryId')?.setValue('');
+            }
+          },
+          error: (err) => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: `No se pudo eliminar la categoría: ${err.error.message}`,
+            });
+          },
         });
       },
     });
@@ -708,6 +1014,14 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
 
     this.onCustomerTypeChange();
 
+    this.orderForm.get('branchId')?.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(branchId => {
+      if (branchId) {
+        this.loadProducts(branchId);
+      } else {
+        this.products = [];
+      }
+    });
+
     this.paymentForm = this.fb.group({
       paymentMethodId: ['', Validators.required],
       amount: [0, Validators.required],
@@ -749,6 +1063,55 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
       mode: ['percentage', Validators.required],
       value: [0, [Validators.required, Validators.min(0)]],
       notes: ['', Validators.required],
+    });
+
+    this.newCustomerForm = this.fb.group({
+      name: ['', [Validators.required]],
+      nit: [''],
+      contactName: ['', [Validators.required]],
+      email: [''],
+      phone: ['', [Validators.required]],
+      address: [''],
+      categoryId: [''],
+      creditLimit: [0, [Validators.min(0)]],
+    });
+
+    this.newCustomerForm.get('name')?.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
+      const contactControl = this.newCustomerForm.get('contactName');
+      if (contactControl?.pristine) {
+        contactControl.setValue(value, { emitEvent: false });
+      }
+    });
+
+    this.newCustomerForm.get('nit')?.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value: string) => {
+      if (!value) return;
+      const cleanValue = value.replace(/-/g, '').toUpperCase();
+      if (cleanValue === 'CF' || cleanValue === 'C/F') {
+        this.newCustomerForm.get('nit')?.setValue(cleanValue, { emitEvent: false });
+        return;
+      }
+      if (cleanValue.length > 1) {
+        const formatted = cleanValue.substring(0, cleanValue.length - 1) + '-' + cleanValue.slice(-1);
+        this.newCustomerForm.get('nit')?.setValue(formatted, { emitEvent: false });
+      } else {
+        this.newCustomerForm.get('nit')?.setValue(cleanValue, { emitEvent: false });
+      }
+    });
+
+    this.newCustomerForm.get('categoryId')?.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((id) => {
+      const category = this.customerCategories.find((c) => c.id === id);
+      if (category) {
+        this.newCustomerForm.get('creditLimit')?.setValue(Number(category.defaultCreditLimit));
+      }
+    });
+
+    this.newCustomerCategoryForm = this.fb.group({
+      name: ['', [Validators.required, Validators.maxLength(50)]],
+      description: ['', [Validators.maxLength(255)]],
+      discountPercentage: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
+      minPurchaseAmount: [0, [Validators.required, Validators.min(0)]],
+      defaultCreditLimit: [0, [Validators.required, Validators.min(0)]],
+      isActive: [true],
     });
 
     this.orderForm.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
@@ -1290,6 +1653,68 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
     this.updateTotals();
     this.markAsChanged();
     this.showAdjustmentDialog = false;
+  }
+
+  loadProducts(branchId: string): void {
+    this.loadingProducts = true;
+    this.productsService.getQuotationCatalog(branchId).subscribe({
+      next: (res) => {
+        const flatProducts: Product[] = [];
+        res.data.forEach((item: any) => {
+          flatProducts.push({
+            ...item,
+            unit: item.unit || {
+              name: item.unitName || '',
+              abbreviation: item.unitAbbreviation || '',
+              allowsDecimals: item.allowsDecimals ?? false
+            }
+          });
+        });
+        this.products = flatProducts;
+        this.loadingProducts = false;
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los productos de la sucursal' });
+        this.loadingProducts = false;
+      }
+    });
+  }
+
+  get filteredProducts(): Product[] {
+    if (!this.searchProductQuery) return this.products;
+    const q = this.searchProductQuery.toLowerCase();
+    return this.products.filter(p => 
+      p.name.toLowerCase().includes(q) || 
+      (p.sku && p.sku.toLowerCase().includes(q))
+    );
+  }
+
+  addProductFromDrawer(product: Product) {
+    const existingIndex = this.details.findIndex(d => d.product.id === product.id);
+    if (existingIndex !== -1) {
+      const detail = this.details[existingIndex];
+      const newQty = Number(detail.quantity || 0) + 1;
+      const stock = detail.product?.stock ?? 0;
+      if (newQty > stock) {
+        this.messageService.add({ severity: 'warn', summary: 'Límite de Stock', detail: 'No hay suficiente stock disponible en esta sucursal.' });
+        return;
+      }
+      this.detailManager.updateQuantity(detail, newQty);
+      this.messageService.add({ 
+        severity: 'info', 
+        summary: 'Cantidad Actualizada', 
+        detail: `Se incrementó la cantidad de ${product.name}` 
+      });
+    } else {
+      this.detailManager.addProduct(product);
+      this.messageService.add({ 
+        severity: 'success', 
+        summary: 'Producto Añadido', 
+        detail: `${product.name} agregado a la lista` 
+      });
+    }
+    this.updateTotals();
+    this.markAsChanged();
   }
 
   ngOnDestroy(): void {

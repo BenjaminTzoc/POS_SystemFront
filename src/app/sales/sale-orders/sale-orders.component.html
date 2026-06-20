@@ -1,62 +1,49 @@
 <div class="py-4 px-0 md:px-6 bg-slate-50/50 min-h-screen">
-  <div class="max-w-[1700px] mx-auto mb-6 md:mb-8 px-4 md:px-0">
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+  <!-- Header Section -->
+  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-2 md:mb-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
       <div class="w-full md:max-w-[50%]">
-        <h1 class="text-2xl md:text-4xl font-semibold text-gray-900 tracking-tight">Órdenes de Venta</h1>
-        <p class="hidden md:block text-[#627ca7] mt-1 md:mt-2 text-sm md:text-md font-medium">
+        <h1 class="text-2xl md:text-3xl font-semibold text-gray-900 tracking-tight">Órdenes de Venta</h1>
+        <p class="hidden md:block text-[#627ca7] mt-1 text-sm md:text-md font-medium">
           Gestione y realice el seguimiento de todos los pedidos de sus clientes.
         </p>
       </div>
-        <div class="flex items-center gap-2 w-full md:w-auto">
-          <div class="flex-1">
-            <p-iconfield>
-              <p-inputicon class="pi pi-search" />
-              <input 
-                [ngModel]="searchTerm()"
-                (input)="applySearch($event)"
-                type="text" 
-                pInputText 
-                placeholder="Buscar orden o cliente..."
-                autocomplete="off"
-                fluid
-              />
-            </p-iconfield>
-          </div>
-          <p-button 
-            label="Nueva Orden"
-            severity="info"
-            icon="pi pi-plus"
-            class="hidden md:block"
-            (onClick)="createSaleOrder()"
-          />
-          <p-button 
-            severity="info"
-            icon="pi pi-plus"
-            class="block md:hidden!"
-            (onClick)="createSaleOrder()"
-          />
+
+      <div class="flex items-center gap-2 w-full md:w-auto">
+        <div class="flex-1">
+          <p-iconfield>
+            <p-inputicon class="pi pi-search" />
+            <input 
+              [ngModel]="searchTerm()"
+              (input)="applySearch($event)"
+              type="text" 
+              pInputText 
+              placeholder="Buscar orden o cliente..."
+              autocomplete="off"
+              fluid
+            />
+          </p-iconfield>
         </div>
+        <p-button 
+          label="Nueva Orden"
+          severity="info"
+          icon="pi pi-plus"
+          class="hidden md:block"
+          (onClick)="createSaleOrder()"
+        />
+        <p-button 
+          severity="info"
+          icon="pi pi-plus"
+          class="block md:hidden"
+          (onClick)="createSaleOrder()"
+        />
+      </div>
     </div>
   </div>
 
-  <div class="w-full mx-auto">
+  <div class="max-w-[1700px] mx-auto">
+    <!-- Filters Section -->
     <div class="flex flex-col md:flex-row gap-4 px-4 md:px-0 mb-6">
-      <div class="flex items-center gap-2">
-        <p-selectButton 
-          [options]="viewOptions" 
-          [(ngModel)]="viewMode" 
-          (onChange)="loadOrders()"
-          optionLabel="label" 
-          optionValue="value"
-          styleClass="shadow-sm"
-        >
-          <ng-template #item let-item>
-            <i [class]="item.icon + ' mr-2'"></i>
-            <span class="hidden sm:inline">{{ item.label }}</span>
-          </ng-template>
-        </p-selectButton>
-      </div>
-
       <p-datePicker
         [(ngModel)]="dateRange"
         selectionMode="range"
@@ -80,6 +67,7 @@
           styleClass="!rounded-xl border-slate-300 w-full md:w-[16rem]"
         />
       }
+      <!--
       <p-select
         [options]="areas()"
         [(ngModel)]="selectedArea"
@@ -91,6 +79,8 @@
         class="!rounded-xl shadow-sm w-full md:w-auto"
         styleClass="!rounded-xl border-slate-300 w-full md:w-[16rem]"
       />
+      -->
+      <!--
       <div class="flex items-center justify-between md:justify-start gap-3 bg-white px-4 py-2 rounded-xl border border-slate-300 shadow-sm w-full md:w-auto">
         <span class="text-sm font-medium text-slate-600">Área específica</span>
         <p-toggleSwitch 
@@ -98,581 +88,377 @@
           (onChange)="loadOrders()"
         />
       </div>
+      -->
+    </div>
+    
+    <!-- DESKTOP VIEW -->
+    <div class="hidden lg:block bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm">
+      <p-table
+        [value]="saleOrders()"
+        [loading]="loading()"
+        [paginator]="true"
+        [rows]="rows()"
+        [totalRecords]="totalRecords()"
+        [lazy]="true"
+        (onLazyLoad)="onPageChange($event)"
+        [rowsPerPageOptions]="[10, 20, 50, 100]"
+        dataKey="id"
+        [expandedRowKeys]="expandedRows()"
+        (expandedRowKeysChange)="expandedRows.set($event)"
+        [rowExpandMode]="'single'"
+        styleClass="p-datatable-modern"
+      >
+        <ng-template pTemplate="header">
+          <tr class="h-18! text-sm! bg-slate-50">
+            <th style="width: 3.5rem" class="!pl-6"></th>
+            <th class="tracking-widest text-slate-400 w-[140px]">Estado</th>
+            <th class="tracking-widest text-slate-400 w-[180px]">Orden</th>
+            <th class="tracking-widest text-slate-400">Cliente / Sucursal</th>
+            <th class="tracking-widest text-slate-400 text-right w-[150px]">Total</th>
+            <th class="!pr-10 tracking-widest text-slate-400 text-right w-[200px]">Acciones</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-order let-expanded="expanded">
+          <tr [ngClass]="{ 'bg-slate-50/50': expanded }" class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 text-sm">
+            <td class="!pl-6 py-4">
+              <p-button
+                type="button"
+                pRipple
+                [pRowToggler]="order"
+                [text]="true"
+                severity="secondary"
+                [rounded]="true"
+                [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                styleClass="!w-7 !h-7 !p-0"
+              />
+            </td>
+            <td class="py-4">
+              <span
+                class="inline-flex items-center px-2.5 py-1 text-[11px] font-semibold rounded-lg border shadow-sm"
+                [ngClass]="{
+                  'bg-amber-50 text-amber-600 border-amber-200': ['pending', 'on_hold'].includes(order.status),
+                  'bg-blue-50 text-blue-600 border-blue-200': order.status === 'confirmed',
+                  'bg-indigo-50 text-indigo-600 border-indigo-200': order.status === 'preparing',
+                  'bg-emerald-50 text-emerald-600 border-emerald-200': ['ready_for_pickup', 'out_for_delivery', 'delivered'].includes(order.status),
+                  'bg-rose-50 text-rose-600 border-rose-200': order.status === 'cancelled'
+                }"
+              >
+                <span class="w-1.5 h-1.5 rounded-full mr-2 animate-pulse"
+                  [ngClass]="{
+                    'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]': ['pending', 'on_hold'].includes(order.status),
+                    'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]': order.status === 'confirmed',
+                    'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.4)]': order.status === 'preparing',
+                    'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]': ['ready_for_pickup', 'out_for_delivery', 'delivered'].includes(order.status),
+                    'bg-rose-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]': order.status === 'cancelled'
+                  }"
+                ></span>
+                {{ order.status | saleStatus }}
+              </span>
+              @if (isAbonada(order)) {
+                <span class="ml-2 inline-flex items-center px-2 py-0.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-md text-[10px] font-bold">
+                  Abonada
+                </span>
+              }
+            </td>
+            <td class="py-4">
+              <div class="flex flex-col gap-1 items-start">
+                <code class="px-2 py-1 bg-marionberry-palest text-marionberry rounded-md text-sm font-bold border border-marionberry-pale font-mono">
+                  #{{ order.invoiceNumber }}
+                </code>
+                <span class="text-[11px] font-medium text-slate-400 leading-tight">
+                  {{ order.date | date: 'dd/MM/yyyy' }} • {{ order.date | date: 'hh:mm a' }}
+                </span>
+              </div>
+            </td>
+            <td class="py-4 text-left">
+              <div class="flex flex-col">
+                <span class="font-semibold text-slate-800 leading-tight">
+                  {{ order.customer?.name || order.guestCustomer?.name || 'Venta al Público' }}
+                </span>
+                <span class="text-xs text-slate-400 mt-1 font-medium">
+                  {{ order.branch?.name }}
+                </span>
+              </div>
+            </td>
+            <td class="py-4 text-right font-semibold text-marionberry tabular-nums text-base">
+              {{ order.total | currency: 'Q ' }}
+            </td>
+            <td class="py-4 !pr-10 text-right">
+              <div class="flex justify-end gap-1">
+                <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="warn" (onClick)="editOrder(order.id)" pTooltip="Editar" tooltipPosition="bottom" styleClass="!w-9 !h-9" />
+                <p-button icon="pi pi-file-pdf" [text]="true" [rounded]="true" severity="danger" (onClick)="previewOrder(order)" pTooltip="Ver Ticket" tooltipPosition="bottom" styleClass="!w-9 !h-9" />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template #expandedrow let-order>
+          <tr>
+            <td colspan="6" class="!p-0 border-none bg-transparent">
+              <div class="p-6 bg-slate-50/50 border-t border-slate-100">
+                <ng-container *ngTemplateOutlet="expandedDetails; context: { $implicit: order }"></ng-container>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="text-center !py-32">
+              <div class="flex flex-col items-center justify-center gap-3 w-full h-full">
+                <i class="pi pi-shopping-cart text-[#95abce]" style="font-size: 5rem"></i>
+                <div class="flex flex-col items-center gap-1">
+                  <p class="text-[#627ca7] font-bold text-xl">No se encontraron órdenes.</p>
+                  <p class="text-[#627ca7] text-sm font-medium">Prueba ajustando los filtros de búsqueda o crea una nueva.</p>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
     </div>
 
-    @if (viewMode() === 'table') {
-      <div class="mt-6 bg-transparent lg:bg-white lg:rounded-xl lg:border lg:border-slate-300 overflow-hidden lg:shadow-sm">
-        <p-table
-          [value]="saleOrders()"
-          [loading]="loading()"
-          [paginator]="true"
-          [rows]="rows()"
-          [totalRecords]="totalRecords()"
-          [lazy]="true"
-          (onLazyLoad)="onPageChange($event)"
-          [rowsPerPageOptions]="[10, 20, 50, 100]"
-          styleClass="p-datatable-modern p-datatable-sm"
-          [showCurrentPageReport]="true"
-          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
-          dataKey="id"
-          [expandedRowKeys]="expandedRows()"
-          (expandedRowKeysChange)="expandedRows.set($event)"
-        >
-          <ng-template #header>
-            <tr class="h-18! text-sm! bg-slate-50 hidden lg:table-row">
-              <th style="width: 3rem"></th>
-              <th class="!pl-10 tracking-widest text-slate-400">No. Orden</th>
-              <th class="tracking-widest text-slate-400">Fecha</th>
-              <th class="tracking-widest text-slate-400">Cliente</th>
-              <th class="tracking-widest text-slate-400">Sucursal</th>
-              <th class="tracking-widest text-slate-400 text-right">Total</th>
-              <th class="tracking-widest text-slate-400 text-center">Estado</th>
-              <th class="!pr-10 tracking-widest text-slate-400 text-right">Acciones</th>
-            </tr>
-          </ng-template>
-
-          <ng-template #body let-order let-expanded="expanded">
-            <tr class="group lg:hover:bg-slate-50 transition-all border-none lg:border-b border-slate-100 cursor-pointer block lg:table-row bg-transparent lg:bg-white mt-4 lg:mt-0 px-4 lg:px-0">
-              <td class="text-center hidden lg:table-cell">
-                <button 
-                  type="button" 
-                  pButton 
-                  pRipple 
-                  [pRowToggler]="order" 
-                  text 
-                  rounded 
-                  plain
-                  class="mr-2 !w-8 !h-8" 
-                  [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
-                ></button>
-              </td>
-              <td class="!pl-10 hidden lg:table-cell">
-                <span class="px-2 py-1 bg-slate-100 text-slate-700 rounded text-[13px] font-bold border border-slate-200 uppercase">
-                  #{{ order.invoiceNumber }}
-                </span>
-              </td>
-              <td class="hidden lg:table-cell">
-                <div class="flex flex-col">
-                  <span class="text-sm font-semibold text-slate-700">{{ order.date | date: 'dd/MM/yyyy' }}</span>
-                  <span class="text-[12px] text-indigo-500 font-medium">{{ order.date | date: 'hh:mm a' }}</span>
-                </div>
-              </td>
-              <td class="hidden lg:table-cell">
-                <div class="flex flex-col">
-                   <span class="text-sm font-semibold text-slate-800">{{ order.customer?.name || order.guestCustomer?.name }}</span>
-                   <span class="text-[12px] text-indigo-500 font-medium">NIT: {{ order.customer?.nit || order.guestCustomer?.nit }}</span>
-                </div>
-              </td>
-              <td class="hidden lg:table-cell">
-                <div class="flex items-center gap-1.5 text-slate-600">
-                  <i class="pi pi-building text-[11px]"></i>
-                  <span class="text-[13px] font-semibold">{{ order.branch?.name }}</span>
-                </div>
-              </td>
-              <td class="text-right hidden lg:table-cell">
-                <div class="flex flex-col items-end gap-1">
-                  <span class="text-md font-bold text-slate-900 leading-none">{{ order.total | currency: 'Q ' }}</span>
-                  <!-- Progress Bar below total -->
-                  @if (getPaymentPercentage(order) > 0) {
-                    <div class="w-24 h-1 bg-slate-100 rounded-full overflow-hidden border border-slate-200/50">
-                      <div 
-                        class="h-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)] transition-all duration-500"
-                        [style.width.%]="getPaymentPercentage(order)"
-                      ></div>
+    <!-- MOBILE VIEW -->
+    <div class="lg:hidden block">
+      <p-table
+        [value]="saleOrders()"
+        [loading]="loading()"
+        [paginator]="true"
+        [rows]="rows()"
+        [totalRecords]="totalRecords()"
+        [lazy]="true"
+        (onLazyLoad)="onPageChange($event)"
+        [rowsPerPageOptions]="[10, 20, 50, 100]"
+        dataKey="id"
+        styleClass="bg-transparent w-full border-none"
+        [breakpoint]="'0px'"
+      >
+        <ng-template pTemplate="body" let-order>
+          <tr class="bg-transparent border-none block" [ngClass]="{ 'opacity-60 grayscale-[0.5]': order.status === 'cancelled' }">
+            <td class="block !p-0 border-none bg-transparent w-full">
+              <div class="bg-white rounded-2xl shadow-sm border border-slate-200 mx-4 my-2.5 flex flex-col overflow-hidden relative">
+                <div class="flex p-4 items-center gap-3">
+                  <div class="w-12 h-12 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden border border-[#4A7FA7] bg-[#D0E2F2] shadow-sm text-[#3B5B8A]">
+                    <i class="pi pi-shopping-bag text-lg!"></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-start gap-1">
+                      <div class="flex flex-col min-w-0">
+                        <span class="inline-flex text-[11px] bg-marionberry-palest text-marionberry font-semibold px-2 py-0.5 rounded border border-marionberry-pale tracking-wide font-mono w-fit">#{{ order.invoiceNumber }}</span>
+                        <h3 class="font-semibold text-slate-800 text-base leading-tight truncate mt-1.5">
+                          {{ order.customer?.name || order.guestCustomer?.name || 'Venta al Público' }}
+                        </h3>
+                      </div>
+                      <span
+                        class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-md border shadow-sm"
+                        [ngClass]="{
+                          'bg-amber-50 text-amber-600 border-amber-200': ['pending', 'on_hold'].includes(order.status),
+                          'bg-blue-50 text-blue-600 border-blue-200': order.status === 'confirmed',
+                          'bg-indigo-50 text-indigo-600 border-indigo-200': order.status === 'preparing',
+                          'bg-emerald-50 text-emerald-600 border-emerald-200': ['ready_for_pickup', 'out_for_delivery', 'delivered'].includes(order.status),
+                          'bg-rose-50 text-rose-600 border-rose-200': order.status === 'cancelled'
+                        }"
+                      >
+                        {{ order.status | saleStatus }}
+                      </span>
                     </div>
-                  }
+                    <div class="flex items-center gap-4 mt-2">
+                      <div>
+                        <p class="text-[9px] font-semibold text-[#3B5B8A] tracking-wider">Total Orden</p>
+                        <p class="text-[18px] font-bold text-marionberry leading-none mt-0.5">{{ order.total | currency: 'Q ' }}</p>
+                      </div>
+                      <div class="flex flex-col">
+                        <p class="text-[9px] font-semibold text-[#3B5B8A] tracking-wider">Fecha</p>
+                        <span class="text-xs font-bold mt-0.5 text-slate-500">
+                          {{ order.date | date: 'dd/MM/yyyy' }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </td>
-              <td class="text-center hidden lg:table-cell">
-                <div class="flex flex-col items-center gap-1">
-                  <p-tag 
-                    [value]="order.status | saleStatus" 
-                    [severity]="getStatusSeverity(order.status)"
-                    styleClass="!text-[12px] !font-bold uppercase tracking-tighter"
-                  />
+
+                <div class="px-4 pb-4 flex items-center gap-2 overflow-x-auto no-scrollbar">
+                  <span class="inline-flex items-center text-[11px] bg-slate-100 text-slate-500 font-semibold px-2 py-0.5 rounded border border-slate-200">
+                    <i class="pi pi-building text-[10px] mr-1"></i> {{ order.branch?.name }}
+                  </span>
+                  <span class="inline-flex items-center text-[11px] bg-[#D0E2F2] text-[#3B5B8A] font-semibold px-2 py-0.5 rounded border border-[#4A7FA7]">
+                    {{ order.details?.length || 0 }} Items
+                  </span>
                   @if (isAbonada(order)) {
-                    <span class="flex items-center gap-1 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded-md border border-blue-100 text-[9px] font-black uppercase tracking-widest animate-pulse">
-                      <i class="pi pi-credit-card text-[8px]"></i>
+                    <span class="inline-flex items-center text-[11px] bg-blue-50 text-blue-600 font-semibold px-2 py-0.5 rounded border border-blue-200">
                       Abonada
                     </span>
                   }
                 </div>
-              </td>
-              <td class="!pr-10 hidden lg:table-cell">
-                <div class="flex justify-end gap-1">
-                  <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text !text-amber-500 hover:!bg-amber-50" (click)="$event.stopPropagation(); editOrder(order.id)"></button>
-                  <button pButton icon="pi pi-file-pdf" class="p-button-rounded p-button-text !text-rose-500 hover:!bg-rose-50" (click)="$event.stopPropagation(); previewOrder(order)"></button>
+
+                <div class="bg-slate-50/50 border-t border-slate-100 p-2 px-3 flex items-center justify-between">
+                  <div class="flex items-center gap-1">
+                    <p-button 
+                      label="Detalles" 
+                      icon="pi pi-external-link" 
+                      (onClick)="showDetails(order)"
+                      styleClass="p-button-text p-button-sm !text-[#3B5B8A] font-semibold text-xs !py-1 !px-2.5 rounded-lg border border-[#4A7FA7] bg-[#D0E2F2] shadow-sm"
+                    />
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="warn" (onClick)="editOrder(order.id)" styleClass="!w-9 !h-9 !p-0" />
+                    <p-button icon="pi pi-file-pdf" [text]="true" [rounded]="true" severity="danger" (onClick)="previewOrder(order)" styleClass="!w-9 !h-9 !p-0" />
+                  </div>
                 </div>
-              </td>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
 
-              <!-- VISTA MÓVIL (Tarjeta) -->
-              <td class="lg:hidden !p-0 bg-transparent block w-full">
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 mx-4 my-2.5 flex flex-col overflow-hidden relative">
-                   <div class="flex p-4 items-center gap-4">
-                      <div class="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden border border-[#4A7FA7] bg-[#D0E2F2] shadow-sm">
-                         <i class="pi pi-shopping-bag text-lg! text-[#3B5B8A]"></i>
-                      </div>
-                      <div class="flex-1 min-w-0">
-                         <div class="flex justify-between items-start gap-1">
-                           <div class="flex flex-col min-w-0">
-                             <span class="text-[10px] text-[#3B5B8A] font-semibold leading-none mb-1 truncate uppercase tracking-widest">#{{ order.invoiceNumber }}</span>
-                             <h3 class="font-semibold text-slate-800 text-base leading-tight truncate">{{ order.customer?.name || order.guestCustomer?.name }}</h3>
-                           </div>
-                           <p-tag 
-                             [value]="order.status | saleStatus" 
-                             [severity]="getStatusSeverity(order.status)"
-                             styleClass="!text-[10px] !font-semibold px-1.5 py-0.5 rounded-md"
-                           />
-                         </div>
-                         <div class="flex items-center gap-4 text-slate-400 mt-2">
-                            <div class="flex items-center gap-1">
-                              <i class="pi pi-calendar text-[10px]"></i>
-                              <span class="text-[10px] font-semibold">{{ order.date | date: 'dd/MM/yy' }}</span>
-                            </div>
-                            <div class="flex items-center gap-1">
-                               <i class="pi pi-building text-[10px]"></i>
-                               <span class="text-[10px] font-semibold truncate max-w-[100px]">{{ order.branch?.name }}</span>
-                            </div>
-                         </div>
-                      </div>
-                   </div>
+        <ng-template pTemplate="emptymessage">
+           <tr>
+             <td class="block !p-0 border-none bg-transparent w-full">
+               <div class="bg-white rounded-lg border border-slate-200 mx-4 my-8 p-10 flex flex-col items-center gap-4 text-center">
+                 <i class="pi pi-shopping-cart text-[#95abce]" style="font-size: 4rem"></i>
+                 <div class="flex flex-col gap-1">
+                   <p class="text-[#627ca7] font-bold text-lg">No se encontraron órdenes</p>
+                   <p class="text-[#627ca7] text-xs font-medium">Prueba ajustando los filtros de búsqueda o crea una nueva.</p>
+                 </div>
+               </div>
+             </td>
+           </tr>
+        </ng-template>
+      </p-table>
+    </div>
 
-                   <div class="bg-slate-50/50 border-t border-slate-100 p-2 px-3 flex items-center justify-between">
-                      <div class="flex flex-col px-1">
-                        <span class="text-[14px] font-black text-indigo-700 leading-none">{{ order.total | currency: 'Q ' }}</span>
-                      </div>
-                      <div class="flex items-center gap-1">
-                        <p-button icon="pi pi-pencil" styleClass="p-button-text !text-amber-500 hover:!bg-amber-50 !w-9 !h-9 !rounded-lg !p-0" (onClick)="$event.stopPropagation(); editOrder(order.id)" />
-                        <p-button icon="pi pi-file-pdf" styleClass="p-button-text !text-rose-500 hover:!bg-rose-50 !w-9 !h-9 !rounded-lg !p-0" (onClick)="$event.stopPropagation(); previewOrder(order)" />
-                        <p-button 
-                          [icon]="isExpanded(order.id) ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" 
-                          (onClick)="$event.stopPropagation(); toggleDetails(order.id)"
-                          styleClass="p-button-text !w-9 !h-9 !rounded-lg !bg-white border border-slate-200 shadow-sm !p-0" />
-                      </div>
-                   </div>
-                   
-                   @if (isExpanded(order.id) && order.details && order.details.length > 0) {
-                      <div class="p-4 bg-slate-50 border-t border-slate-100 space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-2">Items de la orden:</p>
-                        @for (detail of order.details; track detail.id) {
-                          <div class="flex justify-between items-center text-sm group/item">
-                            <div class="flex items-center gap-2 flex-1 min-w-0">
-                              <div [ngClass]="{
-                                'bg-slate-300': detail.preparationStatus === 'pending',
-                                'bg-amber-400': detail.preparationStatus === 'preparing',
-                                'bg-emerald-500': detail.preparationStatus === 'completed'
-                              }" class="w-1.5 h-1.5 rounded-full shrink-0"></div>
-                              <span class="text-slate-700 font-medium truncate">{{ detail.product?.name }}</span>
-                            </div>
-                            <span class="ml-2 px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded text-[11px] font-bold">
-                                x{{ detail.quantity }}
-                            </span>
-                          </div>
-                        }
-                      </div>
-                    }
-                </div>
-              </td>
-            </tr>
-          </ng-template>
+    <!-- DETAILS MODAL -->
+    <p-dialog 
+      [(visible)]="displayDetails" 
+      [modal]="true" 
+      [header]="'Detalle de Orden: #' + selectedOrder?.invoiceNumber"
+      [breakpoints]="{ '1199px': '75vw', '575px': '92vw' }"
+      [style]="{ width: '50vw', 'max-width': '600px' }"
+      [draggable]="false"
+      [resizable]="false"
+      [appendTo]="'body'"
+      styleClass="p-dialog-modern custom-dialog"
+    >
+      @if (selectedOrder) {
+        <div class="py-4">
+           <ng-container *ngTemplateOutlet="expandedDetails; context: { $implicit: selectedOrder }"></ng-container>
+        </div>
+      }
+      <ng-template pTemplate="footer">
+        <p-button label="Cerrar" icon="pi pi-times" (onClick)="displayDetails = false" styleClass="p-button-text p-button-secondary rounded-xl" />
+      </ng-template>
+    </p-dialog>
 
-          <ng-template #expandedrow let-order>
-            <tr>
-              <td colspan="8" class="!px-4 lg:!px-0 !py-0 bg-transparent block lg:table-cell border-none">
-                <div class="lg:bg-gray-50/50 lg:p-6 mb-4 lg:mb-0 mt-2 lg:mt-0">
-                  <div class="flex flex-col lg:grid lg:grid-cols-12 gap-4 lg:gap-6 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <!-- Detalles de Productos -->
-                    <div class="col-span-12 lg:col-span-8">
-                    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-                      <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                        <span class="text-xs font-bold text-slate-700 uppercase tracking-widest">Detalle de Productos</span>
-                        <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded text-[10px] font-black">
-                          {{ order.details?.length || 0 }} ITEMS
-                        </span>
-                      </div>
-                      <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm whitespace-nowrap lg:whitespace-normal">
-                          <thead>
-                            <tr class="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-white border-b border-slate-100">
-                              <th class="px-4 py-3 min-w-[200px]">Producto</th>
-                              <th class="px-4 py-3 text-center">Cant.</th>
-                              <th class="px-4 py-3 text-right">Precio Unit.</th>
-                              <th class="px-4 py-3 text-right">Subtotal</th>
-                            </tr>
-                          </thead>
-                          <tbody class="divide-y divide-slate-50">
-                            @for (detail of order.details; track detail.id) {
-                              <tr class="hover:bg-slate-50/50 transition-colors">
-                                <td class="px-4 py-3">
-                                  <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 bg-slate-50 flex items-center justify-center flex-shrink-0">
-                                      @if (detail.product?.imageUrl) {
-                                        <img [src]="getProductImageUrl(detail.product.imageUrl)" class="w-full h-full object-cover" />
-                                      } @else {
-                                        <i class="pi pi-image text-slate-300 text-lg"></i>
-                                      }
-                                    </div>
-                                    <div class="flex flex-col overflow-hidden max-w-[200px] sm:max-w-none">
-                                      <span class="font-bold text-slate-700 text-sm truncate">{{ detail.product?.name }}</span>
-                                      <span class="text-[10px] text-slate-400 font-mono tracking-tighter uppercase">{{ detail.product?.sku }}</span>
-                                    </div>
-                                  </div>
-                                </td>
-                                <td class="px-4 py-3 text-center">
-                                  <div class="flex flex-col items-center">
-                                    <span class="font-black text-slate-700 text-sm">{{ detail.quantity }}</span>
-                                    <span class="text-[9px] font-bold text-indigo-500 uppercase tracking-tighter">{{ detail.product?.unit?.abbreviation }}</span>
-                                  </div>
-                                </td>
-                                <td class="px-4 py-3 text-right text-slate-600 font-medium">
-                                  {{ detail.unitPrice | currency: 'Q ' }}
-                                </td>
-                                <td class="px-4 py-3 text-right font-black text-slate-800">
-                                  {{ detail.lineTotal | currency: 'Q ' }}
-                                </td>
-                              </tr>
+    <!-- REUSABLE TEMPLATE FOR EXPANDED DETAILS -->
+    <ng-template #expandedDetails let-order>
+      <div class="flex flex-col lg:grid lg:grid-cols-12 gap-6 text-left">
+        <div class="col-span-12 lg:col-span-8 flex flex-col gap-4">
+          <div class="bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm">
+            <!-- Table for items (Desktop) -->
+            <div class="hidden lg:block">
+              <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50 border-b border-slate-300">
+                  <tr class="h-11 text-[11px] font-semibold text-[#3B5B8A]">
+                    <th class="px-6 py-2.5">Producto</th>
+                    <th class="px-6 py-2.5 text-center">Cant.</th>
+                    <th class="px-6 py-2.5 text-right">Precio Unit.</th>
+                    <th class="px-6 py-2.5 text-right">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  @for (detail of order.details; track detail.id) {
+                    <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0">
+                      <td class="px-6 py-2">
+                        <div class="flex items-center gap-3">
+                          <div class="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 bg-slate-50 flex items-center justify-center flex-shrink-0">
+                            @if (detail.product?.imageUrl) {
+                              <img [src]="getProductImageUrl(detail.product.imageUrl)" class="w-full h-full object-cover" />
+                            } @else {
+                              <i class="pi pi-image text-slate-300 text-lg"></i>
                             }
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Resumen Financiero -->
-                  <div class="col-span-12 lg:col-span-4">
-                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col h-full">
-                      <h4 class="text-xs font-bold text-slate-700 uppercase tracking-widest border-b border-slate-100 pb-3 mb-5">Resumen Económico</h4>
-                      
-                      <div class="space-y-3.5 flex-1">
-                        <div class="flex justify-between items-center text-sm">
-                          <span class="text-slate-500 font-medium">Subtotal</span>
-                          <span class="font-bold text-slate-700">{{ order.subtotal | currency: 'Q ' }}</span>
-                        </div>
-                        @if (+order.discountAmount > 0) {
-                          <div class="flex justify-between items-center text-sm text-rose-500">
-                            <span class="font-medium">Descuento Global</span>
-                            <span class="font-bold">-{{ order.discountAmount | currency: 'Q ' }}</span>
                           </div>
-                        }
-                        <div class="flex justify-between items-center text-sm">
-                          <span class="text-slate-500 font-medium">Impuestos (IVA)</span>
-                          <span class="font-bold text-slate-700">{{ order.taxAmount | currency: 'Q ' }}</span>
-                        </div>
-                        
-                        <div class="pt-4 mt-4 border-t border-dashed border-slate-200">
-                          <div class="flex justify-between items-center">
-                            <span class="text-sm font-black text-slate-800 uppercase tracking-tighter">Total Orden</span>
-                            <span class="text-2xl font-black text-indigo-600 tracking-tighter">{{ order.total | currency: 'Q ' }}</span>
+                          <div class="flex flex-col overflow-hidden max-w-[200px] sm:max-w-none">
+                            <span class="font-medium text-[#3B5B8A] text-xs truncate">{{ detail.product?.name }}</span>
+                            <span class="text-[9px] text-slate-400 font-mono tracking-tighter">{{ detail.product?.sku }}</span>
                           </div>
                         </div>
-
-                        <div class="mt-8 grid grid-cols-2 gap-4">
-                          <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
-                            <span class="text-[9px] font-bold text-emerald-500 uppercase tracking-widest block mb-1 text-center">Cobrado</span>
-                            <span class="text-md font-black text-emerald-700 block text-center">{{ order.paidAmount | currency: 'Q ' }}</span>
-                          </div>
-                          <div class="p-3 bg-rose-50 rounded-xl border border-rose-100">
-                            <span class="text-[9px] font-bold text-rose-500 uppercase tracking-widest block mb-1 text-center">Saldo</span>
-                            <span class="text-md font-black text-rose-700 block text-center">{{ order.pendingAmount | currency: 'Q ' }}</span>
-                          </div>
+                      </td>
+                      <td class="px-6 py-2 text-center">
+                        <div class="flex flex-col items-center">
+                          <span class="font-semibold text-[#627ca7] text-xs">{{ detail.quantity }}</span>
+                          <span class="text-[9px] font-semibold text-slate-400">{{ detail.product?.unit?.abbreviation }}</span>
                         </div>
-                      </div>
-
-                      @if (order.notes) {
-                        <div class="mt-6 p-3 bg-slate-50 rounded-lg border border-slate-100 relative">
-                          <i class="pi pi-comment absolute -top-2 -left-2 bg-indigo-500 text-white w-5! h-5! rounded-full flex items-center justify-center text-[10px] shadow-sm"></i>
-                          <p class="text-xs text-slate-600 italic leading-relaxed">{{ order.notes }}</p>
-                        </div>
-                      }
-                    </div>
-                  </div>
-                </div>
-                </div> <!-- Closes .lg:bg-gray-50/50 -->
-              </td>
-            </tr>
-          </ng-template>
-
-          <ng-template #emptymessage>
-            <tr>
-              <td colspan="8" class="text-center !py-24">
-                <div class="flex flex-col items-center gap-4">
-                  <i class="pi pi-shopping-cart text-[#95abce]" style="font-size: 5rem"></i>
-                  <div class="flex flex-col items-center gap-1">
-                    <p class="text-[#627ca7] font-bold text-xl">No se encontraron órdenes</p>
-                    <p class="text-[#627ca7] text-sm font-medium max-w-[280px]">
-                      Intenta ajustar los filtros o el término de búsqueda.
-                    </p>
-                  </div>
-                </div>
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </div>
-    }
-
-    @if (viewMode() === 'kanban') {
-      <div class="relative w-[calc(100dvw-var(--sidebar-width)-80px)] overflow-x-auto h-[calc(100vh-320px)] min-h-[600px] mt-2 hide-scrollbar">
-        <div class="flex gap-6 pb-6 px-2">
-        @for (column of kanbanColumns(); track column.label) {
-          <div class="flex-shrink-0 w-full md:w-[400px] flex flex-col bg-slate-50/50 rounded-2xl border border-slate-200 shadow-sm overflow-hidden border-t-4"
-               [ngClass]="{
-                  'border-t-amber-400': column.color === 'amber',
-                  'border-t-blue-400': column.color === 'blue',
-                  'border-t-indigo-400': column.color === 'indigo',
-                  'border-t-emerald-400': column.color === 'emerald',
-                  'border-t-slate-400': column.color === 'slate'
-               }">
-            <div class="p-4 bg-white border-b border-slate-200 flex items-center justify-between sticky top-0 z-10 shadow-sm">
-              <div class="flex items-center gap-3">
-                <div [ngClass]="{
-                  'bg-amber-100 text-amber-600': column.color === 'amber',
-                  'bg-blue-100 text-blue-600': column.color === 'blue',
-                  'bg-indigo-100 text-indigo-600': column.color === 'indigo',
-                  'bg-emerald-100 text-emerald-600': column.color === 'emerald',
-                  'bg-slate-200 text-slate-700': column.color === 'slate'
-                }" class="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm">
-                  <i class="pi {{ column.icon }} text-lg"></i>
-                </div>
-                <div>
-                  <h3 class="font-bold text-slate-800 text-sm tracking-tight">{{ column.label }}</h3>
-                  <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                    {{ getOrdersForColumn(column.statuses).length + getItemsForColumn(column.statuses).length }} Órdenes
-                  </p>
-                </div>
-              </div>
-              <div class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg border border-slate-200 shadow-inner">
-                <span class="text-xs font-black tracking-tighter">{{ getColumnTotal(column.statuses) | currency : 'Q ' }}</span>
-              </div>
+                      </td>
+                      <td class="px-6 py-2 text-right text-slate-500 font-medium text-xs tabular-nums">{{ detail.unitPrice | currency: 'Q ' }}</td>
+                      <td class="px-6 py-2 text-right text-slate-800 font-bold text-xs tabular-nums">{{ detail.lineTotal | currency: 'Q ' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
             </div>
-            <div class="flex-1 overflow-y-auto p-3 space-y-4">
-              <!-- Modo: Agrupado por Estado de Orden -->
-              @if (groupBy() === 'status') {
-                @for (order of getOrdersForColumn(column.statuses); track order.id) {
-                <div class="group bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-lg hover:border-indigo-300 transition-all duration-300 flex flex-col p-4 relative overflow-hidden cursor-pointer"
-                     (click)="editOrder(order.id)">
-                  
-                  <div class="flex items-start justify-between mb-3">
-                    <div class="flex flex-col items-start gap-1">
-                      <span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[10px] font-bold border border-slate-200 uppercase">
-                        #{{ order.invoiceNumber }}
-                      </span>
-                      <span class="text-[11px] font-medium text-slate-500">
-                        {{ order.date | date : 'dd/MM/yyyy • hh:mm a' }}
-                      </span>
-                    </div>
-  
-                    <div class="flex items-center gap-1.5 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
-                      <i class="pi pi-building text-slate-400 text-[10px]!"></i>
-                      <span class="text-[10px] font-semibold text-slate-500">{{ order.branch?.name ?? '...' }}</span>
-                    </div>
-                  </div>
-  
-                  <div class="mb-4">
-                    <div class="flex justify-between items-start cursor-pointer hover:bg-slate-50 -mx-3 px-3 py-1 rounded-lg transition-colors group/header" (click)="$event.stopPropagation(); toggleDetails(order.id)">
-                      <div class="flex flex-col flex-1">
-                        <p class="font-bold text-slate-800 text-md leading-tight line-clamp-1">
-                          {{ order.customer?.name || order.guestCustomer?.name }}
-                        </p>
-                        @if (isAbonada(order)) {
-                          <span class="mt-1 flex items-center gap-1 w-fit px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded-md border border-blue-100 text-[9px] font-black uppercase tracking-widest animate-pulse">
-                            <i class="pi pi-credit-card text-[8px]"></i>
-                            Abonada
-                          </span>
-                        }
-                      </div>
-                      @if (order.details && order.details.length > 0) {
-                        <div class="flex items-center gap-1.5 text-slate-400 group-hover/header:text-indigo-500 transition-colors">
-                          <span class="text-[10px] font-bold bg-slate-100 group-hover/header:bg-indigo-50 px-1.5 py-0.5 rounded-full">
-                            {{ order.details.length }}
-                          </span>
-                          <i class="pi transition-transform duration-200" 
-                             [ngClass]="isExpanded(order.id) ? 'pi-chevron-up' : 'pi-chevron-down'" 
-                             style="font-size: 0.7rem"></i>
-                        </div>
-                      }
-                    </div>
-                    
-                    @if (isExpanded(order.id) && order.details && order.details.length > 0) {
-                      <div class="mt-3 space-y-2 py-2 px-3 bg-slate-50 rounded-lg border border-slate-100 animate-in fade-in slide-in-from-top-1 duration-200">
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-1">Items a preparar:</p>
-                        @for (detail of order.details; track detail.id) {
-                          <div class="flex justify-between items-center text-sm group/item">
-                            <div class="flex items-center gap-2 flex-1">
-                              <div [ngClass]="{
-                                'bg-slate-300': detail.preparationStatus === 'pending',
-                                'bg-amber-400': detail.preparationStatus === 'preparing',
-                                'bg-emerald-500': detail.preparationStatus === 'completed'
-                              }" class="w-1.5 h-1.5 rounded-full" [pTooltip]="'Estado: ' + detail.preparationStatus"></div>
-                              <span class="text-slate-700 font-medium truncate">{{ detail.product.name }}</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                              <span class="px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded text-[11px] font-bold">
-                                x{{ detail.quantity }}
-                              </span>
-                              @if (detail.preparationStatus !== 'completed') {
-                                <button
-                                  pButton
-                                  icon="pi pi-check"
-                                  [text]="true"
-                                  size="small"
-                                  class="!p-1 !h-6 !w-6 !rounded opacity-0 group-hover/item:opacity-100 transition-opacity text-emerald-600 hover:bg-emerald-50"
-                                  (click)="$event.stopPropagation(); completeItemDetail(detail.id)"
-                                  pTooltip="Marcar como listo"
-                                  tooltipPosition="left"
-                                ></button>
-                              }
-                            </div>
-                          </div>
-                        }
-                      </div>
-                    }
-                  </div>
-  
-                  <div class="flex items-center justify-between py-3 border-t border-slate-100">
-                    <div class="flex flex-col">
-                      <span class="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Total</span>
-                      <div class="flex items-center gap-2">
-                        <span class="text-md font-black text-slate-800 leading-none">{{ order.total | currency : 'Q ' }}</span>
-                        @if (getPaymentPercentage(order) > 0) {
-                          <div class="w-12 h-1 bg-slate-100 rounded-full overflow-hidden border border-slate-200/50">
-                            <div 
-                              class="h-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)] transition-all duration-500"
-                              [style.width.%]="getPaymentPercentage(order)"
-                            ></div>
-                          </div>
-                        }
-                      </div>
-                    </div>
-                    
-                    <div class="flex gap-1">
-                       <p-button 
-                        icon="pi pi-file-pdf" 
-                        [text]="true"
-                        size="small"
-                        pTooltip="Ver Ticket"
-                        tooltipPosition="top"
-                        styleClass="!p-2 !rounded-lg !text-rose-500 hover:!bg-rose-50"
-                        (onClick)="$event.stopPropagation(); previewOrder(order)"
-                      />
-                      @if (order.status === 'confirmed') {
-                        <p-button 
-                          icon="pi pi-play" 
-                          [text]="true"
-                          size="small"
-                          pTooltip="Empezar Preparación"
-                          tooltipPosition="top"
-                          styleClass="!p-2 !rounded-lg text-amber-500 hover:bg-amber-50"
-                          (onClick)="$event.stopPropagation(); startPreparing(order.id)"
-                        />
-                      }
-                      @if (order.status === 'preparing') {
-                        <p-button 
-                          icon="pi pi-check" 
-                          [text]="true"
-                          size="small"
-                          pTooltip="Listo para recoger"
-                          tooltipPosition="top"
-                          styleClass="!p-2 !rounded-lg text-emerald-500 hover:bg-emerald-50"
-                          (onClick)="$event.stopPropagation(); readyForPickup(order.id)"
-                        />
-                      }
-                      <p-button 
-                        icon="pi pi-arrow-right" 
-                        [text]="true"
-                        size="small"
-                        pTooltip="Ver Detalles"
-                        tooltipPosition="top"
-                        styleClass="!p-2 !rounded-lg text-indigo-500 hover:bg-indigo-50"
-                      />
-                    </div>
-                  </div>
-                  <div class="absolute bottom-0 left-0 right-0 h-1"
-                    [ngClass]="{
-                      'bg-amber-400': order.status === 'pending' || order.status === 'on_hold',
-                      'bg-blue-400': order.status === 'confirmed',
-                      'bg-indigo-400': order.status === 'preparing'
-                    }">
+
+            <!-- Mobile cards for items (Mobile) -->
+            <div class="lg:hidden flex flex-col divide-y divide-slate-100">
+              @for (detail of order.details; track detail.id) {
+                <div class="p-2.5 flex gap-3 items-center">
+                  <div class="flex-1 min-w-0">
+                     <h5 class="font-semibold text-[#3B5B8A] text-xs truncate leading-tight mb-1">{{ detail.product?.name }}</h5>
+                     <div class="flex justify-between items-end">
+                        <span class="text-[9px] font-semibold text-[#3B5B8A] bg-[#D0E2F2] border border-[#4A7FA7] px-2 py-0.5 rounded-md">{{ detail.quantity }} unidades</span>
+                        <span class="text-xs font-bold text-slate-800 tabular-nums">{{ detail.lineTotal | currency: 'Q ' }}</span>
+                     </div>
                   </div>
                 </div>
-                } @empty {
-                  <div class="flex flex-col items-center justify-center py-16 text-slate-300">
-                    <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4 border border-dashed border-slate-200">
-                      <i class="pi pi-inbox text-2xl"></i>
-                    </div>
-                    <p class="text-xs font-semibold uppercase tracking-widest text-slate-400">Vacío</p>
-                  </div>
-                }
               }
+            </div>
 
-              <!-- Modo: Agrupado por Preparación -->
-              @if (groupBy() === 'preparationStatus') {
-                @for (item of getItemsForColumn(column.statuses); track item.id) {
-                  <div class="group bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-lg hover:border-indigo-300 transition-all duration-300 flex flex-col p-4 relative overflow-hidden">
-                    <div class="flex items-start justify-between mb-3">
-                      <div class="flex flex-col items-start gap-1">
-                        <span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[10px] font-bold border border-slate-200 uppercase">
-                          #{{ item.invoiceNumber }}
-                        </span>
-                        <p class="font-bold text-slate-800 text-sm leading-tight line-clamp-1">
-                          {{ item.customerName }}
-                        </p>
-                      </div>
-                      <div class="flex items-center gap-1.5 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
-                        <i class="pi pi-tag text-indigo-400 text-[10px]!"></i>
-                        <span class="text-[10px] font-semibold text-indigo-600">{{ item.currentArea.name }}</span>
-                      </div>
-                    </div>
-
-                    <div class="mb-4">
-                      <div class="flex justify-between items-center text-sm py-2 px-3 bg-slate-50 rounded-lg border border-slate-100">
-                        <span class="text-slate-700 font-medium truncate">{{ item.product.name }}</span>
-                        <span class="ml-2 px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded text-[11px] font-bold">
-                          x{{ item.quantity }}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div class="flex items-center justify-between py-3 border-t border-slate-100">
-                      <div class="flex gap-2">
-                        @if (item.preparationStatus === 'pending') {
-                          <p-button 
-                            icon="pi pi-play" 
-                            [text]="true" 
-                            size="small" 
-                            pTooltip="Empezar Preparación"
-                            styleClass="!p-2 !rounded-lg text-amber-500 hover:bg-amber-50"
-                            (onClick)="completeItemDetail(item.id, 'preparing')"
-                          />
-                        }
-                        @if (item.preparationStatus === 'preparing') {
-                          <p-button 
-                            icon="pi pi-check" 
-                            [text]="true" 
-                            size="small" 
-                            pTooltip="Marcar como listo"
-                            styleClass="!p-2 !rounded-lg text-emerald-500 hover:bg-emerald-50"
-                            (onClick)="completeItemDetail(item.id, 'completed')"
-                          />
-                        }
-                      </div>
-                    </div>
-                  </div>
-                } @empty {
-                  <div class="flex flex-col items-center justify-center py-16 text-slate-300">
-                    <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4 border border-dashed border-slate-200">
-                      <i class="pi pi-inbox text-2xl"></i>
-                    </div>
-                    <p class="text-xs font-semibold uppercase tracking-widest text-slate-400">Vacío</p>
-                  </div>
-                }
-              }
+            <!-- Footer totals -->
+            <div class="bg-slate-50/50 border-t border-slate-200 p-3 px-6 flex flex-col gap-1.5">
+               <div class="flex justify-between items-center text-[11px] font-semibold text-[#627ca7]">
+                  <span>Subtotal Base</span>
+                  <span class="text-slate-700 tabular-nums">{{ order.subtotal | currency: 'Q ' }}</span>
+               </div>
+               <div class="flex justify-between items-center text-[11px] font-semibold text-[#627ca7]">
+                  <span>Impuestos (IVA)</span>
+                  <span class="text-slate-700 tabular-nums">{{ order.taxAmount | currency: 'Q ' }}</span>
+               </div>
+               <div class="flex justify-between items-center mt-1 pt-2.5 border-t border-slate-200">
+                  <span class="text-[11px] font-semibold text-[#3B5B8A]">Total Orden</span>
+                  <span class="text-sm font-semibold text-slate-800 tabular-nums">{{ order.total | currency: 'Q ' }}</span>
+               </div>
             </div>
           </div>
-        }
+        </div>
+
+        <div class="col-span-12 lg:col-span-4 flex flex-col gap-4">
+          <div class="p-4 bg-white rounded-xl border border-slate-300 shadow-sm">
+            <h4 class="text-[11px] font-bold text-[#3B5B8A] mb-3">Notas & Resumen Financiero</h4>
+            
+            <div class="space-y-3.5">
+              <div class="mt-4 grid grid-cols-2 gap-4">
+                <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+                  <span class="text-[9px] font-semibold text-emerald-600 block mb-1 text-center">Cobrado</span>
+                  <span class="text-sm font-bold text-emerald-700 block text-center">{{ order.paidAmount | currency: 'Q ' }}</span>
+                </div>
+                <div class="p-3 bg-rose-50 rounded-xl border border-rose-100">
+                  <span class="text-[9px] font-semibold text-rose-600 block mb-1 text-center">Saldo</span>
+                  <span class="text-sm font-bold text-rose-700 block text-center">{{ order.pendingAmount | currency: 'Q ' }}</span>
+                </div>
+              </div>
+            </div>
+            
+            @if (order.notes) {
+              <div class="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <p class="text-xs text-slate-600 leading-relaxed italic">
+                   "{{ order.notes }}"
+                </p>
+              </div>
+            }
+          </div>
+        </div>
       </div>
-    </div>
-    }
+    </ng-template>
+
   </div>
 </div>
 

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Location } from '@angular/common';
 import { ProductsService } from '../../services/products.service';
@@ -14,10 +14,11 @@ import { Select } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { TextareaModule } from 'primeng/textarea';
 
 @Component({
   selector: 'app-movement-form',
-  imports: [ReactiveFormsModule, Select, ButtonModule, InputTextModule, InputNumberModule],
+  imports: [ReactiveFormsModule, Select, ButtonModule, InputTextModule, InputNumberModule, TextareaModule],
   templateUrl: './movement-form.component.html',
   styleUrl: './movement-form.component.css',
 })
@@ -30,6 +31,10 @@ export class MovementFormComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
+
+  @Input() isModal = false;
+  @Output() onClose = new EventEmitter<void>();
+  @Output() onSaved = new EventEmitter<void>();
 
   movementForm: FormGroup;
   products: Product[] = [];
@@ -214,11 +219,19 @@ export class MovementFormComponent implements OnInit {
   }
 
   onCancel() {
-    this.router.navigate(['/inventory/inventory-movements']);
+    if (this.isModal) {
+      this.onClose.emit();
+    } else {
+      this.router.navigate(['/inventory/inventory-movements']);
+    }
   }
 
   goBack() {
-    this.location.back();
+    if (this.isModal) {
+      this.onClose.emit();
+    } else {
+      this.location.back();
+    }
   }
 
   onSave() {
@@ -242,7 +255,11 @@ export class MovementFormComponent implements OnInit {
             summary: 'Movimiento registrado',
             detail: 'El movimiento de inventario se ha guardado correctamente.',
           });
-          this.router.navigate(['/inventory/inventory-movements']);
+          if (this.isModal) {
+            this.onSaved.emit();
+          } else {
+            this.router.navigate(['/inventory/inventory-movements']);
+          }
         }
       },
       error: (error) => {

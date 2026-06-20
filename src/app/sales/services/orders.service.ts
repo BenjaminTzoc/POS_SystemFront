@@ -103,8 +103,12 @@ export class OrdersService {
     return this.http.put<ApiResponse<ISaleOrderResponse>>(`${this.API_URL}/${saleId}`, body);
   }
 
-  sendTicketByEmail(saleId: string): Observable<ApiResponse<void>> {
-    return this.http.post<ApiResponse<void>>(`${this.API_URL}/${saleId}/send-email`, {});
+  sendTicketByEmail(saleId: string, pdfBase64?: string): Observable<ApiResponse<void>> {
+    return this.http.post<ApiResponse<void>>(`${this.API_URL}/${saleId}/send-email`, { pdfBase64 });
+  }
+
+  sendTicketByWhatsApp(saleId: string, pdfBase64?: string): Observable<ApiResponse<void>> {
+    return this.http.post<ApiResponse<void>>(`${this.API_URL}/${saleId}/send-whatsapp`, { pdfBase64 });
   }
 
   updateDetailStatus(detailId: string, status: 'preparing' | 'completed'): Observable<ApiResponse<ISaleDetailResponse>> {

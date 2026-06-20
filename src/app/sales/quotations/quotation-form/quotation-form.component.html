@@ -23,6 +23,7 @@
             styleClass="w-52 border-slate-300 h-8! text-xs! py-0!"
             size="small"
             appendTo="body"
+            (onChange)="onBranchChange($event)"
           />
         </div>
       </div>
@@ -139,6 +140,7 @@
             icon="pi pi-plus"
             (onClick)="drawerVisible = true" 
             class="hidden sm:block"
+            [disabled]="!quotationForm.get('branchId')?.value"
             styleClass="!px-3 h-8! !rounded-lg whitespace-nowrap flex-shrink-0 text-xs border-brand-royal/50! text-brand-royal! hover:bg-brand-royal/10"
           />
           <p-button 
@@ -149,6 +151,7 @@
             icon="pi pi-plus"
             (onClick)="drawerVisible = true" 
             class="block sm:hidden"
+            [disabled]="!quotationForm.get('branchId')?.value"
             styleClass="!px-2.5 h-8! !rounded-lg flex-shrink-0 text-xs border-brand-royal/50! text-brand-royal! hover:bg-brand-royal/10"
           />
         </div>
@@ -372,38 +375,45 @@
 
     <!-- Scrollable Product List -->
     <div class="flex-1 overflow-y-auto flex flex-col gap-2 pr-1 max-h-[calc(100vh-180px)]">
-      <div 
-        *ngFor="let p of filteredProducts" 
-        class="flex items-center justify-between p-2 rounded-lg border border-slate-100 hover:border-brand-royal/30 hover:bg-brand-royal/5 transition-all text-xs"
-      >
-        <div class="flex items-center gap-2.5 min-w-0">
-          <div class="w-8 h-8 rounded border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0 bg-slate-50">
-            <img *ngIf="p.imageUrl" [src]="getProductImageUrl(p.imageUrl)" class="w-full h-full object-cover" />
-            <i *ngIf="!p.imageUrl" class="pi pi-image text-slate-300 text-sm"></i>
+      @if (loadingProducts) {
+        <div class="flex flex-col items-center justify-center py-12 gap-2 text-text-muted text-xs">
+          <i class="pi pi-spin pi-spinner text-xl text-brand-royal"></i>
+          <span>Cargando productos de la sucursal...</span>
+        </div>
+      } @else {
+        <div 
+          *ngFor="let p of filteredProducts" 
+          class="flex items-center justify-between p-2 rounded-lg border border-slate-100 hover:border-brand-royal/30 hover:bg-brand-royal/5 transition-all text-xs"
+        >
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-8 h-8 rounded border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0 bg-slate-50">
+              <img *ngIf="p.imageUrl" [src]="getProductImageUrl(p.imageUrl)" class="w-full h-full object-cover" />
+              <i *ngIf="!p.imageUrl" class="pi pi-image text-slate-300 text-sm"></i>
+            </div>
+            <div class="flex flex-col min-w-0">
+              <span class="font-semibold text-text-body truncate leading-tight">{{ p.name }}</span>
+              <span class="text-[9px] text-text-muted font-mono tracking-wider mt-0.5">{{ p.sku || 'SIN SKU' }}</span>
+            </div>
           </div>
-          <div class="flex flex-col min-w-0">
-            <span class="font-semibold text-text-body truncate leading-tight">{{ p.name }}</span>
-            <span class="text-[9px] text-text-muted font-mono tracking-wider mt-0.5">{{ p.sku || 'SIN SKU' }}</span>
+          
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-accent-rust whitespace-nowrap">{{ p.price | currency:'Q ' }}</span>
+            <p-button 
+              icon="pi pi-plus" 
+              [rounded]="true" 
+              [text]="true" 
+              severity="info" 
+              size="small" 
+              (onClick)="addProductFromDrawer(p)"
+              styleClass="!w-7 !h-7 hover:!bg-brand-royal/10 !p-0 text-brand-royal!"
+            />
           </div>
         </div>
         
-        <div class="flex items-center gap-2">
-          <span class="font-bold text-accent-rust whitespace-nowrap">{{ p.price | currency:'Q ' }}</span>
-          <p-button 
-            icon="pi pi-plus" 
-            [rounded]="true" 
-            [text]="true" 
-            severity="info" 
-            size="small" 
-            (onClick)="addProductFromDrawer(p)"
-            styleClass="!w-7 !h-7 hover:!bg-brand-royal/10 !p-0 text-brand-royal!"
-          />
+        <div *ngIf="filteredProducts.length === 0" class="text-center py-8 text-text-muted text-xs">
+          Ningún producto encontrado.
         </div>
-      </div>
-      
-      <div *ngIf="filteredProducts.length === 0" class="text-center py-8 text-text-muted text-xs">
-        Ningún producto encontrado.
-      </div>
+      }
     </div>
   </div>
 </p-drawer>

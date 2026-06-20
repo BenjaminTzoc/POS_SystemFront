@@ -17,7 +17,7 @@
             variant="outlined" 
             severity="danger" 
             icon="pi pi-times"
-            styleClass="border-rose-400! h-[44px] justify-center"
+            styleClass="border-rose-400! h-[44px] justify-center !rounded-lg"
             fluid
           />
         </div>
@@ -27,7 +27,7 @@
             label="Guardar"
             severity="success"
             [raised]="true"
-            styleClass="shadow-lg h-[44px] justify-center font-bold"
+            styleClass="h-[44px] justify-center !rounded-lg font-bold"
             [loading]="isSaving"
             icon="pi pi-check"
             fluid
@@ -37,13 +37,13 @@
     </div>
 
     <!-- Nota Importante (Móvil) -->
-    <div class="mt-4 md:hidden p-4 rounded-xl bg-orange-50 border border-orange-100">
-      <div class="flex items-center gap-2 text-orange-600 mb-1">
-        <i class="pi pi-exclamation-circle font-bold text-xs"></i>
-        <span class="text-[10px] font-black uppercase tracking-widest">Nota Importante</span>
+    <div class="mt-4 md:hidden p-4 rounded-xl bg-indigo-50 border border-indigo-200 border-dashed">
+      <div class="flex items-center gap-2 text-indigo-600 mb-1">
+        <i class="pi pi-info-circle text-xs"></i>
+        <span class="text-[10px] font-medium uppercase tracking-widest">Nota Importante</span>
       </div>
-      <p class="text-[11px] text-orange-800 leading-relaxed font-medium">
-        Este formulario es para <strong>inicializar</strong> el inventario. No use esto para ajustes de stock cotidianos.
+      <p class="text-[11px] text-indigo-700 leading-relaxed font-normal">
+        Este formulario es para inicializar el inventario de un producto en una sucursal nueva. No use esto para ajustes de stock cotidianos.
       </p>
     </div>
   </div>
@@ -51,8 +51,7 @@
   <form class="grid grid-cols-12 gap-0 md:gap-8 max-w-[1700px] mx-auto" [formGroup]="inventoryForm">
     <!-- Left Column: Selection & Stock -->
     <div class="col-start-1 col-span-12 lg:col-span-8 flex flex-col gap-6 md:gap-8">
-      <div class="p-5 md:p-8 rounded-none md:rounded-2xl bg-white border-y md:border border-slate-300">
-        <h3 class="font-bold text-xl text-gray-800 mb-6 hidden md:block">Configuración de Inventario</h3>
+      <div class="p-5 md:p-8 rounded-none md:rounded-lg bg-white border-y md:border border-slate-300">
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- Product Selector -->
@@ -83,16 +82,16 @@
                     />
                   </div>
                   <div class="flex flex-col">
-                    <small class="text-[10px] font-black text-indigo-500 uppercase leading-none">{{
+                    <small class="text-[10px] font-normal text-indigo-500 uppercase leading-none">{{
                       selectedOption.sku
                     }}</small>
-                    <span class="text-sm font-bold text-gray-700">{{ selectedOption.name }}</span>
+                    <span class="text-sm font-normal text-gray-700">{{ selectedOption.name }}</span>
                   </div>
                 </div>
               </ng-template>
               <ng-template let-product #item>
                 <div class="flex items-center gap-3 py-1">
-                  <div class="w-12 h-12 rounded-lg bg-gray-50 overflow-hidden border border-gray-100 flex-shrink-0">
+                  <div class="w-12 h-12 rounded-lg bg-gray-55 overflow-hidden border border-gray-100 flex-shrink-0">
                     <img
                       class="w-full h-full object-cover"
                       [src]="getProductImageUrl(product.imageUrl)"
@@ -100,10 +99,10 @@
                     />
                   </div>
                   <div class="flex flex-col">
-                    <small class="text-[10px] font-black text-indigo-500 uppercase leading-none">{{
+                    <small class="text-[10px] font-normal text-indigo-500 uppercase leading-none">{{
                       product.sku
                     }}</small>
-                    <span class="text-sm font-bold text-gray-700">{{ product.name }}</span>
+                    <span class="text-sm font-normal text-gray-700">{{ product.name }}</span>
                   </div>
                 </div>
               </ng-template>
@@ -144,8 +143,10 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
           <!-- Stock -->
-          <div class="flex flex-col gap-2 p-5 rounded-2xl md:rounded-xl border border-slate-200 md:border-slate-300 bg-slate-50/50 md:bg-gray-50/60 group hover:bg-white hover:shadow-xl hover:shadow-gray-200/40 transition-all">
-            <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="stock">Stock Inicial</label>
+          <div class="flex flex-col gap-2 p-5 rounded-xl md:rounded-lg border border-slate-200 bg-slate-50/50 group hover:bg-white hover:shadow-lg hover:shadow-gray-200/30 transition-all">
+            <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="stock">
+              <i class="pi pi-chart-line mr-1 text-xs! text-blue-500"></i>Stock Inicial
+            </label>
             <p-inputnumber
               formControlName="stock"
               mode="decimal"
@@ -163,9 +164,11 @@
           </div>
 
           <!-- Min Stock -->
-          <div class="flex flex-col gap-2 p-5 rounded-2xl md:rounded-xl border border-slate-200 md:border-slate-300 bg-slate-50/50 md:bg-gray-50/60 transition-all">
+          <div class="flex flex-col gap-2 p-5 rounded-xl md:rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-white hover:shadow-lg hover:shadow-gray-200/30 transition-all">
             <div class="flex items-center justify-between mb-1">
-              <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="minStock">Mínimo</label>
+              <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="minStock">
+                <i class="pi pi-angle-double-down mr-1 text-xs! text-blue-500"></i>Mínimo
+              </label>
               <p-toggleswitch formControlName="minStockActivated" styleClass="scale-75" />
             </div>
             <p-inputnumber
@@ -183,9 +186,11 @@
           </div>
 
           <!-- Max Stock -->
-          <div class="flex flex-col gap-2 p-5 rounded-2xl md:rounded-xl border border-slate-200 md:border-slate-300 bg-slate-50/50 md:bg-gray-50/60 transition-all">
+          <div class="flex flex-col gap-2 p-5 rounded-xl md:rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-white hover:shadow-lg hover:shadow-gray-200/30 transition-all">
             <div class="flex items-center justify-between mb-1">
-              <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="maxStock">Máximo</label>
+              <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="maxStock">
+                <i class="pi pi-angle-double-up mr-1 text-xs! text-blue-500"></i>Máximo
+              </label>
               <p-toggleswitch formControlName="maxStockActivated" styleClass="scale-75" />
             </div>
             <p-inputnumber
@@ -207,27 +212,26 @@
 
     <!-- Right Column: Info & Summary -->
     <div class="col-span-12 lg:col-span-4 flex flex-col gap-6 md:gap-8 mt-6 lg:mt-0">
-      <div class="p-5 md:p-8 rounded-none md:rounded-2xl bg-white border-y md:border border-slate-300 shadow-sm flex flex-col gap-6">
-        <h3 class="font-bold text-xl text-gray-800 hidden md:block">Finalizar Proceso</h3>
-        <p class="text-sm text-slate-500 leading-relaxed italic text-center md:text-left">
-          Verifique que el producto y la sucursal sean correctos antes de guardar. Estos datos inicializarán los registros de control físico.
-        </p>
-
-        <div class="flex flex-col gap-4 text-center">
-            <i class="pi pi-check-circle text-5xl text-emerald-500"></i>
-            <p class="text-xs text-gray-400">Al guardar se creará un nuevo registro de inventario para el producto seleccionado.</p>
+      <!-- Info Card (Nota Importante) -->
+      <div class="p-6 rounded-xl bg-indigo-50 border border-indigo-200 border-dashed">
+        <div class="flex items-center gap-3 text-indigo-600 mb-2">
+          <i class="pi pi-info-circle"></i>
+          <span class="text-xs font-medium uppercase tracking-widest">Nota Importante</span>
         </div>
+        <p class="text-[11px] text-indigo-700 leading-relaxed font-normal">
+          Este formulario es para inicializar el inventario de un producto en una
+          sucursal nueva. No use esto para ajustes de stock cotidianos.
+        </p>
       </div>
 
-      <!-- Info Card (Solo Desktop) -->
-      <div class="hidden lg:block p-6 rounded-xl bg-indigo-50 border border-indigo-200 border-dashed">
-        <div class="flex items-center gap-3 text-indigo-600 mb-2">
-          <i class="pi pi-info-circle font-bold"></i>
-          <span class="text-xs font-bold uppercase tracking-widest">Nota Importante</span>
+      <!-- Action Card (Finalizar Proceso) -->
+      <div class="p-6 rounded-xl bg-amber-50 border border-amber-200 border-dashed flex flex-col gap-3">
+        <div class="flex items-center gap-3 text-amber-600 mb-2">
+          <i class="pi pi-check-circle text-lg text-amber-600"></i>
+          <span class="text-xs font-medium uppercase tracking-widest text-amber-600">Finalizar Proceso</span>
         </div>
-        <p class="text-[11px] text-indigo-700 leading-relaxed">
-          Este formulario es para <strong>inicializar</strong> el inventario de un producto en una
-          sucursal nueva. No use esto para ajustes de stock cotidianos.
+        <p class="text-[11px] text-amber-700 leading-relaxed font-normal">
+          Verifique que el producto y la sucursal sean correctos antes de guardar. Estos datos inicializarán los registros de control físico. Al guardar se creará un nuevo registro de inventario para el producto seleccionado.
         </p>
       </div>
     </div>

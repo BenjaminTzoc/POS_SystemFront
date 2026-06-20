@@ -173,18 +173,31 @@
                 <i class="pi pi-filter mr-1 text-xs! text-blue-500"></i>
                 Categoría
               </label>
-              <p-select
-                [options]="categories"
-                [checkmark]="true"
-                [showClear]="true"
-                (onChange)="onCategoryChange($event)"
-                formControlName="categoryId"
-                optionLabel="name"
-                optionValue="id"
-                placeholder="Seleccionar categoría..."
-                class="w-full"
-                styleClass="!rounded-lg border-slate-300 {{ productForm.get('categoryId')?.disabled ? 'bg-slate-50' : '' }}"
-              />
+              <div class="flex gap-2 w-full">
+                <p-select
+                  [options]="categories"
+                  [checkmark]="true"
+                  [showClear]="true"
+                  (onChange)="onCategoryChange($event)"
+                  formControlName="categoryId"
+                  optionLabel="name"
+                  optionValue="id"
+                  placeholder="Seleccionar categoría..."
+                  class="flex-1 min-w-0"
+                  styleClass="!rounded-lg border-slate-300 w-full {{ productForm.get('categoryId')?.disabled ? 'bg-slate-50' : '' }}"
+                />
+                @if (!productForm.get('categoryId')?.disabled) {
+                  <button
+                    pButton
+                    type="button"
+                    icon="pi pi-book"
+                    (click)="openCategoryManager()"
+                    class="p-button-outlined !border-indigo-300 !text-indigo-600 !rounded-lg hover:!bg-indigo-50 !h-[38px] !w-[38px] flex items-center justify-center shrink-0"
+                    pTooltip="Gestionar categorías"
+                    tooltipPosition="top"
+                  ></button>
+                }
+              </div>
             </div>
           </div>
 
@@ -246,18 +259,31 @@
                   <i class="pi pi-info-circle mr-1 text-xs! text-blue-500"></i>
                   Unidad <span class="text-red-700">*</span>
                 </label>
-                <p-select
-                  [options]="units"
-                  [checkmark]="true"
-                  [showClear]="true"
-                  (onChange)="onUnitChange($event)"
-                  formControlName="unitId"
-                  optionLabel="abbreviation"
-                  optionValue="id"
-                  placeholder="Unidad"
-                  class="w-full"
-                  styleClass="!rounded-lg border-slate-300"
-                />
+                <div class="flex gap-2 w-full">
+                  <p-select
+                    [options]="units"
+                    [checkmark]="true"
+                    [showClear]="true"
+                    (onChange)="onUnitChange($event)"
+                    formControlName="unitId"
+                    optionLabel="abbreviation"
+                    optionValue="id"
+                    placeholder="Unidad"
+                    class="flex-1 min-w-0"
+                    styleClass="!rounded-lg border-slate-300 w-full"
+                  />
+                  @if (!productForm.get('unitId')?.disabled) {
+                    <button
+                      pButton
+                      type="button"
+                      icon="pi pi-book"
+                      (click)="openUnitManager()"
+                      class="p-button-outlined !border-indigo-300 !text-indigo-600 !rounded-lg hover:!bg-indigo-50 !h-[38px] !w-[38px] flex items-center justify-center shrink-0"
+                      pTooltip="Gestionar unidades"
+                      tooltipPosition="top"
+                    ></button>
+                  }
+                </div>
               </div>
             </div>
           }
@@ -515,7 +541,7 @@
                             >
                               <ng-template #selectedItem let-selectedOption>
                                 <div class="flex items-center gap-2">
-                                  <span class="font-semibold text-gray-700 text-xs truncate">{{ selectedOption.name }}</span>
+                                  <span class="font-normal text-gray-700 text-xs truncate">{{ selectedOption.name }}</span>
                                 </div>
                               </ng-template>
                             </p-select>
@@ -576,4 +602,317 @@
       </div>
     </div>
   </form>
+
+  <p-dialog 
+    [visible]="showCategoryManager()" 
+    (visibleChange)="showCategoryManager.set($event)"
+    [modal]="true" 
+    [draggable]="false" 
+    [resizable]="false"
+    [showHeader]="false"
+    [closable]="false"
+    appendTo="body"
+    styleClass="rounded-2xl overflow-hidden shadow-2xl"
+    [style]="{ width: '900px' }"
+    [breakpoints]="{ '960px': '75vw', '640px': '90vw' }"
+  >
+    <div class="p-6">
+      <div class="grid grid-cols-12 gap-6">
+        <!-- Columna Izquierda: Listado de Categorías -->
+        <div class="col-span-12 md:col-span-7 flex flex-col gap-4">
+          <div class="flex items-center gap-2 pb-2 border-b border-slate-100">
+            <i class="pi pi-list text-indigo-600 text-md"></i>
+            <h3 class="font-bold text-[#3B5B8A] text-sm">Categorías Existentes</h3>
+          </div>
+          
+          <div class="max-h-[300px] overflow-y-auto pr-2 flex flex-col gap-2">
+            @if (categories.length === 0) {
+              <div class="text-center py-8 text-slate-400 text-sm">
+                No hay categorías registradas.
+              </div>
+            } @else {
+              @for (cat of categories; track cat.id) {
+                <div class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl transition-all hover:bg-white hover:shadow-md">
+                  <div class="flex flex-col gap-0.5 flex-1 pr-4">
+                    <span class="font-semibold text-slate-800 text-sm">{{ cat.name }}</span>
+                    @if (cat.description) {
+                      <span class="text-xs text-slate-500 line-clamp-1">{{ cat.description }}</span>
+                    }
+                    @if (cat.defaultUnit) {
+                      <span class="text-[10px] font-semibold text-indigo-600 bg-indigo-50 self-start px-2 py-0.5 rounded-full mt-1">
+                        Unidad: {{ cat.defaultUnit.name }}
+                      </span>
+                    }
+                  </div>
+                  <button
+                    pButton
+                    type="button"
+                    icon="pi pi-trash"
+                    severity="danger"
+                    [text]="true"
+                    (click)="deleteCategory(cat.id, $event)"
+                    class="hover:!bg-rose-50 !rounded-lg"
+                    pTooltip="Eliminar categoría"
+                    tooltipPosition="top"
+                  ></button>
+                </div>
+              }
+            }
+          </div>
+        </div>
+
+        <!-- Columna Derecha: Formulario Nueva Categoría -->
+        <div class="col-span-12 md:col-span-5 border-t md:border-t-0 md:border-l border-slate-200 pt-6 md:pt-0 md:pl-6 flex flex-col gap-4" [formGroup]="newCategoryForm">
+          <div class="flex items-center gap-2 pb-2 border-b border-slate-100">
+            <i class="pi pi-plus-circle text-emerald-600 text-md"></i>
+            <h3 class="font-bold text-[#3B5B8A] text-sm">Nueva Categoría</h3>
+          </div>
+
+          <div class="flex flex-col gap-3">
+            <!-- Nombre -->
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-[#3B5B8A]" for="newCatName">
+                Nombre <span class="text-red-700">*</span>
+              </label>
+              <input
+                pInputText
+                id="newCatName"
+                formControlName="name"
+                class="w-full !rounded-lg text-sm"
+                placeholder="Ej. Bebidas, Carnes, Abarrotes..."
+                autocomplete="off"
+              />
+              @if (newCategoryForm.get('name')?.invalid && newCategoryForm.get('name')?.touched) {
+                <small class="text-rose-500 text-[10px] font-medium mt-1">
+                  El nombre es obligatorio.
+                </small>
+              }
+            </div>
+
+            <!-- Descripción -->
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-[#3B5B8A]" for="newCatDesc">Descripción</label>
+              <textarea
+                pTextarea
+                id="newCatDesc"
+                formControlName="description"
+                [rows]="3"
+                class="w-full !rounded-lg border-slate-300 text-sm p-2"
+                placeholder="Opcional..."
+              ></textarea>
+            </div>
+
+            <!-- Unidad por defecto -->
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-[#3B5B8A]" for="newCatUnit">
+                Unidad de Medida por Defecto
+              </label>
+              <div class="flex gap-2 w-full">
+                <p-select
+                  [options]="units"
+                  [checkmark]="true"
+                  [showClear]="true"
+                  formControlName="defaultUnitId"
+                  optionLabel="name"
+                  optionValue="id"
+                  placeholder="Ninguna"
+                  class="flex-1 min-w-0"
+                  styleClass="!rounded-lg border-slate-300 w-full"
+                />
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-book"
+                  (click)="openUnitManager()"
+                  class="p-button-outlined !border-indigo-300 !text-indigo-600 !rounded-lg hover:!bg-indigo-50 !h-[38px] !w-[38px] flex items-center justify-center shrink-0"
+                  pTooltip="Gestionar unidades"
+                  tooltipPosition="top"
+                ></button>
+              </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="flex gap-2 w-full mt-2">
+              <button
+                pButton
+                type="button"
+                label="Cancelar"
+                (click)="showCategoryManager.set(false)"
+                class="p-button-outlined p-button-secondary !rounded-lg flex-1 font-bold h-[38px] justify-center"
+              ></button>
+              <button
+                pButton
+                type="button"
+                label="Crear"
+                icon="pi pi-check"
+                (click)="saveCategory()"
+                [loading]="isSavingCategory()"
+                class="flex-1 !rounded-lg font-bold h-[38px] justify-center"
+                severity="success"
+              ></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </p-dialog>
+
+  <!-- DIALOGO: Gestionar Unidades de Medida -->
+  <p-dialog 
+    [visible]="showUnitManager()" 
+    (visibleChange)="showUnitManager.set($event)"
+    [modal]="true" 
+    [draggable]="false" 
+    [resizable]="false"
+    [showHeader]="false"
+    [closable]="false"
+    appendTo="body"
+    styleClass="rounded-2xl overflow-hidden shadow-2xl"
+    [style]="{ width: '900px' }"
+    [breakpoints]="{ '960px': '75vw', '640px': '90vw' }"
+  >
+    <div class="p-6">
+
+      <div class="grid grid-cols-12 gap-6">
+        <!-- Columna Izquierda: Listado de Unidades -->
+        <div class="col-span-12 md:col-span-7 flex flex-col gap-4">
+          <div class="flex items-center gap-2 pb-2 border-b border-slate-100">
+            <i class="pi pi-list text-indigo-600 text-md"></i>
+            <h3 class="font-bold text-[#3B5B8A] text-sm">Unidades Existentes</h3>
+          </div>
+          
+          <div class="max-h-[300px] overflow-y-auto pr-2 flex flex-col gap-2">
+            @if (units.length === 0) {
+              <div class="text-center py-8 text-slate-400 text-sm">
+                No hay unidades registradas.
+              </div>
+            } @else {
+              @for (ut of units; track ut.id) {
+                <div class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl transition-all hover:bg-white hover:shadow-md">
+                  <div class="flex flex-col gap-0.5 flex-1 pr-4">
+                    <div class="flex items-center gap-2">
+                      <span class="font-semibold text-slate-800 text-sm">{{ ut.name }}</span>
+                      <span class="text-xs font-bold text-slate-500 font-mono bg-slate-200 px-1.5 py-0.5 rounded">
+                        {{ ut.abbreviation }}
+                      </span>
+                    </div>
+                    @if (ut.description) {
+                      <span class="text-xs text-slate-500 line-clamp-1 mt-0.5">{{ ut.description }}</span>
+                    }
+                    <span class="text-[10px] font-semibold text-indigo-600 bg-indigo-50 self-start px-2 py-0.5 rounded-full mt-1">
+                      {{ ut.allowsDecimals ? 'Permite decimales' : 'Solo enteros' }}
+                    </span>
+                  </div>
+                  <button
+                    pButton
+                    type="button"
+                    icon="pi pi-trash"
+                    severity="danger"
+                    [text]="true"
+                    (click)="deleteUnit(ut.id, $event)"
+                    class="hover:!bg-rose-50 !rounded-lg"
+                    pTooltip="Eliminar unidad"
+                    tooltipPosition="top"
+                  ></button>
+                </div>
+              }
+            }
+          </div>
+        </div>
+
+        <!-- Columna Derecha: Formulario Nueva Unidad -->
+        <div class="col-span-12 md:col-span-5 border-t md:border-t-0 md:border-l border-slate-200 pt-6 md:pt-0 md:pl-6 flex flex-col gap-4" [formGroup]="newUnitForm">
+          <div class="flex items-center gap-2 pb-2 border-b border-slate-100">
+            <i class="pi pi-plus-circle text-emerald-600 text-md"></i>
+            <h3 class="font-bold text-[#3B5B8A] text-sm">Nueva Unidad</h3>
+          </div>
+
+          <div class="flex flex-col gap-3">
+            <!-- Nombre -->
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-[#3B5B8A]" for="newUnitName">
+                Nombre <span class="text-red-700">*</span>
+              </label>
+              <input
+                pInputText
+                id="newUnitName"
+                formControlName="name"
+                class="w-full !rounded-lg text-sm"
+                placeholder="Ej. Libra, Kilogramo, Unidad..."
+                autocomplete="off"
+              />
+              @if (newUnitForm.get('name')?.invalid && newUnitForm.get('name')?.touched) {
+                <small class="text-rose-500 text-[10px] font-medium mt-1">
+                  El nombre es obligatorio (mínimo 2 caracteres).
+                </small>
+              }
+            </div>
+
+            <!-- Abreviación -->
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-[#3B5B8A]" for="newUnitAbbr">
+                Abreviación <span class="text-red-700">*</span>
+              </label>
+              <input
+                pInputText
+                id="newUnitAbbr"
+                formControlName="abbreviation"
+                class="w-full !rounded-lg text-sm"
+                placeholder="Ej. lb, kg, un..."
+                autocomplete="off"
+              />
+              @if (newUnitForm.get('abbreviation')?.invalid && newUnitForm.get('abbreviation')?.touched) {
+                <small class="text-rose-500 text-[10px] font-medium mt-1">
+                  La abreviación es obligatoria.
+                </small>
+              }
+            </div>
+
+            <!-- Permite decimales -->
+            <div class="flex items-center gap-2 py-1">
+              <p-toggleSwitch severity="success" formControlName="allowsDecimals"></p-toggleSwitch>
+              <div class="flex flex-col">
+                <span class="text-xs font-bold text-[#3B5B8A]">Permite Decimales</span>
+                <span class="text-[9px] text-slate-400 font-medium">Permite vender por peso fraccionado (ej. 1.5 lb)</span>
+              </div>
+            </div>
+
+            <!-- Descripción -->
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-[#3B5B8A]" for="newUnitDesc">Descripción</label>
+              <textarea
+                pTextarea
+                id="newUnitDesc"
+                formControlName="description"
+                [rows]="3"
+                class="w-full !rounded-lg border-slate-300 text-sm p-2"
+                placeholder="Opcional..."
+              ></textarea>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="flex gap-2 w-full mt-2">
+              <button
+                pButton
+                type="button"
+                label="Cancelar"
+                (click)="showUnitManager.set(false)"
+                class="p-button-outlined p-button-secondary !rounded-lg flex-1 font-bold h-[38px] justify-center"
+              ></button>
+              <button
+                pButton
+                type="button"
+                label="Crear"
+                icon="pi pi-check"
+                (click)="saveUnit()"
+                [loading]="isSavingUnit()"
+                class="flex-1 !rounded-lg font-bold h-[38px] justify-center"
+                severity="success"
+              ></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </p-dialog>
 </div>

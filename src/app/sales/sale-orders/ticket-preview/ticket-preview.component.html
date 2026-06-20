@@ -1,7 +1,8 @@
 <p-dialog
   [(visible)]="visible"
   [modal]="true"
-  [header]="'Previsualización de Ticket - ' + sale.invoiceNumber"
+  [showHeader]="false"
+  [dismissableMask]="true"
   [style]="{ width: '450px' }"
   [draggable]="false"
   [resizable]="false"
@@ -41,6 +42,16 @@
         severity="info"
         [loading]="isSendingEmail()"
         (click)="onSendEmail()"
+        styleClass="w-full"
+      >
+      </p-button>
+
+      <p-button
+        label="WhatsApp"
+        icon="pi pi-whatsapp"
+        severity="success"
+        [loading]="isSendingWhatsApp()"
+        (click)="onSendWhatsApp()"
         styleClass="w-full"
       >
       </p-button>

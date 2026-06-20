@@ -145,3 +145,21 @@
     }
   </div>
 </div>
+
+<!-- Modal: Movimientos de Inventario -->
+<p-dialog
+  [(visible)]="showMovementsModal"
+  [modal]="true"
+  [showHeader]="false"
+  [closable]="false"
+  [style]="{ width: '90vw', maxWidth: '1400px' }"
+  contentStyleClass="!p-6 md:!p-8"
+  appendTo="body"
+  styleClass="rounded-2xl overflow-hidden shadow-2xl bg-white"
+>
+  <app-inventory-movements 
+    [isModal]="true" 
+    (onClose)="showMovementsModal = false"
+    (onMovementChange)="loadInventories()"
+  ></app-inventory-movements>
+</p-dialog>

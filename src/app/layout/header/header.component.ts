@@ -13,11 +13,12 @@ import { TooltipModule } from 'primeng/tooltip';
 import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
 import { trigger, state, style, transition, animate } from '@angular/animations';
+import { CashSessionDialogComponent } from '../../shared/components/cash-session-dialog/cash-session-dialog.component';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, TooltipModule, ButtonModule, DrawerModule, RouterModule],
+  imports: [CommonModule, TooltipModule, ButtonModule, DrawerModule, RouterModule, CashSessionDialogComponent],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
   animations: [
@@ -41,6 +42,7 @@ export class HeaderComponent {
   @Input() sidebarCollapsed = false;
   @Output() toggleSidebar = new EventEmitter<boolean>();
   mobileMenuVisible = signal(false);
+  showCashDialog = signal(false);
   menuItems: MenuItem[] = [...MENU_ITEMS];
   expandedItem: string | null = null;
   activeRoute = '';
@@ -110,7 +112,7 @@ export class HeaderComponent {
   }
 
   goToCash() {
-    this.router.navigate(['/sales/cash-register']);
+    this.showCashDialog.set(true);
   }
 
   userMenuItems = [

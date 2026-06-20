@@ -20,6 +20,7 @@ import { environment } from '../../../../environments/environment';
 import { CommonModule } from '@angular/common';
 import { TooltipModule } from 'primeng/tooltip';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { DialogModule } from 'primeng/dialog';
 import { Category, Product, ProductType } from '../../interfaces/product.interface';
 import { Branch } from '../../interfaces/branch.interface';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -44,6 +45,7 @@ import { UnitsService } from '../../services/units.service';
     ToggleSwitchModule,
     CommonModule,
     TooltipModule,
+    DialogModule,
   ],
   templateUrl: './product-form.component.html',
   styleUrl: './product-form.component.css',
@@ -105,6 +107,16 @@ export class ProductFormComponent implements OnInit {
   // Custom flags for variant creation
   isCreatingVariantFromList = false;
   isVariant = false;
+
+  // -----------CATEGORIAS-----------
+  showCategoryManager = signal(false);
+  isSavingCategory = signal(false);
+  newCategoryForm!: FormGroup;
+
+  // -----------UNIDADES-----------
+  showUnitManager = signal(false);
+  isSavingUnit = signal(false);
+  newUnitForm!: FormGroup;
 
   get parentName(): string {
     const parentId = this.productForm?.get('parentId')?.value;
@@ -381,6 +393,19 @@ export class ProductFormComponent implements OnInit {
       isActive: [true, Validators.required],
       isVisible: [true, Validators.required],
       initialStocks: this.fb.array([]),
+    });
+
+    this.newCategoryForm = this.fb.group({
+      name: ['', [Validators.required, Validators.maxLength(100)]],
+      description: [''],
+      defaultUnitId: [null]
+    });
+
+    this.newUnitForm = this.fb.group({
+      name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      abbreviation: ['', [Validators.required, Validators.maxLength(10)]],
+      allowsDecimals: [false],
+      description: ['']
     });
   }
 
@@ -742,6 +767,201 @@ export class ProductFormComponent implements OnInit {
       accept: () => {
         this.router.navigate(['inventory/products']);
       },
+    });
+  }
+
+  openCategoryManager() {
+    this.newCategoryForm.reset({
+      name: '',
+      description: '',
+      defaultUnitId: null
+    });
+    this.showCategoryManager.set(true);
+  }
+
+  saveCategory() {
+    this.newCategoryForm.markAllAsTouched();
+    if (this.newCategoryForm.invalid) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Formulario inválido',
+        detail: 'El nombre de la categoría es obligatorio.'
+      });
+      return;
+    }
+
+    this.isSavingCategory.set(true);
+    const formValue = this.newCategoryForm.value;
+
+    this.productsService.createCategory(formValue).subscribe({
+      next: (response) => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: `Categoría "${response.data.name}" creada correctamente.`
+        });
+        this.newCategoryForm.reset({
+          name: '',
+          description: '',
+          defaultUnitId: null
+        });
+        this.loadCategories();
+      },
+      error: (error) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error al crear categoría: ${error.error?.message || 'Error del servidor'}`
+        });
+      },
+      complete: () => this.isSavingCategory.set(false)
+    });
+  }
+
+  deleteCategory(categoryId: string, event: Event) {
+    event.stopPropagation();
+    this.confirmationService.confirm({
+      message: '¿Estás seguro de que deseas eliminar esta categoría?',
+      header: 'Confirmar eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      rejectLabel: 'Cancelar',
+      rejectButtonProps: {
+        label: 'Cancelar',
+        severity: 'secondary',
+        outlined: true,
+      },
+      acceptButtonProps: {
+        label: 'Eliminar',
+        severity: 'danger',
+      },
+      accept: () => {
+        this.productsService.deleteCategory(categoryId).subscribe({
+          next: () => {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Éxito',
+              detail: 'Categoría eliminada correctamente.'
+            });
+
+            // Si la categoría eliminada estaba seleccionada en el formulario principal, la limpiamos
+            if (this.productForm.get('categoryId')?.value === categoryId) {
+              this.productForm.get('categoryId')?.setValue(null);
+              this.selectedCategory = undefined;
+              this.productForm.get('unitId')?.setValue(null);
+              this.selectedUnit = undefined;
+            }
+
+            this.loadCategories();
+          },
+          error: (error) => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: `Error al eliminar la categoría: ${error.error?.message || 'Error del servidor'}`
+            });
+          }
+        });
+      }
+    });
+  }
+
+  openUnitManager() {
+    this.newUnitForm.reset({
+      name: '',
+      abbreviation: '',
+      allowsDecimals: false,
+      description: ''
+    });
+    this.showUnitManager.set(true);
+  }
+
+  saveUnit() {
+    this.newUnitForm.markAllAsTouched();
+    if (this.newUnitForm.invalid) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Formulario inválido',
+        detail: 'El nombre y la abreviatura de la unidad son obligatorios.'
+      });
+      return;
+    }
+
+    this.isSavingUnit.set(true);
+    const formValue = this.newUnitForm.value;
+
+    this.unitsService.createUnit(formValue).subscribe({
+      next: (response) => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: `Unidad "${response.data.name}" creada correctamente.`
+        });
+        this.newUnitForm.reset({
+          name: '',
+          abbreviation: '',
+          allowsDecimals: false,
+          description: ''
+        });
+        this.loadUnits();
+      },
+      error: (error) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error al crear la unidad de medida: ${error.error?.message || 'Error del servidor'}`
+        });
+      },
+      complete: () => this.isSavingUnit.set(false)
+    });
+  }
+
+  deleteUnit(unitId: string, event: Event) {
+    event.stopPropagation();
+    this.confirmationService.confirm({
+      message: '¿Estás seguro de que deseas eliminar esta unidad de medida?',
+      header: 'Confirmar eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      rejectLabel: 'Cancelar',
+      rejectButtonProps: {
+        label: 'Cancelar',
+        severity: 'secondary',
+        outlined: true,
+      },
+      acceptButtonProps: {
+        label: 'Eliminar',
+        severity: 'danger',
+      },
+      accept: () => {
+        this.unitsService.deleteUnit(unitId).subscribe({
+          next: () => {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Éxito',
+              detail: 'Unidad de medida eliminada correctamente.'
+            });
+
+            // Si la unidad eliminada estaba seleccionada en el formulario principal, la limpiamos
+            if (this.productForm.get('unitId')?.value === unitId) {
+              this.productForm.get('unitId')?.setValue(null);
+              this.selectedUnit = undefined;
+            }
+
+            // Si estaba seleccionada en el formulario de nueva categoría, también la limpiamos
+            if (this.newCategoryForm.get('defaultUnitId')?.value === unitId) {
+              this.newCategoryForm.get('defaultUnitId')?.setValue(null);
+            }
+
+            this.loadUnits();
+          },
+          error: (error) => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: `Error al eliminar la unidad de medida: ${error.error?.message || 'Error del servidor'}`
+            });
+          }
+        });
+      }
     });
   }
 

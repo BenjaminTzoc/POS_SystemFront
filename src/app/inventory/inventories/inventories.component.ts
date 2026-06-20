@@ -15,6 +15,8 @@ import { Branch } from '../interfaces/branch.interface';
 import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { DialogModule } from 'primeng/dialog';
+import { InventoryMovementsComponent } from '../inventory-movements/inventory-movements.component';
 
 @Component({
   selector: 'app-inventories',
@@ -29,6 +31,8 @@ import { InputIconModule } from 'primeng/inputicon';
     InputTextModule,
     IconFieldModule,
     InputIconModule,
+    DialogModule,
+    InventoryMovementsComponent,
   ],
   templateUrl: './inventories.component.html',
   styleUrl: './inventories.component.css',
@@ -47,6 +51,7 @@ export class InventoriesComponent implements OnInit {
   searchTerm: string = '';
   loading = false;
   isSuperAdmin = false;
+  showMovementsModal = false;
 
   get groupedInventories() {
     const filtered = this.inventories.filter(
@@ -179,7 +184,7 @@ export class InventoriesComponent implements OnInit {
   }
 
   goToMovements() {
-    this.router.navigate(['inventory/inventory-movements']);
+    this.showMovementsModal = true;
   }
 
   getProductImageUrl(imageUrl: string | null | undefined): string {

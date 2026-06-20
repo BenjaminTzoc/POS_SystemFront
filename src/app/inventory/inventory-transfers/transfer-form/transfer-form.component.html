@@ -147,15 +147,15 @@
                               >
                                   <ng-template let-prod #item>
                                       <div class="flex items-center gap-3 py-1">
-                                          <div class="w-10 h-10 rounded-lg bg-gray-50 border border-slate-100 overflow-hidden flex-shrink-0">
+                                          <div class="w-10 h-10 rounded-lg bg-gray-55 border border-slate-100 overflow-hidden flex-shrink-0">
                                             <img [src]="getProductImageUrl(prod.imageUrl)" class="w-full h-full object-cover" />
                                           </div>
                                           <div class="flex flex-col min-w-0">
-                                              <span class="text-sm font-bold text-gray-700 truncate leading-none mb-1">{{ prod.name }}</span>
+                                              <span class="text-sm font-normal text-gray-700 truncate leading-none mb-1">{{ prod.name }}</span>
                                               <div class="flex items-center gap-2">
-                                                <span class="text-[9px] font-black text-indigo-500 uppercase tracking-tighter">{{ prod.sku }}</span>
+                                                <span class="text-[9px] font-normal text-indigo-500 uppercase tracking-tighter">{{ prod.sku }}</span>
                                                 @if (transferForm.get('originBranchId')?.value) {
-                                                  <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                                                  <span class="text-[9px] font-normal px-1.5 py-0.5 rounded-full"
                                                         [ngClass]="getStockInOrigin(prod) > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'">
                                                       Stock: {{ getStockInOrigin(prod) }} {{ prod.unitAbbreviation }}
                                                   </span>

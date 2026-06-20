@@ -1,9 +1,9 @@
-<div class="py-4 px-0 md:px-6 bg-gray-50/30 min-h-screen">
+<div [class]="isModal ? 'p-0 bg-white' : 'py-4 px-0 md:px-6 bg-gray-50/30 min-h-screen'">
   <!-- Header Section -->
   <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-6 md:mb-8">
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
       <div class="w-full md:max-w-[60%] flex items-center gap-3">
-        <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" severity="secondary" (onClick)="goBack()" />
+        <p-button *ngIf="!isModal" icon="pi pi-arrow-left" [rounded]="true" [text]="true" severity="secondary" (onClick)="goBack()" />
         <div>
           <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight m-0">Registro de movimiento</h1>
           <p class="text-gray-500 mt-1 text-sm md:text-md m-0">
@@ -65,8 +65,8 @@
                       />
                     </div>
                     <div class="flex flex-col min-w-0">
-                      <small class="text-[10px] font-black text-indigo-500 uppercase leading-none truncate">{{ selectedOption.sku }}</small>
-                      <span class="text-sm font-bold text-gray-700 truncate">{{ selectedOption.name }}</span>
+                      <small class="text-[10px] font-normal text-indigo-500 uppercase leading-none truncate">{{ selectedOption.sku }}</small>
+                      <span class="text-sm font-normal text-gray-700 truncate">{{ selectedOption.name }}</span>
                     </div>
                   </div>
                   }
@@ -81,8 +81,8 @@
                       />
                     </div>
                     <div class="flex flex-col">
-                      <small class="text-[10px] font-black text-indigo-500 uppercase leading-none">{{ product.sku }}</small>
-                      <span class="text-sm font-bold text-gray-700">{{ product.name }}</span>
+                      <small class="text-[10px] font-normal text-indigo-500 uppercase leading-none">{{ product.sku }}</small>
+                      <span class="text-sm font-normal text-gray-700">{{ product.name }}</span>
                     </div>
                   </div>
                 </ng-template>
@@ -162,8 +162,8 @@
               >
                 <ng-template let-option #item>
                   <div class="flex flex-col">
-                    <span class="font-bold text-sm text-slate-700">{{ option.label }}</span>
-                    <small class="text-[10px] text-slate-400 font-medium">{{ option.description }}</small>
+                    <span class="font-normal text-sm text-slate-700">{{ option.label }}</span>
+                    <small class="text-[10px] text-slate-400 font-normal">{{ option.description }}</small>
                   </div>
                 </ng-template>
               </p-select>

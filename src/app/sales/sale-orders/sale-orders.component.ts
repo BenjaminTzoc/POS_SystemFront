@@ -3,7 +3,7 @@ import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { OrdersService, SaleFilterDto } from '../services/orders.service';
 import { MessageService } from 'primeng/api';
-import { ISaleOrderResponse, ISaleGroupedByStatus, ISaleGroupedByPreparation, IGroupedItem } from '../interfaces/sale-order.interface';
+import { ISaleOrderResponse } from '../interfaces/sale-order.interface';
 import { CurrencyPipe, DatePipe, NgClass } from '@angular/common';
 import { Router } from '@angular/router';
 import { TooltipModule } from 'primeng/tooltip';
@@ -15,7 +15,6 @@ import { environment } from '../../../environments/environment';
 import { AuthService } from '../../auth/auth.service';
 import { BranchesService } from '../../inventory/services/branches.service';
 import { Branch } from '../../inventory/interfaces/branch.interface';
-import { SelectButtonModule } from 'primeng/selectbutton';
 import { RippleModule } from 'primeng/ripple';
 import { AreasService } from '../../logistics/services/areas.service';
 import { Area } from '../../logistics/interfaces/area.interface';
@@ -28,6 +27,7 @@ import { TicketPreviewComponent } from './ticket-preview/ticket-preview.componen
 import { CommonModule } from '@angular/common';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { DialogModule } from 'primeng/dialog';
 
 @Component({
   selector: 'app-sale-orders',
@@ -43,7 +43,6 @@ import { InputIconModule } from 'primeng/inputicon';
     SelectModule,
     DatePickerModule,
     FormsModule,
-    SelectButtonModule,
     ToggleSwitchModule,
     TagModule,
     SaleStatusPipe,
@@ -51,7 +50,8 @@ import { InputIconModule } from 'primeng/inputicon';
     CommonModule,
     RippleModule,
     IconFieldModule,
-    InputIconModule
+    InputIconModule,
+    DialogModule
   ],
   templateUrl: './sale-orders.component.html',
   styleUrl: './sale-orders.component.css',
@@ -66,20 +66,10 @@ export class SaleOrdersComponent implements OnInit {
   private saleWsService = inject(SaleOrderWsService);
 
   private allOrders = signal<ISaleOrderResponse[]>([]);
-  private groupedByStatus = signal<ISaleGroupedByStatus | null>(null);
-  private groupedByPreparation = signal<ISaleGroupedByPreparation | null>(null);
 
   private subscriptions: Subscription[] = [];
   searchTerm = signal<string>('');
   
-  // Filters
-  groupBy = signal<'status' | 'preparationStatus'>('status');
-  viewMode = signal<'table' | 'kanban'>('table');
-  viewOptions = [
-    { label: 'Tabla', value: 'table', icon: 'pi pi-table' },
-    { label: 'Kanban', value: 'kanban', icon: 'pi pi-th-large' }
-  ];
-
   // Pagination
   totalRecords = signal<number>(0);
   rows = signal<number>(50);
@@ -92,6 +82,9 @@ export class SaleOrdersComponent implements OnInit {
   showTicketPreview = signal<boolean>(false);
   selectedOrderForPreview = signal<ISaleOrderResponse | null>(null);
   expandedRows = signal<any>({});
+  
+  displayDetails = false;
+  selectedOrder: ISaleOrderResponse | null = null;
 
   // ... rest of signals
   dateRange = signal<Date[]>( (() => {
@@ -118,60 +111,7 @@ export class SaleOrdersComponent implements OnInit {
     );
   });
 
-  kanbanColumns = computed(() => {
-    if (this.groupBy() === 'preparationStatus') {
-      return [
-        { label: 'Pendientes', statuses: ['pending'], color: 'amber', icon: 'pi-clock' },
-        { label: 'En Preparación', statuses: ['preparing'], color: 'indigo', icon: 'pi-cog' },
-        { label: 'Completados', statuses: ['completed'], color: 'emerald', icon: 'pi-check-circle' },
-      ];
-    }
-    return [
-      { label: 'Pendientes', statuses: ['pending', 'on_hold'], color: 'amber', icon: 'pi-clock' },
-      { label: 'Confirmados', statuses: ['confirmed'], color: 'blue', icon: 'pi-check-circle' },
-      { label: 'En Preparación', statuses: ['preparing'], color: 'indigo', icon: 'pi-cog' },
-      { label: 'Listos', statuses: ['ready_for_pickup'], color: 'emerald', icon: 'pi-check' },
-      { label: 'Entregados', statuses: ['delivered', 'out_for_delivery', 'partially_delivered'], color: 'slate', icon: 'pi-truck' },
-    ];
-  });
 
-  getOrdersForColumn(statuses: string[]) {
-    if (this.groupBy() === 'status') {
-      const grouped = this.groupedByStatus();
-      if (!grouped) return [];
-      
-      return statuses.reduce((acc, status) => {
-        const data = grouped[status]?.orders || [];
-        return [...acc, ...data];
-      }, [] as ISaleOrderResponse[]);
-    }
-    return [];
-  }
-
-  getItemsForColumn(statuses: string[]) {
-    if (this.groupBy() === 'preparationStatus') {
-      const grouped = this.groupedByPreparation();
-      if (!grouped) return [];
-
-      return statuses.reduce((acc, status) => {
-        const data = grouped[status]?.items || [];
-        return [...acc, ...data];
-      }, [] as IGroupedItem[]);
-    }
-    return [];
-  }
-
-  getColumnTotal(statuses: string[]) {
-    if (this.groupBy() === 'status') {
-      const grouped = this.groupedByStatus();
-      if (!grouped) return 0;
-      return statuses.reduce((acc, status) => acc + (grouped[status]?.total || 0), 0);
-    }
-    
-    const groupedPrep = this.groupedByPreparation();
-    if (!groupedPrep) return 0;
-    return statuses.reduce((acc, status) => acc + (groupedPrep[status]?.total || 0), 0);
-  }
 
   selectedOrders: any[] = [];
   loading = signal<boolean>(false);
@@ -236,17 +176,11 @@ export class SaleOrdersComponent implements OnInit {
   loadOrders(): void {
     this.loading.set(true);
     
-    const currentViewMode = this.viewMode();
     const dates = this.dateRange();
     const currentAreaId = this.selectedArea();
     const currentOnlyAreaDetails = !!currentAreaId || this.onlyAreaDetails();
     
-    // Si hay un área seleccionada, usualmente queremos el agrupamiento por preparación en Kanban
-    const currentGroupBy = currentAreaId ? 'preparationStatus' : 'status';
-    this.groupBy.set(currentGroupBy);
-
     const filters: SaleFilterDto = {
-      groupBy: currentGroupBy,
       branchId: this.selectedBranch(),
       areaId: currentAreaId ?? undefined,
       onlyAreaDetails: currentOnlyAreaDetails,
@@ -257,39 +191,16 @@ export class SaleOrdersComponent implements OnInit {
       limit: this.rows()
     };
 
-    if (currentViewMode === 'table') {
-      this.ordersService.getSalesTable(filters).subscribe({
-        next: (res) => {
-          if (res.statusCode === 200) {
-            this.allOrders.set(res.data.data);
-            this.totalRecords.set(res.data.total);
-            this.groupedByStatus.set(null);
-            this.groupedByPreparation.set(null);
-          }
-        },
-        error: (err) => this.handleError(err),
-        complete: () => this.loading.set(false)
-      });
-    } else {
-      this.ordersService.getSalesKanban(filters).subscribe({
-        next: (res) => {
-          if (res.statusCode === 200) {
-            if (currentGroupBy === 'status') {
-              this.groupedByStatus.set(res.data as ISaleGroupedByStatus);
-              this.groupedByPreparation.set(null);
-              this.allOrders.set([]);
-            } else {
-              this.groupedByPreparation.set(res.data as ISaleGroupedByPreparation);
-              this.groupedByStatus.set(null);
-              this.allOrders.set([]);
-            }
-            this.totalRecords.set(0); // Kanban doesn't use standard pagination meta here usually
-          }
-        },
-        error: (err) => this.handleError(err),
-        complete: () => this.loading.set(false)
-      });
-    }
+    this.ordersService.getSalesTable(filters).subscribe({
+      next: (res) => {
+        if (res.statusCode === 200) {
+          this.allOrders.set(res.data.data);
+          this.totalRecords.set(res.data.total);
+        }
+      },
+      error: (err) => this.handleError(err),
+      complete: () => this.loading.set(false)
+    });
   }
 
   private handleError(err: any): void {
@@ -366,6 +277,11 @@ export class SaleOrdersComponent implements OnInit {
     // Si estamos en modo "Pantalla de Área" con filtrado estricto, expandir por defecto
     if (this.selectedArea() && this.onlyAreaDetails()) return true;
     return this.expandedOrders().has(orderId);
+  }
+
+  showDetails(order: ISaleOrderResponse): void {
+    this.selectedOrder = order;
+    this.displayDetails = true;
   }
 
   previewOrder(order: ISaleOrderResponse) {

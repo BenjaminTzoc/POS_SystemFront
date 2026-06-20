@@ -27,6 +27,7 @@ export class TicketPreviewComponent {
 
   isGenerating = signal(false);
   isSendingEmail = signal(false);
+  isSendingWhatsApp = signal(false);
 
   async onPrint() {
     try {
@@ -60,17 +61,24 @@ export class TicketPreviewComponent {
     }
   }
 
+  private blobToBase64(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = (reader.result as string).split(',')[1];
+        resolve(base64String);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
   async onSendEmail() {
     if (this.isSendingEmail()) return;
 
     try {
-      this.isSendingEmail.set(true);
-      // We assume the backend has an endpoint for this.
-      // Based on instructions, we specify if we need something from backend.
-      // I'll emit a call to a hypothetical method in OrdersService.
-
-      // I'll check if the customer has an email
-      const email = this.sale.customer?.email;
+      // Check if the customer has an email
+      const email = this.sale.customer?.email || this.sale.guestCustomer?.email;
       if (!email) {
         this.messageService.add({
           severity: 'warn',
@@ -80,8 +88,13 @@ export class TicketPreviewComponent {
         return;
       }
 
-      // Prototyping backend call (I'll need to add this method to OrdersService)
-      this.ordersService.sendTicketByEmail(this.sale.id).subscribe({
+      this.isSendingEmail.set(true);
+
+      // Generate the exact same PDF as used for printing/downloading
+      const blob = await this.printService.generatePDF('pos-ticket');
+      const base64 = await this.blobToBase64(blob);
+
+      this.ordersService.sendTicketByEmail(this.sale.id, base64).subscribe({
         next: () => {
           this.messageService.add({
             severity: 'success',
@@ -100,7 +113,61 @@ export class TicketPreviewComponent {
         },
       });
     } catch (error) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo generar el documento PDF para el envío por correo.',
+      });
       this.isSendingEmail.set(false);
+    }
+  }
+
+  async onSendWhatsApp() {
+    if (this.isSendingWhatsApp()) return;
+
+    try {
+      const phone = this.sale.customer?.phone || this.sale.guestCustomer?.phone;
+      if (!phone) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Sin Teléfono',
+          detail: 'El cliente no tiene un número de teléfono registrado.',
+        });
+        return;
+      }
+
+      this.isSendingWhatsApp.set(true);
+
+      const blob = await this.printService.generatePDF('pos-ticket');
+      const base64 = await this.blobToBase64(blob);
+
+      this.ordersService.sendTicketByWhatsApp(this.sale.id, base64).subscribe({
+        next: () => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Enviado',
+            detail: 'Ticket enviado exitosamente por WhatsApp.',
+          });
+          this.isSendingWhatsApp.set(false);
+        },
+        error: (err) => {
+          console.error(err);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Fallo al enviar el mensaje de WhatsApp. Verifique la configuración.',
+          });
+          this.isSendingWhatsApp.set(false);
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo generar el documento PDF para el envío por WhatsApp.',
+      });
+      this.isSendingWhatsApp.set(false);
     }
   }
 

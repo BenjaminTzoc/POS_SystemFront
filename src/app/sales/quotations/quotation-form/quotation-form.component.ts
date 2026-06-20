@@ -73,6 +73,8 @@ export class QuotationFormComponent implements OnInit {
   quotationForm: FormGroup;
   isEditMode = false;
   loading = false;
+  loadingProducts = false;
+  previousBranchId: string | null = null;
   branches: Branch[] = [];
   products: Product[] = [];
   customers: ICustomer[] = [];
@@ -107,6 +109,16 @@ export class QuotationFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadInitialData();
+    
+    // Subscribe to branch selection changes
+    this.quotationForm.get('branchId')?.valueChanges.subscribe(branchId => {
+      if (branchId) {
+        this.loadProducts(branchId);
+      } else {
+        this.products = [];
+      }
+    });
+
     const id = this.route.snapshot.params['id'];
     if (id) {
       this.isEditMode = true;
@@ -124,9 +136,6 @@ export class QuotationFormComponent implements OnInit {
 
   loadInitialData(): void {
     this.branchesService.getBranches().subscribe(res => this.branches = res.data);
-    this.productsService.getProducts(undefined, false, undefined, undefined, false).subscribe(res => {
-      this.products = res.data;
-    });
     this.customersService.getCustomers().subscribe(res => this.customers = res.data);
 
     // Check cash session and roles
@@ -137,8 +146,58 @@ export class QuotationFormComponent implements OnInit {
       if (res.data && !isAdmin) {
          this.quotationForm.patchValue({ branchId: res.data.branchId });
          this.quotationForm.get('branchId')?.disable();
+         this.previousBranchId = res.data.branchId;
       }
     });
+  }
+
+  loadProducts(branchId: string): void {
+    this.loadingProducts = true;
+    this.productsService.getQuotationCatalog(branchId).subscribe({
+      next: (res) => {
+        const flatProducts: Product[] = [];
+        res.data.forEach((item: any) => {
+          flatProducts.push({
+            ...item,
+            unit: item.unit || {
+              name: item.unitName || '',
+              abbreviation: item.unitAbbreviation || '',
+              allowsDecimals: item.allowsDecimals ?? false
+            }
+          });
+        });
+        this.products = flatProducts;
+        this.loadingProducts = false;
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los productos de la sucursal' });
+        this.loadingProducts = false;
+      }
+    });
+  }
+
+  onBranchChange(event: any): void {
+    const newBranchId = event.value;
+    
+    if (this.items.length > 0) {
+      this.confirmationService.confirm({
+        message: 'Si cambia la sucursal, se limpiarán los productos agregados. ¿Desea continuar?',
+        header: 'Confirmar cambio de sucursal',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Sí, cambiar',
+        rejectLabel: 'Cancelar',
+        accept: () => {
+          this.items.clear();
+          this.calculateTotals();
+          this.previousBranchId = newBranchId;
+        },
+        reject: () => {
+          this.quotationForm.get('branchId')?.setValue(this.previousBranchId, { emitEvent: false });
+        }
+      });
+    } else {
+      this.previousBranchId = newBranchId;
+    }
   }
 
   getProductById(id: string) {
@@ -161,6 +220,7 @@ export class QuotationFormComponent implements OnInit {
           notes: q.notes,
           guestCustomer: q.guestCustomer || {}
         });
+        this.previousBranchId = q.branchId;
 
         this.items.clear();
         q.items.forEach(item => {

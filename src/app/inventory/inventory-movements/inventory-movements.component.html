@@ -1,7 +1,7 @@
-<section class="px-4 md:px-16 py-6 md:py-10 overflow-x-hidden">
+<section [class]="isModal ? 'p-0 overflow-x-hidden' : 'px-4 md:px-16 py-6 md:py-10 overflow-x-hidden'">
   <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 md:mb-8 gap-4">
     <div class="flex items-center gap-3">
-      <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" severity="secondary" (onClick)="goBack()" />
+      <p-button [icon]="isModal ? 'pi pi-times' : 'pi pi-arrow-left'" [rounded]="true" [text]="true" severity="secondary" (onClick)="goBack()" />
       <h1 class="text-2xl font-semibold m-0">Movimientos de inventario</h1>
     </div>
     <div class="w-full md:w-auto">
@@ -189,130 +189,82 @@
       </tr>
     </ng-template>
     <ng-template #expandedrow let-movement>
-      <tr>
-        <td colspan="10">
-          <section class="py-4 md:py-6">
-            <div class="grid grid-cols-1 md:grid-cols-12 px-4 md:px-20 gap-6 md:gap-10">
-              <div class="col-span-1 md:col-span-4 flex items-center gap-3">
-                <div class="w-16 aspect-square rounded-md border border-gray-200 overflow-hidden">
-                  <img
-                    [src]="getProductImageUrl(movement.product?.imageUrl)"
-                    [alt]="movement.product?.name"
-                    class="w-full h-full object-cover"
-                  />
+      <tr class="bg-slate-50/50">
+        <td colspan="10" class="!py-3 !px-6 border-b border-slate-100">
+          <div class="flex flex-wrap items-center justify-between gap-6 text-xs md:text-sm">
+            <!-- Columna Producto y Básicos -->
+            <div class="flex items-center gap-3 min-w-[220px]">
+              <div class="w-12 h-12 rounded-lg border border-slate-200 overflow-hidden flex-shrink-0 bg-white">
+                <img
+                  [src]="getProductImageUrl(movement.product?.imageUrl)"
+                  [alt]="movement.product?.name"
+                  class="w-full h-full object-cover"
+                />
+              </div>
+              <div class="flex flex-col">
+                <span class="font-semibold text-slate-800 text-sm md:text-base leading-tight">{{ movement.product?.name }}</span>
+                <span class="text-slate-400 mt-1 text-xs">SKU: {{ movement.product?.sku }} • Barras: {{ movement.product?.barcode || 'N/A' }}</span>
+              </div>
+            </div>
+
+            <!-- Datos de Tracking y Referencia -->
+            <div class="flex flex-col gap-1 min-w-[150px]">
+              <div class="flex items-center gap-1.5"><span class="text-slate-400 font-medium">Fecha:</span> <span class="text-slate-700 font-medium">{{ movement.movementDate | date : 'dd/MM/yyyy HH:mm' }}</span></div>
+              <div class="flex items-center gap-1.5"><span class="text-slate-400 font-medium">Usuario:</span> <span class="text-slate-700 font-medium">{{ movement.createdBy?.name ?? 'Sistema' }}</span></div>
+              @if (movement.referenceId && movement.referenceNumber) {
+                <div class="flex items-center gap-1.5">
+                  <span class="text-slate-400 font-medium">Ref:</span>
+                  <a class="text-brand-royal hover:underline font-semibold" href="/sales/new-order?id={{ movement.referenceId }}">{{ movement.referenceNumber }}</a>
                 </div>
-                <div>
-                  <p class="font-semibold">{{ movement.product?.name }}</p>
-                  <p class="text-sm text-gray-500">SKU: {{ movement.product?.sku }}</p>
-                  <p class="text-sm text-gray-500">
-                    Código de barras: {{ movement.product?.barcode }}
-                  </p>
-                </div>
-              </div>
-
-              <div class="col-span-1 md:col-span-3 flex flex-col justify-center gap-1 md:gap-0">
-                @if (movement.referenceId && movement.referenceNumber) {
-                <p>
-                  <span class="font-semibold">Referencia: </span>
-                  <a
-                    class="text-blue-600 hover:underline"
-                    href="/sales/new-order?id={{ movement.referenceId }}"
-                  >
-                    {{ movement.referenceNumber }}
-                  </a>
-                </p>
-                }
-                <p>
-                  <span class="font-semibold">Fecha y hora: </span>
-                  {{ movement.movementDate | date : 'dd/MM/yyyy HH:mm' }}
-                </p>
-                <p>
-                  <span class="font-semibold">Usuario: </span>
-                  {{ movement.createdBy?.name ?? 'Sistema' }}
-                </p>
-                <p>
-                  <span class="font-semibold">Sucursal: </span>
-                  {{ movement.branch?.name ?? 'N/A' }}
-                </p>
-                <p>
-                  <span class="font-semibold">Estado: </span>
-                  @if (movement.status === 'pending') {
-                  <span class="text-gray-500 italic">{{
-                    movement.status | inventoryMovementStatus
-                  }}</span>
-                  } @else {
-                  <p-tag
-                    [severity]="getStatusSeverity(movement.status)"
-                    [value]="movement.status | inventoryMovementStatus"
-                    [icon]="getStatusIcon(movement.status)"
-                  />
-                  }
-                </p>
-              </div>
-
-              <div class="col-span-1 md:col-span-3 flex flex-col justify-center gap-1 md:gap-0">
-                @if (movement.previousStock !== null && movement.newStock !== null) {
-                <p>
-                  <span class="font-semibold">Stock Inicial:</span>
-                  {{ movement.previousStock }} {{ movement.product?.unit?.abbreviation || '' }}
-                </p>
-                <p>
-                  <span class="font-semibold">Stock Final:</span>
-                  {{ movement.newStock }} {{ movement.product?.unit?.abbreviation || '' }}
-                </p>
-                }
-                <p>
-                  <span class="font-semibold">Concepto:</span>
-                  {{ movement.concept | inventoryMovementConcept }}
-                </p>
-                <p>
-                  <span class="font-semibold">Motivo:</span>
-                  {{ movement.notes || 'Sin descripción' }}
-                </p>
-              </div>
-
-              @if (movement.status === 'cancelled') {
-              <div class="col-span-1 md:col-span-2 flex flex-col justify-center border-t md:border-t-0 md:border-l border-gray-200 pt-4 md:pt-0 md:pl-8 mt-2 md:mt-0">
-                <span class="font-semibold mb-3 text-red-600">Detalles de Cancelación</span>
-                <p class="text-sm">
-                  <span class="font-semibold">Cancelado por: </span>
-                  {{ movement.cancelledBy?.name ?? 'Sistema' }}
-                </p>
-                <p class="text-sm">
-                  <span class="font-semibold">Fecha: </span>
-                  {{ movement.cancelledAt | date : 'dd/MM/yyyy HH:mm' }}
-                </p>
-                <p class="text-sm">
-                  <span class="font-semibold">Razón: </span>
-                  {{ movement.cancellationReason || 'No especificada' }}
-                </p>
-              </div>
               }
             </div>
+
+            <!-- Evolución y Concepto -->
+            <div class="flex flex-col gap-1 min-w-[180px]">
+              @if (movement.previousStock !== null && movement.newStock !== null) {
+                <div class="flex items-center gap-1.5">
+                  <span class="text-slate-400 font-medium">Stock:</span>
+                  <span class="text-slate-500 font-medium line-through">{{ movement.previousStock }}</span>
+                  <i class="pi pi-arrow-right text-[10px] text-slate-400"></i>
+                  <span class="text-slate-800 font-bold">{{ movement.newStock }} {{ movement.product?.unit?.abbreviation || '' }}</span>
+                </div>
+              }
+              <div class="flex items-center gap-1.5"><span class="text-slate-400 font-medium">Concepto:</span> <span class="text-slate-700 font-medium">{{ movement.concept | inventoryMovementConcept }}</span></div>
+              <div class="flex items-center gap-1.5"><span class="text-slate-400 font-medium">Motivo:</span> <span class="text-slate-700 font-medium italic truncate max-w-[200px]" [pTooltip]="movement.notes" tooltipPosition="top">"{{ movement.notes || 'Sin descripción' }}"</span></div>
+            </div>
+
+            <!-- Cancelación Info si aplica -->
+            @if (movement.status === 'cancelled') {
+              <div class="flex flex-col gap-0.5 border-l border-slate-200 pl-4 py-0.5 max-w-[220px]">
+                <span class="font-semibold text-rose-600 text-xs uppercase tracking-wider">Cancelado</span>
+                <span class="text-slate-500 leading-tight">Por: {{ movement.cancelledBy?.name ?? 'Sistema' }}</span>
+                <span class="text-slate-400 italic truncate max-w-[200px]" [pTooltip]="movement.cancellationReason" tooltipPosition="top">Razón: {{ movement.cancellationReason || 'N/A' }}</span>
+              </div>
+            }
+
+            <!-- Acciones si está Pendiente -->
             @if (movement.status === 'pending') {
-            <div class="w-full px-4 md:px-20 mt-4 md:mt-0">
-              <hr class="w-full border-gray-200 my-4" />
-              <div class="flex flex-col sm:flex-row gap-3 md:gap-4">
+              <div class="flex items-center gap-2 ml-auto">
                 <p-button
-                  label="Confirmar Movimiento"
+                  label="Confirmar"
                   icon="pi pi-check"
                   severity="success"
-                  [raised]="true"
+                  size="small"
                   (onClick)="confirmComplete(movement)"
-                  styleClass="w-full sm:w-auto justify-center"
+                  styleClass="!rounded-lg !px-3 !py-1.5 text-xs font-semibold"
                 />
                 <p-button
-                  label="Cancelar Movimiento"
+                  label="Cancelar"
                   icon="pi pi-times"
                   severity="danger"
-                  variant="outlined"
+                  [outlined]="true"
+                  size="small"
                   (onClick)="openCancelDialog(movement)"
-                  styleClass="w-full sm:w-auto justify-center"
+                  styleClass="!rounded-lg !px-3 !py-1.5 text-xs font-semibold !text-rose-600 !border-rose-300 hover:!bg-rose-50"
                 />
               </div>
-            </div>
             }
-          </section>
+          </div>
         </td>
       </tr>
     </ng-template>
@@ -371,5 +323,23 @@
         (onClick)="executeCancel()"
       />
     </ng-template>
+  </p-dialog>
+
+  <!-- Modal: Registrar Nuevo Movimiento (Sub-modal) -->
+  <p-dialog
+    [(visible)]="showNewMovementModal"
+    [modal]="true"
+    [showHeader]="false"
+    [closable]="false"
+    [style]="{ width: '80vw', maxWidth: '1200px' }"
+    contentStyleClass="!p-6 md:!p-8"
+    appendTo="body"
+    styleClass="rounded-2xl overflow-hidden shadow-2xl bg-white"
+  >
+    <app-movement-form 
+      [isModal]="true" 
+      (onClose)="showNewMovementModal = false"
+      (onSaved)="onMovementSaved()"
+    ></app-movement-form>
   </p-dialog>
 </section>

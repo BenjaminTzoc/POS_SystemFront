@@ -1,8 +1,9 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
+import { Subject, takeUntil } from 'rxjs';
 
 // PrimeNG
 import { ButtonModule } from 'primeng/button';
@@ -19,6 +20,7 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { CashSessionDialogComponent } from '../../shared/components/cash-session-dialog/cash-session-dialog.component';
 
 // Services
 import { OrdersService } from '../services/orders.service';
@@ -58,14 +60,16 @@ import { toSignal } from '@angular/core/rxjs-interop';
     TextareaModule,
     SkeletonModule,
     ToggleSwitchModule,
+    CashSessionDialogComponent,
     SaleDiscountsComponent,
     CurrencyPipe
   ],
   templateUrl: './quick-sale.component.html',
   styleUrl: './quick-sale.component.scss'
 })
-export class QuickSaleComponent implements OnInit {
+export class QuickSaleComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
+  private destroy$ = new Subject<void>();
   private ordersService = inject(OrdersService);
   private productsService = inject(ProductsService);
   private paymentService = inject(PaymentMethodsService);
@@ -87,7 +91,10 @@ export class QuickSaleComponent implements OnInit {
   showDiscountDialog = signal(false);
   
   // WebSocket next invoice
-  nextInvoiceNumber = toSignal(this.saleWsService.nextInvoiceNumberUpdated$);
+  nextInvoiceNumber = signal<string>('');
+  
+  // Open Cash dialog state
+  showOpenCashDialog = signal(false);
   
   // Computed products for the ribbon
   filteredProducts = computed(() => {
@@ -117,6 +124,10 @@ export class QuickSaleComponent implements OnInit {
 
   get payments(): FormArray {
     return this.saleForm.get('payments') as FormArray;
+  }
+
+  asGroup(control: any): FormGroup {
+    return control as FormGroup;
   }
 
   // Use a signal to track form values for totals
@@ -152,13 +163,28 @@ export class QuickSaleComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    // Asegurarnos de tener el estado de la caja antes de cargar productos
+    // Asegurarnos de tener el estado de la caja antes de continuar
     this.cashService.getStatus().subscribe({
-      next: () => this.loadProducts(),
-      error: () => this.loadProducts() // Intentar de todos modos con los datos del usuario
+      next: (res) => {
+        if (!res.data) {
+          // No hay caja activa! Mostrar modal
+          this.showOpenCashDialog.set(true);
+        } else {
+          // Caja activa, cargar productos
+          this.loadProducts();
+        }
+      },
+      error: () => {
+        // Fallback en caso de error, intentar cargar productos de todos modos
+        this.loadProducts();
+      }
     });
     this.loadPaymentMethods();
     this.addDefaultPayment();
+    
+    // Cargar número de factura inicial y escuchar actualizaciones por WS
+    this.loadNextInvoiceNumber();
+    this.setupWebSocketListeners();
 
     // Sync form to signal for reactive totals
     this.saleForm.valueChanges.subscribe(val => {
@@ -167,6 +193,39 @@ export class QuickSaleComponent implements OnInit {
     
     // Set initial value
     this.formValues.set(this.saleForm.value);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  setupWebSocketListeners(): void {
+    this.saleWsService.newSaleCreated$.pipe(takeUntil(this.destroy$)).subscribe((data) => {
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Nueva orden creada',
+        detail: `Otro usuario creó la orden: ${data?.data?.invoiceNumber || data?.invoiceNumber}`,
+        life: 5000,
+      });
+
+      this.loadNextInvoiceNumber();
+    });
+
+    this.saleWsService.nextInvoiceNumberUpdated$.pipe(takeUntil(this.destroy$)).subscribe((data) => {
+      const newNumber = data?.data?.nextInvoiceNumber || data?.nextInvoiceNumber;
+
+      if (newNumber && this.nextInvoiceNumber() !== newNumber) {
+        this.nextInvoiceNumber.set(newNumber);
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Número actualizado',
+          detail: `Nuevo número de orden: ${newNumber}`,
+          life: 3000,
+        });
+      }
+    });
   }
 
   loadProducts(): void {
@@ -203,6 +262,19 @@ export class QuickSaleComponent implements OnInit {
       error: () => {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar el catálogo de la sucursal' });
         this.loadingProducts.set(false);
+      }
+    });
+  }
+
+  loadNextInvoiceNumber(): void {
+    this.ordersService.getNextInvoiceNumber().subscribe({
+      next: (res) => {
+        if (res.statusCode === 200) {
+          this.nextInvoiceNumber.set(res.data.nextNumber);
+        }
+      },
+      error: (err) => {
+        console.error('Error loading next invoice number:', err);
       }
     });
   }

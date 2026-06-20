@@ -140,6 +140,10 @@ export class ProductsService {
     return this.http.get<ApiResponse<any[]>>(`${this.API_URL}/branch/${branchId}/catalog`);
   }
 
+  getQuotationCatalog(branchId: string): Observable<ApiResponse<any[]>> {
+    return this.http.get<ApiResponse<any[]>>(`${this.API_URL}/branch/${branchId}/quotation-catalog`);
+  }
+
   getDispatchCatalog(branchId?: string): Observable<ApiResponse<Product[]>> {
     let params = new HttpParams();
     if (branchId) params = params.set('branchId', branchId);

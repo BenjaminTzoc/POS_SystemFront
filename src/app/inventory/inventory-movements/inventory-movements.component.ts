@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { InventoryMovement } from '../interfaces/inventory-movement.interface';
@@ -16,6 +16,7 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
 import { Dialog } from 'primeng/dialog';
 import { FormsModule } from '@angular/forms';
 import { Textarea, TextareaModule } from 'primeng/textarea';
+import { MovementFormComponent } from './movement-form/movement-form.component';
 
 @Component({
   selector: 'app-inventory-movements',
@@ -33,15 +34,21 @@ import { Textarea, TextareaModule } from 'primeng/textarea';
     Dialog,
     FormsModule,
     TextareaModule,
+    MovementFormComponent,
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './inventory-movements.component.html',
   styleUrl: './inventory-movements.component.css',
 })
 export class InventoryMovementsComponent implements OnInit {
+  @Input() isModal = false;
+  @Output() onClose = new EventEmitter<void>();
+  @Output() onMovementChange = new EventEmitter<void>();
+
   inventoryMovements: InventoryMovement[] = [];
   loading: boolean = false;
   stats: any = null;
+  showNewMovementModal = false;
 
   // Cancel dialog properties
   displayCancelDialog: boolean = false;
@@ -86,11 +93,26 @@ export class InventoryMovementsComponent implements OnInit {
   }
 
   recordMovement(): void {
-    this.router.navigate(['/inventory/new-movement']);
+    if (this.isModal) {
+      this.showNewMovementModal = true;
+    } else {
+      this.router.navigate(['/inventory/new-movement']);
+    }
+  }
+
+  onMovementSaved() {
+    this.showNewMovementModal = false;
+    this.loadInventoryMovements();
+    this.loadStats();
+    this.onMovementChange.emit();
   }
 
   goBack(): void {
-    this.location.back();
+    if (this.isModal) {
+      this.onClose.emit();
+    } else {
+      this.location.back();
+    }
   }
 
   confirmComplete(movement: InventoryMovement) {
@@ -117,6 +139,7 @@ export class InventoryMovementsComponent implements OnInit {
           detail: 'El movimiento ha sido confirmado correctamente.',
         });
         this.loadInventoryMovements();
+        this.onMovementChange.emit();
       },
       error: (error) => {
         this.messageService.add({
@@ -162,6 +185,7 @@ export class InventoryMovementsComponent implements OnInit {
           });
           this.closeCancelDialog();
           this.loadInventoryMovements();
+          this.onMovementChange.emit();
           this.submittingCancel = false;
         },
         error: (error) => {
@@ -200,6 +224,7 @@ export class InventoryMovementsComponent implements OnInit {
         });
         this.loadInventoryMovements();
         this.loadStats();
+        this.onMovementChange.emit();
       },
       error: (error) => {
         this.messageService.add({
