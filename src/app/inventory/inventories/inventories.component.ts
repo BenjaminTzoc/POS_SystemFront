@@ -17,6 +17,7 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { DialogModule } from 'primeng/dialog';
 import { InventoryMovementsComponent } from '../inventory-movements/inventory-movements.component';
+import { InventoryFormComponent } from './inventory-form/inventory-form.component';
 
 @Component({
   selector: 'app-inventories',
@@ -33,6 +34,7 @@ import { InventoryMovementsComponent } from '../inventory-movements/inventory-mo
     InputIconModule,
     DialogModule,
     InventoryMovementsComponent,
+    InventoryFormComponent,
   ],
   templateUrl: './inventories.component.html',
   styleUrl: './inventories.component.css',
@@ -52,6 +54,7 @@ export class InventoriesComponent implements OnInit {
   loading = false;
   isSuperAdmin = false;
   showMovementsModal = false;
+  showNewInventoryModal = false;
 
   get groupedInventories() {
     const filtered = this.inventories.filter(
@@ -119,16 +122,18 @@ export class InventoriesComponent implements OnInit {
   }
 
   loadInventories(): void {
+    this.loading = true;
     const request$ = this.selectedBranchId
       ? this.inventoryService.getInventoriesByBranch(this.selectedBranchId)
       : this.inventoryService.getInventories();
 
     request$.subscribe({
       next: (response) => {
-        console.log(response);
         this.inventories = response.data;
+        this.loading = false;
       },
       error: (error) => {
+        this.loading = false;
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -180,7 +185,12 @@ export class InventoriesComponent implements OnInit {
   }
 
   createNewInventory() {
-    this.router.navigate(['inventory/new-inventory']);
+    this.showNewInventoryModal = true;
+  }
+
+  onInventorySaved() {
+    this.showNewInventoryModal = false;
+    this.loadInventories();
   }
 
   goToMovements() {

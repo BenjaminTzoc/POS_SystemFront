@@ -1,239 +1,336 @@
-<div class="py-4 px-0 md:px-6 bg-slate-50/50 min-h-screen">
-  <!-- Header Section -->
-  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-6 md:mb-8">
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
-      <div class="w-full md:max-w-[60%]">
-        <h1 class="text-2xl md:text-4xl font-semibold text-gray-900 tracking-tight">Generar nuevo inventario</h1>
-        <p class="hidden md:block text-[#627ca7] mt-1 md:mt-2 text-sm md:text-md font-medium">
-           Establece las existencias iniciales y límites de stock para un producto en una sucursal.
-        </p>
+<div [class]="isModal ? 'p-0 bg-transparent min-h-0 flex flex-col max-h-[80vh]' : 'py-4 px-0 md:px-6 bg-slate-50/50 min-h-screen'">
+  <!-- Header Section (Solo si no es modal) -->
+  @if (!isModal) {
+    <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-6 md:mb-8">
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div class="w-full md:max-w-[60%]">
+          <h1 class="text-2xl md:text-4xl font-semibold text-gray-900 tracking-tight">Generar nuevo inventario</h1>
+          <p class="hidden md:block text-[#627ca7] mt-1 md:mt-2 text-sm md:text-md font-medium">
+             Establece las existencias iniciales y límites de stock para un producto en una sucursal.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto">
+          <div class="flex-1">
+            <p-button 
+              label="Cancelar" 
+              (onClick)="onCancelProccess()" 
+              variant="outlined" 
+              severity="danger" 
+              icon="pi pi-times"
+              styleClass="border-rose-400! h-[44px] justify-center !rounded-lg"
+              fluid
+            />
+          </div>
+          <div class="flex-1">
+            <p-button
+              (onClick)="onSaveInventory()"
+              label="Guardar"
+              severity="success"
+              [raised]="true"
+              [disabled]="!isFormValid() || isSaving"
+              styleClass="h-[44px] justify-center !rounded-lg font-bold"
+              [loading]="isSaving"
+              icon="pi pi-check"
+              fluid
+            />
+          </div>
+        </div>
       </div>
 
-      <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto">
-        <div class="flex-1">
+      <!-- Nota Importante (Móvil) -->
+      <div class="mt-4 md:hidden p-4 rounded-xl bg-indigo-50 border border-indigo-200 border-dashed">
+        <div class="flex items-center gap-2 text-indigo-600 mb-1">
+          <i class="pi pi-info-circle text-xs"></i>
+          <span class="text-[10px] font-medium uppercase tracking-widest">Nota Importante</span>
+        </div>
+        <p class="text-[11px] text-indigo-700 leading-relaxed font-normal">
+          Este formulario es para inicializar el inventario de un producto en una sucursal nueva. No use esto para ajustes de stock cotidianos.
+        </p>
+      </div>
+    </div>
+  } @else {
+    <!-- Modal Header Compacto & Limpio (Fijo arriba) -->
+    <div class="flex items-start justify-between pb-3 mb-3 border-b border-slate-100 flex-shrink-0">
+      <div>
+        <h2 class="text-lg font-semibold text-slate-800 tracking-tight leading-tight">Generar Nuevo Inventario</h2>
+        <p class="text-xs text-slate-500 font-normal mt-0.5">Establece existencias iniciales y límites para un producto en sucursal.</p>
+      </div>
+      <button 
+        type="button" 
+        (click)="onCancelProccess()"
+        class="w-7 h-7 -mr-1 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors border-none bg-transparent cursor-pointer"
+      >
+        <i class="pi pi-times text-xs"></i>
+      </button>
+    </div>
+  }
+
+  <!-- Modal Loader en medio del modal -->
+  @if (isModal && isLoadingData) {
+    <div class="flex flex-col items-center justify-center py-16 gap-3 flex-1">
+      <i class="pi pi-spin pi-spinner text-3xl text-spiced-purple"></i>
+      <span class="text-xs font-semibold text-slate-500 tracking-wide">Cargando catálogo y sucursales...</span>
+    </div>
+  }
+
+  <form *ngIf="!isModal || !isLoadingData" class="grid grid-cols-12 gap-3 md:gap-4 max-w-[1700px] mx-auto flex-1 min-h-0" [formGroup]="inventoryForm">
+    <!-- Left Column: Selection & Stock -->
+    <div [class]="isModal ? 'col-span-12 flex flex-col min-h-0 flex-1' : 'col-start-1 col-span-12 lg:col-span-8 flex flex-col gap-6 md:gap-8'">
+      <div [class]="isModal ? 'p-0 bg-transparent border-0 flex flex-col min-h-0 flex-1' : 'p-5 md:p-8 rounded-none md:rounded-lg bg-white border-y md:border border-slate-300'">
+
+        <!-- Branch Selector (Fijo arriba en el modal) -->
+        <div class="flex flex-col gap-1 mb-3 flex-shrink-0">
+          <label class="text-xs font-semibold text-slate-700" for="branch">
+            Sucursal de Destino <span class="text-rose-500">*</span>
+          </label>
+          <p-select
+            [options]="branches"
+            [checkmark]="true"
+            [showClear]="true"
+            formControlName="branchId"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Seleccionar sucursal para los productos..."
+            class="w-full"
+            styleClass="!rounded-lg border-slate-200 text-xs"
+            size="small"
+          />
+          @if (inventoryForm.get('branchId')?.invalid && inventoryForm.get('branchId')?.touched) {
+            <small class="text-rose-500 text-[11px] font-medium flex items-center mt-0.5">
+              <i class="pi pi-exclamation-circle mr-1 text-[10px]"></i>Seleccione una sucursal.
+            </small>
+          }
+        </div>
+
+        <!-- Section header with Add Item Button (Fijo) -->
+        <div class="flex items-center justify-between pt-2 pb-1 border-t border-slate-100 mb-2 flex-shrink-0">
+          <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">
+            Productos a Registrar ({{ items.length }})
+          </span>
+          <p-button
+            type="button"
+            label="Añadir Producto"
+            icon="pi pi-plus"
+            (onClick)="addItem()"
+            [disabled]="!hasAvailableProducts()"
+            styleClass="!rounded-lg !py-1 px-2.5 font-semibold text-xs"
+            severity="info"
+            size="small"
+            [outlined]="true"
+          />
+        </div>
+
+        <!-- Dynamic Items FormArray List (ÚNICO SCROLL AQUÍ) -->
+        <div formArrayName="items" class="flex flex-col gap-2.5 overflow-y-auto pr-1 flex-1 min-h-0 max-h-[50vh]">
+          @for (item of items.controls; track $index) {
+            <div [formGroupName]="$index" 
+                 class="relative p-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-slate-300 transition-all flex flex-col gap-2.5 group">
+              
+              <!-- Product and Delete Button Row -->
+              <div class="flex items-start gap-2">
+                <div class="flex-1 min-w-0">
+                  <p-select
+                    [options]="getAvailableProducts($index)"
+                    [filter]="true"
+                    [filterFields]="['name', 'sku']"
+                    [showClear]="true"
+                    (onChange)="onProductChange($event, $index)"
+                    formControlName="productId"
+                    optionLabel="name"
+                    optionValue="id"
+                    placeholder="Seleccionar producto..."
+                    class="w-full"
+                    styleClass="!rounded-lg border-slate-200 text-xs"
+                    size="small"
+                    appendTo="body"
+                  >
+                    <ng-template #selectedItem let-selectedOption>
+                      <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded bg-gray-100 overflow-hidden border border-gray-100 flex-shrink-0">
+                          <img
+                            class="w-full h-full object-cover"
+                            [src]="getProductImageUrl(selectedOption.imageUrl)"
+                            alt=""
+                          />
+                        </div>
+                        <div class="flex items-center gap-1.5 min-w-0">
+                          <small class="text-[9px] font-medium text-indigo-500 uppercase">{{ selectedOption.sku }}</small>
+                          <span class="text-xs font-medium text-slate-800 truncate">{{ selectedOption.name }}</span>
+                        </div>
+                      </div>
+                    </ng-template>
+                    <ng-template let-product #item>
+                      <div class="flex items-center gap-2 py-0.5">
+                        <div class="w-7 h-7 rounded bg-gray-50 overflow-hidden border border-gray-100 flex-shrink-0">
+                          <img
+                            class="w-full h-full object-cover"
+                            [src]="getProductImageUrl(product.imageUrl)"
+                            alt=""
+                          />
+                        </div>
+                        <div class="flex flex-col min-w-0">
+                          <small class="text-[9px] font-medium text-indigo-500 uppercase leading-none">{{ product.sku }}</small>
+                          <span class="text-xs font-normal text-slate-700 truncate">{{ product.name }}</span>
+                        </div>
+                      </div>
+                    </ng-template>
+                  </p-select>
+                </div>
+
+                <!-- Remove Row Button -->
+                <p-button
+                  icon="pi pi-trash"
+                  (onClick)="removeItem($index)"
+                  [disabled]="items.length === 1"
+                  severity="danger"
+                  [text]="true"
+                  styleClass="!w-8 !h-8 !rounded-lg text-rose-500 hover:!bg-rose-50"
+                  size="small"
+                />
+              </div>
+
+              <!-- Numeric Stock Inputs Grid -->
+              <div class="grid grid-cols-3 gap-3 items-start">
+                <!-- Stock Inicial -->
+                <div class="flex flex-col gap-1.5">
+                  <div class="flex items-center h-6">
+                    <label class="text-xs font-semibold text-slate-700 leading-none">Stock Inicial</label>
+                  </div>
+                  <p-inputgroup class="w-full">
+                    <p-inputnumber
+                      formControlName="stock"
+                      mode="decimal"
+                      [min]="0"
+                      [minFractionDigits]="item.get('allowsDecimals')?.value ? 2 : 0"
+                      [maxFractionDigits]="item.get('allowsDecimals')?.value ? 2 : 0"
+                      placeholder="0"
+                      styleClass="w-full !bg-white"
+                      size="small"
+                      fluid
+                    />
+                    @if (item.get('unitAbbreviation')?.value) {
+                      <p-inputgroup-addon class="!text-xs !font-medium !text-slate-600 !bg-slate-100 !px-2 select-none">
+                        {{ item.get('unitAbbreviation')?.value }}
+                      </p-inputgroup-addon>
+                    }
+                  </p-inputgroup>
+                </div>
+
+                <!-- Mínimo -->
+                <div class="flex flex-col gap-1.5">
+                  <div class="flex items-center justify-between h-6">
+                    <label class="text-xs font-semibold text-slate-700 leading-none">Mínimo</label>
+                    <div class="flex items-center justify-center -my-1">
+                      <p-toggleswitch formControlName="minStockActivated" styleClass="!scale-[0.65] origin-right" />
+                    </div>
+                  </div>
+                  <p-inputgroup class="w-full">
+                    <p-inputnumber
+                      [disabled]="!item.get('minStockActivated')?.value"
+                      formControlName="minStock"
+                      mode="decimal"
+                      [min]="0"
+                      [minFractionDigits]="item.get('allowsDecimals')?.value ? 2 : 0"
+                      [maxFractionDigits]="item.get('allowsDecimals')?.value ? 2 : 0"
+                      placeholder="0"
+                      styleClass="w-full !bg-white"
+                      size="small"
+                      fluid
+                    />
+                    @if (item.get('unitAbbreviation')?.value) {
+                      <p-inputgroup-addon class="!text-xs !font-medium !text-slate-600 !bg-slate-100 !px-2 select-none">
+                        {{ item.get('unitAbbreviation')?.value }}
+                      </p-inputgroup-addon>
+                    }
+                  </p-inputgroup>
+                </div>
+
+                <!-- Máximo -->
+                <div class="flex flex-col gap-1.5">
+                  <div class="flex items-center justify-between h-6">
+                    <label class="text-xs font-semibold text-slate-700 leading-none">Máximo</label>
+                    <div class="flex items-center justify-center -my-1">
+                      <p-toggleswitch formControlName="maxStockActivated" styleClass="!scale-[0.65] origin-right" />
+                    </div>
+                  </div>
+                  <p-inputgroup class="w-full">
+                    <p-inputnumber
+                      [disabled]="!item.get('maxStockActivated')?.value"
+                      formControlName="maxStock"
+                      mode="decimal"
+                      [min]="0"
+                      [minFractionDigits]="item.get('allowsDecimals')?.value ? 2 : 0"
+                      [maxFractionDigits]="item.get('allowsDecimals')?.value ? 2 : 0"
+                      placeholder="0"
+                      styleClass="w-full !bg-white"
+                      size="small"
+                      fluid
+                    />
+                    @if (item.get('unitAbbreviation')?.value) {
+                      <p-inputgroup-addon class="!text-xs !font-medium !text-slate-600 !bg-slate-100 !px-2 select-none">
+                        {{ item.get('unitAbbreviation')?.value }}
+                      </p-inputgroup-addon>
+                    }
+                  </p-inputgroup>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Modal Action Buttons Footer (Fijo abajo) -->
+      @if (isModal) {
+        <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 flex-shrink-0">
           <p-button 
             label="Cancelar" 
             (onClick)="onCancelProccess()" 
             variant="outlined" 
-            severity="danger" 
+            severity="secondary" 
             icon="pi pi-times"
-            styleClass="border-rose-400! h-[44px] justify-center !rounded-lg"
-            fluid
+            styleClass="h-[36px] px-4 !rounded-lg text-xs"
           />
-        </div>
-        <div class="flex-1">
           <p-button
             (onClick)="onSaveInventory()"
-            label="Guardar"
+            [label]="items.length > 1 ? 'Guardar ' + items.length + ' Inventarios' : 'Guardar Inventario'"
             severity="success"
             [raised]="true"
-            styleClass="h-[44px] justify-center !rounded-lg font-bold"
+            [disabled]="!isFormValid() || isSaving"
+            styleClass="h-[36px] px-5 !rounded-lg font-semibold text-xs"
             [loading]="isSaving"
             icon="pi pi-check"
-            fluid
           />
         </div>
-      </div>
+      }
     </div>
 
-    <!-- Nota Importante (Móvil) -->
-    <div class="mt-4 md:hidden p-4 rounded-xl bg-indigo-50 border border-indigo-200 border-dashed">
-      <div class="flex items-center gap-2 text-indigo-600 mb-1">
-        <i class="pi pi-info-circle text-xs"></i>
-        <span class="text-[10px] font-medium uppercase tracking-widest">Nota Importante</span>
-      </div>
-      <p class="text-[11px] text-indigo-700 leading-relaxed font-normal">
-        Este formulario es para inicializar el inventario de un producto en una sucursal nueva. No use esto para ajustes de stock cotidianos.
-      </p>
-    </div>
-  </div>
-
-  <form class="grid grid-cols-12 gap-0 md:gap-8 max-w-[1700px] mx-auto" [formGroup]="inventoryForm">
-    <!-- Left Column: Selection & Stock -->
-    <div class="col-start-1 col-span-12 lg:col-span-8 flex flex-col gap-6 md:gap-8">
-      <div class="p-5 md:p-8 rounded-none md:rounded-lg bg-white border-y md:border border-slate-300">
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Product Selector -->
-          <div class="flex flex-col gap-1.5 md:gap-1">
-            <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="product">
-              <i class="pi pi-box mr-1 text-xs! text-blue-500"></i>Producto <span class="text-red-700">*</span>
-            </label>
-            <p-select
-              [options]="products"
-              [filter]="true"
-              [filterFields]="['name', 'sku']"
-              [showClear]="true"
-              (onChange)="onProductChange($event)"
-              formControlName="productId"
-              optionLabel="name"
-              optionValue="id"
-              placeholder="Seleccionar producto"
-              class="w-full"
-              styleClass="!rounded-lg border-slate-300"
-            >
-              <ng-template #selectedItem let-selectedOption>
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden border border-gray-100 flex-shrink-0">
-                    <img
-                      class="w-full h-full object-cover"
-                      [src]="getProductImageUrl(selectedOption.imageUrl)"
-                      alt=""
-                    />
-                  </div>
-                  <div class="flex flex-col">
-                    <small class="text-[10px] font-normal text-indigo-500 uppercase leading-none">{{
-                      selectedOption.sku
-                    }}</small>
-                    <span class="text-sm font-normal text-gray-700">{{ selectedOption.name }}</span>
-                  </div>
-                </div>
-              </ng-template>
-              <ng-template let-product #item>
-                <div class="flex items-center gap-3 py-1">
-                  <div class="w-12 h-12 rounded-lg bg-gray-55 overflow-hidden border border-gray-100 flex-shrink-0">
-                    <img
-                      class="w-full h-full object-cover"
-                      [src]="getProductImageUrl(product.imageUrl)"
-                      alt=""
-                    />
-                  </div>
-                  <div class="flex flex-col">
-                    <small class="text-[10px] font-normal text-indigo-500 uppercase leading-none">{{
-                      product.sku
-                    }}</small>
-                    <span class="text-sm font-normal text-gray-700">{{ product.name }}</span>
-                  </div>
-                </div>
-              </ng-template>
-            </p-select>
-            @if (inventoryForm.get('productId')?.invalid && inventoryForm.get('productId')?.touched) {
-              <small class="text-rose-500 text-xs font-medium flex items-center mt-1">
-                <i class="pi pi-exclamation-circle mr-1 text-xs!"></i>Seleccione un producto.
-              </small>
-            }
+    <!-- Right Column: Info & Summary (Solo en vista de página) -->
+    @if (!isModal) {
+      <div class="col-span-12 lg:col-span-4 flex flex-col gap-6 md:gap-8 mt-6 lg:mt-0">
+        <!-- Info Card (Nota Importante) -->
+        <div class="p-6 rounded-xl bg-indigo-50 border border-indigo-200 border-dashed">
+          <div class="flex items-center gap-3 text-indigo-600 mb-2">
+            <i class="pi pi-info-circle"></i>
+            <span class="text-xs font-medium uppercase tracking-widest">Nota Importante</span>
           </div>
-
-          <!-- Branch Selector -->
-          <div class="flex flex-col gap-1.5 md:gap-1">
-            <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="branch">
-              <i class="pi pi-building mr-1 text-xs! text-blue-500"></i>Sucursal <span class="text-red-700">*</span>
-            </label>
-            <p-select
-              [options]="branches"
-              [checkmark]="true"
-              [showClear]="true"
-              (onChange)="onBranchChange($event)"
-              formControlName="branchId"
-              optionLabel="name"
-              optionValue="id"
-              placeholder="Seleccionar sucursal"
-              class="w-full"
-              styleClass="!rounded-lg border-slate-300"
-            />
-            @if (inventoryForm.get('branchId')?.invalid && inventoryForm.get('branchId')?.touched) {
-              <small class="text-rose-500 text-xs font-medium flex items-center mt-1">
-                <i class="pi pi-exclamation-circle mr-1 text-xs!"></i>Seleccione una sucursal.
-              </small>
-            }
-          </div>
+          <p class="text-[11px] text-indigo-700 leading-relaxed font-normal">
+            Este formulario es para inicializar el inventario de un producto en una
+            sucursal nueva. No use esto para ajustes de stock cotidianos.
+          </p>
         </div>
 
-        <hr class="text-gray-200 my-8" />
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-          <!-- Stock -->
-          <div class="flex flex-col gap-2 p-5 rounded-xl md:rounded-lg border border-slate-200 bg-slate-50/50 group hover:bg-white hover:shadow-lg hover:shadow-gray-200/30 transition-all">
-            <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="stock">
-              <i class="pi pi-chart-line mr-1 text-xs! text-blue-500"></i>Stock Inicial
-            </label>
-            <p-inputnumber
-              formControlName="stock"
-              mode="decimal"
-              [min]="0"
-              [minFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
-              [maxFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
-              placeholder="0.00"
-              [suffix]="' ' + (selectedProduct?.unit?.abbreviation || '')"
-              styleClass="w-full !bg-white !rounded-lg !border-transparent group-hover:!border-indigo-100"
-              fluid
-            />
-            <small class="text-[10px] text-gray-500 italic mt-1"
-              >Existencia inicial en el sistema.</small
-            >
+        <!-- Action Card (Finalizar Proceso) -->
+        <div class="p-6 rounded-xl bg-amber-50 border border-amber-200 border-dashed flex flex-col gap-3">
+          <div class="flex items-center gap-3 text-amber-600 mb-2">
+            <i class="pi pi-check-circle text-lg text-amber-600"></i>
+            <span class="text-xs font-medium uppercase tracking-widest text-amber-600">Finalizar Proceso</span>
           </div>
-
-          <!-- Min Stock -->
-          <div class="flex flex-col gap-2 p-5 rounded-xl md:rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-white hover:shadow-lg hover:shadow-gray-200/30 transition-all">
-            <div class="flex items-center justify-between mb-1">
-              <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="minStock">
-                <i class="pi pi-angle-double-down mr-1 text-xs! text-blue-500"></i>Mínimo
-              </label>
-              <p-toggleswitch formControlName="minStockActivated" styleClass="scale-75" />
-            </div>
-            <p-inputnumber
-              [disabled]="!inventoryForm.get('minStockActivated')?.value"
-              formControlName="minStock"
-              mode="decimal"
-              [min]="0"
-              [minFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
-              [maxFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
-              placeholder="Stock Min"
-              [suffix]="' ' + (selectedProduct?.unit?.abbreviation || '')"
-              styleClass="w-full !bg-white !rounded-lg"
-              fluid
-            />
-          </div>
-
-          <!-- Max Stock -->
-          <div class="flex flex-col gap-2 p-5 rounded-xl md:rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-white hover:shadow-lg hover:shadow-gray-200/30 transition-all">
-            <div class="flex items-center justify-between mb-1">
-              <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="maxStock">
-                <i class="pi pi-angle-double-up mr-1 text-xs! text-blue-500"></i>Máximo
-              </label>
-              <p-toggleswitch formControlName="maxStockActivated" styleClass="scale-75" />
-            </div>
-            <p-inputnumber
-              [disabled]="!inventoryForm.get('maxStockActivated')?.value"
-              formControlName="maxStock"
-              mode="decimal"
-              [min]="0"
-              [minFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
-              [maxFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
-              placeholder="Stock Max"
-              [suffix]="' ' + (selectedProduct?.unit?.abbreviation || '')"
-              styleClass="w-full !bg-white !rounded-lg"
-              fluid
-            />
-          </div>
+          <p class="text-[11px] text-amber-700 leading-relaxed font-normal">
+            Verifique que los productos y la sucursal sean correctos antes de guardar. Estos datos inicializarán los registros de control físico.
+          </p>
         </div>
       </div>
-    </div>
-
-    <!-- Right Column: Info & Summary -->
-    <div class="col-span-12 lg:col-span-4 flex flex-col gap-6 md:gap-8 mt-6 lg:mt-0">
-      <!-- Info Card (Nota Importante) -->
-      <div class="p-6 rounded-xl bg-indigo-50 border border-indigo-200 border-dashed">
-        <div class="flex items-center gap-3 text-indigo-600 mb-2">
-          <i class="pi pi-info-circle"></i>
-          <span class="text-xs font-medium uppercase tracking-widest">Nota Importante</span>
-        </div>
-        <p class="text-[11px] text-indigo-700 leading-relaxed font-normal">
-          Este formulario es para inicializar el inventario de un producto en una
-          sucursal nueva. No use esto para ajustes de stock cotidianos.
-        </p>
-      </div>
-
-      <!-- Action Card (Finalizar Proceso) -->
-      <div class="p-6 rounded-xl bg-amber-50 border border-amber-200 border-dashed flex flex-col gap-3">
-        <div class="flex items-center gap-3 text-amber-600 mb-2">
-          <i class="pi pi-check-circle text-lg text-amber-600"></i>
-          <span class="text-xs font-medium uppercase tracking-widest text-amber-600">Finalizar Proceso</span>
-        </div>
-        <p class="text-[11px] text-amber-700 leading-relaxed font-normal">
-          Verifique que el producto y la sucursal sean correctos antes de guardar. Estos datos inicializarán los registros de control físico. Al guardar se creará un nuevo registro de inventario para el producto seleccionado.
-        </p>
-      </div>
-    </div>
+    }
   </form>
 </div>

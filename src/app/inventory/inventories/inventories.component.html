@@ -71,77 +71,84 @@
   </div>
 
   <div class="max-w-[1700px] mx-auto space-y-8 md:space-y-12">
-    @for (group of groupedInventories; track group.branch) {
-      <div class="space-y-4 md:space-y-6">
-        <div class="flex items-center gap-2 md:gap-4 px-4 md:px-0">
-          <div class="h-[1px] flex-1 bg-slate-200"></div>
-          <div class="flex items-center gap-2 px-4 py-1.5 bg-white rounded-full border border-slate-200 shadow-sm">
-            <i class="pi pi-building text-marionberry text-xs"></i>
-            <span class="text-[12px] md:text-sm font-semibold text-marionberry tracking-widest">{{ group.branch }}</span>
-            <span class="bg-marionberry text-white text-[11px] px-2 py-0.5 rounded-full font-semibold">
-              {{ group.items.length }}
-            </span>
-          </div>
-          <div class="h-[1px] flex-1 bg-slate-200"></div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-6 px-4 md:px-0">
-          @for (inventory of group.items; track inventory.id) {
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex h-32 md:h-44 transition-all hover:border-spiced-purple-palest hover:shadow-md">
-              <div class="w-28 md:w-40 relative overflow-hidden bg-slate-50 flex items-center justify-center flex-shrink-0 border-r border-slate-100">
-                @if (inventory.product?.imageUrl) {
-                  <img [src]="getProductImageUrl(inventory.product?.imageUrl)" [alt]="inventory.product?.name"
-                    class="w-full h-full object-cover"/>
-                } @else {
-                  <div class="w-full h-full flex items-center justify-center bg-slate-50">
-                    <i class="pi pi-image text-3xl md:text-5xl! text-slate-200"></i>
-                  </div>
-                }
-              </div>
-              <div class="flex-1 p-3 md:p-5 flex flex-col justify-between min-w-0">
-                <div class="min-w-0">
-                  <div class="flex flex-col mb-1 min-w-0">
-                    <span class="text-[9px] md:text-[11px] font-semibold text-spiced-purple uppercase tracking-widest leading-none mb-1 truncate">
-                      {{ inventory.product?.sku }}
-                    </span>
-                    <h3 class="text-sm md:text-lg font-semibold text-congressional-navy leading-tight truncate">{{ inventory.product?.name }}</h3>
-                  </div>
-                  <div class="flex flex-col gap-0.5 md:gap-1 mt-1">
-                    <div class="flex items-center text-[10px] md:text-xs font-semibold gap-1 text-slate-500">
-                      <span class="text-spiced-purple">Precio:</span>
-                      <span class="text-congressional-navy">{{ inventory.product?.price | currency: 'Q' }}</span>
-                    </div>
-                    <div class="flex items-center text-[10px] md:text-xs font-semibold gap-1 text-slate-500">
-                      <span class="text-spiced-purple">Últ. mov:</span>
-                      <span class="text-congressional-navy">{{ (inventory.lastMovementDate | date: 'dd/MM/yyyy') || 'Sin registros' }}</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="flex items-center justify-end pt-2 md:pt-3 border-t border-slate-50">
-                  <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 md:w-8 md:h-8 rounded-full bg-spiced-purple-palest text-spiced-purple flex items-center justify-center border border-spiced-purple-pale">
-                      <i class="pi pi-box !text-[10px] md:!text-sm"></i>
-                    </div>
-                    <div class="flex flex-col">
-                      <span class="text-sm md:text-base font-bold leading-none text-spiced-purple">
-                        {{ inventory.stock }} <span class="text-[9px] md:text-xs font-bold">{{ inventory.product?.unit?.abbreviation }}</span>
-                      </span>
-                      <span class="text-[7px] md:text-[10px] text-spiced-purple font-semibold leading-none">En Existencia</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+    @if (loading) {
+      <div class="flex flex-col items-center justify-center py-32 gap-3">
+        <i class="pi pi-spin pi-spinner text-4xl text-spiced-purple"></i>
+        <span class="text-sm font-semibold text-slate-500 tracking-wide">Cargando inventarios...</span>
+      </div>
+    } @else {
+      @for (group of groupedInventories; track group.branch) {
+        <div class="space-y-4 md:space-y-6">
+          <div class="flex items-center gap-2 md:gap-4 px-4 md:px-0">
+            <div class="h-[1px] flex-1 bg-slate-200"></div>
+            <div class="flex items-center gap-2 px-4 py-1.5 bg-white rounded-full border border-slate-200 shadow-sm">
+              <i class="pi pi-building text-marionberry text-xs"></i>
+              <span class="text-[12px] md:text-sm font-semibold text-marionberry tracking-widest">{{ group.branch }}</span>
+              <span class="bg-marionberry text-white text-[11px] px-2 py-0.5 rounded-full font-semibold">
+                {{ group.items.length }}
+              </span>
             </div>
-          }
+            <div class="h-[1px] flex-1 bg-slate-200"></div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-6 px-4 md:px-0">
+            @for (inventory of group.items; track inventory.id) {
+              <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex h-32 md:h-44 transition-all hover:border-spiced-purple-palest hover:shadow-md">
+                <div class="w-28 md:w-40 relative overflow-hidden bg-slate-50 flex items-center justify-center flex-shrink-0 border-r border-slate-100">
+                  @if (inventory.product?.imageUrl) {
+                    <img [src]="getProductImageUrl(inventory.product?.imageUrl)" [alt]="inventory.product?.name"
+                      class="w-full h-full object-cover"/>
+                  } @else {
+                    <div class="w-full h-full flex items-center justify-center bg-slate-50">
+                      <i class="pi pi-image text-3xl md:text-5xl! text-slate-200"></i>
+                    </div>
+                  }
+                </div>
+                <div class="flex-1 p-3 md:p-5 flex flex-col justify-between min-w-0">
+                  <div class="min-w-0">
+                    <div class="flex flex-col mb-1 min-w-0">
+                      <span class="text-[9px] md:text-[11px] font-semibold text-spiced-purple uppercase tracking-widest leading-none mb-1 truncate">
+                        {{ inventory.product?.sku }}
+                      </span>
+                      <h3 class="text-sm md:text-lg font-semibold text-congressional-navy leading-tight truncate">{{ inventory.product?.name }}</h3>
+                    </div>
+                    <div class="flex flex-col gap-0.5 md:gap-1 mt-1">
+                      <div class="flex items-center text-[10px] md:text-xs font-semibold gap-1 text-slate-500">
+                        <span class="text-spiced-purple">Precio:</span>
+                        <span class="text-congressional-navy">{{ inventory.product?.price | currency: 'Q' }}</span>
+                      </div>
+                      <div class="flex items-center text-[10px] md:text-xs font-semibold gap-1 text-slate-500">
+                        <span class="text-spiced-purple">Últ. mov:</span>
+                        <span class="text-congressional-navy">{{ (inventory.lastMovementDate | date: 'dd/MM/yyyy') || 'Sin registros' }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex items-center justify-end pt-2 md:pt-3 border-t border-slate-50">
+                    <div class="flex items-center gap-2">
+                      <div class="w-7 h-7 md:w-8 md:h-8 rounded-full bg-spiced-purple-palest text-spiced-purple flex items-center justify-center border border-spiced-purple-pale">
+                        <i class="pi pi-box !text-[10px] md:!text-sm"></i>
+                      </div>
+                      <div class="flex flex-col">
+                        <span class="text-sm md:text-base font-bold leading-none text-spiced-purple">
+                          {{ inventory.stock }} <span class="text-[9px] md:text-xs font-bold">{{ inventory.product?.unit?.abbreviation }}</span>
+                        </span>
+                        <span class="text-[7px] md:text-[10px] text-spiced-purple font-semibold leading-none">En Existencia</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
         </div>
-      </div>
-    } @empty {
-      <div class="flex flex-col items-center justify-center py-32">
-        <i class="pi pi-inbox text-7xl! text-gray-300 mb-2"></i>
-        <h2 class="text-2xl font-bold text-gray-800 mb-2">No se encontraron inventarios</h2>
-        <p class="text-gray-400 max-w-sm text-center">
-          No hay registros que coincidan con los filtros seleccionados para esta búsqueda.
-        </p>
-      </div>
+      } @empty {
+        <div class="flex flex-col items-center justify-center py-32">
+          <i class="pi pi-inbox text-7xl! text-gray-300 mb-2"></i>
+          <h2 class="text-2xl font-bold text-gray-800 mb-2">No se encontraron inventarios</h2>
+          <p class="text-gray-400 max-w-sm text-center">
+            No hay registros que coincidan con los filtros seleccionados para esta búsqueda.
+          </p>
+        </div>
+      }
     }
   </div>
 </div>
@@ -162,4 +169,24 @@
     (onClose)="showMovementsModal = false"
     (onMovementChange)="loadInventories()"
   ></app-inventory-movements>
+</p-dialog>
+
+<!-- Modal: Generar Nuevo Inventario -->
+<p-dialog
+  [(visible)]="showNewInventoryModal"
+  [modal]="true"
+  [showHeader]="false"
+  [closable]="false"
+  [style]="{ width: '90vw', maxWidth: '680px', maxHeight: '90vh' }"
+  contentStyleClass="!p-5 md:!p-6 !overflow-hidden flex flex-col"
+  appendTo="body"
+  styleClass="rounded-2xl overflow-hidden shadow-2xl bg-white"
+>
+  @if (showNewInventoryModal) {
+    <app-inventory-form 
+      [isModal]="true"
+      (onClose)="showNewInventoryModal = false"
+      (onSaved)="onInventorySaved()"
+    ></app-inventory-form>
+  }
 </p-dialog>

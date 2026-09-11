@@ -24,6 +24,10 @@ export class InventoryService {
     return this.http.post<ApiResponse<any>>(`${this.API_URL}`, body);
   }
 
+  createBulkInventories(body: { branchId: string; items: any[] }): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.API_URL}/bulk`, body);
+  }
+
   deleteInventory(inventoryId: string): Observable<ApiResponse<any>> {
     return this.http.delete<ApiResponse<any>>(`${this.API_URL}/${inventoryId}`);
   }

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CardModule } from 'primeng/card';
@@ -27,33 +27,36 @@ export class CompanySettingsComponent implements OnInit {
   private fb = inject(FormBuilder);
   private companySettingService = inject(CompanySettingService);
   private messageService = inject(MessageService);
+  private cdr = inject(ChangeDetectorRef);
 
-  form!: FormGroup;
+  form: FormGroup = this.fb.group({
+    companyName: ['', [Validators.required]],
+    address: ['', [Validators.required]],
+    phone: ['', [Validators.required]],
+    nit: ['', [Validators.required]]
+  });
   isLoading = signal(false);
   isSaving = signal(false);
 
   ngOnInit() {
-    this.initForm();
     this.loadSettings();
-  }
-
-  private initForm() {
-    this.form = this.fb.group({
-      companyName: ['', [Validators.required]],
-      address: ['', [Validators.required]],
-      phone: ['', [Validators.required]],
-      nit: ['', [Validators.required]]
-    });
   }
 
   private loadSettings() {
     this.isLoading.set(true);
     this.companySettingService.getSettings().subscribe({
-      next: (settings) => {
-        if (settings) {
-          this.form.patchValue(settings);
+      next: (response) => {
+        const data = response?.data;
+        if (data) {
+          this.form.patchValue({
+            companyName: data.companyName || '',
+            address: data.address || '',
+            phone: data.phone || '',
+            nit: data.nit || '',
+          });
         }
         this.isLoading.set(false);
+        this.cdr.detectChanges();
       },
       error: () => {
         this.messageService.add({
@@ -62,6 +65,7 @@ export class CompanySettingsComponent implements OnInit {
           detail: 'No se pudieron cargar los datos de la empresa.'
         });
         this.isLoading.set(false);
+        this.cdr.detectChanges();
       }
     });
   }
@@ -74,14 +78,23 @@ export class CompanySettingsComponent implements OnInit {
 
     this.isSaving.set(true);
     this.companySettingService.updateSettings(this.form.value).subscribe({
-      next: (settings) => {
+      next: (response) => {
+        const data = response?.data;
         this.messageService.add({
           severity: 'success',
           summary: 'Guardado',
           detail: 'Datos de la empresa actualizados exitosamente.'
         });
-        this.form.patchValue(settings);
+        if (data) {
+          this.form.patchValue({
+            companyName: data.companyName || '',
+            address: data.address || '',
+            phone: data.phone || '',
+            nit: data.nit || '',
+          });
+        }
         this.isSaving.set(false);
+        this.cdr.detectChanges();
       },
       error: () => {
         this.messageService.add({
@@ -90,6 +103,7 @@ export class CompanySettingsComponent implements OnInit {
           detail: 'No se pudieron guardar los cambios.'
         });
         this.isSaving.set(false);
+        this.cdr.detectChanges();
       }
     });
   }

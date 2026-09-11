@@ -25,13 +25,15 @@ export class TicketPreviewComponent {
   @Input() visible = false;
   @Output() visibleChange = new EventEmitter<boolean>();
 
-  isGenerating = signal(false);
+  isPrinting = signal(false);
+  isDownloading = signal(false);
   isSendingEmail = signal(false);
   isSendingWhatsApp = signal(false);
 
   async onPrint() {
+    if (this.isPrinting()) return;
+    this.isPrinting.set(true);
     try {
-      this.isGenerating.set(true);
       const blob = await this.printService.generatePDF('pos-ticket');
       this.printService.printPDF(blob);
     } catch (error) {
@@ -41,13 +43,14 @@ export class TicketPreviewComponent {
         detail: 'No se pudo generar el documento para impresión',
       });
     } finally {
-      this.isGenerating.set(false);
+      this.isPrinting.set(false);
     }
   }
 
   async onDownload() {
+    if (this.isDownloading()) return;
+    this.isDownloading.set(true);
     try {
-      this.isGenerating.set(true);
       const blob = await this.printService.generatePDF('pos-ticket');
       this.printService.downloadPDF(blob, `ticket-${this.sale.invoiceNumber}`);
     } catch (error) {
@@ -57,7 +60,7 @@ export class TicketPreviewComponent {
         detail: 'No se pudo descargar el PDF',
       });
     } finally {
-      this.isGenerating.set(false);
+      this.isDownloading.set(false);
     }
   }
 
