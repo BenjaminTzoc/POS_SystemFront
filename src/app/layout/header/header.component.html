@@ -1,15 +1,18 @@
 <header
   class="w-full h-20 bg-white border-b border-slate-200 flex items-center m-0 p-0"
 >
-  <div class="max-w-[1600px] w-full px-4 md:px-8 flex justify-between items-center">
+  <div class="w-full px-4 md:px-8 flex justify-between items-center">
     <!-- Botón de Menú (Solo Móvil) -->
     <button 
       pButton 
       icon="pi pi-bars" 
-      class="p-button-text !text-slate-800 font-bold flex lg:hidden !p-2"
+      class="mobile-menu-btn p-button-text !text-slate-800 font-bold flex lg:!hidden !p-2"
       aria-label="Abrir Menú"
       (click)="mobileMenuVisible.set(true)"
     ></button>
+
+    <!-- Espacio flexible o vacío en desktop si no hay mobile button -->
+    <div class="hidden lg:block"></div>
 
     <div class="flex items-center gap-4 ml-auto">
     <div

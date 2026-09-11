@@ -38,6 +38,17 @@ export class ModernSidebarComponent implements OnInit, OnDestroy {
   menuItems = computed(() => this.authService.mainMenuSignal());
   expandedItems: Set<string> = new Set();
   activeRoute = '';
+  hoveredItem: string | null = null;
+
+  onItemMouseEnter(item: MenuItem) {
+    if (this.collapsed && item.children && item.children.length > 0) {
+      this.hoveredItem = item.label;
+    }
+  }
+
+  onItemMouseLeave() {
+    this.hoveredItem = null;
+  }
 
   ngOnInit() {
     this.activeRoute = this.router.url;

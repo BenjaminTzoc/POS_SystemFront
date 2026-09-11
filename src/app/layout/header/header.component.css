@@ -1,3 +1,10 @@
+/* Responsive Header Button */
+@media (min-width: 1024px) {
+  .mobile-menu-btn {
+    display: none !important;
+  }
+}
+
 /* Drawer Navigation Styles */
 .nav-section {
   display: flex;

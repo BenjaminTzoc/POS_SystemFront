@@ -41,7 +41,14 @@
 
   <form class="grid grid-cols-12 gap-0 md:gap-8 max-w-[1700px] mx-auto" [formGroup]="productForm">
     <div class="col-span-12 lg:col-span-7 flex flex-col gap-6 md:gap-8">
-      <div class="p-5 md:p-8 rounded-none md:rounded-lg bg-white border-y md:border border-slate-300">
+      <!-- Card 1: Datos Principales -->
+      <div class="relative p-5 md:p-8 rounded-none md:rounded-lg bg-white border-y md:border border-slate-300 min-h-[350px]">
+        @if (isLoadingProduct()) {
+          <div class="absolute inset-0 bg-white/70 backdrop-blur-[1px] z-10 flex flex-col items-center justify-center rounded-none md:rounded-lg">
+            <p-progressSpinner strokeWidth="4" [style]="{ width: '42px', height: '42px' }" />
+            <span class="text-xs font-semibold text-slate-500 mt-2">Cargando datos del producto...</span>
+          </div>
+        }
         @if (!isVariant) {
           <div class="flex items-start sm:items-center justify-between p-4 bg-[#D0E2F2] border border-[#4A7FA7] rounded-lg mb-6 gap-4">
             <div class="flex flex-col flex-1">
@@ -370,7 +377,13 @@
       </div>
     </div>
     <div class="col-span-12 lg:col-span-5 flex flex-col gap-6 md:gap-8">
-      <div class="w-full p-4 md:p-5 bg-white border-y md:border border-slate-300 rounded-none md:rounded-lg shadow-xs flex flex-col gap-3">
+      <!-- Card 2: Estado y Visibilidad -->
+      <div class="relative w-full p-4 md:p-5 bg-white border-y md:border border-slate-300 rounded-none md:rounded-lg shadow-xs flex flex-col gap-3 min-h-[120px]">
+        @if (isLoadingProduct()) {
+          <div class="absolute inset-0 bg-white/70 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-none md:rounded-lg">
+            <p-progressSpinner strokeWidth="4" [style]="{ width: '32px', height: '32px' }" />
+          </div>
+        }
         <!-- Estado Operativo -->
         <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200/80">
           <div class="flex items-center gap-2.5">
@@ -406,8 +419,14 @@
           <p-toggleSwitch formControlName="isVisible" [disabled]="true" severity="info" />
         </div>
       </div>
-      <!-- Section for Inventory Management (always visible, disabled if master product) -->
-      <div class="w-full p-5 md:p-8 bg-white border-y md:border border-slate-300 rounded-none md:rounded-lg shadow-sm">
+      <!-- Card 3: Gestión de Inventario -->
+      <div class="relative w-full p-5 md:p-8 bg-white border-y md:border border-slate-300 rounded-none md:rounded-lg shadow-sm min-h-[160px]">
+        @if (isLoadingProduct()) {
+          <div class="absolute inset-0 bg-white/70 backdrop-blur-[1px] z-10 flex flex-col items-center justify-center rounded-none md:rounded-lg">
+            <p-progressSpinner strokeWidth="4" [style]="{ width: '38px', height: '38px' }" />
+            <span class="text-xs font-semibold text-slate-500 mt-2">Cargando inventario...</span>
+          </div>
+        }
         <div class="flex flex-col gap-4">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
               <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="status">¿Gestionar stock?</label>

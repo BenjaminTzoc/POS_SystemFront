@@ -1,5 +1,6 @@
 :host {
   display: block;
+  position: relative !important;
   height: 100vh;
   width: 250px;
   z-index: 50;
@@ -96,7 +97,13 @@
 .sidebar-content {
   flex: 1;
   overflow-y: auto;
+  overflow-x: visible;
   padding: 1rem 0.75rem;
+}
+
+:host(.collapsed) .sidebar-content {
+  overflow-y: visible !important;
+  overflow-x: visible !important;
 }
 
 .sidebar-content::-webkit-scrollbar {
@@ -307,7 +314,7 @@
 .toggle-sidebar {
   position: absolute;
   right: -14px;
-  top: 32px;
+  top: 26px;
   width: 28px;
   height: 28px;
   background: #ffffff;
@@ -318,7 +325,7 @@
   justify-content: center;
   cursor: pointer;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  z-index: 60;
+  z-index: 100;
   color: #64748b;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -340,4 +347,68 @@
   margin: 0 !important;
   height: 0 !important;
   min-height: 0 !important;
+}
+
+/* Floating Submenu when Collapsed */
+.menu-item-wrapper {
+  position: relative;
+}
+
+.floating-submenu {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  margin-left: 0.75rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  min-width: 220px;
+  z-index: 9999 !important;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-8px) scale(0.96);
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+  pointer-events: none;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+/* Invisible hover bridge to prevent menu from closing when moving mouse across gap */
+.floating-submenu::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -0.75rem;
+  width: 0.75rem;
+  height: 100%;
+}
+
+.menu-item-wrapper:hover .floating-submenu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0) scale(1);
+  pointer-events: auto;
+}
+
+.floating-submenu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
+  color: #64748b;
+  text-decoration: none;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+
+.floating-submenu-item:hover {
+  color: #1e293b;
+  background: #f8fafc;
+}
+
+.floating-submenu-item.active {
+  color: #6366f1;
+  background: #f1f5f9;
+  font-weight: 600;
 }

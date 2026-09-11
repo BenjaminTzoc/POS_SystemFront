@@ -21,6 +21,7 @@ import { CommonModule } from '@angular/common';
 import { TooltipModule } from 'primeng/tooltip';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { DialogModule } from 'primeng/dialog';
+import { ProgressSpinner } from 'primeng/progressspinner';
 import { Category, Product, ProductType } from '../../interfaces/product.interface';
 import { Branch } from '../../interfaces/branch.interface';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -46,6 +47,7 @@ import { UnitsService } from '../../services/units.service';
     CommonModule,
     TooltipModule,
     DialogModule,
+    ProgressSpinner,
   ],
   templateUrl: './product-form.component.html',
   styleUrl: './product-form.component.css',
@@ -98,6 +100,7 @@ export class ProductFormComponent implements OnInit {
   // -----------EDICION-----------
   productId: string | null = null;
   isEditMode: boolean = false;
+  isLoadingProduct = signal(false);
   currentImageUrl: string | null = null;
   objectUrl: string | null = null;
   isSaving: boolean = false;
@@ -304,6 +307,7 @@ export class ProductFormComponent implements OnInit {
   }
 
   loadProduct(productId: string): void {
+    this.isLoadingProduct.set(true);
     this.productsService.getProduct(productId).subscribe({
       next: (response) => {
         this.productForm.patchValue(response.data);
@@ -360,11 +364,15 @@ export class ProductFormComponent implements OnInit {
         }
       },
       error: (error) => {
+        this.isLoadingProduct.set(false);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
           detail: `Error cargando el producto: ${error.error.message}`,
         });
+      },
+      complete: () => {
+        this.isLoadingProduct.set(false);
       },
     });
   }
