@@ -1,0 +1,7 @@
+:host ::ng-deep .p-fileupload,
+:host ::ng-deep .p-fileupload-content,
+:host ::ng-deep .p-fileupload-header {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}

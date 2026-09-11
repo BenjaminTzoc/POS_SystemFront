@@ -288,135 +288,122 @@
             </div>
           }
 
-          <div class="flex flex-col gap-1.5 md:gap-1">
-            <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="description">
-              <i class="pi pi-align-left mr-1 text-xs! text-blue-500"></i>
-              Descripción
-            </label>
-            <textarea
-              rows="2"
-              pTextarea
-              formControlName="description"
-              class="w-full !rounded-lg border-slate-300"
-              placeholder="Corte fresco de primera calidad, ideal para asados y parrilladas. Marmoleado perfecto..."
-            autocomplete="off"
-            ></textarea>
-          </div>
-        </div>
-      </div>
-      <div class="rounded-none md:rounded-lg bg-white border-y md:border border-slate-300 overflow-hidden">
-        @if (!currentImageUrl) {
-          <div class="group relative">
-            <p-fileUpload
-              #fileUpload
-              name="images[]"
-              [multiple]="false"
-              accept="image/*"
-              maxFileSize="5000000"
-              (onSelect)="onUpload($event)"
-              styleClass="w-full border-none!"
-              [showUploadButton]="false"
-              [showCancelButton]="false"
-              [customUpload]="true"
-              chooseLabel="Seleccionar archivo"
-            >
-              <ng-template pTemplate="header"></ng-template>
-              <ng-template pTemplate="content">
-                @if (uploadedFiles.length === 0) {
-                  <div
-                    (click)="fileUpload.choose()"
-                    class="flex flex-col items-center justify-center py-8 md:py-12 px-6 bg-slate-50/50 group-hover:bg-indigo-50/30 transition-all cursor-pointer text-center"
+          <!-- Fila: Descripción (50%) e Imagen del Producto (50%) -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+            <!-- Descripción -->
+            <div class="flex flex-col gap-1.5 md:gap-1 h-full">
+              <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="description">
+                <i class="pi pi-align-left mr-1 text-xs! text-blue-500"></i>
+                Descripción
+              </label>
+              <textarea
+                pTextarea
+                formControlName="description"
+                class="w-full !rounded-lg border-slate-300 flex-1 min-h-[140px] resize-none"
+                placeholder="Corte fresco de primera calidad, ideal para asados y parrilladas. Marmoleado perfecto..."
+                autocomplete="off"
+              ></textarea>
+            </div>
+
+            <!-- Imagen del Producto -->
+            <div class="flex flex-col gap-1.5 md:gap-1 h-full">
+              <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]">
+                <i class="pi pi-image mr-1 text-xs! text-blue-500"></i>
+                Imagen del Producto
+              </label>
+
+              <div class="bg-slate-50/70 border border-dashed border-slate-300 rounded-xl p-2 flex items-center justify-center flex-1 min-h-[140px]">
+                @if (!currentImageUrl) {
+                  <p-fileUpload
+                    #fileUpload
+                    name="images[]"
+                    [multiple]="false"
+                    accept="image/*"
+                    maxFileSize="10000000"
+                    (onSelect)="onUpload($event)"
+                    styleClass="!bg-transparent !border-none !p-0 !m-0 w-full h-full flex items-center justify-center"
+                    [showUploadButton]="false"
+                    [showCancelButton]="false"
+                    [customUpload]="true"
+                    chooseLabel="Seleccionar archivo"
                   >
-                    <div
-                      class="w-12 h-12 md:w-16 md:h-16 rounded-full bg-blue-500 shadow-sm flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform"
-                    >
-                      <i class="pi pi-upload text-xl md:text-2xl!"></i>
-                    </div>
-                    <p class="text-slate-700 font-bold mb-1 text-sm md:text-base">Sube una imagen del producto</p>
-                    <p class="font-semibold text-[10px] md:text-sm italic text-slate-400">Haz clic para buscar o arrastra aquí</p>
-                  </div>
-                } @else {
-                  <div class="flex flex-col items-center gap-4 p-4">
-                    <div class="flex items-center justify-between w-full px-2">
-                        <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full tracking-wider">{{ uploadedFiles[0].name }}</span>
-                        <p-button label="Cambiar" icon="pi pi-pencil" [text]="true" size="small" (onClick)="fileUpload.choose()"></p-button>
-                    </div>
-                    <div class="relative group/preview w-full max-h-[400px] rounded-xl overflow-hidden border border-slate-100 shadow-sm">
-                        <img [src]="objectUrl" class="w-full h-full object-contain" />
-                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/preview:opacity-100 transition-opacity flex items-center justify-center">
-                            <button pButton icon="pi pi-trash" class="p-button-danger p-button-rounded" (click)="onRemoveUploadedFile()"></button>
+                    <ng-template pTemplate="header"></ng-template>
+                    <ng-template pTemplate="content">
+                      @if (uploadedFiles.length === 0) {
+                        <div
+                          (click)="fileUpload.choose()"
+                          class="flex flex-col items-center justify-center gap-1.5 p-3 hover:bg-indigo-50/40 rounded-lg transition-all cursor-pointer text-center w-full h-full"
+                        >
+                          <div
+                            class="w-9 h-9 rounded-full bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0"
+                          >
+                            <i class="pi pi-upload text-sm"></i>
+                          </div>
+                          <p class="text-slate-700 font-bold text-xs">Subir imagen</p>
+                          <p class="text-[10px] text-slate-400">PNG, JPG</p>
                         </div>
+                      } @else {
+                        <div class="relative group/preview h-28 sm:h-32 aspect-square rounded-xl overflow-hidden border border-slate-300 shadow-xs bg-slate-100 flex items-center justify-center mx-auto">
+                          <img [src]="objectUrl" class="w-full h-full object-cover" alt="Vista previa del producto" />
+                          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/preview:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                            <button pButton icon="pi pi-pencil" class="p-button-rounded !w-7 !h-7" pTooltip="Cambiar imagen" (click)="fileUpload.choose()"></button>
+                            <button pButton icon="pi pi-trash" class="p-button-danger p-button-rounded !w-7 !h-7" pTooltip="Eliminar" (click)="onRemoveUploadedFile()"></button>
+                          </div>
+                        </div>
+                      }
+                    </ng-template>
+                  </p-fileUpload>
+                }
+                @if (currentImageUrl && uploadedFiles.length === 0) {
+                  <div class="relative group/preview h-28 sm:h-32 aspect-square rounded-xl overflow-hidden border border-slate-300 shadow-xs bg-slate-100 flex items-center justify-center mx-auto">
+                    <img [src]="currentImageUrl" class="w-full h-full object-cover" alt="Imagen del producto" />
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/preview:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <button pButton icon="pi pi-pencil" class="p-button-rounded !w-7 !h-7" pTooltip="Cambiar imagen" (click)="changeImage()"></button>
+                      <button pButton icon="pi pi-trash" class="p-button-danger p-button-rounded !w-7 !h-7" pTooltip="Eliminar" (click)="changeImage()"></button>
                     </div>
                   </div>
                 }
-              </ng-template>
-            </p-fileUpload>
-          </div>
-        }
-        @if (currentImageUrl && uploadedFiles.length === 0) {
-          <div class="flex flex-col items-center gap-4 p-4">
-            <div class="flex items-center justify-between w-full px-2">
-                <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full tracking-wider">Imagen Actual</span>
-                <p-button label="Cambiar" icon="pi pi-pencil" [text]="true" size="small" (onClick)="changeImage()"></p-button>
-            </div>
-            <div class="relative group/preview w-full max-h-[400px] rounded-xl overflow-hidden border border-slate-100 shadow-sm">
-                <img [src]="currentImageUrl" class="w-full h-full object-contain" />
-                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/preview:opacity-100 transition-opacity flex items-center justify-center">
-                    <button pButton icon="pi pi-trash" class="p-button-danger p-button-rounded" (click)="changeImage()"></button>
-                </div>
+              </div>
             </div>
           </div>
-        }
+        </div>
       </div>
     </div>
     <div class="col-span-12 lg:col-span-5 flex flex-col gap-6 md:gap-8">
-      <div class="w-full p-5 md:p-8 bg-white border-y md:border border-slate-300 rounded-none md:rounded-lg shadow-sm">
-        <div class="flex flex-col gap-2">
-          <label class="text-base font-semibold flex items-center" for="status">
-            <i class="pi pi-cog mr-2 text-blue-500"></i>Estado Operativo
-          </label>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-2">
-            @for (status of statuses; track status.name) {
-              <div
-                class="flex items-center p-3 rounded-xl border border-gray-300 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-200 transition-all cursor-pointer"
-              >
-                <p-radiobutton
-                  [inputId]="status.key + '-status'"
-                  name="status"
-                  formControlName="isActive"
-                  [value]="status.key"
-                />
-                <label [for]="status.key + '-status'" class="ml-3 font-semibold text-gray-700 cursor-pointer text-sm">
-                  {{ status.name }}
-                </label>
-              </div>
-            }
+      <div class="w-full p-4 md:p-5 bg-white border-y md:border border-slate-300 rounded-none md:rounded-lg shadow-xs flex flex-col gap-3">
+        <!-- Estado Operativo -->
+        <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200/80">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center" [ngClass]="productForm.get('isActive')?.value ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-500'">
+              <i class="pi pi-power-off text-sm"></i>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-xs font-bold text-slate-800">Estado Operativo</span>
+              <span class="text-[11px] font-medium" [ngClass]="productForm.get('isActive')?.value ? 'text-emerald-600' : 'text-slate-400'">
+                {{ productForm.get('isActive')?.value ? 'Activo para operaciones' : 'Inactivo / Deshabilitado' }}
+              </span>
+            </div>
           </div>
+          <p-toggleSwitch formControlName="isActive" severity="success" />
         </div>
-        <hr class="text-gray-300 my-6" />
-        <div class="flex flex-col gap-2">
-          <label class="text-base font-semibold flex items-center" for="status">
-            <i class="pi pi-eye mr-2 text-violet-500"></i>Visibilidad en Catálogo
-          </label>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-2">
-            @for (visible of visibility; track visible.name) {
-              <div
-                class="flex items-center p-3 rounded-xl border border-gray-300 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-200 transition-all cursor-pointer"
-              >
-                <p-radiobutton
-                  [inputId]="visible.key + '-visibility'"
-                  name="visibility"
-                  formControlName="isVisible"
-                  [value]="visible.key"
-                />
-                <label
-                  [for]="visible.key + '-visibility'"
-                  class="ml-3 font-semibold text-gray-700 cursor-pointer text-sm"
-                  >{{ visible.name }}</label
-                >
-              </div>
-            }
+
+        <!-- Visibilidad en Catálogo (Deshabilitado) -->
+        <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50/60 border border-slate-200/60 opacity-60 cursor-not-allowed">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-200 text-slate-500">
+              <i class="pi pi-eye text-sm"></i>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                Visibilidad en Catálogo
+                <span class="text-[9px] font-semibold text-slate-500 bg-slate-200 px-1.5 py-0.2 rounded">Fijo</span>
+              </span>
+              <span class="text-[11px] font-medium text-slate-500">
+                Visible en ventas y menú
+              </span>
+            </div>
           </div>
+          <p-toggleSwitch formControlName="isVisible" [disabled]="true" severity="info" />
         </div>
       </div>
       <!-- Section for Inventory Management (always visible, disabled if master product) -->
@@ -612,7 +599,7 @@
     [showHeader]="false"
     [closable]="false"
     appendTo="body"
-    styleClass="rounded-2xl overflow-hidden shadow-2xl"
+    styleClass="rounded-2xl shadow-2xl"
     [style]="{ width: '900px' }"
     [breakpoints]="{ '960px': '75vw', '640px': '90vw' }"
   >
@@ -718,6 +705,7 @@
                   placeholder="Ninguna"
                   class="flex-1 min-w-0"
                   styleClass="!rounded-lg border-slate-300 w-full"
+                  appendTo="body"
                 />
                 <button
                   pButton
@@ -767,7 +755,7 @@
     [showHeader]="false"
     [closable]="false"
     appendTo="body"
-    styleClass="rounded-2xl overflow-hidden shadow-2xl"
+    styleClass="rounded-2xl shadow-2xl"
     [style]="{ width: '900px' }"
     [breakpoints]="{ '960px': '75vw', '640px': '90vw' }"
   >

@@ -724,7 +724,7 @@ export class ProductFormComponent implements OnInit {
     if (this.objectUrl) {
       URL.revokeObjectURL(this.objectUrl);
     }
-    this.uploadedFiles = event.currentFiles;
+    this.uploadedFiles = event.currentFiles || [];
     if (this.uploadedFiles.length > 0) {
       const file = this.uploadedFiles[0];
       this.objectUrl = URL.createObjectURL(file);
@@ -738,7 +738,7 @@ export class ProductFormComponent implements OnInit {
       this.objectUrl = null;
     }
     if (this.fileUpload) {
-        this.fileUpload.clear();
+      this.fileUpload.clear();
     }
   }
 
