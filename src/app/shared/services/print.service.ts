@@ -6,7 +6,7 @@ import html2canvas from 'html2canvas';
   providedIn: 'root',
 })
 export class PrintService {
-  async generatePDF(elementId: string): Promise<Blob> {
+  async generatePDF(elementId: string, format: 'ticket' | 'letter' = 'letter'): Promise<Blob> {
     const data = document.getElementById(elementId);
     if (!data) throw new Error(`Element with id ${elementId} not found`);
 
@@ -17,7 +17,7 @@ export class PrintService {
       backgroundColor: '#ffffff',
     });
 
-    const imgWidth = 80; // 80mm for thermal printer
+    const imgWidth = format === 'ticket' ? 80 : 215.9; // 80mm for thermal, 215.9mm for Letter size
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
     // Create PDF with custom size based on content height

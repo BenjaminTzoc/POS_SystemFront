@@ -92,4 +92,8 @@ export const SALES_ROUTES: Routes = [
     path: 'payment-methods/edit/:id',
     loadComponent: () => import('./payment-methods/payment-method-form/payment-method-form.component').then(m => m.PaymentMethodFormComponent),
   },
+  {
+    path: 'bank-accounts',
+    loadComponent: () => import('./bank-accounts/bank-accounts.component').then(m => m.BankAccountsComponent),
+  },
 ];

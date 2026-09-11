@@ -1,132 +1,261 @@
 .ticket-container {
-  width: 80mm;
-  padding: 5mm;
+  width: 190mm;
+  padding: 10mm;
   background-color: white;
-  color: black;
-  font-family: 'Courier New', Courier, monospace;
+  color: #1e293b;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   font-size: 10pt;
-  line-height: 1.4;
+  line-height: 1.5;
+  box-sizing: border-box;
 }
 
+/* Header layout: 2-column flexbox */
 .header {
-  text-align: center;
-  margin-bottom: 4mm;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6mm;
+  border-bottom: 2px solid #f1f5f9;
+  padding-bottom: 4mm;
 }
 
 .logo-container {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 0mm;
+  display: flex;
+  align-items: center;
+  gap: 6mm;
+  flex: 1;
 }
 
 .logo {
-  max-width: 30mm;
+  max-width: 25mm;
   height: auto;
-  filter: grayscale(100%); /* Thermal printers are B&W */
+}
+
+.company-details {
+  display: flex;
+  flex-direction: column;
+  min-width: 75mm;
 }
 
 .company-name {
   font-size: 13pt;
   font-weight: bold;
-  margin: 0;
-  text-transform: uppercase;
+  color: #0f172a;
 }
 
 .company-info {
-  margin: 0;
-  font-size: 9pt;
+  margin: 0.5mm 0;
+  font-size: 8.5pt;
+  color: #64748b;
+}
+
+.document-badge {
+  text-align: right;
+}
+
+.ticket-title {
+  font-size: 16pt;
+  font-weight: 800;
+  color: #1e3a8a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 2mm 0;
+}
+
+.document-number {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  font-weight: bold;
+  padding: 1mm 4mm;
+  border-radius: 6px;
+  display: inline-block;
+  font-size: 10pt;
 }
 
 .divider {
   border: none;
-  border-top: 1px dashed black;
-  margin: 3mm 0;
+  border-top: 1px solid #cbd5e1;
+  margin: 4mm 0;
 }
 
-.sale-info p {
+/* Sale & Customer Info: 2-column grid */
+.info-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6mm;
+  margin-bottom: 6mm;
+  background-color: #f8fafc;
+  padding: 4mm;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.info-block h3 {
+  margin: 0 0 2mm 0;
+  font-size: 8.5pt;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+}
+
+.info-block p {
   margin: 1mm 0;
-  font-size: 9pt;
+  font-size: 9.5pt;
+  color: #334155;
 }
 
+/* Items Table styling */
 .items-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 9pt;
+  font-size: 9.5pt;
+  margin-bottom: 6mm;
 }
 
 .items-table th {
+  background-color: #0f172a;
+  color: white;
   text-align: left;
-  padding-bottom: 1mm;
+  padding: 2.5mm 3mm;
+  font-weight: 600;
   text-transform: uppercase;
+  font-size: 8.5pt;
+  letter-spacing: 0.5px;
+}
+
+.items-table th:first-child {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+.items-table th:last-child {
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
 }
 
 .items-table td {
-  padding: 2mm 0;
-  vertical-align: top;
+  padding: 2.5mm 3mm;
+  vertical-align: middle;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.product-group-header td {
+  background-color: #f8fafc;
+  font-weight: bold;
+  color: #1e293b;
+  font-size: 10pt;
+  padding-top: 3mm;
+  padding-bottom: 1.5mm;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.product-group-subtotal td {
+  font-weight: bold;
+  background-color: #fafafa;
+  color: #0f172a;
+  border-top: 1px dashed #cbd5e1;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .discount-text {
-    font-style: italic;
-    color: #333;
+  font-style: italic;
+  color: #dc2626;
+  font-weight: 500;
 }
 
 .text-right {
   text-align: right;
 }
 
+.text-center {
+  text-align: center;
+}
+
+/* Totals section split layout */
+.totals-and-payments {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 8mm;
+  margin-top: 4mm;
+}
+
 .totals {
-  margin-top: 3mm;
+  background-color: #f8fafc;
+  padding: 4mm;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 2mm;
 }
 
 .total-row {
-  display: block;
-  width: 100%;
-  margin-bottom: 1mm;
-  font-size: 10pt;
+  display: flex;
+  justify-content: space-between;
+  font-size: 9.5pt;
+  color: #475569;
 }
 
-.total-row span:first-child {
-  float: left;
-}
-
-.total-row span:last-child {
-  float: right;
-}
-
-.total-row::after {
-  content: "";
-  display: table;
-  clear: both;
-}
-
-.grand-total {
+.total-row.grand-total {
   font-size: 12pt;
-  font-weight: bold;
-  margin-top: 2mm;
+  font-weight: 800;
+  color: #0f172a;
+  border-top: 2px solid #e2e8f0;
+  padding-top: 2mm;
+  margin-top: 1mm;
+}
+
+.payments-info {
+  background-color: #faf5ff;
+  border: 1px solid #f3e8ff;
+  padding: 4mm;
+  border-radius: 6px;
+  font-size: 9.5pt;
+}
+
+.payments-info h3 {
+  margin: 0 0 2mm 0;
+  font-size: 8.5pt;
+  text-transform: uppercase;
+  color: #7c3aed;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+}
+
+.payment-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2mm;
+  padding-bottom: 1.5mm;
+  border-bottom: 1px solid #f3e8ff;
+}
+
+.payment-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
 }
 
 .solid-line {
   height: 1px;
-  background-color: black;
+  background-color: #e2e8f0;
   border: none;
-  margin: 0;
-  padding: 0;
-  display: block;
-  clear: both;
-}
-
-.payments-info {
-    margin-top: 2mm;
-    font-size: 9pt;
+  margin: 4mm 0;
 }
 
 .footer {
   text-align: center;
-  margin-top: 8mm;
-  font-size: 8pt;
+  margin-top: 10mm;
+  font-size: 8.5pt;
+  color: #64748b;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 4mm;
 }
 
 .legal-text {
-    margin-top: 4mm;
-    line-height: 1.1;
+  margin-top: 2mm;
+  line-height: 1.3;
 }
+

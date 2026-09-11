@@ -36,19 +36,6 @@ export class SaleDetailManagerService {
   }
 
   addProduct(product: Product): void {
-    const existing = this.details.find((d) => d.product?.id === product.id);
-
-    if (existing) {
-      existing.quantity += 1;
-
-      const line = this.calculator.calculateLine(existing);
-      existing.lineSubtotal = line.lineSubtotal;
-      existing.lineTotal = line.lineTotal;
-      existing.lineSurcharge = line.lineSurcharge;
-      existing.subtotalAfterLineDiscount = line.subtotalAfterLineDiscount;
-      return;
-    }
-
     const newDetail: ISaleDetailPayload = {
       product,
       quantity: 1,

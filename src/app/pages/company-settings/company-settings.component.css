@@ -1,0 +1,116 @@
+.settings-container {
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.header-section {
+  margin-bottom: 2rem;
+}
+
+.header-section h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 0.5rem 0;
+}
+
+.subtitle {
+  color: #64748b;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.settings-card {
+  position: relative;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.loading-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 0;
+}
+
+.grid-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group.full-width {
+  grid-column: span 2;
+}
+
+.form-group label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #334155;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  color: #94a3b8;
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.input-wrapper input {
+  padding-left: 2.75rem !important;
+  height: 2.75rem;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  transition: all 0.2s ease;
+}
+
+.input-wrapper input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.error-text {
+  color: #ef4444;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.actions-section {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 1.5rem;
+}
+
+.save-btn {
+  height: 2.75rem;
+  padding: 0 2rem;
+  font-weight: 600;
+  border-radius: 6px;
+}
+
+@media (max-width: 640px) {
+  .grid-form {
+    grid-template-columns: 1fr;
+  }
+  .form-group.full-width {
+    grid-column: span 1;
+  }
+}

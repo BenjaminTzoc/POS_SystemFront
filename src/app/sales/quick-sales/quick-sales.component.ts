@@ -308,26 +308,19 @@ export class QuickSaleComponent implements OnInit, OnDestroy {
   addProduct(product: Product): void {
     if (!product) return;
 
-    const existingIndex = this.details.controls.findIndex(c => c.get('productId')?.value === product.id);
-
-    if (existingIndex >= 0) {
-      const quantityControl = this.details.at(existingIndex).get('quantity');
-      quantityControl?.setValue(quantityControl.value + 1);
-    } else {
-      const detailGroup = this.fb.group({
-        productId: [product.id, Validators.required],
-        productName: [product.name],
-        sku: [product.sku],
-        quantity: [1, [Validators.required, Validators.min(0.001)]],
-        unitPrice: [product.price || 0, [Validators.required, Validators.min(0)]],
-        discount: [0],
-        discountType: ['percentage'],
-        discountAmount: [0],
-        allowsDecimals: [product.unit?.allowsDecimals ?? (product as any).allowsDecimals ?? false],
-        unitAbbreviation: [product.unit?.abbreviation || (product as any).unitAbbreviation || '']
-      });
-      this.details.push(detailGroup);
-    }
+    const detailGroup = this.fb.group({
+      productId: [product.id, Validators.required],
+      productName: [product.name],
+      sku: [product.sku],
+      quantity: [1, [Validators.required, Validators.min(0.001)]],
+      unitPrice: [product.price || 0, [Validators.required, Validators.min(0)]],
+      discount: [0],
+      discountType: ['percentage'],
+      discountAmount: [0],
+      allowsDecimals: [product.unit?.allowsDecimals ?? (product as any).allowsDecimals ?? false],
+      unitAbbreviation: [product.unit?.abbreviation || (product as any).unitAbbreviation || '']
+    });
+    this.details.push(detailGroup);
 
     this.updatePaymentAmount();
   }

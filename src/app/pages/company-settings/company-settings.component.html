@@ -1,0 +1,107 @@
+<p-toast></p-toast>
+
+<div class="settings-container">
+  <div class="header-section">
+    <h1>Datos de la Empresa</h1>
+    <p class="subtitle">Administre la información corporativa que se despliega en los documentos de venta y cotizaciones.</p>
+  </div>
+
+  <p-card styleClass="settings-card shadow-lg">
+    <div class="loading-overlay" *ngIf="isLoading()">
+      <i class="pi pi-spin pi-spinner text-4xl text-primary"></i>
+      <span class="mt-2 text-slate-500">Cargando configuración...</span>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading()">
+      <div class="grid-form">
+        <!-- Company Name -->
+        <div class="form-group full-width">
+          <label for="companyName">Nombre de la Empresa</label>
+          <div class="input-wrapper">
+            <i class="pi pi-building input-icon"></i>
+            <input 
+              id="companyName" 
+              type="text" 
+              pInputText 
+              formControlName="companyName" 
+              placeholder="Ej: CABEN CARNES Y EMBUTIDOS" 
+              class="w-full"
+            />
+          </div>
+          <small class="error-text" *ngIf="form.get('companyName')?.touched && form.get('companyName')?.hasError('required')">
+            El nombre de la empresa es obligatorio.
+          </small>
+        </div>
+
+        <!-- NIT -->
+        <div class="form-group">
+          <label for="nit">NIT / Identificación Tributaria</label>
+          <div class="input-wrapper">
+            <i class="pi pi-id-card input-icon"></i>
+            <input 
+              id="nit" 
+              type="text" 
+              pInputText 
+              formControlName="nit" 
+              placeholder="Ej: 1234567-8" 
+              class="w-full"
+            />
+          </div>
+          <small class="error-text" *ngIf="form.get('nit')?.touched && form.get('nit')?.hasError('required')">
+            El NIT es obligatorio.
+          </small>
+        </div>
+
+        <!-- Phone -->
+        <div class="form-group">
+          <label for="phone">Teléfono de Contacto</label>
+          <div class="input-wrapper">
+            <i class="pi pi-phone input-icon"></i>
+            <input 
+              id="phone" 
+              type="text" 
+              pInputText 
+              formControlName="phone" 
+              placeholder="Ej: 2222-3333" 
+              class="w-full"
+            />
+          </div>
+          <small class="error-text" *ngIf="form.get('phone')?.touched && form.get('phone')?.hasError('required')">
+            El teléfono es obligatorio.
+          </small>
+        </div>
+
+        <!-- Address -->
+        <div class="form-group full-width">
+          <label for="address">Dirección Física</label>
+          <div class="input-wrapper">
+            <i class="pi pi-map-marker input-icon"></i>
+            <input 
+              id="address" 
+              type="text" 
+              pInputText 
+              formControlName="address" 
+              placeholder="Ej: Calle Ficticia 123, Ciudad" 
+              class="w-full"
+            />
+          </div>
+          <small class="error-text" *ngIf="form.get('address')?.touched && form.get('address')?.hasError('required')">
+            La dirección es obligatoria.
+          </small>
+        </div>
+      </div>
+
+      <div class="actions-section">
+        <button 
+          pButton 
+          type="submit" 
+          label="Guardar Cambios" 
+          icon="pi pi-save" 
+          severity="primary" 
+          [loading]="isSaving()"
+          class="save-btn"
+        ></button>
+      </div>
+    </form>
+  </p-card>
+</div>

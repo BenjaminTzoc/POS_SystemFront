@@ -42,6 +42,13 @@ export const routes: Routes = [
         path: 'production',
         loadChildren: () => import('./production/production.routes').then((m) => m.PRODUCTION_ROUTES),
       },
+      {
+        path: 'admin/company-settings',
+        loadComponent: () =>
+          import('./pages/company-settings/company-settings.component').then(
+            (c) => c.CompanySettingsComponent
+          ),
+      },
     ],
   },
   {

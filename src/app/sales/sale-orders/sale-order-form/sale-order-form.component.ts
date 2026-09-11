@@ -47,6 +47,7 @@ import { TicketTemplateComponent } from '../../../shared/components/ticket-templ
 import { PrintService } from '../../../shared/services/print.service';
 import { BankAccountsService } from '../../services/bank-accounts.service';
 import { IBankAccount } from '../../interfaces/bank-account.interface';
+import { BankAccountsComponent } from '../../bank-accounts/bank-accounts.component';
 import { ProductsService } from '../../../inventory/services/products.service';
 import { DrawerModule } from 'primeng/drawer';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -56,7 +57,7 @@ import { CashSessionDialogComponent } from '../../../shared/components/cash-sess
 @Component({
   selector: 'app-sale-order-form',
   //prettier-ignore
-  imports: [ReactiveFormsModule, FormsModule, RadioButtonModule, FloatLabelModule, InputTextModule, CurrencyPipe, ButtonModule, DatePickerModule, TableModule, DialogModule, SelectModule, ToggleSwitchModule, InputNumberModule, TextareaModule, CommonModule, AutoCompleteModule, SaleDiscountsComponent, SaleStatusPipe, PaymentStatusPipe, TooltipModule, ConfirmDialogModule, TagModule, TicketPreviewComponent, TicketTemplateComponent, DrawerModule, IconFieldModule, InputIconModule, CashSessionDialogComponent],
+  imports: [ReactiveFormsModule, FormsModule, RadioButtonModule, FloatLabelModule, InputTextModule, CurrencyPipe, ButtonModule, DatePickerModule, TableModule, DialogModule, SelectModule, ToggleSwitchModule, InputNumberModule, TextareaModule, CommonModule, AutoCompleteModule, SaleDiscountsComponent, SaleStatusPipe, PaymentStatusPipe, TooltipModule, ConfirmDialogModule, TagModule, TicketPreviewComponent, TicketTemplateComponent, DrawerModule, IconFieldModule, InputIconModule, CashSessionDialogComponent, BankAccountsComponent],
   templateUrl: './sale-order-form.component.html',
   styleUrl: './sale-order-form.component.css',
   providers: [ConfirmationService],
@@ -168,6 +169,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
 
   payments: any[] = [];
   isAddingPayment: boolean = false;
+  displayBankAccountsCatalog: boolean = false;
   paymentMethods: IPaymentMethod[] = [];
   bankAccounts: IBankAccount[] = [];
 
@@ -946,6 +948,23 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
     });
   }
 
+  loadBankAccounts(): void {
+    this.bankAccountsService.getBankAccounts().subscribe({
+      next: (res) => {
+        this.bankAccounts = res.data;
+      },
+    });
+  }
+
+  showBankAccountsCatalog(): void {
+    this.displayBankAccountsCatalog = true;
+  }
+
+  onCloseBankCatalog(): void {
+    this.displayBankAccountsCatalog = false;
+    this.loadBankAccounts();
+  }
+
   addPayment() {
     this.paymentForm.reset({
       paymentMethodId: null,
@@ -959,11 +978,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
     this.isAddingPayment = true;
 
     // Load bank accounts
-    this.bankAccountsService.getBankAccounts().subscribe({
-      next: (res) => {
-        this.bankAccounts = res.data;
-      },
-    });
+    this.loadBankAccounts();
 
     this.paymentMethodsService.getPaymentMethods().subscribe({
       next: (res) => {
@@ -1690,29 +1705,12 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   }
 
   addProductFromDrawer(product: Product) {
-    const existingIndex = this.details.findIndex(d => d.product.id === product.id);
-    if (existingIndex !== -1) {
-      const detail = this.details[existingIndex];
-      const newQty = Number(detail.quantity || 0) + 1;
-      const stock = detail.product?.stock ?? 0;
-      if (newQty > stock) {
-        this.messageService.add({ severity: 'warn', summary: 'Límite de Stock', detail: 'No hay suficiente stock disponible en esta sucursal.' });
-        return;
-      }
-      this.detailManager.updateQuantity(detail, newQty);
-      this.messageService.add({ 
-        severity: 'info', 
-        summary: 'Cantidad Actualizada', 
-        detail: `Se incrementó la cantidad de ${product.name}` 
-      });
-    } else {
-      this.detailManager.addProduct(product);
-      this.messageService.add({ 
-        severity: 'success', 
-        summary: 'Producto Añadido', 
-        detail: `${product.name} agregado a la lista` 
-      });
-    }
+    this.detailManager.addProduct(product);
+    this.messageService.add({ 
+      severity: 'success', 
+      summary: 'Producto Añadido', 
+      detail: `${product.name} agregado a la lista` 
+    });
     this.updateTotals();
     this.markAsChanged();
   }

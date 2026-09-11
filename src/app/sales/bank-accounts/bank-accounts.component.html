@@ -1,0 +1,577 @@
+<div [ngClass]="isDialogMode ? 'p-0 bg-white' : 'py-4 px-0 md:px-6 bg-slate-50/50 min-h-screen'">
+
+  <!-- MODE: Dialog (Double-Column inline view) -->
+  <div *ngIf="isDialogMode" class="p-6">
+    <div class="grid grid-cols-12 gap-6">
+      <!-- Columna Izquierda: Listado de Cuentas -->
+      <div class="col-span-12 md:col-span-7 flex flex-col gap-4">
+        <div class="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <i class="pi pi-list text-indigo-600 text-md"></i>
+            <h3 class="font-normal text-[#3B5B8A] text-sm">Cuentas Registradas</h3>
+          </div>
+          <!-- Search input -->
+          <p-iconfield class="w-48">
+            <p-inputicon class="pi pi-search text-xs" />
+            <input 
+              (input)="onSearchDialog($event)"
+              type="text" 
+              pInputText 
+              placeholder="Buscar..."
+              autocomplete="off"
+              class="w-full !rounded-lg text-[11px] py-1 px-2.5 h-7"
+            />
+          </p-iconfield>
+        </div>
+
+        <div class="max-h-[350px] overflow-y-auto pr-2 flex flex-col gap-2">
+          @if (filteredBankAccounts().length === 0) {
+            <div class="text-center py-8 text-slate-400 text-sm font-normal">
+              No hay cuentas bancarias registradas.
+            </div>
+          } @else {
+            <div *ngFor="let account of filteredBankAccounts()" class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl transition-all hover:bg-white hover:shadow-md">
+              <div class="flex flex-col gap-0.5 flex-1 pr-4">
+                <div class="flex items-center gap-2">
+                  <span class="font-normal text-slate-800 text-sm">{{ account.alias }}</span>
+                  <span *ngIf="account.isActive" class="inline-flex items-center px-1.5 py-0.5 text-[9px] font-normal rounded-md bg-emerald-50 text-emerald-600 border border-emerald-200">
+                    Activa
+                  </span>
+                  <span *ngIf="!account.isActive" class="inline-flex items-center px-1.5 py-0.5 text-[9px] font-normal rounded-md bg-rose-50 text-rose-600 border border-rose-200">
+                    Inactiva
+                  </span>
+                </div>
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-[11px] text-slate-500">
+                  <span>{{ account.bankName }}</span>
+                  <span class="font-mono">{{ account.accountNumber }}</span>
+                  <span>Saldo: {{ account.balance | currency: 'Q' }}</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1" *ngIf="canManage">
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-pencil"
+                  [text]="true"
+                  (click)="onEditAccountInline(account)"
+                  class="hover:!bg-amber-50 !text-amber-500 !rounded-lg !w-8 !h-8"
+                  pTooltip="Editar"
+                  tooltipPosition="top"
+                ></button>
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-trash"
+                  severity="danger"
+                  [text]="true"
+                  (click)="onDeleteAccount(account)"
+                  class="hover:!bg-rose-50 !rounded-lg !w-8 !h-8"
+                  pTooltip="Eliminar"
+                  tooltipPosition="top"
+                ></button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Columna Derecha: Formulario Nueva/Editar Cuenta -->
+      <div class="col-span-12 md:col-span-5 border-t md:border-t-0 md:border-l border-slate-200 pt-6 md:pt-0 md:pl-6 flex flex-col gap-4" [formGroup]="bankAccountForm" *ngIf="canManage">
+        <div class="flex items-center gap-2 pb-2 border-b border-slate-100">
+          <i [class]="isEditMode ? 'pi pi-pencil text-amber-500 text-md' : 'pi pi-plus-circle text-emerald-600 text-md'"></i>
+          <h3 class="font-normal text-[#3B5B8A] text-sm">{{ isEditMode ? 'Editar Cuenta' : 'Nueva Cuenta' }}</h3>
+        </div>
+
+        <div class="flex flex-col gap-3">
+          <!-- Alias -->
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-normal text-[#3B5B8A]">Nombre / Alias <span class="text-red-700">*</span></label>
+            <input
+              pInputText
+              formControlName="alias"
+              class="w-full !rounded-lg text-xs py-1 px-2.5 h-8"
+              placeholder="Ej. Cuenta Monetaria..."
+              autocomplete="off"
+            />
+            @if (bankAccountForm.get('alias')?.invalid && bankAccountForm.get('alias')?.touched) {
+              <small class="text-rose-500 text-[10px] font-normal mt-0.5">El alias es obligatorio.</small>
+            }
+          </div>
+
+          <!-- Banco -->
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-normal text-[#3B5B8A]">Nombre del Banco <span class="text-red-700">*</span></label>
+            <input
+              pInputText
+              formControlName="bankName"
+              class="w-full !rounded-lg text-xs py-1 px-2.5 h-8"
+              placeholder="Ej. Banco Industrial..."
+              autocomplete="off"
+            />
+            @if (bankAccountForm.get('bankName')?.invalid && bankAccountForm.get('bankName')?.touched) {
+              <small class="text-rose-500 text-[10px] font-normal mt-0.5">El banco es obligatorio.</small>
+            }
+          </div>
+
+          <!-- Número de Cuenta -->
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-normal text-[#3B5B8A]">Número de Cuenta <span class="text-red-700">*</span></label>
+            <input
+              pInputText
+              formControlName="accountNumber"
+              class="w-full !rounded-lg text-xs py-1 px-2.5 h-8"
+              placeholder="Ej. 123456789..."
+              autocomplete="off"
+            />
+            @if (bankAccountForm.get('accountNumber')?.invalid && bankAccountForm.get('accountNumber')?.touched) {
+              <small class="text-rose-500 text-[10px] font-normal mt-0.5">El número de cuenta es obligatorio.</small>
+            }
+          </div>
+
+          <!-- Titular -->
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-normal text-[#3B5B8A]">Titular <span class="text-red-700">*</span></label>
+            <input
+              pInputText
+              formControlName="holderName"
+              class="w-full !rounded-lg text-xs py-1 px-2.5 h-8"
+              placeholder="Ej. Caben Carnes, S.A...."
+              autocomplete="off"
+            />
+            @if (bankAccountForm.get('holderName')?.invalid && bankAccountForm.get('holderName')?.touched) {
+              <small class="text-rose-500 text-[10px] font-normal mt-0.5">El titular es obligatorio.</small>
+            }
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <!-- Tipo de Cuenta -->
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-normal text-[#3B5B8A]">Tipo *</label>
+              <p-select
+                [options]="accountTypeOptions"
+                formControlName="accountType"
+                optionLabel="label"
+                optionValue="value"
+                class="w-full text-xs"
+                styleClass="!rounded-lg text-xs border-slate-300! h-8!"
+                size="small"
+                appendTo="body"
+              />
+            </div>
+
+            <!-- Saldo Inicial -->
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-normal text-[#3B5B8A]">Saldo Inicial</label>
+              <p-inputnumber
+                formControlName="balance"
+                mode="decimal"
+                [min]="0"
+                [minFractionDigits]="2"
+                [maxFractionDigits]="2"
+                [showButtons]="false"
+                [prefix]="'Q '"
+                styleClass="w-full !rounded-lg text-xs h-8!"
+                inputStyleClass="text-xs h-8! py-1! px-2.5! border-slate-300!"
+                size="small"
+                fluid
+              />
+            </div>
+          </div>
+
+          <!-- Activa Toggle switch -->
+          <div class="flex items-center justify-between p-2 bg-slate-50 rounded-lg border border-slate-200 mt-1">
+            <span class="text-xs font-normal text-slate-700">¿Cuenta Activa?</span>
+            <p-toggleSwitch formControlName="isActive" />
+          </div>
+
+          <!-- Botones de Acción -->
+          <div class="flex gap-2 w-full mt-2">
+            <button
+              pButton
+              type="button"
+              [label]="isEditMode ? 'Cancelar' : 'Cerrar'"
+              (click)="isEditMode ? onCancelEdit() : onCloseCatalog()"
+              class="p-button-outlined p-button-secondary !rounded-lg flex-1 font-normal h-8 justify-center text-xs"
+            ></button>
+            <button
+              pButton
+              type="button"
+              [label]="isEditMode ? 'Actualizar' : 'Crear'"
+              icon="pi pi-check"
+              (click)="onSaveAccount()"
+              [loading]="isSaving"
+              class="flex-1 !rounded-lg font-normal h-8 justify-center text-xs"
+              [severity]="isEditMode ? 'warn' : 'success'"
+            ></button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Permission error for non-admins -->
+      <div class="col-span-12 md:col-span-5 border-t md:border-t-0 md:border-l border-slate-200 pt-6 md:pt-0 md:pl-6 flex flex-col justify-center items-center text-center gap-2" *ngIf="!canManage">
+        <i class="pi pi-lock text-slate-400 text-3xl"></i>
+        <p class="text-xs text-slate-500 font-normal">No tienes permisos para modificar cuentas bancarias.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODE: Normal Page View -->
+  <div *ngIf="!isDialogMode">
+    <!-- Title Header (Desktop/Mobile Page Mode) -->
+    <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-4 md:mb-8">
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div class="w-full md:max-w-[50%]">
+          <h1 class="text-2xl md:text-4xl font-semibold text-gray-900 tracking-tight line-clamp-1">Cuentas Bancarias</h1>
+          <p class="hidden md:block text-[#627ca7] mt-1 md:mt-2 text-sm md:text-md font-medium">
+             Administre las cuentas de banco habilitadas para registrar transferencias y depósitos de cobros.
+          </p>
+        </div>
+        <div class="flex items-center gap-2 w-full md:w-auto">
+          <div class="flex-1">
+            <p-iconfield>
+              <p-inputicon class="pi pi-search" />
+              <input 
+                (input)="onSearch($event)"
+                type="text" 
+                pInputText 
+                placeholder="Buscar cuenta..."
+                autocomplete="off"
+                class="w-full !rounded-xl"
+              />
+            </p-iconfield>
+          </div>
+          <p-button 
+            label="Nueva Cuenta"
+            severity="info"
+            icon="pi pi-plus"
+            class="hidden md:block"
+            styleClass="!rounded-xl"
+            *ngIf="canManage"
+            (onClick)="openNewDialog()"
+          />
+          <p-button 
+            severity="info"
+            icon="pi pi-plus"
+            class="block md:hidden"
+            styleClass="!rounded-xl"
+            *ngIf="canManage"
+            (onClick)="openNewDialog()"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Header for Dialog Mode (Compact) -->
+    <div *ngIf="isDialogMode" class="flex items-center justify-between gap-4 mb-4">
+      <div class="flex-1">
+        <p-iconfield>
+          <p-inputicon class="pi pi-search" />
+          <input 
+            (input)="onSearch($event)"
+            type="text" 
+            pInputText 
+            placeholder="Buscar cuenta..."
+            autocomplete="off"
+            class="w-full !rounded-xl text-xs py-1.5 px-3"
+          />
+        </p-iconfield>
+      </div>
+      <p-button 
+        label="Nueva Cuenta"
+        severity="info"
+        icon="pi pi-plus"
+        styleClass="!rounded-xl text-xs py-1.5 px-3"
+        *ngIf="canManage"
+        (onClick)="openNewDialog()"
+      />
+    </div>
+
+    <div class="max-w-[1700px] mx-auto pb-10">
+      <!-- Desktop Table -->
+      <div class="hidden lg:block bg-white rounded-xl border border-slate-300 overflow-x-auto shadow-sm">
+        <p-table
+          #dt
+          [value]="bankAccounts()"
+          [loading]="loading()"
+          [paginator]="true"
+          [rows]="10"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
+          [rowsPerPageOptions]="[5, 10, 20]"
+          [globalFilterFields]="['bankName', 'accountNumber', 'alias', 'holderName']"
+          dataKey="id"
+          styleClass="p-datatable-modern"
+          [tableStyle]="{'min-width': '900px'}"
+        >
+          <ng-template pTemplate="header">
+            <tr class="h-14 bg-slate-50 text-xs">
+              <th class="!pl-6 tracking-widest text-slate-400 w-[120px]">Estado</th>
+              <th class="tracking-widest text-slate-400 w-[200px]" pSortableColumn="alias">Nombre / Alias <p-sortIcon field="alias" /></th>
+              <th class="tracking-widest text-slate-400 w-[180px]" pSortableColumn="bankName">Banco <p-sortIcon field="bankName" /></th>
+              <th class="tracking-widest text-slate-400 w-[180px]">Número de Cuenta</th>
+              <th class="tracking-widest text-slate-400 w-[200px]">Titular</th>
+              <th class="tracking-widest text-slate-400 text-right w-[150px]" pSortableColumn="balance">Saldo <p-sortIcon field="balance" /></th>
+              <th class="!pr-6 tracking-widest text-slate-400 text-right w-[130px]" *ngIf="canManage">Acciones</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-account>
+            <tr class="hover:bg-slate-50 transition-all border-b border-slate-100 last:border-0 text-xs">
+              <td class="!pl-6 py-3">
+                <span *ngIf="account.isActive" class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-300">
+                  Activa
+                </span>
+                <span *ngIf="!account.isActive" class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-lg bg-rose-50 text-rose-600 border border-rose-300">
+                  Inactiva
+                </span>
+              </td>
+              <td class="py-3 font-semibold text-slate-800">{{ account.alias }}</td>
+              <td>{{ account.bankName }}</td>
+              <td class="font-mono text-slate-600 font-medium">{{ account.accountNumber }}</td>
+              <td>{{ account.holderName }}</td>
+              <td class="text-right font-bold text-slate-700">{{ account.balance | currency: 'Q' }}</td>
+              <td class="!pr-6 text-right" *ngIf="canManage">
+                <div class="flex justify-end gap-1">
+                  <button
+                    pButton
+                    icon="pi pi-pencil"
+                    class="p-button-rounded p-button-text p-button-warning !text-amber-500 hover:!bg-amber-50 !w-8 !h-8 !p-0"
+                    (click)="openEditDialog(account)"
+                    pTooltip="Editar"
+                    tooltipPosition="bottom"
+                  ></button>
+                  <button
+                    pButton
+                    icon="pi pi-trash"
+                    class="p-button-rounded p-button-text p-button-danger !text-rose-500 hover:!bg-rose-50 !w-8 !h-8 !p-0"
+                    (click)="onDeleteAccount(account)"
+                    pTooltip="Eliminar"
+                    tooltipPosition="bottom"
+                  ></button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template #emptymessage>
+            <tr>
+              <td colspan="7" class="text-center !py-20">
+                <div class="flex flex-col items-center justify-center gap-3">
+                  <i class="pi pi-credit-card text-[#95abce]" style="font-size: 3rem"></i>
+                  <p class="text-[#627ca7] font-semibold text-sm">No se encontraron cuentas bancarias.</p>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <!-- Mobile Table (Only in full page mode, hidden in dialog mode for compact space) -->
+      <div class="block lg:hidden w-full px-2" *ngIf="!isDialogMode">
+        <p-table
+          #dtMobile
+          [value]="bankAccounts()"
+          [loading]="loading()"
+          [paginator]="true"
+          [rows]="5"
+          [globalFilterFields]="['bankName', 'accountNumber', 'alias', 'holderName']"
+          dataKey="id"
+          styleClass="p-datatable-modern bg-transparent w-full"
+          [tableStyle]="{'table-layout': 'fixed', 'width': '100%'}"
+          [breakpoint]="'0px'"
+        >
+          <ng-template pTemplate="body" let-account>
+            <tr class="bg-transparent border-none block">
+              <td class="block !p-0 border-none bg-transparent">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 my-2 flex flex-col overflow-hidden relative">
+                  <div class="flex p-4 items-center gap-4">
+                    <div class="flex items-center justify-center shrink-0">
+                      <span class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 shadow-sm">
+                        <i class="pi pi-credit-card text-lg"></i>
+                      </span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex flex-col min-w-0">
+                        <div class="flex items-center gap-2">
+                          <span class="text-[9px] text-slate-400 font-mono tracking-wider leading-none mb-1">{{ account.bankName }}</span>
+                          <p-tag [value]="account.isActive ? 'ACTIVA' : 'INACTIVA'" [severity]="account.isActive ? 'success' : 'danger'" styleClass="text-[8px] !font-semibold px-1.5 py-0.5 rounded-md" />
+                        </div>
+                        <h3 class="font-semibold text-slate-800 text-sm leading-tight truncate">{{ account.alias }}</h3>
+                      </div>
+                    </div>
+                    <div class="text-right">
+                      <span class="text-xs font-bold text-slate-800">{{ account.balance | currency: 'Q' }}</span>
+                    </div>
+                  </div>
+
+                  <div class="px-4 pb-3 flex flex-col gap-1 text-[11px] text-slate-500">
+                    <div><strong>Nº Cuenta:</strong> <span class="font-mono">{{ account.accountNumber }}</span></div>
+                    <div><strong>Titular:</strong> {{ account.holderName }}</div>
+                  </div>
+
+                  <div class="bg-slate-50 border-t border-slate-100 p-2 px-3 flex items-center justify-end" *ngIf="canManage">
+                    <div class="flex items-center gap-1">
+                      <p-button
+                        icon="pi pi-pencil"
+                        styleClass="p-button-text !text-amber-500 hover:!bg-amber-50 !w-8 !h-8 !rounded-lg !p-0"
+                        (onClick)="openEditDialog(account)"
+                      />
+                      <p-button
+                        icon="pi pi-trash"
+                        styleClass="p-button-text !text-rose-500 hover:!bg-rose-50 !w-8 !h-8 !rounded-lg !p-0"
+                        (onClick)="onDeleteAccount(account)"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+          
+          <ng-template #emptymessage>
+            <tr>
+              <td class="block !p-0 border-none bg-transparent">
+                <div class="bg-white rounded-lg border border-slate-300 mx-4 my-8 p-10 flex flex-col items-center gap-4 text-center">
+                  <i class="pi pi-credit-card text-[#95abce]" style="font-size: 3rem"></i>
+                  <p class="text-[#627ca7] font-semibold text-sm">No se encontraron cuentas.</p>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Dialog (Create / Edit) -->
+  <p-dialog
+    [(visible)]="displayFormDialog"
+    [header]="isEditMode ? 'Editar Cuenta Bancaria' : 'Nueva Cuenta Bancaria'"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: '450px' }"
+    appendTo="body"
+    styleClass="p-dialog-modern custom-dialog"
+  >
+    <form [formGroup]="bankAccountForm" (ngSubmit)="onSaveAccount()" class="space-y-4 pt-2 text-left">
+      <div class="flex flex-col gap-1.5">
+        <label for="alias" class="text-xs font-semibold text-slate-700">Nombre / Alias de la cuenta *</label>
+        <input 
+          id="alias" 
+          type="text" 
+          pInputText 
+          formControlName="alias" 
+          placeholder="Ej. Cuenta Monetaria Banrural" 
+          class="w-full text-xs py-2 border-slate-300! focus:border-brand-deep!" 
+        />
+        <small class="text-red-500 text-[10px]" *ngIf="bankAccountForm.get('alias')?.touched && bankAccountForm.get('alias')?.invalid">
+          El alias es requerido (mínimo 2 letras)
+        </small>
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label for="bankName" class="text-xs font-semibold text-slate-700">Nombre del Banco *</label>
+        <input 
+          id="bankName" 
+          type="text" 
+          pInputText 
+          formControlName="bankName" 
+          placeholder="Ej. Banco Industrial" 
+          class="w-full text-xs py-2 border-slate-300! focus:border-brand-deep!" 
+        />
+        <small class="text-red-500 text-[10px]" *ngIf="bankAccountForm.get('bankName')?.touched && bankAccountForm.get('bankName')?.invalid">
+          El banco es requerido
+        </small>
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label for="accountNumber" class="text-xs font-semibold text-slate-700">Número de Cuenta *</label>
+        <input 
+          id="accountNumber" 
+          type="text" 
+          pInputText 
+          formControlName="accountNumber" 
+          placeholder="Ej. 123456789" 
+          class="w-full text-xs py-2 border-slate-300! focus:border-brand-deep!" 
+        />
+        <small class="text-red-500 text-[10px]" *ngIf="bankAccountForm.get('accountNumber')?.touched && bankAccountForm.get('accountNumber')?.invalid">
+          El número de cuenta es requerido (mínimo 5 caracteres)
+        </small>
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label for="holderName" class="text-xs font-semibold text-slate-700">Titular de la cuenta *</label>
+        <input 
+          id="holderName" 
+          type="text" 
+          pInputText 
+          formControlName="holderName" 
+          placeholder="Ej. Caben Carnes y Embutidos, S.A." 
+          class="w-full text-xs py-2 border-slate-300! focus:border-brand-deep!" 
+        />
+        <small class="text-red-500 text-[10px]" *ngIf="bankAccountForm.get('holderName')?.touched && bankAccountForm.get('holderName')?.invalid">
+          El nombre del titular es requerido (mínimo 3 letras)
+        </small>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div class="flex flex-col gap-1.5">
+          <label for="accountType" class="text-xs font-semibold text-slate-700">Tipo de cuenta *</label>
+          <p-select
+            id="accountType"
+            [options]="accountTypeOptions"
+            formControlName="accountType"
+            optionLabel="label"
+            optionValue="value"
+            class="w-full"
+            styleClass="border-slate-300! h-8! text-xs! py-0!"
+            size="small"
+            appendTo="body"
+          />
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label for="balance" class="text-xs font-semibold text-slate-700">Saldo inicial</label>
+          <p-inputnumber
+            id="balance"
+            formControlName="balance"
+            mode="decimal"
+            [min]="0"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="2"
+            [showButtons]="false"
+            [prefix]="'Q  '"
+            styleClass="w-full border-slate-300! h-8!"
+            inputStyleClass="text-xs h-8! py-1! px-2.5! border-slate-300! focus:border-brand-deep!"
+            size="small"
+            fluid
+          />
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+        <span class="text-xs font-semibold text-slate-700">¿Cuenta Habilitada / Activa?</span>
+        <p-toggleSwitch formControlName="isActive" />
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+        <p-button 
+          label="Cancelar" 
+          severity="secondary" 
+          styleClass="p-button-text rounded-xl text-xs py-1.5 px-3" 
+          (onClick)="displayFormDialog = false" 
+          type="button" 
+        />
+        <p-button 
+          [label]="isEditMode ? 'Actualizar' : 'Guardar'" 
+          severity="info" 
+          styleClass="rounded-xl text-xs py-1.5 px-3" 
+          [loading]="isSaving" 
+          type="submit" 
+        />
+      </div>
+    </form>
+  </p-dialog>
+</div>
+

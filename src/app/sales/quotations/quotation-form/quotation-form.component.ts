@@ -310,33 +310,22 @@ export class QuotationFormComponent implements OnInit {
   }
 
   addProductFromDrawer(product: Product) {
-    const existingIndex = this.items.controls.findIndex(c => c.get('productId')?.value === product.id);
-    if (existingIndex !== -1) {
-      const qtyControl = this.items.at(existingIndex).get('quantity');
-      qtyControl?.setValue(Number(qtyControl.value || 0) + 1);
-      this.messageService.add({ 
-        severity: 'info', 
-        summary: 'Cantidad Actualizada', 
-        detail: `Se incrementó la cantidad de ${product.name}` 
-      });
-    } else {
-      const itemGroup = this.fb.group({
-        productId: [product.id, Validators.required],
-        quantity: [1, [Validators.required, Validators.min(1)]],
-        unitPrice: [Number(product.price), [Validators.required, Validators.min(0)]],
-        discount: [0],
-        discountType: ['percentage'],
-        taxPercentage: [12],
-        notes: [''],
-        lineTotal: [Number(product.price)]
-      });
-      this.items.push(itemGroup);
-      this.messageService.add({ 
-        severity: 'success', 
-        summary: 'Producto Añadido', 
-        detail: `${product.name} agregado a la lista` 
-      });
-    }
+    const itemGroup = this.fb.group({
+      productId: [product.id, Validators.required],
+      quantity: [1, [Validators.required, Validators.min(1)]],
+      unitPrice: [Number(product.price), [Validators.required, Validators.min(0)]],
+      discount: [0],
+      discountType: ['percentage'],
+      taxPercentage: [12],
+      notes: [''],
+      lineTotal: [Number(product.price)]
+    });
+    this.items.push(itemGroup);
+    this.messageService.add({ 
+      severity: 'success', 
+      summary: 'Producto Añadido', 
+      detail: `${product.name} agregado a la lista` 
+    });
     this.calculateTotals();
   }
 

@@ -858,12 +858,14 @@
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
-  [style]="{ width: '450px' }"
+  [style]="{ width: '700px' }"
+  [breakpoints]="{ '768px': '90vw' }"
   appendTo="body"
   styleClass="p-dialog-modern custom-dialog payment-dialog"
 >
-  <form [formGroup]="paymentForm" class="space-y-4 pt-2 text-left">
-    <div class="flex flex-col gap-2">
+  <form [formGroup]="paymentForm" class="grid grid-cols-12 gap-4 pt-2 text-left">
+    <!-- Método de pago -->
+    <div class="col-span-12 md:col-span-6 flex flex-col gap-2">
       <label for="PaymentMethod" class="text-xs font-semibold text-text-body">Método de pago</label>
       <p-select
         id="PaymentMethod"
@@ -878,7 +880,8 @@
       />
     </div>
 
-    <div class="flex flex-col gap-2">
+    <!-- Monto a pagar -->
+    <div class="col-span-12 md:col-span-6 flex flex-col gap-2">
       <label for="Amount" class="text-xs font-semibold text-text-body">Monto a pagar</label>
       <p-inputnumber
         id="Amount"
@@ -897,60 +900,39 @@
     </div>
 
     <!-- Anticipo Toggle -->
-    <div class="flex items-center justify-between p-3 bg-brand-royal/5 rounded-lg border border-brand-royal/20 border-dashed">
+    <div class="col-span-12 flex items-center justify-between p-3 bg-brand-royal/5 rounded-lg border border-brand-royal/20 border-dashed">
       <div class="flex flex-col gap-0.5">
         <label class="text-xs font-semibold text-text-body flex items-center gap-1.5">
           ¿Es un anticipo?
           <i class="pi pi-info-circle text-[10px] text-brand-royal" pTooltip="Un anticipo no descuenta stock automáticamente"></i>
         </label>
-        <span class="text-[10px] text-text-muted leading-tight max-w-[220px]">
+        <span class="text-[10px] text-text-muted leading-tight max-w-[450px]">
           Si se activa, la orden seguirá pendiente y no se descontará inventario todavía.
         </span>
       </div>
       <p-toggleSwitch formControlName="isDownPayment" />
     </div>
 
-    <div class="flex flex-col gap-2">
-      <label for="PaymentDate" class="text-xs font-semibold text-text-body">Fecha de pago</label>
-      <p-datepicker
-        formControlName="date"
-        [iconDisplay]="'input'"
-        [showIcon]="true"
-        inputId="PaymentDate"
-        styleClass="w-full border-slate-300 h-8!"
-        appendTo="body"
-        size="small"
-        fluid
-      />
+    <!-- Fecha de pago -->
+    <div class="col-span-12" [ngClass]="requiresBankAccount ? 'md:col-span-6' : ''">
+      <div class="flex flex-col gap-2">
+        <label for="PaymentDate" class="text-xs font-semibold text-text-body">Fecha de pago</label>
+        <p-datepicker
+          formControlName="date"
+          [iconDisplay]="'input'"
+          [showIcon]="true"
+          inputId="PaymentDate"
+          styleClass="w-full border-slate-300 h-8!"
+          appendTo="body"
+          size="small"
+          fluid
+        />
+      </div>
     </div>
 
     @if (requiresBankAccount) {
-      <div class="flex flex-col gap-2">
-        <label for="BankAccount" class="text-xs font-semibold text-text-body">
-          Cuenta Bancaria <span class="text-red-500">*</span>
-        </label>
-        <p-select
-          id="BankAccount"
-          [options]="bankAccounts"
-          formControlName="bankAccountId"
-          optionLabel="alias"
-          optionValue="id"
-          placeholder="Seleccione cuenta"
-          class="w-full"
-          styleClass="border-slate-300! h-8! text-xs! py-0!"
-          size="small"
-          appendTo="body"
-        >
-          <ng-template #item let-account>
-            <div class="flex flex-col py-1 text-left">
-              <span class="font-bold text-xs text-slate-700 leading-tight">{{ account.alias }}</span>
-              <span class="text-[9px] text-slate-400 mt-0.5 leading-none">{{ account.bankName }} - {{ account.accountNumber }}</span>
-            </div>
-          </ng-template>
-        </p-select>
-      </div>
-
-      <div class="flex flex-col gap-2">
+      <!-- No. Referencia -->
+      <div class="col-span-12 md:col-span-6 flex flex-col gap-2">
         <label for="ReferenceNumber" class="text-xs font-semibold text-text-body">
           No. Referencia <span class="text-red-500">*</span>
         </label>
@@ -964,9 +946,52 @@
           size="small"
         />
       </div>
+
+      <!-- Cuenta Bancaria -->
+      <div class="col-span-12 flex flex-col gap-1">
+        <label for="BankAccount" class="text-xs font-semibold text-text-body">
+          Cuenta Bancaria <span class="text-red-500">*</span>
+        </label>
+        <div class="flex gap-2 w-full">
+          <p-select
+            id="BankAccount"
+            [options]="bankAccounts"
+            formControlName="bankAccountId"
+            optionLabel="alias"
+            optionValue="id"
+            placeholder="Seleccione cuenta"
+            class="flex-1 min-w-0"
+            styleClass="!rounded-lg border-slate-300 w-full text-xs! h-8! py-0!"
+            size="small"
+            appendTo="body"
+          >
+            <ng-template #selectedItem let-selectedOption>
+              <span class="font-normal text-slate-700 text-xs">
+                {{ selectedOption.alias }} - {{ selectedOption.bankName }} | {{ selectedOption.accountNumber }}
+              </span>
+            </ng-template>
+            <ng-template #item let-account>
+              <div class="flex flex-col py-1 text-left">
+                <span class="font-normal text-xs text-slate-700 leading-tight">{{ account.alias }}</span>
+                <span class="text-[9px] text-slate-400 mt-0.5 leading-none">{{ account.bankName }} - {{ account.accountNumber }}</span>
+              </div>
+            </ng-template>
+          </p-select>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-book"
+            (click)="showBankAccountsCatalog()"
+            class="p-button-outlined !border-indigo-300 !text-indigo-600 !rounded-lg hover:!bg-indigo-50 !h-8 !w-8 flex items-center justify-center shrink-0"
+            pTooltip="Gestionar cuentas bancarias"
+            tooltipPosition="top"
+          ></button>
+        </div>
+      </div>
     }
 
-    <div class="flex flex-col gap-2">
+    <!-- Agregar nota -->
+    <div class="col-span-12 flex flex-col gap-2">
       <label for="PaymentNotes" class="text-xs font-semibold text-text-body">Agregar nota</label>
       <textarea
         pTextarea
@@ -979,7 +1004,8 @@
       ></textarea>
     </div>
 
-    <div class="flex justify-end gap-3 pt-6 border-t border-slate-100">
+    <!-- Botones de Acción -->
+    <div class="col-span-12 flex justify-end gap-3 pt-6 border-t border-slate-100">
       <p-button
         label="Cancelar"
         (onClick)="cancelPayment()"
@@ -989,7 +1015,7 @@
         styleClass="!rounded-lg !px-4 font-semibold h-8! hover:bg-cancel-red/5 transition-all text-xs border-cancel-red! text-cancel-red! w-32 justify-center"
       ></p-button>
       <p-button
-        label="Registrar Pago"
+        label="Registrar"
         (onClick)="registerPayment()"
         icon="pi pi-check"
         severity="success"
@@ -1506,6 +1532,23 @@
   [forceActive]="true" 
   (sessionOpened)="onCashSessionOpened()"
 ></app-cash-session-dialog>
+
+<!-- Bank Accounts Catalog Dialog -->
+<p-dialog
+  [visible]="displayBankAccountsCatalog"
+  (visibleChange)="displayBankAccountsCatalog = $event"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [showHeader]="false"
+  [closable]="false"
+  appendTo="body"
+  styleClass="rounded-2xl overflow-hidden shadow-2xl"
+  [style]="{ width: '900px' }"
+  [breakpoints]="{ '960px': '75vw', '640px': '90vw' }"
+>
+  <app-bank-accounts [isDialogMode]="true" (close)="onCloseBankCatalog()"></app-bank-accounts>
+</p-dialog>
 
 
 
