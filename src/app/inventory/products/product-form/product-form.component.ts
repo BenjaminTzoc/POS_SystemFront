@@ -22,6 +22,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { DialogModule } from 'primeng/dialog';
 import { ProgressSpinner } from 'primeng/progressspinner';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { Category, Product, ProductType } from '../../interfaces/product.interface';
 import { Branch } from '../../interfaces/branch.interface';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -48,6 +49,7 @@ import { UnitsService } from '../../services/units.service';
     TooltipModule,
     DialogModule,
     ProgressSpinner,
+    ConfirmDialogModule,
   ],
   templateUrl: './product-form.component.html',
   styleUrl: './product-form.component.css',
@@ -71,6 +73,8 @@ export class ProductFormComponent implements OnInit {
   selectedUnit: UnitMeasure | undefined;
   branches = signal<Branch[]>([]);
   parentProducts = signal<Product[]>([]);
+  showNoStockConfirmDialog = signal<boolean>(false);
+  showCancelConfirmDialog = signal<boolean>(false);
   uploadedFiles: any[] = [];
   statuses: any[] = [
     { name: 'Inactivo', key: false },
@@ -519,6 +523,28 @@ export class ProductFormComponent implements OnInit {
       return;
     }
 
+    const isMasterProduct = this.productForm.get('isMasterProduct')?.value === true;
+    const hasInitialStocks =
+      this.initialStocks.length > 0 &&
+      this.initialStocks.controls.some((control) => {
+        const qty = control.get('quantity')?.value;
+        return qty !== null && qty !== undefined && Number(qty) > 0;
+      });
+
+    if (!this.isEditMode && !isMasterProduct && !hasInitialStocks) {
+      this.showNoStockConfirmDialog.set(true);
+      return;
+    }
+
+    this.executeSaveProduct();
+  }
+
+  confirmCreateWithoutStock(): void {
+    this.showNoStockConfirmDialog.set(false);
+    this.executeSaveProduct();
+  }
+
+  private executeSaveProduct(): void {
     const formData = this.createFormData();
     this.isSaving = true;
 
@@ -757,25 +783,12 @@ export class ProductFormComponent implements OnInit {
   }
 
   onCancelProccess() {
-    this.confirmationService.confirm({
-      message: '¿Estás seguro de cancelar este proceso?',
-      header: 'Confirmar cancelación',
-      icon: 'pi pi-info-circle',
-      rejectLabel: 'Regresar',
-      rejectButtonProps: {
-        label: 'Regresar',
-        severity: 'secondary',
-        outlined: true,
-      },
-      acceptButtonProps: {
-        label: 'Cancelar proceso',
-        severity: 'danger',
-      },
+    this.showCancelConfirmDialog.set(true);
+  }
 
-      accept: () => {
-        this.router.navigate(['inventory/products']);
-      },
-    });
+  confirmCancelProcess() {
+    this.showCancelConfirmDialog.set(false);
+    this.router.navigate(['/inventory/products']);
   }
 
   openCategoryManager() {

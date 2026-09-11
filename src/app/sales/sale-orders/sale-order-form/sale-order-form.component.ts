@@ -1,5 +1,5 @@
 //prettier-ignore
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 //prettier-ignore
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -32,6 +32,7 @@ import { SaleDiscountsComponent } from '../../../components/sale-discounts/sale-
 import { SaleCalculatorService, SaleTotals } from '../../services/sale-calculator.service';
 import { SaleDetailManagerService } from '../../services/sale-detail-manager.service';
 import { SaleOrderWsService } from '../../services/sale-order-ws.service';
+import { QuickQuantityService } from '../../services/quick-quantity.service';
 import { ISaleDetailPayload, ISaleOrderResponse } from '../../interfaces/sale-order.interface';
 import { PaymentMethodsService } from '../../services/payment-methods.service';
 import { SalePaymentsService } from '../../services/sale-payments.service';
@@ -89,13 +90,34 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   private confirmationService = inject(ConfirmationService);
   private cashService = inject(CashRegisterService);
   private productsService = inject(ProductsService);
+  private quickQuantityService = inject(QuickQuantityService);
   private destroy$ = new Subject<void>();
 
-  // Product Catalog Drawer State
+  // Product Catalog Container & Drawer State
+  @ViewChild('catalogContainer') catalogContainer!: ElementRef<HTMLDivElement>;
   products: Product[] = [];
   drawerVisible = false;
   searchProductQuery = '';
   loadingProducts = false;
+
+  scrollCatalog(direction: 'left' | 'right' | number): void {
+    if (this.catalogContainer?.nativeElement) {
+      const container = this.catalogContainer.nativeElement;
+      let amount = 0;
+      if (typeof direction === 'number') {
+        amount = direction;
+      } else {
+        const firstCard = container.firstElementChild as HTMLElement;
+        if (firstCard) {
+          const cardWidthWithGap = firstCard.offsetWidth + 12; // ancho de 1 tarjeta + 12px gap
+          amount = (direction === 'left' ? -1 : 1) * (cardWidthWithGap * 3);
+        } else {
+          amount = (direction === 'left' ? -1 : 1) * container.clientWidth;
+        }
+      }
+      container.scrollBy({ left: amount, behavior: 'smooth' });
+    }
+  }
 
   // Cash status
   get currentCashSession(): CashSession | null {
@@ -1704,12 +1726,27 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
     );
   }
 
+  getQuickQuantity(productId: string): number {
+    return this.quickQuantityService.getQuantity(productId);
+  }
+
+  onQuickQuantityChange(productId: string, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input) return;
+    const value = parseFloat(input.value);
+    if (!isNaN(value) && value > 0) {
+      this.quickQuantityService.setQuantity(productId, value);
+    }
+  }
+
   addProductFromDrawer(product: Product) {
-    this.detailManager.addProduct(product);
+    const qty = this.getQuickQuantity(product.id);
+    this.detailManager.addProduct(product, qty);
+    const unitAbbr = product.unit?.abbreviation ? ` ${product.unit.abbreviation}` : '';
     this.messageService.add({ 
       severity: 'success', 
       summary: 'Producto Añadido', 
-      detail: `${product.name} agregado a la lista` 
+      detail: `${product.name} (+${qty}${unitAbbr}) agregado a la lista` 
     });
     this.updateTotals();
     this.markAsChanged();

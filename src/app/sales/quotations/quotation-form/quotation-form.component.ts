@@ -26,6 +26,7 @@ import { CustomersService } from '../../services/customers.service';
 import { Branch } from '../../../inventory/interfaces/branch.interface';
 import { Product } from '../../../inventory/interfaces/product.interface';
 import { ICustomer } from '../../interfaces/customer.interface';
+import { QuickQuantityService } from '../../services/quick-quantity.service';
 import { CreateQuotationDto, IQuotation } from '../../interfaces/quotation.interface';
 import { SaleCalculatorService } from '../../services/sale-calculator.service';
 import { environment } from '../../../../environments/environment';
@@ -57,6 +58,7 @@ import { CashRegisterService } from '../../../inventory/services/cash-register.s
   styleUrls: ['./quotation-form.component.css']
 })
 export class QuotationFormComponent implements OnInit {
+  private quickQuantityService = inject(QuickQuantityService);
   private fb = inject(FormBuilder);
   private quotationsService = inject(QuotationsService);
   private branchesService = inject(BranchesService);
@@ -309,22 +311,37 @@ export class QuotationFormComponent implements OnInit {
     );
   }
 
+  getQuickQuantity(productId: string): number {
+    return this.quickQuantityService.getQuantity(productId);
+  }
+
+  onQuickQuantityChange(productId: string, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input) return;
+    const value = parseFloat(input.value);
+    if (!isNaN(value) && value > 0) {
+      this.quickQuantityService.setQuantity(productId, value);
+    }
+  }
+
   addProductFromDrawer(product: Product) {
+    const qty = this.getQuickQuantity(product.id);
     const itemGroup = this.fb.group({
       productId: [product.id, Validators.required],
-      quantity: [1, [Validators.required, Validators.min(1)]],
+      quantity: [qty, [Validators.required, Validators.min(0.001)]],
       unitPrice: [Number(product.price), [Validators.required, Validators.min(0)]],
       discount: [0],
       discountType: ['percentage'],
       taxPercentage: [12],
       notes: [''],
-      lineTotal: [Number(product.price)]
+      lineTotal: [Number(product.price) * qty]
     });
     this.items.push(itemGroup);
+    const unitAbbr = product.unit?.abbreviation ? ` ${product.unit.abbreviation}` : '';
     this.messageService.add({ 
       severity: 'success', 
       summary: 'Producto Añadido', 
-      detail: `${product.name} agregado a la lista` 
+      detail: `${product.name} (+${qty}${unitAbbr}) agregado a la lista` 
     });
     this.calculateTotals();
   }

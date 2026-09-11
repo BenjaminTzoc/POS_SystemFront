@@ -309,34 +309,133 @@
         </div>
       </div>
 
+      <!-- RECUADRO DE ATAJOS RÁPIDOS DE PRODUCTOS -->
+      <div class="bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm">
+        <div class="p-3.5 px-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-brand-royal/5">
+          <div class="flex flex-col">
+            <span class="text-sm font-semibold text-title-secondary leading-none">Catálogo Rápido de Productos</span>
+            <span class="text-xs font-semibold text-brand-royal mt-1">Haz click en un producto para agregarlo al detalle</span>
+          </div>
+
+          <!-- Buscador integrado en la cabecera -->
+          <div class="w-full sm:w-64">
+            <p-iconfield>
+              <p-inputicon class="pi pi-search text-text-muted" />
+              <input 
+                type="text" 
+                pInputText 
+                [(ngModel)]="searchProductQuery" 
+                placeholder="Buscar por nombre o SKU..." 
+                class="w-full h-7! py-1! px-8! text-xs! border-slate-300! focus:border-brand-deep!"
+              />
+            </p-iconfield>
+          </div>
+        </div>
+
+        <div class="py-3.5 px-0">
+          @if (loadingProducts) {
+            <div class="flex items-center justify-center py-6 gap-2 text-text-muted text-xs">
+              <i class="pi pi-spin pi-spinner text-lg text-brand-royal"></i>
+              <span>Cargando catálogo de productos...</span>
+            </div>
+          } @else if (!products || products.length === 0) {
+            <div class="text-center py-6 text-text-muted text-xs italic">
+              Selecciona una sucursal activa para cargar los productos disponibles.
+            </div>
+          } @else {
+            <div class="flex items-stretch w-full px-2 gap-1.5">
+              <!-- Botón Izquierdo Ocupando Espacio Layout -->
+              <button
+                type="button"
+                (click)="scrollCatalog('left')"
+                pTooltip="Anterior"
+                tooltipPosition="top"
+                class="w-7 md:w-8 flex-shrink-0 flex items-center justify-center bg-transparent hover:bg-slate-100 text-slate-600 hover:text-brand-royal transition-all cursor-pointer rounded-lg focus:outline-none border border-transparent hover:border-slate-200"
+              >
+                <i class="pi pi-chevron-left text-lg font-bold"></i>
+              </button>
+
+              <!-- Contenedor Horizontal con 3 Tarjetas Completas Ajustadas -->
+              <div 
+                #catalogContainer 
+                class="flex-1 min-w-0 flex flex-row overflow-x-auto gap-3 py-1 px-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth"
+              >
+                <div 
+                  *ngFor="let p of filteredProducts" 
+                  class="w-[calc((100%-1.5rem)/3)] min-w-[200px] flex-shrink-0 flex flex-col gap-2 p-2.5 rounded-xl border border-slate-200/80 bg-slate-50/50 hover:bg-white hover:border-indigo-300 hover:shadow-xs transition-all text-xs group"
+                >
+                  <!-- Fila Superior: Info + Precio (Clicable para agregar al pedido) -->
+                  <div 
+                    (click)="addProductFromDrawer(p)"
+                    pTooltip="Haz clic para agregar al pedido"
+                    tooltipPosition="top"
+                    class="flex items-center justify-between gap-2 cursor-pointer hover:opacity-80 transition-all"
+                  >
+                    <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                      <div class="w-9 h-9 rounded-lg border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0 bg-white">
+                        <img *ngIf="p.imageUrl" [src]="getProductImageUrl(p.imageUrl)" class="w-full h-full object-cover" />
+                        <i *ngIf="!p.imageUrl" class="pi pi-image text-slate-300 text-sm"></i>
+                      </div>
+                      <div class="flex flex-col min-w-0">
+                        <span class="font-bold text-slate-800 truncate leading-tight text-xs group-hover:text-brand-royal transition-colors">{{ p.name }}</span>
+                        <span class="text-[9px] text-slate-400 font-mono tracking-wider mt-0.5">{{ p.sku || 'SIN SKU' }}</span>
+                      </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-1.5 flex-shrink-0">
+                      <span class="font-bold text-emerald-600 whitespace-nowrap text-xs">{{ p.price | currency:'Q ' }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Fila Inferior: Atajo Rápido con Label y Suffix -->
+                  <div class="flex items-center justify-between pt-1.5 border-t border-slate-200/60 gap-2">
+                    <label class="text-[10px] font-semibold text-slate-500 flex items-center gap-1">
+                      <i class="pi pi-bolt text-amber-500 text-[10px]"></i>
+                      Cant. rápida:
+                    </label>
+
+                    <div class="relative flex items-center w-28">
+                      <input 
+                        type="number" 
+                        [min]="p.unit?.allowsDecimals ? 0.01 : 1" 
+                        [step]="p.unit?.allowsDecimals ? 0.5 : 1" 
+                        [value]="getQuickQuantity(p.id)" 
+                        (input)="onQuickQuantityChange(p.id, $event)"
+                        (keyup.enter)="addProductFromDrawer(p)"
+                        (click)="$event.stopPropagation()"
+                        class="w-full h-6.5 pl-2 pr-7 text-right font-bold text-slate-700 bg-white border border-slate-200 rounded-md focus:border-indigo-500 focus:outline-none text-[11px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        pTooltip="Atajo de cantidad rápida"
+                        tooltipPosition="top"
+                      />
+                      <span class="absolute right-2 text-[10px] font-bold text-slate-400 pointer-events-none select-none">
+                        {{ p.unit?.abbreviation || 'un' }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Botón Derecho Ocupando Espacio Layout -->
+              <button
+                type="button"
+                (click)="scrollCatalog('right')"
+                pTooltip="Siguiente"
+                tooltipPosition="top"
+                class="w-7 md:w-8 flex-shrink-0 flex items-center justify-center bg-transparent hover:bg-slate-100 text-slate-600 hover:text-brand-royal transition-all cursor-pointer rounded-lg focus:outline-none border border-transparent hover:border-slate-200"
+              >
+                <i class="pi pi-chevron-right text-lg font-bold"></i>
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+
       <!-- ITEMS SECTION WITH DYNAMIC HEIGHT -->
       <div class="bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm">
         <div class="p-3 md:px-5 border-b border-slate-300 flex items-center justify-between bg-brand-royal/5">
           <div class="flex flex-col">
              <h2 class="text-sm font-semibold text-title-secondary tracking-tight">Ítems del pedido</h2>
           </div>
-          <p-button 
-            label="Añadir producto"
-            severity="info" 
-            [outlined]="true"
-            size="small"
-            icon="pi pi-plus"
-            (onClick)="drawerVisible = true" 
-            class="hidden sm:block"
-            [disabled]="!orderForm.get('branchId')?.value || !!(isEditing && sale?.status && sale?.status !== 'pending')"
-            styleClass="!px-3 h-8! !rounded-lg whitespace-nowrap flex-shrink-0 text-xs border-brand-royal/50! text-brand-royal! hover:bg-brand-royal/10"
-          />
-          <p-button 
-            label="Añadir"
-            severity="info" 
-            [outlined]="true"
-            size="small"
-            icon="pi pi-plus"
-            (onClick)="drawerVisible = true" 
-            class="block sm:hidden"
-            [disabled]="!orderForm.get('branchId')?.value || !!(isEditing && sale?.status && sale?.status !== 'pending')"
-            styleClass="!px-2.5 h-8! !rounded-lg flex-shrink-0 text-xs border-brand-royal/50! text-brand-royal! hover:bg-brand-royal/10"
-          />
         </div>
 
         <div class="overflow-x-auto w-full">
@@ -1036,77 +1135,7 @@
 >
 </app-ticket-preview>
 
-<!-- COMPRESSED AND BRANDED PRODUCT SLIDER SELECTOR (DRAWER) -->
-<p-drawer 
-  [(visible)]="drawerVisible" 
-  position="right" 
-  header="Catálogo de Productos" 
-  styleClass="w-full sm:w-[450px] border-l border-border-elegant! bg-white shadow-xl"
-  [modal]="true"
->
-  <div class="flex flex-col h-full gap-4 p-1">
-    <p class="text-[11px] text-text-muted -mt-2">
-      Haz clic en el botón '+' para agregar el producto a la lista o incrementar su cantidad.
-    </p>
 
-    <!-- Search Input -->
-    <div class="w-full">
-      <p-iconfield>
-        <p-inputicon class="pi pi-search text-text-muted" />
-        <input 
-          type="text" 
-          pInputText 
-          [(ngModel)]="searchProductQuery" 
-          placeholder="Buscar por nombre o SKU..." 
-          class="w-full h-8! py-1! px-8! text-xs! border-slate-300! focus:border-brand-deep!"
-        />
-      </p-iconfield>
-    </div>
-
-    <!-- Scrollable Product List -->
-    <div class="flex-1 overflow-y-auto flex flex-col gap-2 pr-1 max-h-[calc(100vh-180px)]">
-      @if (loadingProducts) {
-        <div class="flex flex-col items-center justify-center py-12 gap-2 text-text-muted text-xs">
-          <i class="pi pi-spin pi-spinner text-xl text-brand-royal"></i>
-          <span>Cargando productos de la sucursal...</span>
-        </div>
-      } @else {
-        <div 
-          *ngFor="let p of filteredProducts" 
-          class="flex items-center justify-between p-2 rounded-lg border border-slate-100 hover:border-brand-royal/30 hover:bg-brand-royal/5 transition-all text-xs"
-        >
-          <div class="flex items-center gap-2.5 min-w-0">
-            <div class="w-8 h-8 rounded border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0 bg-slate-50">
-              <img *ngIf="p.imageUrl" [src]="getProductImageUrl(p.imageUrl)" class="w-full h-full object-cover" />
-              <i *ngIf="!p.imageUrl" class="pi pi-image text-slate-300 text-sm"></i>
-            </div>
-            <div class="flex flex-col min-w-0">
-              <span class="font-semibold text-text-body truncate leading-tight">{{ p.name }}</span>
-              <span class="text-[9px] text-text-muted font-mono tracking-wider mt-0.5">{{ p.sku || 'SIN SKU' }}</span>
-            </div>
-          </div>
-          
-          <div class="flex items-center gap-2">
-            <span class="font-bold text-accent-rust whitespace-nowrap">{{ p.price | currency:'Q ' }}</span>
-            <p-button 
-              icon="pi pi-plus" 
-              [rounded]="true" 
-              [text]="true" 
-              severity="info" 
-              size="small" 
-              (onClick)="addProductFromDrawer(p)"
-              styleClass="!w-7 !h-7 hover:!bg-brand-royal/10 !p-0 text-brand-royal!"
-            />
-          </div>
-        </div>
-        
-        <div *ngIf="filteredProducts.length === 0" class="text-center py-8 text-text-muted text-xs">
-          Ningún producto encontrado.
-        </div>
-      }
-    </div>
-  </div>
-</p-drawer>
 
 <!-- DIALOG: Gestionar Clientes -->
 <p-dialog 

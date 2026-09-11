@@ -922,4 +922,124 @@
       </div>
     </div>
   </p-dialog>
+
+  <p-confirmDialog />
+
+  <!-- MODAL DE CONFIRMACIÓN: SIN STOCK INICIAL -->
+  <p-dialog
+    [visible]="showNoStockConfirmDialog()"
+    (visibleChange)="showNoStockConfirmDialog.set($event)"
+    [modal]="true"
+    [style]="{ width: '90%', 'max-width': '460px' }"
+    [draggable]="false"
+    [resizable]="false"
+    [dismissableMask]="true"
+    appendTo="body"
+    [baseZIndex]="10000"
+    header="Confirmar registro"
+    styleClass="!rounded-2xl overflow-hidden"
+  >
+    <div class="flex flex-col items-center justify-center text-center pt-2 pb-1 px-3">
+      <!-- Icono central en círculo suave -->
+      <div class="w-16 h-16 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center mb-5 shadow-xs">
+        <i class="pi pi-box text-rose-500 text-2xl!"></i>
+      </div>
+
+      <!-- Título principal -->
+      <h3 class="text-base md:text-lg font-bold text-slate-800 mb-3 tracking-tight">
+        ¿Estás seguro de no registrar stock inicial para el producto?
+      </h3>
+
+      <!-- Descripción detallada -->
+      <p class="text-xs md:text-sm text-slate-600 font-medium mb-3 leading-relaxed">
+        Recuerda que puedes registrar el stock inicial en la sección
+        <strong class="text-slate-800 font-bold">"Cantidades por Sucursal"</strong> dentro de
+        <strong class="text-slate-800 font-bold">"Gestión de Inventario"</strong> antes de crear el producto.
+      </p>
+
+      <!-- Nota aclaratoria -->
+      <p class="text-[11px] text-slate-400 font-normal">
+        Esta acción creará el producto con existencias en 0 en todas las sucursales.
+      </p>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="flex items-center justify-end gap-3 w-full pt-3 pb-1 border-t border-slate-100">
+        <button
+          pButton
+          type="button"
+          label="CANCELAR"
+          (click)="showNoStockConfirmDialog.set(false)"
+          class="p-button-text p-button-secondary font-bold text-xs tracking-wider !px-5 !h-[40px] hover:!bg-slate-100 !rounded-lg"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="CREAR SIN STOCK"
+          icon="pi pi-check-circle"
+          (click)="confirmCreateWithoutStock()"
+          severity="danger"
+          class="font-bold text-xs tracking-wider !px-5 !h-[40px] !rounded-lg shadow-sm"
+        ></button>
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <!-- MODAL DE CONFIRMACIÓN: CANCELAR PROCESO -->
+  <p-dialog
+    [visible]="showCancelConfirmDialog()"
+    (visibleChange)="showCancelConfirmDialog.set($event)"
+    [modal]="true"
+    [style]="{ width: '90%', 'max-width': '460px' }"
+    [draggable]="false"
+    [resizable]="false"
+    [dismissableMask]="true"
+    appendTo="body"
+    [baseZIndex]="10000"
+    header="Confirmar cancelación"
+    styleClass="!rounded-2xl overflow-hidden"
+  >
+    <div class="flex flex-col items-center justify-center text-center pt-2 pb-1 px-3">
+      <!-- Icono central en círculo suave -->
+      <div class="w-16 h-16 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center mb-5 shadow-xs">
+        <i class="pi pi-times text-rose-500 text-2xl!"></i>
+      </div>
+
+      <!-- Título principal -->
+      <h3 class="text-base md:text-lg font-bold text-slate-800 mb-3 tracking-tight">
+        ¿Estás seguro de cancelar este proceso?
+      </h3>
+
+      <!-- Descripción detallada -->
+      <p class="text-xs md:text-sm text-slate-600 font-medium mb-3 leading-relaxed">
+        Los cambios realizados no se guardarán y serás redirigido al catálogo de productos.
+      </p>
+
+      <!-- Nota aclaratoria -->
+      <p class="text-[11px] text-slate-400 font-normal">
+        Esta acción descartará toda la información ingresada en el formulario.
+      </p>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="flex items-center justify-end gap-3 w-full pt-3 pb-1 border-t border-slate-100">
+        <button
+          pButton
+          type="button"
+          label="REGRESAR"
+          (click)="showCancelConfirmDialog.set(false)"
+          class="p-button-text p-button-secondary font-bold text-xs tracking-wider !px-5 !h-[40px] hover:!bg-slate-100 !rounded-lg"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="CANCELAR PROCESO"
+          icon="pi pi-times-circle"
+          (click)="confirmCancelProcess()"
+          severity="danger"
+          class="font-bold text-xs tracking-wider !px-5 !h-[40px] !rounded-lg shadow-sm"
+        ></button>
+      </div>
+    </ng-template>
+  </p-dialog>
 </div>
