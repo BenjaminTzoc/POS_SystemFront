@@ -103,6 +103,12 @@ export class OrdersService {
     return this.http.put<ApiResponse<ISaleOrderResponse>>(`${this.API_URL}/${saleId}`, body);
   }
 
+  getSalePdf(saleId: string): Observable<Blob> {
+    return this.http.get(`${this.API_URL}/${saleId}/pdf`, {
+      responseType: 'blob',
+    });
+  }
+
   sendTicketByEmail(saleId: string, pdfBase64?: string): Observable<ApiResponse<void>> {
     return this.http.post<ApiResponse<void>>(`${this.API_URL}/${saleId}/send-email`, { pdfBase64 });
   }

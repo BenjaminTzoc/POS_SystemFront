@@ -48,6 +48,7 @@ export class TicketTemplateComponent implements OnInit {
       productId: string;
       productName: string;
       sku: string;
+      unitAbbreviation: string;
       unitPrice: number;
       items: any[];
       totalQuantity: number;
@@ -62,6 +63,7 @@ export class TicketTemplateComponent implements OnInit {
           productId: prodId,
           productName: item.product?.name || 'Producto',
           sku: item.product?.sku || '',
+          unitAbbreviation: item.product?.unit?.abbreviation || '',
           unitPrice: Number(item.unitPrice || 0),
           items: [],
           totalQuantity: 0,
@@ -74,6 +76,6 @@ export class TicketTemplateComponent implements OnInit {
       group.totalAmount += Number(item.lineTotal || 0);
     });
 
-    return groups;
+    return groups.sort((a, b) => a.productName.localeCompare(b.productName, 'es', { sensitivity: 'base' }));
   }
 }

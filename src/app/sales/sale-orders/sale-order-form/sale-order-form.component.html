@@ -397,8 +397,8 @@
                     <div class="relative flex items-center w-28">
                       <input 
                         type="number" 
-                        [min]="p.unit?.allowsDecimals ? 0.01 : 1" 
-                        [step]="p.unit?.allowsDecimals ? 0.5 : 1" 
+                        [min]="p.unit.allowsDecimals ? 0.01 : 1" 
+                        [step]="p.unit.allowsDecimals ? 0.5 : 1" 
                         [value]="getQuickQuantity(p.id)" 
                         (input)="onQuickQuantityChange(p.id, $event)"
                         (keyup.enter)="addProductFromDrawer(p)"
@@ -408,7 +408,7 @@
                         tooltipPosition="top"
                       />
                       <span class="absolute right-2 text-[10px] font-bold text-slate-400 pointer-events-none select-none">
-                        {{ p.unit?.abbreviation || 'un' }}
+                        {{ p.unit.abbreviation || 'un' }}
                       </span>
                     </div>
                   </div>

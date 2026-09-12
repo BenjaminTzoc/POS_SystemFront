@@ -30,148 +30,119 @@ export class TicketPreviewComponent {
   isSendingEmail = signal(false);
   isSendingWhatsApp = signal(false);
 
-  async onPrint() {
+  onPrint() {
     if (this.isPrinting()) return;
     this.isPrinting.set(true);
-    try {
-      const blob = await this.printService.generatePDF('pos-ticket');
-      this.printService.printPDF(blob);
-    } catch (error) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'No se pudo generar el documento para impresión',
-      });
-    } finally {
-      this.isPrinting.set(false);
-    }
-  }
 
-  async onDownload() {
-    if (this.isDownloading()) return;
-    this.isDownloading.set(true);
-    try {
-      const blob = await this.printService.generatePDF('pos-ticket');
-      this.printService.downloadPDF(blob, `ticket-${this.sale.invoiceNumber}`);
-    } catch (error) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'No se pudo descargar el PDF',
-      });
-    } finally {
-      this.isDownloading.set(false);
-    }
-  }
-
-  private blobToBase64(blob: Blob): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = (reader.result as string).split(',')[1];
-        resolve(base64String);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
+    this.ordersService.getSalePdf(this.sale.id).subscribe({
+      next: (blob) => {
+        this.printService.printPDF(blob);
+        this.isPrinting.set(false);
+      },
+      error: (error) => {
+        console.error(error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo generar el documento para impresión',
+        });
+        this.isPrinting.set(false);
+      },
     });
   }
 
-  async onSendEmail() {
-    if (this.isSendingEmail()) return;
+  onDownload() {
+    if (this.isDownloading()) return;
+    this.isDownloading.set(true);
 
-    try {
-      // Check if the customer has an email
-      const email = this.sale.customer?.email || this.sale.guestCustomer?.email;
-      if (!email) {
+    this.ordersService.getSalePdf(this.sale.id).subscribe({
+      next: (blob) => {
+        const filename = `Factura_${this.sale.invoiceNumber || this.sale.id}.pdf`;
+        this.printService.downloadPDF(blob, filename);
+        this.isDownloading.set(false);
+      },
+      error: (error) => {
+        console.error(error);
         this.messageService.add({
-          severity: 'warn',
-          summary: 'Sin Email',
-          detail: 'El cliente no tiene un correo electrónico registrado.',
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo descargar el PDF de la factura',
         });
-        return;
-      }
-
-      this.isSendingEmail.set(true);
-
-      // Generate the exact same PDF as used for printing/downloading
-      const blob = await this.printService.generatePDF('pos-ticket');
-      const base64 = await this.blobToBase64(blob);
-
-      this.ordersService.sendTicketByEmail(this.sale.id, base64).subscribe({
-        next: () => {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Enviado',
-            detail: 'Ticket enviado exitosamente por correo.',
-          });
-          this.isSendingEmail.set(false);
-        },
-        error: (err) => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Fallo al enviar el correo. Verifique configuración de servidor.',
-          });
-          this.isSendingEmail.set(false);
-        },
-      });
-    } catch (error) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'No se pudo generar el documento PDF para el envío por correo.',
-      });
-      this.isSendingEmail.set(false);
-    }
+        this.isDownloading.set(false);
+      },
+    });
   }
 
-  async onSendWhatsApp() {
+  onSendEmail() {
+    if (this.isSendingEmail()) return;
+
+    const email = this.sale.customer?.email || this.sale.guestCustomer?.email;
+    if (!email) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sin Email',
+        detail: 'El cliente no tiene un correo electrónico registrado.',
+      });
+      return;
+    }
+
+    this.isSendingEmail.set(true);
+
+    this.ordersService.sendTicketByEmail(this.sale.id).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Enviado',
+          detail: 'Ticket enviado exitosamente por correo.',
+        });
+        this.isSendingEmail.set(false);
+      },
+      error: (err) => {
+        console.error(err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Fallo al enviar el correo. Verifique configuración de servidor.',
+        });
+        this.isSendingEmail.set(false);
+      },
+    });
+  }
+
+  onSendWhatsApp() {
     if (this.isSendingWhatsApp()) return;
 
-    try {
-      const phone = this.sale.customer?.phone || this.sale.guestCustomer?.phone;
-      if (!phone) {
-        this.messageService.add({
-          severity: 'warn',
-          summary: 'Sin Teléfono',
-          detail: 'El cliente no tiene un número de teléfono registrado.',
-        });
-        return;
-      }
-
-      this.isSendingWhatsApp.set(true);
-
-      const blob = await this.printService.generatePDF('pos-ticket');
-      const base64 = await this.blobToBase64(blob);
-
-      this.ordersService.sendTicketByWhatsApp(this.sale.id, base64).subscribe({
-        next: () => {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Enviado',
-            detail: 'Ticket enviado exitosamente por WhatsApp.',
-          });
-          this.isSendingWhatsApp.set(false);
-        },
-        error: (err) => {
-          console.error(err);
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Fallo al enviar el mensaje de WhatsApp. Verifique la configuración.',
-          });
-          this.isSendingWhatsApp.set(false);
-        },
-      });
-    } catch (error) {
-      console.error(error);
+    const phone = this.sale.customer?.phone || this.sale.guestCustomer?.phone;
+    if (!phone) {
       this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'No se pudo generar el documento PDF para el envío por WhatsApp.',
+        severity: 'warn',
+        summary: 'Sin Teléfono',
+        detail: 'El cliente no tiene un número de teléfono registrado.',
       });
-      this.isSendingWhatsApp.set(false);
+      return;
     }
+
+    this.isSendingWhatsApp.set(true);
+
+    this.ordersService.sendTicketByWhatsApp(this.sale.id).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Enviado',
+          detail: 'Ticket enviado exitosamente por WhatsApp.',
+        });
+        this.isSendingWhatsApp.set(false);
+      },
+      error: (err) => {
+        console.error(err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Fallo al enviar el mensaje de WhatsApp. Verifique la configuración.',
+        });
+        this.isSendingWhatsApp.set(false);
+      },
+    });
   }
 
   onClose() {

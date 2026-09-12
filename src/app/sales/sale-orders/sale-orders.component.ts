@@ -23,11 +23,13 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TagModule } from 'primeng/tag';
 import { Subscription } from 'rxjs';
 import { SaleStatusPipe } from '../../shared/pipes/sale-status.pipe';
+import { DeliveryDatePipe } from '../../shared/pipes/delivery-date.pipe';
 import { TicketPreviewComponent } from './ticket-preview/ticket-preview.component';
 import { CommonModule } from '@angular/common';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { DialogModule } from 'primeng/dialog';
+import { LucideCirclePlus, LucideRefreshCw, LucideSquarePen, LucideReceipt, LucideEye } from '@lucide/angular';
 
 @Component({
   selector: 'app-sale-orders',
@@ -46,12 +48,18 @@ import { DialogModule } from 'primeng/dialog';
     ToggleSwitchModule,
     TagModule,
     SaleStatusPipe,
+    DeliveryDatePipe,
     TicketPreviewComponent,
     CommonModule,
     RippleModule,
     IconFieldModule,
     InputIconModule,
-    DialogModule
+    DialogModule,
+    LucideCirclePlus,
+    LucideRefreshCw,
+    LucideSquarePen,
+    LucideReceipt,
+    LucideEye
   ],
   templateUrl: './sale-orders.component.html',
   styleUrl: './sale-orders.component.css',
@@ -121,7 +129,6 @@ export class SaleOrdersComponent implements OnInit {
       this.loadBranches();
     }
     this.loadAreas();
-    this.loadOrders();
     this.setupWebSockets();
   }
 
@@ -131,9 +138,6 @@ export class SaleOrdersComponent implements OnInit {
 
   setupWebSockets(): void {
     this.subscriptions.push(
-      this.saleWsService.newSaleCreated$.subscribe(() => {
-        this.loadOrders();
-      }),
       this.saleWsService.newSale$.subscribe(() => {
         this.loadOrders();
       })

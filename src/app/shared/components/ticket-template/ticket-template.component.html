@@ -55,7 +55,10 @@
             </span>
           </td>
           <td class="text-right">{{ item.unitPrice | currency: 'Q' }}</td>
-          <td class="text-right">{{ item.quantity | number:'1.2-2' }}</td>
+          <td class="text-right">
+            {{ item.quantity | number:'1.2-2' }}
+            <span *ngIf="group.unitAbbreviation" style="font-size: 8pt; color: #555; margin-left: 1px;">{{ group.unitAbbreviation }}</span>
+          </td>
           <td class="text-right">{{ item.lineTotal | currency: 'Q' }}</td>
         </tr>
         <!-- Product Group Subtotal (Only if more than 1 item) -->
@@ -63,6 +66,7 @@
           <td colspan="3"></td>
           <td class="text-right" style="font-weight: bold; border-top: 1px dashed #aaa; padding-top: 0.5mm;">
             {{ group.totalQuantity | number:'1.2-2' }}
+            <span *ngIf="group.unitAbbreviation" style="font-size: 8pt; color: #555; margin-left: 1px;">{{ group.unitAbbreviation }}</span>
           </td>
           <td class="text-right" style="font-weight: bold; border-top: 1px dashed #aaa; padding-top: 0.5mm;">
             {{ group.totalAmount | currency: 'Q' }}

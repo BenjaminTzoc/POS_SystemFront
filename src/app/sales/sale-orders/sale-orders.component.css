@@ -7,6 +7,22 @@
   display: none;
 }
 
-:host ::ng-deep .p-datatable-modern .p-datatable-tbody > tr > td {
-    padding: 1rem 1.5rem;
+:host ::ng-deep .p-datatable-modern .p-datatable-thead > tr > th {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
 }
+
+:host ::ng-deep .p-datatable-modern .p-datatable-tbody > tr > td {
+    padding: 0.5rem 1rem;
+    transition: background-color 0.15s ease-in-out;
+}
+
+:host ::ng-deep .p-datatable-modern .p-datatable-tbody > tr {
+    cursor: pointer;
+}
+
+:host ::ng-deep .p-datatable-modern .p-datatable-tbody > tr:hover,
+:host ::ng-deep .p-datatable-modern .p-datatable-tbody > tr:hover > td {
+    background-color: #f1f5f9 !important;
+}
+

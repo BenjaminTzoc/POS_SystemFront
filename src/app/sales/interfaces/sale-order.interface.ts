@@ -9,6 +9,7 @@ export interface ISaleOrderResponse {
   invoiceNumber: string;
   date: Date;
   dueDate: Date;
+  deliveredAt?: Date | string | null;
   type: string;
   status: string;
   subtotal: string;

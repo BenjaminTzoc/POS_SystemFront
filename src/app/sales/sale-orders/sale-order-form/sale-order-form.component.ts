@@ -1540,24 +1540,27 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
     this.showTicketPreview = true;
   }
 
-  async onDownloadTicket() {
-    try {
-      this.isGeneratingTicket = true;
-      // Small delay to ensure hidden template is rendered
-      await new Promise((resolve) => setTimeout(resolve, 100));
+  onDownloadTicket() {
+    if (!this.sale?.id || this.isGeneratingTicket) return;
+    this.isGeneratingTicket = true;
+    const currentSale = this.sale;
 
-      const blob = await this.printService.generatePDF('hidden-pos-ticket');
-      this.printService.downloadPDF(blob, `ticket-${this.sale?.invoiceNumber}`);
-    } catch (error) {
-      console.error(error);
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'No se pudo generar el documento',
-      });
-    } finally {
-      this.isGeneratingTicket = false;
-    }
+    this.ordersService.getSalePdf(currentSale.id).subscribe({
+      next: (blob) => {
+        const filename = `Factura_${currentSale.invoiceNumber || currentSale.id}.pdf`;
+        this.printService.downloadPDF(blob, filename);
+        this.isGeneratingTicket = false;
+      },
+      error: (error) => {
+        console.error(error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo descargar el documento',
+        });
+        this.isGeneratingTicket = false;
+      },
+    });
   }
 
   onSendTicketEmail() {

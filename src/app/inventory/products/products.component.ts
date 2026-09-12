@@ -16,7 +16,6 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { CommonModule } from '@angular/common';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
-import { Ripple } from 'primeng/ripple';
 
 @Component({
   selector: 'app-products',
@@ -32,7 +31,6 @@ import { Ripple } from 'primeng/ripple';
     CommonModule,
     TagModule,
     TooltipModule,
-    Ripple,
   ],
   templateUrl: './products.component.html',
   styleUrl: './products.component.css',

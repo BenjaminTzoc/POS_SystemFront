@@ -1,95 +1,90 @@
 <div class="py-4 px-0 md:px-6 bg-slate-50/50 min-h-screen">
-  <!-- Header Section -->
-  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-2 md:mb-8">
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
-      <div class="w-full md:max-w-[50%]">
-        <h1 class="text-2xl md:text-3xl font-semibold text-gray-900 tracking-tight">Órdenes de Venta</h1>
-        <p class="hidden md:block text-[#627ca7] mt-1 text-sm md:text-md font-medium">
-          Gestione y realice el seguimiento de todos los pedidos de sus clientes.
-        </p>
+  <!-- Top Card: Header & Filters -->
+  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-6">
+    <div class="bg-white rounded-2xl border border-slate-300 shadow-sm">
+      <div class="py-2.5 px-4 md:px-6 flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/50 rounded-t-2xl">
+        <h1 class="text-lg md:text-xl font-semibold text-gray-900 tracking-tight leading-none">
+          Órdenes de Venta
+        </h1>
+
+        <div class="flex items-center gap-2 w-full md:w-auto">
+          <div class="flex-1 md:w-72">
+            <p-iconfield>
+              <p-inputicon class="pi pi-search" />
+              <input 
+                [ngModel]="searchTerm()"
+                (input)="applySearch($event)"
+                type="text" 
+                pInputText 
+                placeholder="Buscar orden o cliente..."
+                autocomplete="off"
+                class="!rounded-xl border-slate-200 text-xs h-9!"
+                fluid
+              />
+            </p-iconfield>
+          </div>
+          <p-button 
+            [outlined]="true"
+            severity="secondary"
+            styleClass="!rounded-lg text-sm! inline-flex items-center gap-1.5 border-slate-300 text-slate-700 hover:bg-slate-100 shadow-none"
+            [loading]="loading()"
+            (onClick)="loadOrders()"
+            pTooltip="Actualizar lista de órdenes"
+            tooltipPosition="bottom"
+          >
+            <svg lucideRefreshCw class="w-4 h-4" [class.animate-spin]="loading()"></svg>
+            <span>Actualizar</span>
+          </p-button>
+
+          <p-button 
+            styleClass="!rounded-lg text-sm! !bg-[#48021C] !border-[#48021C] !text-white hover:!bg-[#350114] inline-flex items-center gap-1.5 shadow-sm"
+            (onClick)="createSaleOrder()"
+          >
+            <svg lucideCirclePlus class="w-4 h-4"></svg>
+            <span>Nueva Orden</span>
+          </p-button>
+        </div>
       </div>
 
-      <div class="flex items-center gap-2 w-full md:w-auto">
-        <div class="flex-1">
-          <p-iconfield>
-            <p-inputicon class="pi pi-search" />
-            <input 
-              [ngModel]="searchTerm()"
-              (input)="applySearch($event)"
-              type="text" 
-              pInputText 
-              placeholder="Buscar orden o cliente..."
-              autocomplete="off"
-              fluid
-            />
-          </p-iconfield>
+      <!-- Card Body: Date and Branch Filters -->
+      <div class="p-4 md:px-6 flex flex-col md:flex-row items-stretch md:items-center gap-3">
+        <div class="flex flex-col gap-1 w-full md:w-auto">
+          <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Rango de Fechas</label>
+          <p-datePicker
+            [(ngModel)]="dateRange"
+            selectionMode="range"
+            [showIcon]="true"
+            [readonlyInput]="true"
+            (onSelect)="loadOrders()"
+            placeholder="Hoy"
+            appendTo="body"
+            class="!rounded-xl shadow-none w-full md:w-auto"
+            styleClass="!rounded-xl border-slate-200 w-full md:w-64 text-xs h-9!"
+          />
         </div>
-        <p-button 
-          label="Nueva Orden"
-          severity="info"
-          icon="pi pi-plus"
-          class="hidden md:block"
-          (onClick)="createSaleOrder()"
-        />
-        <p-button 
-          severity="info"
-          icon="pi pi-plus"
-          class="block md:hidden"
-          (onClick)="createSaleOrder()"
-        />
+
+        @if (isSuperAdmin()) {
+          <div class="flex flex-col gap-1 w-full md:w-auto">
+            <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Sucursal</label>
+            <p-select
+              [options]="branches()"
+              [(ngModel)]="selectedBranch"
+              optionLabel="name"
+              optionValue="id"
+              [showClear]="true"
+              (onChange)="loadOrders()"
+              placeholder="Todas las sucursales"
+              appendTo="body"
+              class="!rounded-xl shadow-none w-full md:w-auto"
+              styleClass="!rounded-xl border-slate-200 w-full md:w-[16rem] text-xs h-9!"
+            />
+          </div>
+        }
       </div>
     </div>
   </div>
 
   <div class="max-w-[1700px] mx-auto">
-    <!-- Filters Section -->
-    <div class="flex flex-col md:flex-row gap-4 px-4 md:px-0 mb-6">
-      <p-datePicker
-        [(ngModel)]="dateRange"
-        selectionMode="range"
-        [showIcon]="true"
-        [readonlyInput]="true"
-        (onSelect)="loadOrders()"
-        placeholder="Hoy"
-        class="!rounded-xl shadow-sm w-full md:w-auto"
-        styleClass="!rounded-xl border-slate-300 w-full md:w-64"
-      />
-      @if (isSuperAdmin()) {
-        <p-select
-          [options]="branches()"
-          [(ngModel)]="selectedBranch"
-          optionLabel="name"
-          optionValue="id"
-          [showClear]="true"
-          (onChange)="loadOrders()"
-          placeholder="Todas las sucursales"
-          class="!rounded-xl shadow-sm w-full md:w-auto"
-          styleClass="!rounded-xl border-slate-300 w-full md:w-[16rem]"
-        />
-      }
-      <!--
-      <p-select
-        [options]="areas()"
-        [(ngModel)]="selectedArea"
-        optionLabel="name"
-        optionValue="id"
-        [showClear]="true"
-        (onChange)="loadOrders()"
-        placeholder="Todas las áreas"
-        class="!rounded-xl shadow-sm w-full md:w-auto"
-        styleClass="!rounded-xl border-slate-300 w-full md:w-[16rem]"
-      />
-      -->
-      <!--
-      <div class="flex items-center justify-between md:justify-start gap-3 bg-white px-4 py-2 rounded-xl border border-slate-300 shadow-sm w-full md:w-auto">
-        <span class="text-sm font-medium text-slate-600">Área específica</span>
-        <p-toggleSwitch 
-          [(ngModel)]="onlyAreaDetails" 
-          (onChange)="loadOrders()"
-        />
-      </div>
-      -->
-    </div>
     
     <!-- DESKTOP VIEW -->
     <div class="hidden lg:block bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm">
@@ -106,22 +101,33 @@
         [expandedRowKeys]="expandedRows()"
         (expandedRowKeysChange)="expandedRows.set($event)"
         [rowExpandMode]="'single'"
+        [stripedRows]="true"
+        [rowHover]="true"
         styleClass="p-datatable-modern"
       >
         <ng-template pTemplate="header">
-          <tr class="h-18! text-sm! bg-slate-50">
-            <th style="width: 3.5rem" class="!pl-6"></th>
-            <th class="tracking-widest text-slate-400 w-[140px]">Estado</th>
-            <th class="tracking-widest text-slate-400 w-[180px]">Orden</th>
-            <th class="tracking-widest text-slate-400">Cliente / Sucursal</th>
-            <th class="tracking-widest text-slate-400 text-right w-[150px]">Total</th>
-            <th class="!pr-10 tracking-widest text-slate-400 text-right w-[200px]">Acciones</th>
+          <tr class="h-10! text-xs! bg-slate-50 border-b border-slate-200">
+            <th style="width: 3.5rem" class="!px-3 !py-2 text-center text-slate-500 font-semibold border-r border-slate-200"></th>
+            <th class="tracking-wider text-slate-500 font-semibold !px-4 !py-2 w-[180px] border-r border-slate-200">Pedido</th>
+            <th class="tracking-wider text-slate-500 font-semibold !px-4 !py-2 border-r border-slate-200">Cliente</th>
+            <th class="tracking-wider text-slate-500 font-semibold !px-4 !py-2 w-[150px] border-r border-slate-200">Entrega</th>
+            <th class="tracking-wider text-slate-500 font-semibold !px-4 !py-2 text-right! w-[130px] border-r border-slate-200">Total</th>
+            <th class="tracking-wider text-slate-500 font-semibold !px-4 !py-2 w-[170px] border-r border-slate-200">Pago</th>
+            <th class="tracking-wider text-slate-500 font-semibold !px-4 !py-2 w-[140px] border-r border-slate-200">Estado</th>
+            <th class="tracking-wider text-slate-500 font-semibold !px-4 !py-2 text-right w-[190px]">Acciones</th>
           </tr>
         </ng-template>
 
-        <ng-template pTemplate="body" let-order let-expanded="expanded">
-          <tr [ngClass]="{ 'bg-slate-50/50': expanded }" class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 text-sm">
-            <td class="!pl-6 py-4">
+        <ng-template pTemplate="body" let-order let-expanded="expanded" let-rowIndex="rowIndex">
+          <tr 
+            [ngClass]="{ 
+              'bg-slate-100/60': expanded,
+              'bg-slate-50/60': !expanded && rowIndex % 2 === 1,
+              'bg-white': !expanded && rowIndex % 2 === 0
+            }" 
+            class="hover:bg-slate-100/80 transition-colors border-b border-slate-200 text-sm cursor-pointer"
+          >
+            <td class="!px-3 !py-2.5 text-center border-r border-slate-200">
               <p-button
                 type="button"
                 pRipple
@@ -133,61 +139,105 @@
                 styleClass="!w-7 !h-7 !p-0"
               />
             </td>
-            <td class="py-4">
+            <td class="!px-4 !py-2.5 border-r border-slate-200">
+              <div class="flex flex-col gap-1 items-start">
+                <span class="px-2 py-0.5 bg-[#93c5fd]/50 text-[#172554] rounded-md text-[12px] font-semibold border border-[#2563eb]/60">
+                  #{{ order.invoiceNumber }}
+                </span>
+                <span class="text-[11px] font-medium text-slate-500 leading-tight">
+                  {{ order.date | date: 'dd/MM/yyyy':'-0600' }} • {{ order.date | date: 'hh:mm a':'-0600' }}
+                </span>
+              </div>
+            </td>
+            <td class="!px-4 !py-2.5 text-left border-r border-slate-200">
+              <div class="flex flex-col">
+                <span class="font-normal capitalize text-slate-800 leading-tight">
+                  {{ order.customer?.name || order.guestCustomer?.name || 'Venta al Público' }}
+                </span>
+                @if (order.customer?.phone || order.guestCustomer?.phone) {
+                  <span class="text-xs font-semibold text-slate-700 mt-0.5">
+                    {{ order.customer?.phone || order.guestCustomer?.phone }}
+                  </span>
+                } @else {
+                  <span class="text-[11px] text-slate-400 mt-0.5 italic">Sin teléfono</span>
+                }
+              </div>
+            </td>
+            <td class="!px-4 !py-2.5 text-left border-r border-slate-200">
+              <span 
+                class="text-xs font-semibold"
+                [ngClass]="order.deliveredAt ? 'text-slate-800' : 'text-slate-400 font-normal'"
+              >
+                {{ order.deliveredAt | deliveryDate }}
+              </span>
+            </td>
+            <td class="!px-4 !py-2.5 text-right! font-[600] border-r border-slate-200">
+              {{ order.total | currency: 'Q ' }}
+            </td>
+            <td class="!px-4 !py-2.5 text-left border-r border-slate-200">
+              @if (+order.paidAmount === 0) {
+                <span class="text-xs font-semibold">Sin abono</span>
+              } @else if (+order.pendingAmount > 0) {
+                <div class="flex flex-col leading-tight gap-0.5">
+                  <span class="text-xs font-semibold text-[#15803d]">
+                    {{ order.paidAmount | currency: 'Q' }} abonado
+                  </span>
+                  <span class="text-xs font-semibold text-[#be123c]">
+                    {{ order.pendingAmount | currency: 'Q' }} pendiente
+                  </span>
+                </div>
+              } @else {
+                <span class="text-xs font-semibold text-[#15803d]">
+                  {{ order.paidAmount | currency: 'Q' }} pagado
+                </span>
+              }
+            </td>
+            <td class="!px-4 !py-2.5 border-r border-slate-200">
               <span
-                class="inline-flex items-center px-2.5 py-1 text-[11px] font-semibold rounded-lg border shadow-sm"
+                class="inline-flex items-center px-2.5 py-1 text-[11px] font-semibold rounded-md border"
                 [ngClass]="{
-                  'bg-amber-50 text-amber-600 border-amber-200': ['pending', 'on_hold'].includes(order.status),
-                  'bg-blue-50 text-blue-600 border-blue-200': order.status === 'confirmed',
-                  'bg-indigo-50 text-indigo-600 border-indigo-200': order.status === 'preparing',
-                  'bg-emerald-50 text-emerald-600 border-emerald-200': ['ready_for_pickup', 'out_for_delivery', 'delivered'].includes(order.status),
-                  'bg-rose-50 text-rose-600 border-rose-200': order.status === 'cancelled'
+                  'bg-amber-50/70 text-amber-800 border-amber-300/60': ['pending', 'on_hold'].includes(order.status),
+                  'bg-blue-50/70 text-blue-800 border-blue-300/60': order.status === 'confirmed',
+                  'bg-indigo-50/70 text-indigo-800 border-indigo-300/60': order.status === 'preparing',
+                  'bg-emerald-50/70 text-emerald-800 border-emerald-300/60': ['ready_for_pickup', 'out_for_delivery', 'delivered'].includes(order.status),
+                  'bg-rose-50/70 text-rose-800 border-rose-300/60': order.status === 'cancelled'
                 }"
               >
-                <span class="w-1.5 h-1.5 rounded-full mr-2 animate-pulse"
+                <span class="w-1.5 h-1.5 rounded-full mr-2"
                   [ngClass]="{
-                    'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]': ['pending', 'on_hold'].includes(order.status),
-                    'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]': order.status === 'confirmed',
-                    'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.4)]': order.status === 'preparing',
-                    'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]': ['ready_for_pickup', 'out_for_delivery', 'delivered'].includes(order.status),
-                    'bg-rose-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]': order.status === 'cancelled'
+                    'bg-amber-600': ['pending', 'on_hold'].includes(order.status),
+                    'bg-blue-600': order.status === 'confirmed',
+                    'bg-indigo-600': order.status === 'preparing',
+                    'bg-emerald-600': ['ready_for_pickup', 'out_for_delivery', 'delivered'].includes(order.status),
+                    'bg-rose-600': order.status === 'cancelled'
                   }"
                 ></span>
                 {{ order.status | saleStatus }}
               </span>
-              @if (isAbonada(order)) {
-                <span class="ml-2 inline-flex items-center px-2 py-0.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-md text-[10px] font-bold">
-                  Abonada
-                </span>
-              }
             </td>
-            <td class="py-4">
-              <div class="flex flex-col gap-1 items-start">
-                <code class="px-2 py-1 bg-marionberry-palest text-marionberry rounded-md text-sm font-bold border border-marionberry-pale font-mono">
-                  #{{ order.invoiceNumber }}
-                </code>
-                <span class="text-[11px] font-medium text-slate-400 leading-tight">
-                  {{ order.date | date: 'dd/MM/yyyy' }} • {{ order.date | date: 'hh:mm a' }}
-                </span>
-              </div>
-            </td>
-            <td class="py-4 text-left">
-              <div class="flex flex-col">
-                <span class="font-semibold text-slate-800 leading-tight">
-                  {{ order.customer?.name || order.guestCustomer?.name || 'Venta al Público' }}
-                </span>
-                <span class="text-xs text-slate-400 mt-1 font-medium">
-                  {{ order.branch?.name }}
-                </span>
-              </div>
-            </td>
-            <td class="py-4 text-right font-semibold text-marionberry tabular-nums text-base">
-              {{ order.total | currency: 'Q ' }}
-            </td>
-            <td class="py-4 !pr-10 text-right">
-              <div class="flex justify-end gap-1">
-                <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="warn" (onClick)="editOrder(order.id)" pTooltip="Editar" tooltipPosition="bottom" styleClass="!w-9 !h-9" />
-                <p-button icon="pi pi-file-pdf" [text]="true" [rounded]="true" severity="danger" (onClick)="previewOrder(order)" pTooltip="Ver Ticket" tooltipPosition="bottom" styleClass="!w-9 !h-9" />
+            <td class="!px-4 !py-2.5 text-right">
+              <div class="flex justify-end items-center gap-1.5">
+                <p-button 
+                  [outlined]="true" 
+                  (onClick)="editOrder(order.id)" 
+                  styleClass="!text-[13px] !py-1 !px-2.5 !rounded-lg font-semibold shadow-none !border-[1.5px] !border-[#1e3a5f] !text-[#1e3a5f] hover:!bg-[#1e3a5f] hover:!text-white hover:!border-[#1e3a5f] transition-all inline-flex items-center gap-1.5" 
+                >
+                  @if (['delivered', 'cancelled'].includes(order.status)) {
+                    <svg lucideEye class="w-3.5 h-3.5 stroke-[2.2]"></svg>
+                    <span>Ver</span>
+                  } @else {
+                    <svg lucideSquarePen class="w-3.5 h-3.5 stroke-[2.2]"></svg>
+                    <span>Editar</span>
+                  }
+                </p-button>
+                <p-button 
+                  [outlined]="true" 
+                  (onClick)="previewOrder(order)" 
+                  styleClass="!text-[13px] !py-1 !px-2.5 !rounded-lg font-semibold shadow-none !border-[1.5px] !border-[#1e3a5f] !text-[#1e3a5f] hover:!bg-[#1e3a5f] hover:!text-white hover:!border-[#1e3a5f] transition-all inline-flex items-center gap-1.5" 
+                >
+                  <svg lucideReceipt class="w-3.5 h-3.5 stroke-[2.2]"></svg>
+                  <span>Ticket</span>
+                </p-button>
               </div>
             </td>
           </tr>
@@ -195,7 +245,7 @@
 
         <ng-template #expandedrow let-order>
           <tr>
-            <td colspan="6" class="!p-0 border-none bg-transparent">
+            <td colspan="8" class="!p-0 border-none bg-transparent">
               <div class="p-6 bg-slate-50/50 border-t border-slate-100">
                 <ng-container *ngTemplateOutlet="expandedDetails; context: { $implicit: order }"></ng-container>
               </div>
@@ -205,7 +255,7 @@
 
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="6" class="text-center !py-32">
+            <td colspan="8" class="text-center !py-32">
               <div class="flex flex-col items-center justify-center gap-3 w-full h-full">
                 <i class="pi pi-shopping-cart text-[#95abce]" style="font-size: 5rem"></i>
                 <div class="flex flex-col items-center gap-1">
@@ -245,7 +295,7 @@
                   <div class="flex-1 min-w-0">
                     <div class="flex justify-between items-start gap-1">
                       <div class="flex flex-col min-w-0">
-                        <span class="inline-flex text-[11px] bg-marionberry-palest text-marionberry font-semibold px-2 py-0.5 rounded border border-marionberry-pale tracking-wide font-mono w-fit">#{{ order.invoiceNumber }}</span>
+                        <span class="inline-flex text-[11px] bg-[#93c5fd]/50 text-[#172554] font-semibold px-2 py-0.5 rounded border border-[#2563eb]/60 w-fit">#{{ order.invoiceNumber }}</span>
                         <h3 class="font-semibold text-slate-800 text-base leading-tight truncate mt-1.5">
                           {{ order.customer?.name || order.guestCustomer?.name || 'Venta al Público' }}
                         </h3>
@@ -260,18 +310,29 @@
                           'bg-rose-50 text-rose-600 border-rose-200': order.status === 'cancelled'
                         }"
                       >
+                        <span class="w-1.5 h-1.5 rounded-full mr-1.5"
+                          [ngClass]="{
+                            'bg-amber-500': ['pending', 'on_hold'].includes(order.status),
+                            'bg-blue-500': order.status === 'confirmed',
+                            'bg-indigo-500': order.status === 'preparing',
+                            'bg-emerald-500': ['ready_for_pickup', 'out_for_delivery', 'delivered'].includes(order.status),
+                            'bg-rose-500': order.status === 'cancelled'
+                          }"
+                        ></span>
                         {{ order.status | saleStatus }}
                       </span>
                     </div>
-                    <div class="flex items-center gap-4 mt-2">
-                      <div>
-                        <p class="text-[9px] font-semibold text-[#3B5B8A] tracking-wider">Total Orden</p>
-                        <p class="text-[18px] font-bold text-marionberry leading-none mt-0.5">{{ order.total | currency: 'Q ' }}</p>
-                      </div>
+                    <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-100">
                       <div class="flex flex-col">
-                        <p class="text-[9px] font-semibold text-[#3B5B8A] tracking-wider">Fecha</p>
-                        <span class="text-xs font-bold mt-0.5 text-slate-500">
-                          {{ order.date | date: 'dd/MM/yyyy' }}
+                        <span class="text-[11px] text-slate-400 font-medium">Fecha y Hora</span>
+                        <span class="text-xs font-semibold text-slate-600">
+                          {{ order.date | date: 'dd/MM/yyyy':'-0600' }} • {{ order.date | date: 'hh:mm a':'-0600' }}
+                        </span>
+                      </div>
+                      <div class="flex flex-col items-end">
+                        <span class="text-[11px] text-slate-400 font-medium">Total</span>
+                        <span class="text-sm font-bold text-slate-800">
+                          {{ order.total | currency: 'Q ' }}
                         </span>
                       </div>
                     </div>
@@ -302,8 +363,16 @@
                     />
                   </div>
                   <div class="flex items-center gap-1">
-                    <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="warn" (onClick)="editOrder(order.id)" styleClass="!w-9 !h-9 !p-0" />
-                    <p-button icon="pi pi-file-pdf" [text]="true" [rounded]="true" severity="danger" (onClick)="previewOrder(order)" styleClass="!w-9 !h-9 !p-0" />
+                    <p-button [text]="true" [rounded]="true" (onClick)="editOrder(order.id)" styleClass="!w-9 !h-9 !p-0 !text-[#1e3a5f] hover:!bg-[#1e3a5f] hover:!text-white transition-all flex items-center justify-center">
+                      @if (['delivered', 'cancelled'].includes(order.status)) {
+                        <svg lucideEye class="w-4 h-4"></svg>
+                      } @else {
+                        <svg lucideSquarePen class="w-4 h-4"></svg>
+                      }
+                    </p-button>
+                    <p-button [text]="true" [rounded]="true" (onClick)="previewOrder(order)" styleClass="!w-9 !h-9 !p-0 !text-[#1e3a5f] hover:!bg-[#1e3a5f] hover:!text-white transition-all flex items-center justify-center">
+                      <svg lucideReceipt class="w-4 h-4"></svg>
+                    </p-button>
                   </div>
                 </div>
               </div>
