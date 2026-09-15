@@ -257,7 +257,7 @@
                 <div class="flex flex-col p-2.5 bg-sky-50/70 rounded-lg border border-sky-200/80 shadow-2xs">
                   <span class="text-[9px] uppercase font-bold text-sky-700 tracking-wider">Actual</span>
                   <span class="text-xs md:text-sm font-semibold text-sky-900 tabular-nums truncate">
-                    {{ currentStock !== null ? currentStock : '---' }} {{ selectedProduct.unit?.abbreviation || '' }}
+                    {{ currentStock !== null ? currentStock : '---' }} {{ selectedProduct.unit.abbreviation || '' }}
                   </span>
                 </div>
 
@@ -276,7 +276,7 @@
                     class="text-xs md:text-sm font-bold tabular-nums truncate"
                     [ngClass]="movementForm.get('type')?.value === 'in' ? 'text-emerald-800' : 'text-rose-800'"
                   >
-                    {{ movementForm.get('type')?.value === 'in' ? '+' : '-' }}{{ movementForm.get('quantity')?.value || 0 }} {{ selectedProduct.unit?.abbreviation || '' }}
+                    {{ movementForm.get('type')?.value === 'in' ? '+' : '-' }}{{ movementForm.get('quantity')?.value || 0 }} {{ selectedProduct.unit.abbreviation || '' }}
                   </span>
                 </div>
 
@@ -295,7 +295,7 @@
                     class="text-xs md:text-sm font-bold tabular-nums truncate"
                     [ngClass]="movementForm.get('type')?.value === 'in' ? 'text-teal-900' : 'text-indigo-950'"
                   >
-                    {{ predictedStock !== null ? predictedStock : '---' }} {{ selectedProduct.unit?.abbreviation || '' }}
+                    {{ predictedStock !== null ? predictedStock : '---' }} {{ selectedProduct.unit.abbreviation || '' }}
                   </span>
                 </div>
               </div>
