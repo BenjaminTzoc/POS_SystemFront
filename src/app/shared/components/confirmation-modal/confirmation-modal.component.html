@@ -1,0 +1,63 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '90%', 'max-width': width }"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  appendTo="body"
+  [baseZIndex]="10000"
+  [header]="header"
+  styleClass="!rounded-2xl overflow-hidden"
+  (onHide)="handleClose()"
+>
+  <div class="flex flex-col items-center justify-center text-center pt-2 pb-1 px-3">
+    <!-- Icono central en círculo suave -->
+    <div 
+      class="w-16 h-16 rounded-full border flex items-center justify-center mb-5 shadow-xs transition-transform transform duration-200 hover:scale-105"
+      [ngClass]="iconContainerClasses"
+    >
+      <i [class]="computedIcon + ' text-2xl!'"></i>
+    </div>
+
+    <!-- Título principal -->
+    <h3 *ngIf="title" class="text-base md:text-lg font-bold text-slate-800 mb-2.5 tracking-tight leading-snug">
+      {{ title }}
+    </h3>
+
+    <!-- Mensaje / Descripción -->
+    <p *ngIf="message" class="text-xs md:text-sm text-slate-600 font-medium mb-3 leading-relaxed max-w-md">
+      {{ message }}
+    </p>
+
+    <!-- Slot para contenido personalizado adicional -->
+    <ng-content></ng-content>
+
+    <!-- Nota aclaratoria -->
+    <p *ngIf="note" class="text-[11px] text-slate-400 font-normal mt-2 leading-relaxed">
+      {{ note }}
+    </p>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex items-center justify-end gap-2.5 w-full pt-3 pb-1 border-t border-slate-100">
+      <button
+        pButton
+        type="button"
+        [label]="cancelLabel"
+        (click)="handleClose()"
+        class="p-button-text p-button-secondary font-semibold text-xs whitespace-nowrap !px-4 !h-[38px] hover:!bg-slate-100 !rounded-lg cursor-pointer"
+      ></button>
+      <button
+        pButton
+        type="button"
+        [label]="confirmLabel"
+        [icon]="confirmIcon"
+        [loading]="loading"
+        (click)="handleConfirm()"
+        [ngClass]="confirmButtonClasses"
+        class="font-semibold text-xs whitespace-nowrap !px-4 !h-[38px] !rounded-lg shadow-sm cursor-pointer"
+      ></button>
+    </div>
+  </ng-template>
+</p-dialog>

@@ -1,49 +1,181 @@
-<div class="py-4 px-0 md:px-6 bg-slate-50/50 min-h-screen">
-  <!-- HEADER SECTION -->
+<div class="pt-4 pb-24 px-0 md:px-6 bg-slate-50/50 min-h-screen">
+  <!-- Top Card: Header & Parameters (Branch & Client) -->
   <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-4 md:mb-6">
-    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4" [formGroup]="quotationForm">
-      <div class="flex flex-col">
-        <h1 class="text-xl md:text-2xl font-semibold text-title-primary tracking-tight">
-          {{ isEditMode ? 'Cotización: ' + correlative : 'Nueva cotización' }}
-        </h1>
-        <p class="text-xs font-medium text-text-muted mt-0.5">
-          Presupuesto formal de productos para clientes.
-        </p>
-        
-        <div class="mt-3 flex items-center gap-2 flex-wrap text-xs">
-          <span class="font-semibold text-text-body">Sucursal de origen <span class="text-red-600 font-bold">*</span>:</span>
-          <p-select
-            [options]="branches"
-            formControlName="branchId"
-            optionLabel="name"
-            optionValue="id"
-            placeholder="Seleccionar sucursal"
-            [filter]="true"
-            filterBy="name"
-            styleClass="w-52 border-slate-300 h-8! text-xs! py-0!"
-            size="small"
-            appendTo="body"
-            (onChange)="onBranchChange($event)"
+    <div class="bg-white rounded-2xl border border-slate-300 shadow-sm" [formGroup]="quotationForm">
+      <!-- Card Header: Title -->
+      <div class="py-2.5 px-4 md:px-5 flex items-center justify-between border-b border-slate-100 bg-slate-50/50 rounded-t-2xl">
+        <div class="flex items-center gap-2">
+          <p-button 
+            icon="pi pi-arrow-left" 
+            [outlined]="true" 
+            severity="secondary" 
+            size="small" 
+            (onClick)="onCancel()" 
+            styleClass="!w-6.5 !h-6.5 !p-0 text-slate-500 hover:text-[#48021C] bg-white hover:bg-slate-100 hover:border-slate-400! border border-slate-300! !rounded-md shadow-2xs hover:shadow-xs hover:scale-105 active:scale-95 transition-all duration-150 cursor-pointer [&_.p-button-icon]:!text-xs"
           />
+          <h1 class="text-base md:text-lg font-semibold text-gray-900 tracking-tight leading-none">
+            {{ isEditMode ? 'Cotización: ' + correlative : 'Nueva cotización' }}
+          </h1>
+          <span *ngIf="!isEditMode" class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-brand-royal/10 text-brand-royal border border-brand-royal/20">
+            Borrador
+          </span>
         </div>
       </div>
 
-      <div class="flex flex-col sm:flex-row gap-2.5 w-full md:w-auto">
-        <p-button 
-          label="Cancelar" 
-          [outlined]="true" 
-          severity="danger" 
-          (onClick)="onCancel()" 
-          icon="pi pi-times"
-          styleClass="!rounded-lg !px-4 font-semibold h-8! hover:bg-cancel-red/5 transition-all w-full md:w-auto text-xs border-cancel-red! text-cancel-red!"
-        />
-        <p-button 
-          [label]="isEditMode ? 'Actualizar cotización' : 'Generar cotización'" 
-          (onClick)="onSave()"
-          [loading]="loading"
-          icon="pi pi-check"
-          styleClass="!rounded-lg !px-5 shadow-sm transition-all font-semibold h-8! w-full md:w-auto justify-center text-xs bg-brand-deep! text-white border-brand-deep! hover:bg-brand-royal!"
-        />
+      <!-- Card Body: Compact Branch and Client Info Grid -->
+      <div class="p-3 md:p-3.5">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-start">
+          
+          <!-- Columna Izquierda: Sucursal con label alineado a la barra de tabs -->
+          <div class="md:col-span-3 lg:col-span-3 flex flex-col gap-1.5">
+            <div class="h-[28px] flex items-center">
+              <label class="text-xs font-medium text-slate-600 flex items-center gap-1">
+                Sucursal <span class="text-red-600 font-bold">*</span>
+              </label>
+            </div>
+            <p-select
+              [options]="branches"
+              formControlName="branchId"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Sucursal..."
+              [filter]="true"
+              filterBy="name"
+              size="small"
+              appendTo="body"
+              [fluid]="true"
+              (onChange)="onBranchChange($event)"
+            />
+          </div>
+
+          <!-- Columna Derecha: Tipo y Selección de Cliente -->
+          <div class="md:col-span-9 lg:col-span-9 flex flex-col gap-1.5">
+            <div class="h-[28px] flex items-center justify-between flex-wrap gap-2">
+              <label class="text-xs font-medium text-slate-600 flex items-center gap-1">
+                Cliente <span class="text-red-600 font-bold">*</span>
+              </label>
+
+              <!-- Tabs de Tipo de Cliente con Color Vino Institucional -->
+              <div class="inline-flex p-0.5 bg-slate-100 rounded-lg border border-slate-200 text-xs">
+                <button 
+                  type="button" 
+                  (click)="customerType = 'registered'" 
+                  [class]="customerType === 'registered' ? 'bg-[#48021C] text-white font-medium shadow-xs' : 'text-slate-600 hover:text-[#48021C]'" 
+                  class="px-2.5 py-1 rounded-md text-xs transition-all cursor-pointer"
+                >
+                  Registrado
+                </button>
+                <button 
+                  type="button" 
+                  (click)="customerType = 'guest'" 
+                  [class]="customerType === 'guest' ? 'bg-[#48021C] text-white font-medium shadow-xs' : 'text-slate-600 hover:text-[#48021C]'" 
+                  class="px-2.5 py-1 rounded-md text-xs transition-all cursor-pointer"
+                >
+                  Consumidor Final / Invitado
+                </button>
+              </div>
+            </div>
+
+            <!-- Cliente Registrado: Selector y Campos en disposición en "L" siempre visibles -->
+            <div *ngIf="customerType === 'registered'" class="flex flex-col gap-2.5 animate-in fade-in duration-150">
+              @let customer = getCustomerById(quotationForm.get('customerId')?.value);
+              
+              <!-- Fila Superior: Selector de Cliente + Campo NIT (50% / 50%) -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-start">
+                <div>
+                  <p-select
+                    [options]="customers"
+                    formControlName="customerId"
+                    optionLabel="name"
+                    optionValue="id"
+                    placeholder="Seleccione un cliente..."
+                    [filter]="true"
+                    filterBy="name"
+                    [showClear]="true"
+                    size="small"
+                    appendTo="body"
+                    [fluid]="true"
+                  />
+                </div>
+
+                <!-- Campo NIT alineado con el selector (50%) -->
+                <div 
+                  class="flex items-center justify-between px-3 h-[33px] rounded-lg border text-xs transition-all duration-200"
+                  [class]="customer ? 'bg-sky-50/70 border-sky-200 text-sky-900 shadow-2xs' : 'bg-slate-50 rounded-lg border-slate-200 text-slate-400'"
+                >
+                  <span class="text-[10px] font-semibold uppercase tracking-wider" [class]="customer ? 'text-sky-600' : 'text-slate-400'">
+                    NIT:
+                  </span>
+                  <span [class]="customer?.nit ? 'font-bold text-sky-900' : (customer ? 'text-sky-700/80 italic text-[11px]' : 'text-slate-400 italic text-[11px]')">
+                    {{ customer?.nit || 'Sin NIT' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Fila Inferior (Base de la "L"): Correo y Teléfono -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div 
+                  class="flex items-center justify-between px-3 h-[31px] rounded-lg border text-xs transition-all duration-200"
+                  [class]="customer ? 'bg-sky-50/60 border-sky-200 text-sky-900 shadow-2xs' : 'bg-slate-50/80 border-slate-200/80 text-slate-400'"
+                >
+                  <span class="text-[10px] font-semibold uppercase tracking-wider" [class]="customer ? 'text-sky-600' : 'text-slate-400'">
+                    Correo:
+                  </span>
+                  <span [class]="customer?.email ? 'font-medium text-sky-900 truncate max-w-[200px]' : (customer ? 'text-sky-700/80 italic text-[11px]' : 'text-slate-400 italic text-[11px]')">
+                    {{ customer?.email || 'Sin correo registrado' }}
+                  </span>
+                </div>
+
+                <div 
+                  class="flex items-center justify-between px-3 h-[31px] rounded-lg border text-xs transition-all duration-200"
+                  [class]="customer ? 'bg-sky-50/60 border-sky-200 text-sky-900 shadow-2xs' : 'bg-slate-50/80 border-slate-200/80 text-slate-400'"
+                >
+                  <span class="text-[10px] font-semibold uppercase tracking-wider" [class]="customer ? 'text-sky-600' : 'text-slate-400'">
+                    Teléfono:
+                  </span>
+                  <span [class]="customer?.phone ? 'font-medium text-sky-900' : (customer ? 'text-sky-700/80 italic text-[11px]' : 'text-slate-400 italic text-[11px]')">
+                    {{ customer?.phone || 'Sin teléfono registrado' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cliente Invitado: Campos en Card con fondo azul claro y en 2 filas -->
+            <div 
+              *ngIf="customerType === 'guest'" 
+              class="p-3 bg-sky-50/70 rounded-xl border border-sky-200 shadow-2xs animate-in fade-in duration-150" 
+              formGroupName="guestCustomer"
+            >
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div class="flex flex-col gap-1">
+                  <label class="text-[10px] font-semibold text-sky-700 uppercase tracking-wider">
+                    Nombre completo <span class="text-red-600 font-bold">*</span>
+                  </label>
+                  <input pInputText formControlName="name" placeholder="Ej. Juan Pérez" size="small" class="w-full p-inputtext-sm bg-white" />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-[10px] font-semibold text-sky-700 uppercase tracking-wider">
+                    NIT / Facturación
+                  </label>
+                  <input pInputText formControlName="nit" placeholder="C/F o número" size="small" class="w-full p-inputtext-sm bg-white" />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-[10px] font-semibold text-sky-700 uppercase tracking-wider">
+                    Correo electrónico
+                  </label>
+                  <input pInputText formControlName="email" placeholder="cliente@correo.com" size="small" class="w-full p-inputtext-sm bg-white" />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-[10px] font-semibold text-sky-700 uppercase tracking-wider">
+                    Teléfono
+                  </label>
+                  <input pInputText formControlName="phone" placeholder="7766-5544" size="small" class="w-full p-inputtext-sm bg-white" />
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -51,252 +183,250 @@
   <!-- MAIN CONTENT GRID -->
   <div class="grid grid-cols-12 gap-4 max-w-[1700px] mx-auto" [formGroup]="quotationForm">
     <div class="col-span-12 lg:col-span-8 flex flex-col gap-4">
-      <!-- CLIENT INFO CARD -->
+
+      <!-- RECUADRO DE ATAJOS RÁPIDOS DE PRODUCTOS -->
       <div class="bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm">
-        <div class="p-4 px-5">
-          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-            <div class="flex flex-col">
-               <span class="text-sm font-semibold text-title-secondary leading-none">Información del cliente</span>
-               <span class="text-[10px] font-medium text-text-muted mt-1">Registrado o venta al público</span>
+        <div class="p-3.5 px-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-brand-royal/5">
+          <div class="flex flex-col">
+            <span class="text-sm font-semibold text-title-secondary leading-none">Catálogo Rápido de Productos</span>
+            <span class="text-xs font-semibold text-brand-royal mt-1">Haz click en un producto para agregarlo a la cotización</span>
+          </div>
+
+          <!-- Buscador integrado en la cabecera -->
+          <div class="w-full sm:w-64">
+            <p-iconfield>
+              <p-inputicon class="pi pi-search text-text-muted" />
+              <input 
+                type="text" 
+                pInputText 
+                [(ngModel)]="searchProductQuery" 
+                placeholder="Buscar por nombre o SKU..." 
+                class="w-full h-7! py-1! px-8! text-xs! border-slate-300! focus:border-brand-deep!"
+              />
+            </p-iconfield>
+          </div>
+        </div>
+
+        <div class="py-3.5 px-0">
+          @if (loadingProducts) {
+            <div class="flex items-center justify-center py-6 gap-2 text-text-muted text-xs">
+              <i class="pi pi-spin pi-spinner text-lg text-brand-royal"></i>
+              <span>Cargando catálogo de productos...</span>
             </div>
-
-            <!-- Tab switch with customized brand colors -->
-            <div class="p-1 bg-brand-royal/5 rounded-lg hidden md:flex border border-brand-royal/10 self-start sm:self-auto">
-              <button type="button" (click)="customerType = 'registered'" [class]="customerType === 'registered' ? 'bg-brand-royal text-white shadow-sm border border-brand-royal/10' : 'text-text-muted hover:text-brand-royal'" class="px-4 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer">Registrado</button>
-              <button type="button" (click)="customerType = 'guest'" [class]="customerType === 'guest' ? 'bg-brand-royal text-white shadow-sm border border-brand-royal/10' : 'text-text-muted hover:text-brand-royal'" class="px-4 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer">Invitado</button>
+          } @else if (!products || products.length === 0) {
+            <div class="text-center py-6 text-text-muted text-xs italic">
+              Selecciona una sucursal activa para cargar los productos disponibles.
             </div>
-          </div>
+          } @else {
+            <div class="flex items-stretch w-full px-2 gap-1.5">
+              <!-- Botón Izquierdo Ocupando Espacio Layout -->
+              <button
+                type="button"
+                (click)="scrollCatalog('left')"
+                pTooltip="Anterior"
+                tooltipPosition="top"
+                class="w-7 md:w-8 flex-shrink-0 flex items-center justify-center bg-transparent hover:bg-slate-100 text-slate-600 hover:text-brand-royal transition-all cursor-pointer rounded-lg focus:outline-none border border-transparent hover:border-slate-200"
+              >
+                <i class="pi pi-chevron-left text-lg font-bold"></i>
+              </button>
 
-          <div class="grid grid-cols-2 p-1 bg-brand-royal/5 rounded-lg md:hidden mb-4 border border-brand-royal/10">
-             <button type="button" (click)="customerType = 'registered'" [class]="customerType === 'registered' ? 'bg-brand-royal text-white shadow-sm border border-brand-royal/10' : 'text-text-muted'" class="py-2 rounded-md text-xs font-semibold transition-all cursor-pointer">Registrado</button>
-             <button type="button" (click)="customerType = 'guest'" [class]="customerType === 'guest' ? 'bg-brand-royal text-white shadow-sm border border-brand-royal/10' : 'text-text-muted'" class="py-2 rounded-md text-xs font-semibold transition-all cursor-pointer">Invitado</button>
-          </div>
+              <!-- Contenedor Horizontal con 3 Tarjetas Completas Ajustadas -->
+              <div 
+                #catalogContainer 
+                class="flex-1 min-w-0 flex flex-row overflow-x-auto gap-3 py-1 px-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth"
+              >
+                <div 
+                  *ngFor="let p of filteredProducts" 
+                  class="w-[calc((100%-1.5rem)/3)] min-w-[200px] flex-shrink-0 flex flex-col gap-2 p-2.5 rounded-xl border border-slate-200/80 bg-slate-50/50 hover:bg-white hover:border-indigo-300 hover:shadow-xs transition-all text-xs group"
+                >
+                  <!-- Fila Superior: Info + Precio (Clicable para agregar a la cotización) -->
+                  <div 
+                    (click)="addProductFromDrawer(p)"
+                    pTooltip="Haz clic para agregar a la cotización"
+                    tooltipPosition="top"
+                    class="flex items-center justify-between gap-2 cursor-pointer hover:opacity-80 transition-all"
+                  >
+                    <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                      <div class="w-9 h-9 rounded-lg border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0 bg-white">
+                        <img *ngIf="p.imageUrl" [src]="getProductImageUrl(p.imageUrl)" class="w-full h-full object-cover" />
+                        <i *ngIf="!p.imageUrl" class="pi pi-image text-slate-300 text-sm"></i>
+                      </div>
+                      <div class="flex flex-col min-w-0">
+                        <span class="font-bold text-slate-800 truncate leading-tight text-xs group-hover:text-brand-royal transition-colors">{{ p.name }}</span>
+                        <span class="text-[10px] text-slate-400 mt-0.5 truncate">{{ p.sku || '---' }}</span>
+                      </div>
+                    </div>
+                    
+                    <div class="flex flex-col items-end flex-shrink-0">
+                      <span class="font-bold text-emerald-600 whitespace-nowrap text-xs">{{ p.price | currency:'Q ' }}</span>
+                      <span class="text-[10px] text-slate-500 font-medium whitespace-nowrap mt-0.5">Stock: {{ p.stock ?? 0 }} {{ p.unit.abbreviation || 'un' }}</span>
+                    </div>
+                  </div>
 
-          <div *ngIf="customerType === 'registered'" class="flex flex-col gap-3 animate-in fade-in slide-in-from-top-1">
-             <div class="flex flex-col gap-1">
-                <label class="text-xs font-semibold text-text-body">Buscar cliente <span class="text-red-600 font-bold">*</span></label>
-                <p-select
-                  [options]="customers"
-                  formControlName="customerId"
-                  optionLabel="name"
-                  optionValue="id"
-                  placeholder="Escribe el nombre del cliente..."
-                  [filter]="true"
-                  filterBy="name"
-                  [showClear]="true"
-                  styleClass="w-full border-slate-300 h-8! text-xs! py-0!"
-                  size="small"
-                  appendTo="body"
-                  [fluid]="true"
-                />
-             </div>
-             
-             <!-- Selected client detail card styled with premium palette -->
-             <div *ngIf="quotationForm.get('customerId')?.value" class="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 bg-brand-royal/5 rounded-lg border border-brand-royal/20 border-dashed">
-                @let customer = getCustomerById(quotationForm.get('customerId')?.value);
-                <div class="flex flex-col gap-0.5">
-                   <span class="text-[10px] font-semibold text-text-muted">Nit</span>
-                   <span class="text-xs font-semibold text-brand-deep">{{ customer?.nit || '---' }}</span>
+                  <!-- Fila Inferior: Atajo Rápido con Label y Suffix -->
+                  <div class="flex items-center justify-between pt-1.5 border-t border-slate-200/60 gap-2">
+                    <label class="text-[10px] font-semibold text-slate-500 flex items-center gap-1">
+                      <i class="pi pi-bolt text-amber-500 text-[10px]"></i>
+                      Cant. rápida:
+                    </label>
+
+                    <div class="relative flex items-center w-28">
+                      <input 
+                        type="number" 
+                        [min]="p.unit.allowsDecimals ? 0.01 : 1" 
+                        [step]="p.unit.allowsDecimals ? 0.5 : 1" 
+                        [value]="getQuickQuantity(p.id)" 
+                        (input)="onQuickQuantityChange(p.id, $event)"
+                        (keyup.enter)="addProductFromDrawer(p)"
+                        (click)="$event.stopPropagation()"
+                        class="w-full h-6.5 pl-2 pr-7 text-right font-bold text-slate-700 bg-white border border-slate-200 rounded-md focus:border-indigo-500 focus:outline-none text-[11px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        pTooltip="Atajo de cantidad rápida"
+                        tooltipPosition="top"
+                      />
+                      <span class="absolute right-2 text-[10px] font-bold text-slate-400 pointer-events-none select-none">
+                        {{ p.unit.abbreviation || 'un' }}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div class="flex flex-col gap-0.5 md:col-span-2">
-                   <span class="text-[10px] font-semibold text-text-muted">Correo electrónico</span>
-                   <span class="text-xs font-semibold text-brand-deep">{{ customer?.email || '---' }}</span>
-                </div>
-             </div>
-          </div>
+              </div>
 
-          <div *ngIf="customerType === 'guest'" class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 animate-in fade-in slide-in-from-top-1" formGroupName="guestCustomer">
-             <div class="flex flex-col gap-1">
-                <label class="text-xs font-semibold text-text-body">Nombre completo <span class="text-red-600 font-bold">*</span></label>
-                <input pInputText formControlName="name" placeholder="Ej. Juan Pérez" class="w-full h-8! py-1! px-2.5! text-xs! border-slate-300! focus:border-brand-deep!" size="small" />
-             </div>
-             <div class="flex flex-col gap-1">
-                <label class="text-xs font-semibold text-text-body">Nit / Facturación</label>
-                <input pInputText formControlName="nit" placeholder="C/F o número" class="w-full h-8! py-1! px-2.5! text-xs! border-slate-300! focus:border-brand-deep!" size="small" />
-             </div>
-             <div class="flex flex-col gap-1">
-                <label class="text-xs font-semibold text-text-body">Correo electrónico</label>
-                <input pInputText formControlName="email" placeholder="cliente@correo.com" class="w-full h-8! py-1! px-2.5! text-xs! border-slate-300! focus:border-brand-deep!" size="small" />
-             </div>
-             <div class="flex flex-col gap-1">
-                <label class="text-xs font-semibold text-text-body">Teléfono</label>
-                <input pInputText formControlName="phone" placeholder="7766-5544" class="w-full h-8! py-1! px-2.5! text-xs! border-slate-300! focus:border-brand-deep!" size="small" />
-             </div>
-          </div>
+              <!-- Botón Derecho Ocupando Espacio Layout -->
+              <button
+                type="button"
+                (click)="scrollCatalog('right')"
+                pTooltip="Siguiente"
+                tooltipPosition="top"
+                class="w-7 md:w-8 flex-shrink-0 flex items-center justify-center bg-transparent hover:bg-slate-100 text-slate-600 hover:text-brand-royal transition-all cursor-pointer rounded-lg focus:outline-none border border-transparent hover:border-slate-200"
+              >
+                <i class="pi pi-chevron-right text-lg font-bold"></i>
+              </button>
+            </div>
+          }
         </div>
       </div>
 
-      <!-- ITEMS SECTION WITH DYNAMIC HEIGHT -->
-      <div class="bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm">
-        <div class="p-3 md:px-5 border-b border-slate-300 flex items-center justify-between bg-brand-royal/5">
-          <div class="flex flex-col">
+      <!-- ITEMS SECTION WITH DYNAMIC HEIGHT AND SCROLL -->
+      <div class="bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm flex flex-col">
+        <div class="p-3 md:px-5 border-b border-slate-300 flex items-center justify-between bg-brand-royal/5 flex-shrink-0">
+          <div class="flex items-center gap-2">
              <h2 class="text-sm font-semibold text-title-secondary tracking-tight">Ítems de la cotización</h2>
-          </div>
-          <p-button 
-            label="Añadir producto"
-            severity="info" 
-            [outlined]="true"
-            size="small"
-            icon="pi pi-plus"
-            (onClick)="drawerVisible = true" 
-            class="hidden sm:block"
-            [disabled]="!quotationForm.get('branchId')?.value"
-            styleClass="!px-3 h-8! !rounded-lg whitespace-nowrap flex-shrink-0 text-xs border-brand-royal/50! text-brand-royal! hover:bg-brand-royal/10"
-          />
-          <p-button 
-            label="Añadir"
-            severity="info" 
-            [outlined]="true"
-            size="small"
-            icon="pi pi-plus"
-            (onClick)="drawerVisible = true" 
-            class="block sm:hidden"
-            [disabled]="!quotationForm.get('branchId')?.value"
-            styleClass="!px-2.5 h-8! !rounded-lg flex-shrink-0 text-xs border-brand-royal/50! text-brand-royal! hover:bg-brand-royal/10"
-          />
-        </div>
-
-        <!-- Empty list state -->
-        <div *ngIf="items.controls.length === 0" class="flex flex-col items-center justify-center py-16 gap-3 bg-slate-50/20 text-center">
-          <div class="w-12 h-12 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm">
-            <i class="pi pi-shopping-bag text-text-muted text-lg"></i>
-          </div>
-          <div class="flex flex-col gap-1 max-w-[280px]">
-            <span class="text-xs font-semibold text-title-secondary">Lista de productos vacía</span>
-            <span class="text-[10px] text-text-muted leading-relaxed">
-              Haz clic en "Añadir producto" para desplegar el catálogo y armar tu presupuesto formal.
-            </span>
+             <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-brand-royal/10 text-brand-royal">
+               {{ items.length }} {{ items.length === 1 ? 'producto' : 'productos' }}
+             </span>
           </div>
         </div>
 
-        <div class="overflow-x-auto w-full" *ngIf="items.controls.length > 0">
-          <!-- DESKTOP VIEW -->
-          <div class="hidden md:block">
-            <p-table [value]="items.controls" styleClass="p-datatable-striped p-datatable-sm p-datatable-gridless">
-              <ng-template pTemplate="header">
-                <tr class="h-11 bg-brand-royal/10 text-brand-royal text-[11px] font-semibold border-b border-brand-royal/20">
-                  <th class="w-[210px] !pl-6 text-left">Producto</th>
-                  <th class="w-28 text-right">Precio</th>
-                  <th class="w-32 text-left !pl-4">Cantidad</th>
-                  <th class="w-40 text-center">Descuento</th>
-                  <th class="w-28 text-right !pr-6">Subtotal</th>
-                  <th class="w-16 !pr-6"></th>
-                </tr>
-              </ng-template>
-              <ng-template pTemplate="body" let-control let-i="rowIndex">
-                <tr [formGroup]="asGroup(control)" class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 text-xs">
-                  @let product = getProductById(control.get('productId')?.value);
-                  <td class="py-2.5 !pl-6 align-middle">
-                    <div class="flex flex-col py-0.5 max-w-[190px] min-w-0">
-                      <span class="font-semibold text-text-body leading-tight truncate block" [pTooltip]="product?.name" tooltipPosition="top">{{ product?.name || 'Cargando producto...' }}</span>
-                      <span class="text-[9px] font-mono text-text-muted mt-0.5 truncate block">{{ product?.sku || 'SIN SKU' }}</span>
+        <div class="overflow-x-auto w-full max-h-[480px] overflow-y-auto">
+          <p-table 
+            [value]="items.controls" 
+            [scrollable]="true"
+            scrollHeight="480px"
+            styleClass="w-full p-datatable-striped p-datatable-sm p-datatable-gridless"
+            [tableStyle]="{ 'width': '100%', 'min-width': '680px' }"
+          >
+            <ng-template pTemplate="header">
+              <tr class="h-11 bg-brand-royal/10 text-brand-royal text-[11px] font-semibold border-b border-brand-royal/20 sticky top-0 z-10 backdrop-blur-md">
+                <th class="!pl-6 text-left">Producto</th>
+                <th class="w-28 text-right pr-4">Precio</th>
+                <th class="w-28 text-left !pl-4">Descuento</th>
+                <th class="w-32 text-left !pl-4">Cantidad</th>
+                <th class="w-28 text-right pr-6">Subtotal</th>
+                <th class="w-16 pr-6"></th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-control let-i="rowIndex">
+              <tr [formGroup]="asGroup(control)" class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 text-xs">
+                @let product = getProductById(control.get('productId')?.value);
+                <td class="py-2.5 !pl-6 align-middle">
+                  <div class="flex items-center gap-3 py-0.5">
+                    <div class="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 bg-slate-50 flex items-center justify-center flex-shrink-0">
+                      @if (product?.imageUrl) {
+                        <img [src]="getProductImageUrl(product?.imageUrl)" class="w-full h-full object-cover" />
+                      } @else {
+                        <i class="pi pi-image text-slate-300 text-lg"></i>
+                      }
                     </div>
-                  </td>
-                  <td class="py-2.5 text-right align-middle font-medium text-text-muted tabular-nums text-xs pr-2">
-                    {{ control.get('unitPrice')?.value | currency: 'Q ' }}
-                  </td>
-                  <td class="py-2.5 !pl-4">
-                    <p-inputnumber 
+                    <div class="flex flex-col overflow-hidden max-w-[200px] sm:max-w-none">
+                      <span class="font-semibold text-text-body text-xs truncate leading-tight" [pTooltip]="product?.name" tooltipPosition="top">
+                        {{ product?.name || 'Cargando producto...' }}
+                      </span>
+                      <span class="text-[10px] text-text-muted mt-0.5 truncate block">
+                        {{ product?.sku || '---' }}
+                      </span>
+                    </div>
+                  </div>
+                </td>
+                
+                <td class="py-2.5 text-right align-middle font-medium text-text-muted tabular-nums text-xs pr-4">
+                  {{ control.get('unitPrice')?.value | currency: 'Q ' }}
+                </td>
+
+                <td class="py-2.5 !pl-4 align-middle text-left">
+                  <div class="inline-flex items-stretch border border-slate-300 rounded-lg overflow-hidden bg-white h-8 focus-within:border-brand-deep focus-within:ring-1 focus-within:ring-brand-deep shadow-2xs w-26">
+                    <input 
+                      type="number" 
+                      formControlName="discount" 
+                      min="0" 
+                      (input)="calculateTotals()" 
+                      class="w-14 h-full text-center text-xs font-semibold text-slate-700 bg-transparent border-0 focus:outline-none px-1.5 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <div class="w-px bg-slate-200 self-stretch my-1"></div>
+                    <select 
+                      formControlName="discountType" 
+                      (change)="calculateTotals()" 
+                      class="h-full px-2 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-brand-royal transition-colors cursor-pointer border-0 outline-none select-none text-center"
+                    >
+                      <option value="percentage">%</option>
+                      <option value="fixed_amount">Q</option>
+                    </select>
+                  </div>
+                </td>
+
+                <td class="py-2.5 !pl-4 align-middle">
+                  <div class="inline-flex items-stretch border border-slate-300 rounded-lg overflow-hidden bg-white h-8 focus-within:border-brand-deep focus-within:ring-1 focus-within:ring-brand-deep shadow-2xs w-28">
+                    <input 
+                      type="number" 
                       formControlName="quantity" 
                       [min]="0.001" 
-                      [minFractionDigits]="product?.unit?.allowsDecimals ? 2 : 0"
-                      [maxFractionDigits]="product?.unit?.allowsDecimals ? 2 : 0"
-                      class="w-full"
-                      styleClass="border-slate-300! h-8!"
-                      size="small"
-                      [fluid]="true"
-                      [showButtons]="false"
-                      inputStyleClass="text-xs h-8! py-1! px-2.5! text-center border-slate-300! focus:border-brand-deep!"
-                      (onInput)="calculateTotals()"
+                      [step]="product?.unit?.allowsDecimals ? 0.5 : 1"
+                      (input)="calculateTotals()" 
+                      class="w-full h-full text-center text-xs font-semibold text-slate-700 bg-transparent border-0 focus:outline-none px-2 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
-                  </td>
-                  <td class="py-2.5 text-center">
-                    <div class="flex items-center justify-center gap-1.5">
-                      <p-inputnumber 
-                        formControlName="discount" 
-                        [min]="0" 
-                        [minFractionDigits]="0"
-                        [maxFractionDigits]="2"
-                        styleClass="w-16 border-slate-300! h-8!" 
-                        size="small" 
-                        (onInput)="calculateTotals()" 
-                        inputStyleClass="!text-center text-xs h-8! py-1! px-1.5! border-slate-300! focus:border-brand-deep!" 
-                        [fluid]="true" 
-                      />
-                      <select formControlName="discountType" class="text-[10px] bg-brand-royal/10 rounded-md border-none p-1 font-semibold text-brand-royal hover:bg-brand-royal/20 transition-colors cursor-pointer h-8! px-2!" (change)="calculateTotals()">
-                        <option value="percentage">%</option>
-                        <option value="fixed_amount">Q</option>
-                      </select>
-                    </div>
-                  </td>
-                  <td class="py-2.5 text-right font-bold text-accent-rust text-sm tabular-nums !pr-6">
-                    {{ control.get('lineTotal')?.value | currency: 'Q ' }}
-                  </td>
-                  <td class="py-2.5 text-center !pr-6">
-                    <p-button icon="pi pi-trash" [text]="true" severity="danger" size="small" (onClick)="removeItem(i)" styleClass="!text-cancel-red hover:!bg-rose-50 !w-8 !h-8" />
-                  </td>
-                </tr>
-              </ng-template>
-            </p-table>
-          </div>
+                    <div class="w-px bg-slate-200 self-stretch my-1"></div>
+                    <span class="px-2.5 h-full flex items-center justify-center text-[10px] font-bold text-slate-500 bg-slate-50 select-none tracking-wider">
+                      {{ product?.unit?.abbreviation || 'un' }}
+                    </span>
+                  </div>
+                </td>
 
-          <!-- MOBILE VIEW -->
-          <div class="md:hidden flex flex-col p-3 gap-3 bg-slate-50/50">
-             <div *ngFor="let control of items.controls; let i = index" [formGroup]="asGroup(control)" class="bg-white rounded-xl border border-slate-200 p-3.5 flex flex-col gap-3 shadow-sm">
-                @let productMobile = getProductById(control.get('productId')?.value);
-                <div class="flex justify-between items-center pb-2 border-b border-slate-100">
-                   <span class="text-[10px] font-semibold text-text-muted">Ítem #{{ i + 1 }}</span>
-                   <p-button icon="pi pi-trash" [text]="true" severity="danger" size="small" (onClick)="removeItem(i)" styleClass="!text-cancel-red hover:!bg-rose-50 !w-8 !h-8 !p-0" />
-                </div>
-                <div class="flex flex-col gap-1 py-1">
-                   <span class="text-[10px] font-semibold text-text-muted">Producto</span>
-                   <span class="text-xs font-semibold text-text-body truncate block max-w-[280px]" [pTooltip]="productMobile?.name" tooltipPosition="top">{{ productMobile?.name }}</span>
-                   <span class="text-[9px] font-mono text-text-muted mt-0.5 truncate block">{{ productMobile?.sku || 'SIN SKU' }}</span>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                   <div class="flex flex-col gap-1">
-                      <label class="text-[10px] font-semibold text-text-muted">Cantidad</label>
-                      <p-inputnumber 
-                        formControlName="quantity" 
-                        [min]="0.001" 
-                        [minFractionDigits]="productMobile?.unit?.allowsDecimals ? 2 : 0"
-                        [maxFractionDigits]="productMobile?.unit?.allowsDecimals ? 2 : 0"
-                        size="small" 
-                        styleClass="border-slate-300! h-8!"
-                        [fluid]="true" 
-                        [showButtons]="false" 
-                        inputStyleClass="text-xs h-8! py-1! px-2.5! text-center border-slate-300! focus:border-brand-deep!"
-                        (onInput)="calculateTotals()" 
-                      />
-                   </div>
-                   <div class="flex flex-col gap-1">
-                      <label class="text-[10px] font-semibold text-text-muted">Precio (Fijo)</label>
-                      <span class="text-xs font-semibold text-text-muted mt-1 leading-8">{{ control.get('unitPrice')?.value | currency: 'Q ' }}</span>
-                   </div>
-                </div>
-                <div class="flex items-center justify-between border-t border-slate-100 pt-2.5 mt-0.5">
-                   <div class="flex items-center gap-1.5 flex-1 text-xs">
-                      <span class="text-[10px] font-semibold text-text-muted">Desc:</span>
-                      <p-inputnumber 
-                        formControlName="discount" 
-                        [min]="0" 
-                        [minFractionDigits]="0"
-                        [maxFractionDigits]="2"
-                        styleClass="w-full max-w-[55px] border-slate-300! h-8!" 
-                        size="small" 
-                        (onInput)="calculateTotals()" 
-                        [fluid]="true" 
-                        inputStyleClass="text-xs h-8! py-1! px-1.5! text-center border-slate-300! focus:border-brand-deep!" 
-                      />
-                      <select formControlName="discountType" class="text-[10px] bg-brand-royal/10 rounded border-none p-1 font-semibold text-brand-royal h-8! px-2!">
-                        <option value="percentage">%</option>
-                        <option value="fixed_amount">Q</option>
-                      </select>
-                   </div>
-                   <span class="font-bold text-accent-rust ml-4 tabular-nums text-sm">{{ control.get('lineTotal')?.value | currency: 'Q ' }}</span>
-                </div>
-             </div>
-          </div>
+                <td class="py-2.5 text-right align-middle font-semibold text-accent-rust text-xs tabular-nums !pr-6">
+                  {{ control.get('lineTotal')?.value | currency: 'Q ' }}
+                </td>
+
+                <td class="py-2.5 text-center !pr-6 align-middle">
+                  <p-button icon="pi pi-trash" [text]="true" severity="danger" size="small" (onClick)="removeItem(i)" styleClass="!text-cancel-red hover:!bg-rose-50 !w-8 !h-8" />
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="6" class="!text-center !p-0 w-full">
+                  <div class="flex flex-col items-center justify-center gap-3 w-full py-16 text-center">
+                    <div class="w-12 h-12 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center shadow-sm">
+                      <i class="pi pi-shopping-bag text-text-muted text-lg"></i>
+                    </div>
+                    <div class="flex flex-col gap-1 max-w-[280px] text-center">
+                      <span class="text-xs font-semibold text-title-secondary">Lista de productos vacía</span>
+                      <span class="text-[10px] text-text-muted">Busca y añade productos para armar la cotización.</span>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
         </div>
       </div>
     </div>
@@ -344,7 +474,52 @@
       </div>
     </div>
   </div>
+
+  <!-- FLOATING BOTTOM-RIGHT ACTION BAR -->
+  <div class="fixed bottom-6 right-6 z-40 animate-in fade-in slide-in-from-bottom-3 duration-200">
+    <div class="bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-slate-300/80 shadow-xl flex items-center gap-3.5">
+      <!-- Resumen rápido del total -->
+      <div class="flex flex-col pr-3 border-r border-slate-200">
+        <span class="text-[10px] font-medium text-slate-500 leading-tight">Total</span>
+        <span class="text-sm font-bold text-emerald-600 leading-none">{{ total | currency: 'Q ' }}</span>
+      </div>
+
+      <!-- Botón Cancelar -->
+      <p-button 
+        label="Cancelar" 
+        [outlined]="true" 
+        severity="danger" 
+        (onClick)="onCancel()" 
+        icon="pi pi-times"
+        styleClass="!rounded-lg !px-3.5 font-semibold h-9! hover:bg-cancel-red/5 transition-all text-xs border-cancel-red! text-cancel-red!"
+      />
+
+      <!-- Botón Guardar / Generar -->
+      <p-button 
+        [label]="isEditMode ? 'Actualizar cotización' : 'Generar cotización'" 
+        (onClick)="onSave()"
+        [loading]="loading"
+        [disabled]="!isFormValid || loading"
+        icon="pi pi-check"
+        styleClass="!rounded-lg !px-5 shadow-sm transition-all font-semibold h-9! justify-center text-xs !bg-[#48021C] !text-white !border-[#48021C] hover:!bg-[#350114] disabled:!opacity-40 disabled:!cursor-not-allowed"
+      />
+    </div>
+  </div>
 </div>
+
+<!-- MODAL DE CONFIRMACIÓN: CANCELAR COTIZACIÓN -->
+<app-confirmation-modal
+  [(visible)]="showCancelConfirmModal"
+  header="Confirmar cancelación"
+  title="¿Estás seguro de cancelar y salir?"
+  message="Tienes cambios o productos agregados en la cotización que no se han guardado."
+  note="Si sales ahora, se perderán las modificaciones no guardadas."
+  type="warning"
+  icon="pi pi-exclamation-triangle"
+  confirmLabel="Salir"
+  cancelLabel="Continuar"
+  (onConfirm)="executeCancelExit()"
+/>
 
 <!-- COMPRESSED AND BRANDED PRODUCT SLIDER SELECTOR (DRAWER) -->
 <p-drawer 
@@ -394,12 +569,15 @@
               </div>
               <div class="flex flex-col min-w-0">
                 <span class="font-bold text-slate-800 truncate leading-tight text-xs">{{ p.name }}</span>
-                <span class="text-[9px] text-slate-400 font-mono tracking-wider mt-0.5">{{ p.sku || 'SIN SKU' }}</span>
+                <span class="text-[10px] text-slate-400 mt-0.5 truncate">{{ p.sku || '---' }}</span>
               </div>
             </div>
             
             <div class="flex items-center gap-2 flex-shrink-0">
-              <span class="font-bold text-emerald-600 whitespace-nowrap text-xs">{{ p.price | currency:'Q ' }}</span>
+              <div class="flex flex-col items-end">
+                <span class="font-bold text-emerald-600 whitespace-nowrap text-xs">{{ p.price | currency:'Q ' }}</span>
+                <span class="text-[10px] text-slate-500 font-medium whitespace-nowrap mt-0.5">Stock: {{ p.stock ?? 0 }} {{ p.unit.abbreviation || 'un' }}</span>
+              </div>
               <button 
                 type="button"
                 (click)="addProductFromDrawer(p)"

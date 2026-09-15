@@ -4,7 +4,7 @@ import { TableModule } from 'primeng/table';
 import { OrdersService, SaleFilterDto } from '../services/orders.service';
 import { MessageService } from 'primeng/api';
 import { ISaleOrderResponse } from '../interfaces/sale-order.interface';
-import { CurrencyPipe, DatePipe, NgClass } from '@angular/common';
+import { CurrencyPipe, DatePipe, DecimalPipe, NgClass } from '@angular/common';
 import { Router } from '@angular/router';
 import { TooltipModule } from 'primeng/tooltip';
 import { InputTextModule } from 'primeng/inputtext';
@@ -39,6 +39,7 @@ import { LucideCirclePlus, LucideRefreshCw, LucideSquarePen, LucideReceipt, Luci
     TableModule, 
     DatePipe, 
     CurrencyPipe, 
+    DecimalPipe,
     NgClass, 
     TooltipModule, 
     InputTextModule,
@@ -312,5 +313,45 @@ export class SaleOrdersComponent implements OnInit {
 
   isAbonada(order: ISaleOrderResponse): boolean {
     return order.status === 'pending' && Number(order.paidAmount) > 0;
+  }
+
+  getGroupedDetails(order: ISaleOrderResponse) {
+    if (!order || !order.details) return [];
+
+    const groups: {
+      productId: string;
+      productName: string;
+      sku: string;
+      unitAbbreviation: string;
+      unitPrice: number;
+      items: any[];
+      totalQuantity: number;
+      totalAmount: number;
+    }[] = [];
+
+    order.details.forEach((item) => {
+      const prodId = item.product?.id || item.product?.name || '';
+      let group = groups.find((g) => g.productId === prodId);
+      if (!group) {
+        group = {
+          productId: prodId,
+          productName: item.product?.name || 'Producto',
+          sku: item.product?.sku || '---',
+          unitAbbreviation: item.product?.unit?.abbreviation || 'U',
+          unitPrice: Number(item.unitPrice || 0),
+          items: [],
+          totalQuantity: 0,
+          totalAmount: 0,
+        };
+        groups.push(group);
+      }
+      group.items.push(item);
+      group.totalQuantity += Number(item.quantity || 0);
+      group.totalAmount += Number(item.lineTotal || 0);
+    });
+
+    return groups.sort((a, b) =>
+      a.productName.localeCompare(b.productName, 'es', { sensitivity: 'base' })
+    );
   }
 }

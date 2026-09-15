@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, inject, OnInit, OnDestroy, HostBinding, computed } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, OnInit, OnDestroy, HostBinding, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { MenuItem } from '../sidebar/menu-items';
@@ -6,11 +6,13 @@ import { TooltipModule } from 'primeng/tooltip';
 import { filter, Subscription } from 'rxjs';
 import { AuthService } from '../../auth/auth.service';
 import { trigger, style, transition, animate } from '@angular/animations';
+import { CashRegisterService } from '../../inventory/services/cash-register.service';
+import { CashSessionDialogComponent } from '../../shared/components/cash-session-dialog/cash-session-dialog.component';
 
 @Component({
   selector: 'app-modern-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule, TooltipModule],
+  imports: [CommonModule, RouterModule, TooltipModule, CashSessionDialogComponent],
   templateUrl: './modern-sidebar.component.html',
   styleUrl: './modern-sidebar.component.css',
   animations: [
@@ -29,16 +31,26 @@ import { trigger, style, transition, animate } from '@angular/animations';
 export class ModernSidebarComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   public authService = inject(AuthService);
+  private cashService = inject(CashRegisterService);
   private routerSub?: Subscription;
 
   @Input() collapsed = false;
   @HostBinding('class.collapsed') get isCollapsed() { return this.collapsed; }
   @Output() toggle = new EventEmitter<boolean>();
 
+  showCashDialog = signal(false);
   menuItems = computed(() => this.authService.mainMenuSignal());
   expandedItems: Set<string> = new Set();
   activeRoute = '';
   hoveredItem: string | null = null;
+
+  get currentCashSession() {
+    return this.cashService.currentSession;
+  }
+
+  openCashDialog() {
+    this.showCashDialog.set(true);
+  }
 
   onItemMouseEnter(item: MenuItem) {
     if (this.collapsed && item.children && item.children.length > 0) {
@@ -51,6 +63,7 @@ export class ModernSidebarComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.cashService.getStatus().subscribe();
     this.activeRoute = this.router.url;
     this.routerSub = this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
@@ -80,6 +93,7 @@ export class ModernSidebarComponent implements OnInit, OnDestroy {
     if (this.expandedItems.has(label)) {
       this.expandedItems.delete(label);
     } else {
+      this.expandedItems.clear();
       this.expandedItems.add(label);
     }
   }

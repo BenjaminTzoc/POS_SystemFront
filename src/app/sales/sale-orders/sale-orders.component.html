@@ -7,41 +7,17 @@
           Órdenes de Venta
         </h1>
 
-        <div class="flex items-center gap-2 w-full md:w-auto">
-          <div class="flex-1 md:w-72">
-            <p-iconfield>
-              <p-inputicon class="pi pi-search" />
-              <input 
-                [ngModel]="searchTerm()"
-                (input)="applySearch($event)"
-                type="text" 
-                pInputText 
-                placeholder="Buscar orden o cliente..."
-                autocomplete="off"
-                class="!rounded-xl border-slate-200 text-xs h-9!"
-                fluid
-              />
-            </p-iconfield>
-          </div>
+        <div class="flex items-center gap-2">
           <p-button 
             [outlined]="true"
-            severity="secondary"
-            styleClass="!rounded-lg text-sm! inline-flex items-center gap-1.5 border-slate-300 text-slate-700 hover:bg-slate-100 shadow-none"
+            styleClass="!rounded-lg text-sm! font-semibold !border-[1.5px] !border-[#1e3a5f] !text-[#1e3a5f] !bg-white hover:!bg-[#1e3a5f] hover:!text-white inline-flex items-center gap-1.5 shadow-sm transition-all"
             [loading]="loading()"
             (onClick)="loadOrders()"
             pTooltip="Actualizar lista de órdenes"
             tooltipPosition="bottom"
           >
-            <svg lucideRefreshCw class="w-4 h-4" [class.animate-spin]="loading()"></svg>
+            <svg lucideRefreshCw class="w-4 h-4 stroke-[2.2]" [class.animate-spin]="loading()"></svg>
             <span>Actualizar</span>
-          </p-button>
-
-          <p-button 
-            styleClass="!rounded-lg text-sm! !bg-[#48021C] !border-[#48021C] !text-white hover:!bg-[#350114] inline-flex items-center gap-1.5 shadow-sm"
-            (onClick)="createSaleOrder()"
-          >
-            <svg lucideCirclePlus class="w-4 h-4"></svg>
-            <span>Nueva Orden</span>
           </p-button>
         </div>
       </div>
@@ -84,10 +60,48 @@
     </div>
   </div>
 
-  <div class="max-w-[1700px] mx-auto">
+  <!-- Table Card: List of Orders -->
+  <div class="max-w-[1700px] mx-auto px-4 md:px-0">
     
-    <!-- DESKTOP VIEW -->
-    <div class="hidden lg:block bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm">
+    <!-- DESKTOP VIEW CARD -->
+    <div class="hidden lg:block bg-white rounded-2xl border border-slate-300 overflow-hidden shadow-sm">
+      <!-- Card Header: Title & Actions (Buscador y Botón Nueva Orden alineados a la derecha) -->
+      <div class="py-3 px-4 md:px-6 flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-200 bg-slate-50/50">
+        <div class="flex items-center gap-2.5">
+          <h2 class="text-base font-semibold text-gray-900 tracking-tight leading-none m-0">
+            Listado de Órdenes
+          </h2>
+          <span class="px-2.5 py-0.5 bg-slate-200/80 text-slate-700 text-xs font-semibold rounded-full">
+            {{ totalRecords() }}
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+          <div class="flex-1 md:w-72">
+            <p-iconfield>
+              <p-inputicon class="pi pi-search" />
+              <input 
+                [ngModel]="searchTerm()"
+                (input)="applySearch($event)"
+                type="text" 
+                pInputText 
+                placeholder="Buscar orden o cliente..."
+                autocomplete="off"
+                class="!rounded-xl border-slate-200 text-xs h-9!"
+                fluid
+              />
+            </p-iconfield>
+          </div>
+
+          <p-button 
+            styleClass="!rounded-lg text-sm! !bg-[#48021C] !border-[#48021C] !text-white hover:!bg-[#350114] inline-flex items-center gap-1.5 shadow-sm"
+            (onClick)="createSaleOrder()"
+          >
+            <svg lucideCirclePlus class="w-4 h-4"></svg>
+            <span>Nueva Orden</span>
+          </p-button>
+        </div>
+      </div>
       <p-table
         [value]="saleOrders()"
         [loading]="loading()"
@@ -175,8 +189,10 @@
               {{ order.total | currency: 'Q ' }}
             </td>
             <td class="!px-4 !py-2.5 text-left border-r border-slate-200">
-              @if (+order.paidAmount === 0) {
-                <span class="text-xs font-semibold">Sin abono</span>
+              @if (order.status === 'cancelled') {
+                <span class="text-xs font-semibold text-slate-400 italic">No Aplica</span>
+              } @else if (+order.paidAmount === 0) {
+                <span class="text-xs font-semibold text-slate-500">Sin abono</span>
               } @else if (+order.pendingAmount > 0) {
                 <div class="flex flex-col leading-tight gap-0.5">
                   <span class="text-xs font-semibold text-[#15803d]">
@@ -270,7 +286,41 @@
     </div>
 
     <!-- MOBILE VIEW -->
-    <div class="lg:hidden block">
+    <div class="lg:hidden block bg-white rounded-2xl border border-slate-300 overflow-hidden shadow-sm">
+      <!-- Mobile Card Header -->
+      <div class="p-4 flex flex-col gap-2.5 border-b border-slate-200 bg-slate-50/50">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <h2 class="text-base font-semibold text-gray-900 tracking-tight leading-none m-0">
+              Listado de Órdenes
+            </h2>
+            <span class="px-2 py-0.5 bg-slate-200 text-slate-700 text-xs font-semibold rounded-full">
+              {{ totalRecords() }}
+            </span>
+          </div>
+          <p-button 
+            styleClass="!rounded-lg text-xs! !bg-[#48021C] !border-[#48021C] !text-white hover:!bg-[#350114] inline-flex items-center gap-1 shadow-sm !py-1.5 !px-3"
+            (onClick)="createSaleOrder()"
+          >
+            <svg lucideCirclePlus class="w-3.5 h-3.5"></svg>
+            <span>Nueva Orden</span>
+          </p-button>
+        </div>
+        <p-iconfield class="w-full">
+          <p-inputicon class="pi pi-search" />
+          <input 
+            [ngModel]="searchTerm()"
+            (input)="applySearch($event)"
+            type="text" 
+            pInputText 
+            placeholder="Buscar orden o cliente..."
+            autocomplete="off"
+            class="!rounded-xl border-slate-200 text-xs h-9! w-full"
+            fluid
+          />
+        </p-iconfield>
+      </div>
+
       <p-table
         [value]="saleOrders()"
         [loading]="loading()"
@@ -422,63 +472,66 @@
     <ng-template #expandedDetails let-order>
       <div class="flex flex-col lg:grid lg:grid-cols-12 gap-6 text-left">
         <div class="col-span-12 lg:col-span-8 flex flex-col gap-4">
-          <div class="bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm">
-            <!-- Table for items (Desktop) -->
-            <div class="hidden lg:block">
-              <table class="w-full text-left text-sm">
-                <thead class="bg-slate-50 border-b border-slate-300">
-                  <tr class="h-11 text-[11px] font-semibold text-[#3B5B8A]">
-                    <th class="px-6 py-2.5">Producto</th>
-                    <th class="px-6 py-2.5 text-center">Cant.</th>
-                    <th class="px-6 py-2.5 text-right">Precio Unit.</th>
-                    <th class="px-6 py-2.5 text-right">Subtotal</th>
+          <div class="bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm flex flex-col">
+            <!-- Scrollable Table Container (Replicating exact preview table without images) -->
+            <div class="max-h-[380px] overflow-y-auto overflow-x-auto">
+              <table class="w-full text-left text-sm border-collapse">
+                <thead class="sticky top-0 bg-[#0f172a] text-white z-10 shadow-sm">
+                  <tr class="h-9 text-[11px] font-semibold uppercase tracking-wider">
+                    <th class="px-4 py-2.5 text-left text-white" style="width: 15%">Código</th>
+                    <th class="px-4 py-2.5 text-left text-white" style="width: 35%">Nombre</th>
+                    <th class="px-4 py-2.5 text-right text-white" style="width: 15%">Precio Q.</th>
+                    <th class="px-4 py-2.5 text-right text-white" style="width: 15%">Cantidad</th>
+                    <th class="px-4 py-2.5 text-right text-white" style="width: 20%">Total Q.</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
-                  @for (detail of order.details; track detail.id) {
-                    <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0">
-                      <td class="px-6 py-2">
-                        <div class="flex items-center gap-3">
-                          <div class="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 bg-slate-50 flex items-center justify-center flex-shrink-0">
-                            @if (detail.product?.imageUrl) {
-                              <img [src]="getProductImageUrl(detail.product.imageUrl)" class="w-full h-full object-cover" />
-                            } @else {
-                              <i class="pi pi-image text-slate-300 text-lg"></i>
-                            }
-                          </div>
-                          <div class="flex flex-col overflow-hidden max-w-[200px] sm:max-w-none">
-                            <span class="font-medium text-[#3B5B8A] text-xs truncate">{{ detail.product?.name }}</span>
-                            <span class="text-[9px] text-slate-400 font-mono tracking-tighter">{{ detail.product?.sku }}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td class="px-6 py-2 text-center">
-                        <div class="flex flex-col items-center">
-                          <span class="font-semibold text-[#627ca7] text-xs">{{ detail.quantity }}</span>
-                          <span class="text-[9px] font-semibold text-slate-400">{{ detail.product?.unit?.abbreviation }}</span>
-                        </div>
-                      </td>
-                      <td class="px-6 py-2 text-right text-slate-500 font-medium text-xs tabular-nums">{{ detail.unitPrice | currency: 'Q ' }}</td>
-                      <td class="px-6 py-2 text-right text-slate-800 font-bold text-xs tabular-nums">{{ detail.lineTotal | currency: 'Q ' }}</td>
-                    </tr>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                  @for (group of getGroupedDetails(order); track group.productId) {
+                    @for (item of group.items; track $index) {
+                      <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100">
+                        <td class="px-4 py-2 text-xs text-slate-600 font-mono">
+                          {{ group.sku }}
+                        </td>
+                        <td class="px-4 py-2 text-xs text-slate-800 font-medium">
+                          {{ group.productName }}
+                          @if (+item.discountAmount > 0 || (item.discount && +item.discount > 0)) {
+                            <span class="block text-[10px] text-rose-600 italic font-normal">
+                              Desc: -{{ (item.discountAmount || item.discount) | currency: 'Q ' }}
+                            </span>
+                          }
+                        </td>
+                        <td class="px-4 py-2 text-xs text-right text-slate-700 tabular-nums">
+                          {{ item.unitPrice | currency: 'Q ' }}
+                        </td>
+                        <td class="px-4 py-2 text-xs text-right text-slate-800 tabular-nums">
+                          {{ item.quantity | number:'1.2-2' }}
+                          @if (group.unitAbbreviation) {
+                            <span class="text-[10px] text-slate-500 ml-0.5">{{ group.unitAbbreviation }}</span>
+                          }
+                        </td>
+                        <td class="px-4 py-2 text-xs text-right text-slate-900 font-semibold tabular-nums">
+                          {{ item.lineTotal | currency: 'Q ' }}
+                        </td>
+                      </tr>
+                    }
+                    <!-- Product Group Subtotal (Only if more than 1 item) -->
+                    @if (group.items.length > 1) {
+                      <tr class="bg-slate-50/40">
+                        <td colspan="3"></td>
+                        <td class="px-4 py-1.5 text-right text-xs font-bold text-slate-900 border-t border-dashed border-slate-300 tabular-nums">
+                          {{ group.totalQuantity | number:'1.2-2' }}
+                          @if (group.unitAbbreviation) {
+                            <span class="text-[10px] font-normal text-slate-500 ml-0.5">{{ group.unitAbbreviation }}</span>
+                          }
+                        </td>
+                        <td class="px-4 py-1.5 text-right text-xs font-bold text-slate-900 border-t border-dashed border-slate-300 tabular-nums">
+                          {{ group.totalAmount | currency: 'Q ' }}
+                        </td>
+                      </tr>
+                    }
                   }
                 </tbody>
               </table>
-            </div>
-
-            <!-- Mobile cards for items (Mobile) -->
-            <div class="lg:hidden flex flex-col divide-y divide-slate-100">
-              @for (detail of order.details; track detail.id) {
-                <div class="p-2.5 flex gap-3 items-center">
-                  <div class="flex-1 min-w-0">
-                     <h5 class="font-semibold text-[#3B5B8A] text-xs truncate leading-tight mb-1">{{ detail.product?.name }}</h5>
-                     <div class="flex justify-between items-end">
-                        <span class="text-[9px] font-semibold text-[#3B5B8A] bg-[#D0E2F2] border border-[#4A7FA7] px-2 py-0.5 rounded-md">{{ detail.quantity }} unidades</span>
-                        <span class="text-xs font-bold text-slate-800 tabular-nums">{{ detail.lineTotal | currency: 'Q ' }}</span>
-                     </div>
-                  </div>
-                </div>
-              }
             </div>
 
             <!-- Footer totals -->
@@ -503,18 +556,32 @@
           <div class="p-4 bg-white rounded-xl border border-slate-300 shadow-sm">
             <h4 class="text-[11px] font-bold text-[#3B5B8A] mb-3">Notas & Resumen Financiero</h4>
             
-            <div class="space-y-3.5">
-              <div class="mt-4 grid grid-cols-2 gap-4">
-                <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
-                  <span class="text-[9px] font-semibold text-emerald-600 block mb-1 text-center">Cobrado</span>
-                  <span class="text-sm font-bold text-emerald-700 block text-center">{{ order.paidAmount | currency: 'Q ' }}</span>
+            @if (order.status === 'cancelled') {
+              <div class="p-4 bg-rose-50/70 rounded-xl border border-rose-200/80 flex flex-col items-center text-center gap-2 my-1">
+                <div class="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 shadow-xs">
+                  <i class="pi pi-ban text-base font-bold"></i>
                 </div>
-                <div class="p-3 bg-rose-50 rounded-xl border border-rose-100">
-                  <span class="text-[9px] font-semibold text-rose-600 block mb-1 text-center">Saldo</span>
-                  <span class="text-sm font-bold text-rose-700 block text-center">{{ order.pendingAmount | currency: 'Q ' }}</span>
+                <div class="flex flex-col gap-1">
+                  <span class="text-xs font-bold text-rose-800 tracking-tight uppercase">Orden Cancelada</span>
+                  <p class="text-[11px] text-rose-600 font-medium leading-relaxed">
+                    Esta orden se encuentra anulada. No registra saldos pendientes de cobro ni transacciones activas.
+                  </p>
                 </div>
               </div>
-            </div>
+            } @else {
+              <div class="space-y-3.5">
+                <div class="mt-4 grid grid-cols-2 gap-4">
+                  <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+                    <span class="text-[9px] font-semibold text-emerald-600 block mb-1 text-center">Cobrado</span>
+                    <span class="text-sm font-bold text-emerald-700 block text-center">{{ order.paidAmount | currency: 'Q ' }}</span>
+                  </div>
+                  <div class="p-3 bg-rose-50 rounded-xl border border-rose-100">
+                    <span class="text-[9px] font-semibold text-rose-600 block mb-1 text-center">Saldo</span>
+                    <span class="text-sm font-bold text-rose-700 block text-center">{{ order.pendingAmount | currency: 'Q ' }}</span>
+                  </div>
+                </div>
+              </div>
+            }
             
             @if (order.notes) {
               <div class="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200">

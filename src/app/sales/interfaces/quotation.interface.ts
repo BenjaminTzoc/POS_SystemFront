@@ -43,7 +43,9 @@ export interface IQuotation {
   status: QuotationStatus;
   notes?: string;
   subtotal: number;
-  tax: number;
+  tax?: number;
+  taxAmount?: number;
+  discountAmount?: number;
   total: number;
   validUntil: string;
   createdAt: string;
@@ -61,6 +63,7 @@ export interface IQuotation {
   adjustments?: IQuotationAdjustment[];
   saleId?: string;
   applyTax?: boolean;
+  createdBy?: string;
 }
 
 export interface IQuotationResponse {

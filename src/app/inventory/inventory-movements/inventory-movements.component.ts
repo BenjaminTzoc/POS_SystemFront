@@ -15,7 +15,8 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { Dialog } from 'primeng/dialog';
 import { FormsModule } from '@angular/forms';
-import { Textarea, TextareaModule } from 'primeng/textarea';
+import { TextareaModule } from 'primeng/textarea';
+import { ConfirmationModalComponent } from '../../shared/components/confirmation-modal/confirmation-modal.component';
 import { MovementFormComponent } from './movement-form/movement-form.component';
 
 @Component({
@@ -34,6 +35,7 @@ import { MovementFormComponent } from './movement-form/movement-form.component';
     Dialog,
     FormsModule,
     TextareaModule,
+    ConfirmationModalComponent,
     MovementFormComponent,
   ],
   providers: [ConfirmationService, MessageService],
@@ -50,15 +52,24 @@ export class InventoryMovementsComponent implements OnInit {
   stats: any = null;
   showNewMovementModal = false;
 
+  // Complete dialog properties
+  displayCompleteDialog: boolean = false;
+  selectedMovementForComplete: InventoryMovement | null = null;
+  submittingComplete: boolean = false;
+
   // Cancel dialog properties
   displayCancelDialog: boolean = false;
   cancelReason: string = '';
-  selectedMovementId: string | null = null;
+  selectedMovementForCancel: InventoryMovement | null = null;
   submittingCancel: boolean = false;
+
+  // Delete dialog properties
+  displayDeleteDialog: boolean = false;
+  selectedMovementForDelete: InventoryMovement | null = null;
+  submittingDelete: boolean = false;
 
   constructor(
     private inventoryMovementsService: InventoryMovementsService,
-    private confirmationService: ConfirmationService,
     private messageService: MessageService,
     private router: Router,
     private location: Location
@@ -116,55 +127,57 @@ export class InventoryMovementsComponent implements OnInit {
   }
 
   confirmComplete(movement: InventoryMovement) {
-    this.confirmationService.confirm({
-      message: `¿Estás seguro de que deseas completar este movimiento para "${movement.product?.name}"? Esto afectará el stock oficial.`,
-      header: 'Confirmar Finalización',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sí, completar',
-      rejectLabel: 'No, esperar',
-      acceptButtonStyleClass: 'p-button-success',
-      rejectButtonStyleClass: 'p-button-text p-button-secondary',
-      accept: () => {
-        this.executeComplete(movement.id);
-      },
-    });
+    this.selectedMovementForComplete = movement;
+    this.displayCompleteDialog = true;
   }
 
-  private executeComplete(id: string) {
-    this.inventoryMovementsService.completeInventoryMovement(id).subscribe({
+  closeCompleteDialog() {
+    this.displayCompleteDialog = false;
+    this.selectedMovementForComplete = null;
+  }
+
+  executeComplete() {
+    if (!this.selectedMovementForComplete) return;
+
+    this.submittingComplete = true;
+    this.inventoryMovementsService.completeInventoryMovement(this.selectedMovementForComplete.id).subscribe({
       next: () => {
         this.messageService.add({
           severity: 'success',
           summary: 'Completado',
           detail: 'El movimiento ha sido confirmado correctamente.',
         });
+        this.closeCompleteDialog();
         this.loadInventoryMovements();
+        this.loadStats();
         this.onMovementChange.emit();
+        this.submittingComplete = false;
       },
       error: (error) => {
+        this.submittingComplete = false;
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: `No se pudo completar: ${error.error.message}`,
+          detail: `No se pudo completar: ${error.error?.message || error.message}`,
         });
       },
     });
   }
 
   openCancelDialog(movement: InventoryMovement) {
-    this.selectedMovementId = movement.id;
+    this.selectedMovementForCancel = movement;
     this.cancelReason = '';
     this.displayCancelDialog = true;
   }
 
   closeCancelDialog() {
     this.displayCancelDialog = false;
-    this.selectedMovementId = null;
+    this.selectedMovementForCancel = null;
     this.cancelReason = '';
   }
 
   executeCancel() {
-    if (!this.selectedMovementId || !this.cancelReason.trim()) {
+    if (!this.selectedMovementForCancel || !this.cancelReason.trim()) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Campo Requerido',
@@ -175,7 +188,7 @@ export class InventoryMovementsComponent implements OnInit {
 
     this.submittingCancel = true;
     this.inventoryMovementsService
-      .cancelInventoryMovement(this.selectedMovementId, this.cancelReason)
+      .cancelInventoryMovement(this.selectedMovementForCancel.id, this.cancelReason)
       .subscribe({
         next: () => {
           this.messageService.add({
@@ -185,52 +198,54 @@ export class InventoryMovementsComponent implements OnInit {
           });
           this.closeCancelDialog();
           this.loadInventoryMovements();
+          this.loadStats();
           this.onMovementChange.emit();
           this.submittingCancel = false;
         },
         error: (error) => {
+          this.submittingCancel = false;
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: `No se pudo cancelar: ${error.error.message}`,
+            detail: `No se pudo cancelar: ${error.error?.message || error.message}`,
           });
-          this.submittingCancel = false;
         },
       });
   }
 
   confirmDelete(movement: InventoryMovement) {
-    this.confirmationService.confirm({
-      message: `¿Estás seguro de que deseas eliminar este movimiento? Esta acción realizará un borrado lógico.`,
-      header: 'Confirmar Eliminación',
-      icon: 'pi pi-trash',
-      acceptLabel: 'Sí, eliminar',
-      rejectLabel: 'Cerrar',
-      acceptButtonStyleClass: 'p-button-danger',
-      rejectButtonStyleClass: 'p-button-text p-button-secondary',
-      accept: () => {
-        this.executeDelete(movement.id);
-      },
-    });
+    this.selectedMovementForDelete = movement;
+    this.displayDeleteDialog = true;
   }
 
-  private executeDelete(id: string) {
-    this.inventoryMovementsService.deleteMovement(id).subscribe({
+  closeDeleteDialog() {
+    this.displayDeleteDialog = false;
+    this.selectedMovementForDelete = null;
+  }
+
+  executeDelete() {
+    if (!this.selectedMovementForDelete) return;
+
+    this.submittingDelete = true;
+    this.inventoryMovementsService.deleteMovement(this.selectedMovementForDelete.id).subscribe({
       next: () => {
         this.messageService.add({
           severity: 'success',
           summary: 'Eliminado',
           detail: 'El movimiento ha sido eliminado.',
         });
+        this.closeDeleteDialog();
         this.loadInventoryMovements();
         this.loadStats();
         this.onMovementChange.emit();
+        this.submittingDelete = false;
       },
       error: (error) => {
+        this.submittingDelete = false;
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: `No se pudo eliminar: ${error.error.message}`,
+          detail: `No se pudo eliminar: ${error.error?.message || error.message}`,
         });
       },
     });

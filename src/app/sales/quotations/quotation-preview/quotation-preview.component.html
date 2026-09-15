@@ -1,0 +1,206 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [showHeader]="false"
+  [dismissableMask]="true"
+  [style]="{ width: '850px', 'max-width': '95vw', 'max-height': '94vh' }"
+  contentStyleClass="!p-4 sm:!p-5 !overflow-hidden flex flex-col"
+  [draggable]="false"
+  [resizable]="false"
+  appendTo="body"
+  styleClass="rounded-2xl overflow-hidden shadow-2xl bg-white"
+  (onHide)="onClose()"
+>
+  <div class="preview-content flex flex-col h-full min-h-0 max-h-[88vh]" *ngIf="quotation">
+    <!-- Header with Title and Close Button (Compacto y sin icono) -->
+    <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 flex-shrink-0">
+      <h3 class="text-sm font-semibold text-slate-800 tracking-tight leading-none">
+        Documento de Cotización <span *ngIf="quotation?.correlative" class="text-brand-navy text-xs font-bold">#{{ quotation.correlative }}</span>
+      </h3>
+      <button 
+        type="button" 
+        (click)="onClose()"
+        class="w-7 h-7 -mr-1 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors border-none bg-transparent cursor-pointer"
+        pTooltip="Cerrar vista previa"
+      >
+        <i class="pi pi-times text-xs"></i>
+      </button>
+    </div>
+
+    <!-- The actual ticket template simulation (ÚNICO SCROLL) -->
+    <div class="ticket-wrapper flex-1 min-h-0 overflow-y-auto">
+      <div id="pos-ticket" class="ticket-container">
+        
+        <!-- HEADER SECTION -->
+        <div class="header">
+          <div class="logo-container">
+            <img [src]="companyInfo.logo" class="logo" alt="Logo de la Empresa" />
+            <div class="company-details">
+              <p class="company-info">{{ companyInfo.address }}</p>
+              <p class="company-info" *ngIf="companyInfo.phone">Tel: {{ companyInfo.phone }}</p>
+              <p class="company-info" *ngIf="companyInfo.nit">NIT: {{ companyInfo.nit }}</p>
+            </div>
+          </div>
+          <div class="document-badge">
+            <h2 class="ticket-title">Cotización</h2>
+            <div class="document-number">Nº: {{ quotation.correlative || quotation.quotationNumber }}</div>
+          </div>
+        </div>
+
+        <!-- SALE & CUSTOMER INFORMATION -->
+        <div class="info-section">
+          <div class="info-block">
+            <h3>Información del Cliente</h3>
+            <p><strong>Nombre:</strong> {{ quotation.customer ? quotation.customer.name : (quotation.guestCustomer?.name || quotation.customerName || 'Consumidor Final') }}</p>
+            <p><strong>NIT:</strong> {{ (quotation.customer ? quotation.customer.nit : quotation.guestCustomer?.nit) || 'C/F' }}</p>
+            <p *ngIf="quotation.customer?.phone || quotation.guestCustomer?.phone"><strong>Teléfono:</strong> {{ quotation.customer ? quotation.customer.phone : quotation.guestCustomer?.phone }}</p>
+            <p *ngIf="quotation.customer?.address || quotation.guestCustomer?.address"><strong>Dirección:</strong> {{ quotation.customer ? quotation.customer.address : quotation.guestCustomer?.address }}</p>
+          </div>
+          <div class="info-block">
+            <h3>Detalles de la Emisión</h3>
+            <p><strong>Fecha de Emisión:</strong> {{ quotation.createdAt | date: 'dd/MM/yyyy HH:mm' }}</p>
+            <p *ngIf="quotation.validUntil"><strong>Validez:</strong> {{ getValidityFormatted() }}</p>
+            <p *ngIf="quotation.branch || quotation.branchName"><strong>Sucursal:</strong> {{ quotation.branch?.name || quotation.branchName }}</p>
+            <p><strong>Estado:</strong> {{ getStatusLabel(quotation.status) }}</p>
+          </div>
+        </div>
+
+        <!-- ITEMS TABLE -->
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th style="width: 15%">Código</th>
+              <th style="width: 35%">Nombre</th>
+              <th style="width: 15%; text-align: right">Precio Q.</th>
+              <th style="width: 15%; text-align: right">Cantidad</th>
+              <th style="width: 20%; text-align: right">Total Q.</th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngFor="let group of groupedDetails">
+              <!-- Individual Weigh/Detail Rows -->
+              <tr *ngFor="let item of group.items">
+                <td>{{ group.sku }}</td>
+                <td>
+                  {{ group.productName }}
+                  <span *ngIf="item.discountAmount > 0" class="discount-text">
+                    <br /><small>Desc: -{{ item.discountAmount | currency: 'Q' }}</small>
+                  </span>
+                </td>
+                <td class="text-right">{{ item.unitPrice | currency: 'Q' }}</td>
+                <td class="text-right">
+                  {{ item.quantity | number:'1.2-2' }}
+                  <span *ngIf="group.unitAbbreviation" style="font-size: 8pt; color: #555; margin-left: 1px;">{{ group.unitAbbreviation }}</span>
+                </td>
+                <td class="text-right">{{ (item.lineTotal || item.subtotal) | currency: 'Q' }}</td>
+              </tr>
+              <!-- Product Group Subtotal (Only if more than 1 item) -->
+              <tr *ngIf="group.items.length > 1" class="product-group-subtotal">
+                <td colspan="3"></td>
+                <td class="text-right" style="font-weight: bold; border-top: 1px dashed #aaa; padding-top: 0.5mm;">
+                  {{ group.totalQuantity | number:'1.2-2' }}
+                  <span *ngIf="group.unitAbbreviation" style="font-size: 8pt; color: #555; margin-left: 1px;">{{ group.unitAbbreviation }}</span>
+                </td>
+                <td class="text-right" style="font-weight: bold; border-top: 1px dashed #aaa; padding-top: 0.5mm;">
+                  {{ group.totalAmount | currency: 'Q' }}
+                </td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
+
+        <!-- TOTALS AND TERMS SECTION -->
+        <div class="totals-and-payments">
+          <!-- Terms & Conditions Column -->
+          <div class="terms-conditions">
+            <h3>TÉRMINOS Y CONDICIONES</h3>
+            <ul class="terms-list">
+              <li *ngIf="quotation.validUntil">
+                Esta cotización tiene una validez de {{ validityDays }} {{ validityDays === 1 ? 'día' : 'días' }} a partir de su emisión.
+              </li>
+              <li *ngIf="quotation.validUntil">
+                Vence oficialmente el día {{ validityExpireDateFormatted }}.
+              </li>
+              <li>Precios y existencias sujetos a cambios sin previo aviso.</li>
+              <li *ngIf="quotation.notes" class="italic mt-1 text-slate-500">
+                <strong>Nota:</strong> "{{ quotation.notes }}"
+              </li>
+            </ul>
+          </div>
+
+          <!-- Totals Column -->
+          <div class="totals">
+            <div class="total-row">
+              <span>Subtotal:</span>
+              <span>{{ quotation.subtotal | currency: 'Q' }}</span>
+            </div>
+            <div class="total-row" *ngIf="totalDiscount > 0">
+              <span>Descuento:</span>
+              <span>-{{ totalDiscount | currency: 'Q' }}</span>
+            </div>
+            <div class="total-row" *ngIf="taxAmount > 0">
+              <span>Impuestos:</span>
+              <span>{{ taxAmount | currency: 'Q' }}</span>
+            </div>
+            <div class="total-row grand-total">
+              <span>TOTAL:</span>
+              <span>{{ quotation.total | currency: 'Q' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+          <p>¡Gracias por su preferencia!</p>
+          <p>Cotización Informativa - Sujeta a disponibilidad y términos comerciales</p>
+          <div class="legal-text">
+            <small>Precios y disponibilidad válidos hasta la fecha de vigencia estipulada</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions Footer Grid (Fijo Abajo) -->
+    <div class="actions-grid mt-2.5 pt-2.5 border-t border-slate-100 flex-shrink-0">
+      <p-button
+        label="Imprimir"
+        icon="pi pi-print"
+        severity="primary"
+        [loading]="isPrinting()"
+        (click)="onPrint()"
+        styleClass="w-full"
+      >
+      </p-button>
+
+      <p-button
+        label="Descargar"
+        icon="pi pi-download"
+        severity="secondary"
+        [loading]="isDownloading()"
+        (click)="onDownload()"
+        styleClass="w-full"
+      >
+      </p-button>
+
+      <p-button
+        label="Enviar Email"
+        icon="pi pi-envelope"
+        severity="info"
+        [loading]="isSendingEmail()"
+        (click)="onSendEmail()"
+        styleClass="w-full"
+      >
+      </p-button>
+
+      <p-button
+        label="WhatsApp"
+        icon="pi pi-whatsapp"
+        severity="success"
+        [loading]="isSendingWhatsApp()"
+        (click)="onSendWhatsApp()"
+        styleClass="w-full"
+      >
+      </p-button>
+    </div>
+  </div>
+</p-dialog>

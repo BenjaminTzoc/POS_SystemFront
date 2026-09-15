@@ -1,5 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { CommonModule, CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
@@ -12,17 +12,29 @@ import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { DialogModule } from 'primeng/dialog';
+import { SelectModule } from 'primeng/select';
+import { RippleModule } from 'primeng/ripple';
+import { LucideCirclePlus, LucideRefreshCw, LucideEye, LucideSquarePen, LucideBan, LucideShoppingCart, LucideFileText } from '@lucide/angular';
 
 import { QuotationsService } from '../services/quotations.service';
 import { IQuotation, QuotationStatus, IQuotationResponse } from '../interfaces/quotation.interface';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../../core/models/api-response.model';
+import { AuthService } from '../../auth/auth.service';
+import { BranchesService } from '../../inventory/services/branches.service';
+import { Branch } from '../../inventory/interfaces/branch.interface';
+
+import { QuotationPreviewComponent } from './quotation-preview/quotation-preview.component';
+import { ConfirmationModalComponent } from '../../shared/components/confirmation-modal/confirmation-modal.component';
 
 @Component({
   selector: 'app-quotations',
   standalone: true,
   imports: [
     CommonModule,
+    CurrencyPipe,
+    DatePipe,
+    DecimalPipe,
     ButtonModule,
     TableModule,
     TagModule,
@@ -33,6 +45,16 @@ import { ApiResponse } from '../../core/models/api-response.model';
     IconFieldModule,
     InputIconModule,
     DialogModule,
+    SelectModule,
+    RippleModule,
+    LucideCirclePlus,
+    LucideRefreshCw,
+    LucideSquarePen,
+    LucideBan,
+    LucideShoppingCart,
+    LucideFileText,
+    QuotationPreviewComponent,
+    ConfirmationModalComponent
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './quotations.component.html',
@@ -43,22 +65,61 @@ export class QuotationsComponent implements OnInit {
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
   private router = inject(Router);
+  private authService = inject(AuthService);
+  private branchesService = inject(BranchesService);
 
   quotations: IQuotation[] = [];
+  branches = signal<Branch[]>([]);
   loading = false;
   searchTerm = '';
-  expandedRowsDesktop: { [key: string]: boolean } = {};
+  selectedBranch: string | null = null;
+  selectedStatus: QuotationStatus | null = null;
+  
+  statusOptions = [
+    { label: 'Pendiente', value: 'PENDING' },
+    { label: 'Convertida', value: 'CONVERTED' },
+    { label: 'Expirada', value: 'EXPIRED' },
+    { label: 'Cancelada', value: 'CANCELLED' }
+  ];
+
+  isSuperAdmin = computed(() => {
+    return this.authService.currentUser?.roles?.some(r => r.isSuperAdmin) ?? false;
+  });
+
+  expandedRows = signal<any>({});
   displayDetails = false;
   selectedQuotation: IQuotation | null = null;
-  expandedRowsMobile: { [key: string]: boolean } = {};
+
+  showConvertConfirmDialog = false;
+  quotationToConvert: IQuotation | null = null;
+  isConverting = false;
+
+  showCancelConfirmDialog = false;
+  quotationToCancel: IQuotation | null = null;
 
   ngOnInit(): void {
+    this.loadBranches();
     this.loadQuotations();
+  }
+
+  loadBranches(): void {
+    this.branchesService.getBranches().subscribe({
+      next: (res) => {
+        if (res.statusCode === 200) {
+          this.branches.set(res.data);
+        }
+      }
+    });
   }
 
   loadQuotations(): void {
     this.loading = true;
-    this.quotationsService.getQuotations({ search: this.searchTerm }).subscribe({
+    const filters: any = {};
+    if (this.searchTerm?.trim()) filters.search = this.searchTerm.trim();
+    if (this.selectedBranch) filters.branchId = this.selectedBranch;
+    if (this.selectedStatus) filters.status = this.selectedStatus;
+
+    this.quotationsService.getQuotations(filters).subscribe({
       next: (res: IQuotationResponse) => {
         this.quotations = res.data;
         this.loading = false;
@@ -89,23 +150,17 @@ export class QuotationsComponent implements OnInit {
   }
 
   confirmConvert(quotation: IQuotation): void {
-    this.confirmationService.confirm({
-      header: 'Convertir a Venta',
-      message: `¿Estás seguro de que deseas convertir la cotización ${quotation.correlative} en una Órden de Venta? El stock se descontará en este momento.`,
-      icon: 'pi pi-shopping-cart',
-      acceptLabel: 'Sí, convertir',
-      acceptButtonStyleClass: 'p-button-success',
-      rejectLabel: 'Cancelar',
-      rejectButtonStyleClass: 'p-button-text p-button-secondary',
-      accept: () => {
-        this.convertToSale(quotation.id);
-      },
-    });
+    this.quotationToConvert = quotation;
+    this.showConvertConfirmDialog = true;
   }
 
-  private convertToSale(id: string): void {
-    this.quotationsService.convertToSale(id).subscribe({
+  executeConvertToSale(): void {
+    if (!this.quotationToConvert) return;
+    this.isConverting = true;
+    this.quotationsService.convertToSale(this.quotationToConvert.id).subscribe({
       next: (res) => {
+        this.isConverting = false;
+        this.showConvertConfirmDialog = false;
         this.messageService.add({
           severity: 'success',
           summary: 'Convertido',
@@ -114,6 +169,7 @@ export class QuotationsComponent implements OnInit {
         this.router.navigate(['/sales/orders']);
       },
       error: (err) => {
+        this.isConverting = false;
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -124,6 +180,13 @@ export class QuotationsComponent implements OnInit {
   }
 
   downloadPdf(quotation: IQuotation): void {
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Generando Documento',
+      detail: `Preparando PDF de ${quotation.correlative}...`,
+      life: 2000
+    });
+
     this.quotationsService.downloadPdf(quotation.id).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
@@ -132,12 +195,17 @@ export class QuotationsComponent implements OnInit {
         a.download = `Cotizacion_${quotation.correlative}.pdf`;
         a.click();
         window.URL.revokeObjectURL(url);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Descargado',
+          detail: `Documento ${quotation.correlative} descargado correctamente.`,
+        });
       },
       error: () => {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'No se pudo generar el PDF.',
+          detail: 'No se pudo generar el documento PDF.',
         });
       },
     });
@@ -154,7 +222,7 @@ export class QuotationsComponent implements OnInit {
       return;
     }
 
-    this.quotationsService.sendEmail(quotation.id, email).subscribe({
+    this.quotationsService.sendQuotationByEmail(quotation.id, email).subscribe({
       next: () => {
         this.messageService.add({
           severity: 'success',
@@ -173,18 +241,15 @@ export class QuotationsComponent implements OnInit {
   }
 
   confirmCancel(quotation: IQuotation): void {
-    this.confirmationService.confirm({
-      header: 'Anular Cotización',
-      message: `¿Deseas anular la cotización ${quotation.correlative}? Esta acción no se puede deshacer.`,
-      icon: 'pi pi-times-circle',
-      acceptLabel: 'Sí, anular',
-      acceptButtonStyleClass: 'p-button-danger',
-      rejectLabel: 'Cerrar',
-      rejectButtonStyleClass: 'p-button-text p-button-secondary',
-      accept: () => {
-        this.updateStatus(quotation.id, 'CANCELLED');
-      },
-    });
+    this.quotationToCancel = quotation;
+    this.showCancelConfirmDialog = true;
+  }
+
+  executeCancelQuotation(): void {
+    if (!this.quotationToCancel) return;
+    const id = this.quotationToCancel.id;
+    this.showCancelConfirmDialog = false;
+    this.updateStatus(id, 'CANCELLED');
   }
 
   private updateStatus(id: string, status: QuotationStatus): void {
@@ -234,6 +299,26 @@ export class QuotationsComponent implements OnInit {
     return labels[status] || status;
   }
 
+  getValidityInfo(validUntil: string | Date | undefined): { text: string; isExpired: boolean } {
+    if (!validUntil) return { text: 'Sin vigencia', isExpired: false };
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const target = new Date(validUntil);
+    target.setHours(0, 0, 0, 0);
+    
+    const diffTime = target.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) {
+      const days = Math.abs(diffDays);
+      return { text: `Vencida hace ${days} ${days === 1 ? 'día' : 'días'}`, isExpired: true };
+    } else if (diffDays === 0) {
+      return { text: 'Vence hoy', isExpired: false };
+    } else {
+      return { text: `Vence en ${diffDays} ${diffDays === 1 ? 'día' : 'días'}`, isExpired: false };
+    }
+  }
+
   getIcon(status: QuotationStatus): string {
     switch (status) {
       case 'PENDING':
@@ -255,11 +340,45 @@ export class QuotationsComponent implements OnInit {
     return `${environment.baseUrl}${imageUrl}`;
   }
 
-  onExpandedRowKeysChangeDesktop(value: any): void {
-    this.expandedRowsDesktop = value;
-  }
+  getGroupedDetails(quotation: IQuotation) {
+    if (!quotation || !quotation.items) return [];
 
-  onExpandedRowKeysChangeMobile(value: any): void {
-    this.expandedRowsMobile = value;
+    const groups: {
+      productId: string;
+      productName: string;
+      sku: string;
+      unitAbbreviation: string;
+      unitPrice: number;
+      productImage?: string;
+      items: any[];
+      totalQuantity: number;
+      totalAmount: number;
+    }[] = [];
+
+    quotation.items.forEach((item: any) => {
+      const prodId = item.productId || item.product?.id || item.productName || '';
+      let group = groups.find((g) => g.productId === prodId);
+      if (!group) {
+        group = {
+          productId: prodId,
+          productName: item.productName || item.product?.name || 'Producto',
+          sku: item.productSku || item.product?.sku || '---',
+          unitAbbreviation: item.product?.unit?.abbreviation || 'U',
+          unitPrice: Number(item.unitPrice || 0),
+          productImage: item.productImage || item.product?.imageUrl,
+          items: [],
+          totalQuantity: 0,
+          totalAmount: 0,
+        };
+        groups.push(group);
+      }
+      group.items.push(item);
+      group.totalQuantity += Number(item.quantity || 0);
+      group.totalAmount += Number(item.lineTotal || item.subtotal || 0);
+    });
+
+    return groups.sort((a, b) =>
+      a.productName.localeCompare(b.productName, 'es', { sensitivity: 'base' })
+    );
   }
 }

@@ -5,7 +5,7 @@
            [pTooltip]="collapsed ? 'Caben POS' : ''" 
            tooltipPosition="right">
         <img 
-          [src]="!collapsed ? 'svg/Logo caben programa-01.svg' : 'svg/Logo caben programa-02.svg'" 
+          [src]="!collapsed ? 'svg/LogoCaben.svg' : 'svg/Logo caben programa-02.svg'" 
           alt="Caben Logo" 
           [class]="!collapsed ? 'h-32!' : 'h-8!'"
           class="w-auto object-contain" />
@@ -54,10 +54,10 @@
             <!-- Submenu flotante tipo Flyout en modo colapsado (Pure CSS Hover) -->
             @if (collapsed) {
               <div class="floating-submenu shadow-2xl">
-                <div class="floating-header font-bold text-xs text-slate-800 px-3 py-2 border-b border-slate-100 bg-slate-50 rounded-t-xl">
+                <div class="floating-header font-bold text-xs px-3 py-2">
                   {{ item.label }}
                 </div>
-                <div class="flex flex-col p-1.5 gap-0.5 bg-white rounded-b-xl">
+                <div class="flex flex-col p-1.5 gap-0.5">
                   @for (child of item.children; track child.label) {
                     <a [routerLink]="child.route" 
                        routerLinkActive="active" 
@@ -79,20 +79,41 @@
 
   <!-- Sidebar Footer -->
   <div class="sidebar-footer">
-    <div class="user-profile">
-      <div class="user-avatar">
-        {{ userInitials }}
-      </div>
-      <div class="user-info">
-        <span class="user-name">{{ user?.name || 'Invitado' }}</span>
-        <span class="user-role">{{ user?.roles?.[0]?.name || 'Usuario' }}</span>
-      </div>
-      <div class="logout-btn" (click)="logout()" pTooltip="Cerrar sesión">
-        <i class="pi pi-power-off"></i>
-      </div>
+    <!-- Cash Register Widget -->
+    <div 
+      class="cash-widget"
+      (click)="openCashDialog()"
+      [pTooltip]="collapsed ? (currentCashSession() ? 'Caja Activa (' + (currentCashSession()?.openingBalance | currency:'Q') + ')' : 'Caja Cerrada - Clic para abrir') : ''"
+      tooltipPosition="right"
+    >
+      @if (!collapsed) {
+        <div class="cash-card" [class.active]="currentCashSession()" [class.closed]="!currentCashSession()">
+          <div class="cash-status-indicator">
+            <span class="status-dot" [class.pulse]="currentCashSession()"></span>
+          </div>
+          <div class="cash-details">
+            <span class="cash-label">Caja {{ currentCashSession() ? 'Activa' : 'Cerrada' }}</span>
+            <span class="cash-subtext">
+              @if (currentCashSession()) {
+                {{ currentCashSession()?.openingBalance | currency:'Q' }} Apertura
+              } @else {
+                Clic para abrir turno
+              }
+            </span>
+          </div>
+          <i class="pi pi-sliders-h cash-icon"></i>
+        </div>
+      } @else {
+        <div class="cash-collapsed-btn" [class.active]="currentCashSession()" [class.closed]="!currentCashSession()">
+          <i class="pi pi-wallet"></i>
+          <span class="collapsed-dot" [class.pulse]="currentCashSession()"></span>
+        </div>
+      }
     </div>
   </div>
 </aside>
+
+<app-cash-session-dialog [(visible)]="showCashDialog"></app-cash-session-dialog>
 
 <!-- Toggle Button (Fuera del aside para evitar recortes) -->
 <button class="toggle-sidebar" (click)="toggleSidebar($event)" aria-label="Toggle Sidebar">

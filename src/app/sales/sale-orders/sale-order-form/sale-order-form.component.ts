@@ -55,15 +55,26 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { CashSessionDialogComponent } from '../../../shared/components/cash-session-dialog/cash-session-dialog.component';
 
+import { ConfirmationModalComponent } from '../../../shared/components/confirmation-modal/confirmation-modal.component';
+
 @Component({
   selector: 'app-sale-order-form',
   //prettier-ignore
-  imports: [ReactiveFormsModule, FormsModule, RadioButtonModule, FloatLabelModule, InputTextModule, CurrencyPipe, ButtonModule, DatePickerModule, TableModule, DialogModule, SelectModule, ToggleSwitchModule, InputNumberModule, TextareaModule, CommonModule, AutoCompleteModule, SaleDiscountsComponent, SaleStatusPipe, PaymentStatusPipe, TooltipModule, ConfirmDialogModule, TagModule, TicketPreviewComponent, TicketTemplateComponent, DrawerModule, IconFieldModule, InputIconModule, CashSessionDialogComponent, BankAccountsComponent],
+  imports: [ReactiveFormsModule, FormsModule, RadioButtonModule, FloatLabelModule, InputTextModule, CurrencyPipe, ButtonModule, DatePickerModule, TableModule, DialogModule, SelectModule, ToggleSwitchModule, InputNumberModule, TextareaModule, CommonModule, AutoCompleteModule, SaleDiscountsComponent, SaleStatusPipe, PaymentStatusPipe, TooltipModule, ConfirmDialogModule, TagModule, TicketPreviewComponent, TicketTemplateComponent, DrawerModule, IconFieldModule, InputIconModule, CashSessionDialogComponent, BankAccountsComponent, ConfirmationModalComponent],
   templateUrl: './sale-order-form.component.html',
   styleUrl: './sale-order-form.component.css',
   providers: [ConfirmationService],
 })
 export class SaleOrderFormComponent implements OnInit, OnDestroy {
+  // Confirmation Modals
+  showCancelConfirmModal = false;
+  showConfirmSaleModal = false;
+  showDeliverSaleModal = false;
+  showVoidSaleModal = false;
+  isConfirmingSale = false;
+  isDeliveringSale = false;
+  isVoidingSale = false;
+
   // Ticket Preview
   showTicketPreview = false;
   confirmedSaleData: ISaleOrderResponse | null = null;
@@ -598,6 +609,10 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
     this.orderForm.get('customerId')!.updateValueAndValidity();
     this.orderForm.get('guestCustomer')!.get('name')!.updateValueAndValidity();
     this.orderForm.get('guestCustomer')!.get('phone')!.updateValueAndValidity();
+  }
+
+  getCustomerById(id: string): ICustomer | undefined {
+    return this.customers.find((c) => c.id === id);
   }
 
   loadCustomers(): void {
@@ -1407,92 +1422,90 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
       });
       return;
     }
+    this.showConfirmSaleModal = true;
+  }
 
-    this.confirmationService.confirm({
-      header: 'Confirmar Venta',
-      message:
-        '¿Está seguro de confirmar esta venta? Una vez confirmada, los productos, cantidades y precios no podrán ser modificados.',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sí, confirmar',
-      rejectLabel: 'Cancelar',
-      accept: () => {
-        this.ordersService.confirmSale(this.sale!.id).subscribe({
-          next: (res) => {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Éxito',
-              detail: 'Venta confirmada correctamente.',
-            });
-            this.confirmedSaleData = res.data;
-            this.showTicketPreview = true;
-            this.loadSale(res.data.id);
-          },
-          error: (err) => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: `Error al confirmar el pedido: ${err.error.message}`,
-            });
-          },
+  executeConfirmSale(): void {
+    if (!this.sale?.id || this.isConfirmingSale) return;
+    this.isConfirmingSale = true;
+    this.ordersService.confirmSale(this.sale.id).subscribe({
+      next: (res) => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'Venta confirmada correctamente.',
         });
+        this.confirmedSaleData = res.data;
+        this.showTicketPreview = true;
+        this.showConfirmSaleModal = false;
+        this.isConfirmingSale = false;
+        this.loadSale(res.data.id);
+      },
+      error: (err) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error al confirmar el pedido: ${err.error.message}`,
+        });
+        this.isConfirmingSale = false;
       },
     });
   }
 
   onDeliverSale(): void {
-    this.confirmationService.confirm({
-      header: 'Entregar Venta',
-      message: '¿Confirma que la venta ha sido entregada al cliente?',
-      icon: 'pi pi-check-circle',
-      acceptLabel: 'Sí, entregar',
-      rejectLabel: 'Cancelar',
-      accept: () => {
-        this.ordersService.deliverSale(this.sale!.id).subscribe({
-          next: (res) => {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Éxito',
-              detail: 'Venta marcada como entregada.',
-            });
-            this.loadSale(res.data.id);
-          },
-          error: (err) => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: `Error al entregar: ${err.error.message}`,
-            });
-          },
+    this.showDeliverSaleModal = true;
+  }
+
+  executeDeliverSale(): void {
+    if (!this.sale?.id || this.isDeliveringSale) return;
+    this.isDeliveringSale = true;
+    this.ordersService.deliverSale(this.sale.id).subscribe({
+      next: (res) => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'Venta marcada como entregada.',
         });
+        this.showDeliverSaleModal = false;
+        this.isDeliveringSale = false;
+        this.loadSale(res.data.id);
+      },
+      error: (err) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error al entregar: ${err.error.message}`,
+        });
+        this.isDeliveringSale = false;
       },
     });
   }
 
   onCancelSale(): void {
-    this.confirmationService.confirm({
-      header: 'Cancelar Venta',
-      message: '¿Está seguro que desea cancelar esta venta? Esta acción no se puede deshacer.',
-      icon: 'pi pi-times-circle',
-      acceptLabel: 'Sí, cancelar venta',
-      rejectLabel: 'Cerrar',
-      accept: () => {
-        this.ordersService.cancelSale(this.sale!.id).subscribe({
-          next: (res) => {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Éxito',
-              detail: 'Venta cancelada correctamente.',
-            });
-            this.loadSale(res.data.id);
-          },
-          error: (err) => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: `Error al cancelar: ${err.error.message}`,
-            });
-          },
+    this.showVoidSaleModal = true;
+  }
+
+  executeCancelSale(): void {
+    if (!this.sale?.id || this.isVoidingSale) return;
+    this.isVoidingSale = true;
+    this.ordersService.cancelSale(this.sale.id).subscribe({
+      next: (res) => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'Venta cancelada correctamente.',
         });
+        this.showVoidSaleModal = false;
+        this.isVoidingSale = false;
+        this.loadSale(res.data.id);
+      },
+      error: (err) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error al cancelar: ${err.error.message}`,
+        });
+        this.isVoidingSale = false;
       },
     });
   }
@@ -1518,19 +1531,21 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
     }
   }
 
-  onBack(): void {
-    if (this.sale?.status === 'pending' && Number(this.sale.paidAmount) > 0) {
-      this.confirmationService.confirm({
-        message: 'Esta orden tiene anticipos registrados pero no ha sido confirmada. El inventario aún no ha sido reservados. ¿Desea salir de todos modos?',
-        header: 'Venta no confirmada',
-        icon: 'pi pi-exclamation-triangle',
-        acceptLabel: 'Sí, salir',
-        rejectLabel: 'No, quedarme',
-        accept: () => this.router.navigate(['/sales/orders']),
-      });
+  onCancel(): void {
+    if (this.hasUnsavedChanges || this.details.length > 0 || (this.sale?.status === 'pending' && Number(this.sale.paidAmount) > 0)) {
+      this.showCancelConfirmModal = true;
       return;
     }
     this.router.navigate(['/sales/orders']);
+  }
+
+  executeCancelExit(): void {
+    this.showCancelConfirmModal = false;
+    this.router.navigate(['/sales/orders']);
+  }
+
+  onBack(): void {
+    this.onCancel();
   }
 
   // -------------------- TICKETS --------------------
@@ -1696,6 +1711,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   }
 
   loadProducts(branchId: string): void {
+    this.quickQuantityService.clearAll();
     this.loadingProducts = true;
     this.productsService.getQuotationCatalog(branchId).subscribe({
       next: (res) => {
@@ -1745,6 +1761,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   addProductFromDrawer(product: Product) {
     const qty = this.getQuickQuantity(product.id);
     this.detailManager.addProduct(product, qty);
+    this.quickQuantityService.resetQuantity(product.id);
     const unitAbbr = product.unit?.abbreviation ? ` ${product.unit.abbreviation}` : '';
     this.messageService.add({ 
       severity: 'success', 

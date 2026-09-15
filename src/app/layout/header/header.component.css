@@ -1,8 +1,6 @@
-/* Responsive Header Button */
-@media (min-width: 1024px) {
-  .mobile-menu-btn {
-    display: none !important;
-  }
+:host {
+  display: block;
+  width: 100%;
 }
 
 /* Drawer Navigation Styles */
@@ -17,7 +15,7 @@
   align-items: center;
   padding: 0.75rem 1rem;
   border-radius: 12px;
-  color: #64748b;
+  color: #f1d5dc;
   text-decoration: none;
   font-weight: 600;
   transition: all 0.2s;
@@ -26,13 +24,17 @@
 }
 
 .nav-item:hover {
-  background: #f8fafc;
-  color: #1e293b;
+  background: rgba(255, 255, 255, 0.09);
+  color: #ffffff;
 }
 
 .nav-item.active {
-  background: #f1f5f9;
-  color: #6366f1;
+  background: #ffffff;
+  color: #48021C;
+}
+
+.nav-item.active .nav-icon {
+  color: #48021C;
 }
 
 .nav-icon {
@@ -41,6 +43,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #f1d5dc;
+}
+
+.nav-item:hover .nav-icon {
+  color: #ffffff;
 }
 
 .nav-label {
@@ -50,7 +57,9 @@
 
 .submenu {
   margin-top: 4px;
-  padding-left: 2.75rem;
+  padding-left: 1.5rem;
+  margin-left: 1.25rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -61,7 +70,7 @@
   align-items: center;
   padding: 0.5rem 1rem;
   border-radius: 8px;
-  color: #64748b;
+  color: #f1d5dc;
   text-decoration: none;
   font-size: 0.8125rem;
   font-weight: 500;
@@ -69,12 +78,13 @@
 }
 
 .submenu-item:hover {
-  color: #1e293b;
-  background: #f8fafc;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .submenu-item.active {
-  color: #6366f1;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.16);
   font-weight: 700;
 }
 
@@ -86,13 +96,14 @@
   margin-left: auto;
 }
 
-.badge.info { background: #e0f2fe; color: #0369a1; }
-.badge.success { background: #dcfce7; color: #15803d; }
-.badge.warning { background: #fef9c3; color: #a16207; }
-.badge.danger { background: #fee2e2; color: #b91c1c; }
+.badge.info { background: rgba(56, 189, 248, 0.2); color: #7dd3fc; }
+.badge.success { background: rgba(74, 222, 128, 0.2); color: #86efac; }
+.badge.warning { background: rgba(250, 204, 21, 0.2); color: #fde047; }
+.badge.danger { background: rgba(248, 113, 113, 0.2); color: #fca5a5; }
 
 .arrow {
   font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.5);
   transition: transform 0.3s;
   margin-left: auto;
 }
@@ -103,7 +114,7 @@
 
 .sidebar-footer {
   margin-top: auto;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding: 1.25rem 0 0 0;
 }
 
@@ -112,7 +123,7 @@
   align-items: center;
   padding: 0.75rem 1rem;
   border-radius: 16px;
-  background: #f8fafc;
+  background: rgba(255, 255, 255, 0.06);
   gap: 0.75rem;
 }
 
@@ -120,25 +131,26 @@
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: white;
+  background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  color: #6366f1;
-  border: 1px solid #e2e8f0;
+  color: #48021C;
+  border: 1px solid #ffffff;
 }
 
 .user-name {
   font-weight: 700;
   font-size: 0.875rem;
-  color: #1e293b;
+  color: #ffffff;
   display: block;
 }
 
 .user-role {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: #f1d5dc;
+  opacity: 0.8;
   font-weight: 500;
 }
 
@@ -171,4 +183,14 @@
 
 :host ::ng-deep .p-drawer {
   padding: 0 !important;
+}
+
+/* Spotlight Dialog Styling */
+::ng-deep .spotlight-dialog .p-dialog-content {
+  padding: 0 !important;
+  border-radius: 1rem !important;
+}
+
+::ng-deep .spotlight-dialog .p-dialog-header {
+  display: none !important;
 }

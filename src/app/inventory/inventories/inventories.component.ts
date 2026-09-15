@@ -15,7 +15,9 @@ import { Branch } from '../interfaces/branch.interface';
 import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { TooltipModule } from 'primeng/tooltip';
 import { DialogModule } from 'primeng/dialog';
+import { ConfirmationModalComponent } from '../../shared/components/confirmation-modal/confirmation-modal.component';
 import { InventoryMovementsComponent } from '../inventory-movements/inventory-movements.component';
 import { InventoryFormComponent } from './inventory-form/inventory-form.component';
 
@@ -33,6 +35,8 @@ import { InventoryFormComponent } from './inventory-form/inventory-form.componen
     IconFieldModule,
     InputIconModule,
     DialogModule,
+    TooltipModule,
+    ConfirmationModalComponent,
     InventoryMovementsComponent,
     InventoryFormComponent,
   ],
@@ -55,6 +59,9 @@ export class InventoriesComponent implements OnInit {
   isSuperAdmin = false;
   showMovementsModal = false;
   showNewInventoryModal = false;
+  showDeleteConfirmModal = false;
+  inventoryToDelete: Inventory | null = null;
+  isDeletingInventory = false;
 
   get groupedInventories() {
     const filtered = this.inventories.filter(
@@ -144,41 +151,33 @@ export class InventoriesComponent implements OnInit {
   }
 
   onDeleteInventory(inventory: Inventory) {
-    this.confirmationService.confirm({
-      message: `¿Estás seguro de eliminar el inventario del producto "${inventory.product?.name}" de la sucursal "${inventory.branchName || inventory.branch?.name}"?`,
-      header: 'Confirmar eliminación',
-      icon: 'pi pi-info-circle',
-      acceptLabel: 'Eliminar',
-      rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-danger !rounded-2xl',
-      rejectButtonStyleClass: 'p-button-secondary p-button-text !rounded-2xl',
+    this.inventoryToDelete = inventory;
+    this.showDeleteConfirmModal = true;
+  }
 
-      accept: () => {
-        this.inventoryService.deleteInventory(inventory.id).subscribe({
-          next: (response) => {
-            if (response.statusCode === 200) {
-              this.messageService.add({
-                severity: 'success',
-                summary: 'Éxito',
-                detail: `El inventario se ha eliminado correctamente.`,
-              });
-              this.loadInventories();
-            }
-          },
-          error: (error) => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: `Error eliminando el inventario: ${error.error.message}`,
-            });
-          },
-        });
+  executeDeleteInventory() {
+    if (!this.inventoryToDelete?.id || this.isDeletingInventory) return;
+    this.isDeletingInventory = true;
+    this.inventoryService.deleteInventory(this.inventoryToDelete.id).subscribe({
+      next: (response) => {
+        if (response.statusCode === 200) {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: `El inventario se ha eliminado correctamente.`,
+          });
+          this.showDeleteConfirmModal = false;
+          this.isDeletingInventory = false;
+          this.inventoryToDelete = null;
+          this.loadInventories();
+        }
       },
-      reject: () => {
+      error: (error) => {
+        this.isDeletingInventory = false;
         this.messageService.add({
           severity: 'error',
-          summary: 'Cancelado',
-          detail: 'Se ha cancelado la operación',
+          summary: 'Error',
+          detail: `Error eliminando el inventario: ${error.error.message}`,
         });
       },
     });

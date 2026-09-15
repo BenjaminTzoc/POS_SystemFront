@@ -1,0 +1,314 @@
+.preview-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding-top: 0;
+}
+
+.ticket-wrapper {
+  background-color: #f1f5f9;
+  padding: 1.5rem 1rem;
+  border-radius: 8px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .actions-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.ticket-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ticket-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ticket-wrapper::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.ticket-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Document Container Sheet */
+.ticket-container {
+  width: 100%;
+  max-width: 190mm;
+  min-height: max-content;
+  height: auto;
+  margin-bottom: 1.5rem;
+  padding: 10mm;
+  background-color: white;
+  color: #1e293b;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 10pt;
+  line-height: 1.5;
+  box-sizing: border-box;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+/* Header layout: 2-column flexbox */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6mm;
+  border-bottom: 2px solid #f1f5f9;
+  padding-bottom: 4mm;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 6mm;
+  flex: 1;
+}
+
+.logo {
+  max-width: 25mm;
+  height: auto;
+}
+
+.company-details {
+  display: flex;
+  flex-direction: column;
+  min-width: 75mm;
+}
+
+.company-name {
+  font-size: 13pt;
+  font-weight: bold;
+  color: #0f172a;
+}
+
+.company-info {
+  margin: 0.5mm 0;
+  font-size: 8.5pt;
+  color: #64748b;
+}
+
+.document-badge {
+  text-align: right;
+}
+
+.ticket-title {
+  font-size: 16pt;
+  font-weight: 800;
+  color: #1e3a8a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 2mm 0;
+}
+
+.document-number {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  font-weight: bold;
+  padding: 1mm 4mm;
+  border-radius: 6px;
+  display: inline-block;
+  font-size: 10pt;
+}
+
+/* Info Section: 2-column grid */
+.info-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6mm;
+  margin-bottom: 6mm;
+  background-color: #f8fafc;
+  padding: 4mm;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.info-block h3 {
+  margin: 0 0 2mm 0;
+  font-size: 8.5pt;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+}
+
+.info-block p {
+  margin: 1mm 0;
+  font-size: 9.5pt;
+  color: #334155;
+}
+
+/* Items Table styling */
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9.5pt;
+  margin-bottom: 6mm;
+}
+
+.items-table th {
+  background-color: #0f172a;
+  color: white;
+  text-align: left;
+  padding: 2.5mm 3mm;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 8.5pt;
+  letter-spacing: 0.5px;
+}
+
+.items-table th:first-child {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+.items-table th:last-child {
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+.items-table td {
+  padding: 2.5mm 3mm;
+  vertical-align: middle;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.discount-text {
+  font-style: italic;
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* Totals section split layout */
+.totals-and-payments {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 8mm;
+  margin-top: 4mm;
+}
+
+.totals {
+  background-color: #f8fafc;
+  padding: 4mm;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 2mm;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9.5pt;
+  color: #475569;
+}
+
+.total-row.grand-total {
+  font-size: 12pt;
+  font-weight: 800;
+  color: #0f172a;
+  border-top: 2px solid #e2e8f0;
+  padding-top: 2mm;
+  margin-top: 1mm;
+}
+
+.terms-conditions {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 1mm 0;
+}
+
+.terms-conditions h3 {
+  margin: 0 0 2.5mm 0;
+  font-size: 8.5pt;
+  text-transform: uppercase;
+  color: #1e3a8a;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+}
+
+.terms-list {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5mm;
+  font-size: 8.5pt;
+  color: #334155;
+  line-height: 1.4;
+}
+
+.terms-list li {
+  position: relative;
+  padding-left: 3.5mm;
+}
+
+.terms-list li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #475569;
+  font-weight: bold;
+}
+
+.payments-info {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 4mm;
+  border-radius: 6px;
+  font-size: 9.5pt;
+}
+
+.payments-info h3 {
+  margin: 0 0 2mm 0;
+  font-size: 8.5pt;
+  text-transform: uppercase;
+  color: #1e3a8a;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+}
+
+.footer {
+  text-align: center;
+  margin-top: 8mm;
+  font-size: 8.5pt;
+  color: #64748b;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 4mm;
+}
+
+.legal-text {
+  margin-top: 2mm;
+  line-height: 1.3;
+}

@@ -1,45 +1,40 @@
-<div [class]="isModal ? 'p-0 bg-white' : 'py-4 px-0 md:px-6 bg-gray-50/30 min-h-screen'">
-  <!-- Header Section -->
-  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-6 md:mb-8">
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
-      <div class="w-full md:max-w-[60%] flex items-center gap-3">
-        <p-button *ngIf="!isModal" icon="pi pi-arrow-left" [rounded]="true" [text]="true" severity="secondary" (onClick)="goBack()" />
-        <div>
-          <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight m-0">Registro de movimiento</h1>
-          <p class="text-gray-500 mt-1 text-sm md:text-md m-0">
-             Documenta entradas, salidas o ajustes manuales de stock.
-          </p>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto">
-        <p-button 
-          label="Cancelar" 
-          (onClick)="onCancel()" 
-          variant="outlined" 
-          severity="danger" 
-          icon="pi pi-times"
-          styleClass="!rounded-xl px-4 md:px-6 font-bold border-rose-400! h-[44px] flex-1 md:flex-none justify-center"
-        />
-        <p-button
-          (onClick)="onSave()"
-          label="Guardar Movimiento"
-          severity="primary"
-          styleClass="!rounded-xl px-4 md:px-6 shadow-lg font-bold h-[44px] flex-1 md:flex-none justify-center"
-          icon="pi pi-check"
-        />
+<div [class]="isModal ? 'p-0 bg-slate-100/60 flex flex-col h-full overflow-hidden' : 'py-6 px-4 md:px-12 bg-slate-100/50 min-h-screen'">
+  <!-- Top Bar / Modal Header -->
+  <div class="flex items-center justify-between py-3.5 px-5 md:px-6 bg-white border-b border-slate-200 rounded-t-2xl gap-3 flex-shrink-0">
+    <div class="flex items-center gap-2.5">
+      <p-button 
+        [icon]="isModal ? 'pi pi-times' : 'pi pi-arrow-left'" 
+        [outlined]="true" 
+        severity="secondary" 
+        size="small" 
+        (onClick)="goBack()" 
+        styleClass="!w-7 !h-7 !p-0 text-slate-500 hover:text-[#48021C] bg-slate-50 hover:bg-slate-100 border border-slate-300! !rounded-md shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer [&_.p-button-icon]:!text-xs"
+      />
+      <div class="flex items-center gap-2">
+        <h1 class="text-base font-semibold text-gray-900 tracking-tight leading-none m-0">
+          Registrar movimiento
+        </h1>
+        <span class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-[#48021C]/10 text-[#48021C] border border-[#48021C]/20">
+          Inventario
+        </span>
       </div>
     </div>
   </div>
-  <form class="max-w-[1700px] mx-auto grid grid-cols-12 gap-0 md:gap-8" [formGroup]="movementForm">
-    <div class="col-span-12 lg:col-span-8 flex flex-col gap-6 md:gap-8">
-      <div class="p-5 md:p-8 rounded-none md:rounded-2xl bg-white border-y md:border border-slate-300">
-        <h3 class="font-bold text-xl text-gray-800 mb-6 hidden md:block">General</h3>
-        <div class="space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="flex flex-col gap-1.5 md:gap-1">
-              <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0" for="product">
-                <i class="pi pi-box mr-1 text-xs! text-blue-500"></i>Producto <span class="text-red-700">*</span>
+
+  <!-- Form Body -->
+  <div class="p-4 md:p-6 overflow-y-auto max-h-[calc(85vh-130px)] flex-1">
+    <form class="grid grid-cols-12 gap-5" [formGroup]="movementForm">
+      
+      <!-- Left Column: Form Fields -->
+      <div class="col-span-12 lg:col-span-7 xl:col-span-8 flex flex-col gap-4">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-4 md:p-5 flex flex-col gap-4">
+
+          <!-- Product & Branch -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Producto -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-medium text-slate-700" for="product">
+                Producto <span class="text-rose-500">*</span>
               </label>
               <p-select
                 [options]="products"
@@ -50,54 +45,56 @@
                 formControlName="productId"
                 optionLabel="name"
                 optionValue="id"
-                placeholder="Seleccionar un producto"
+                placeholder="Seleccionar producto"
+                size="small"
                 class="w-full"
-                styleClass="!rounded-lg border-slate-300 h-[44px] sm:h-auto"
+                styleClass="w-full !rounded-md border-slate-300 text-xs"
               >
                 <ng-template #selectedItem let-selectedOption>
-                  @if(selectedOption){
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden border border-gray-100 flex-shrink-0">
-                      <img
-                        class="w-full h-full object-cover"
-                        [src]="getProductImageUrl(selectedOption.imageUrl)"
-                        alt=""
-                      />
+                  @if (selectedOption) {
+                    <div class="flex items-center gap-2 py-0.5">
+                      <div class="w-6 h-6 rounded-md bg-slate-100 overflow-hidden border border-slate-200 flex-shrink-0 flex items-center justify-center">
+                        <img
+                          class="w-full h-full object-cover"
+                          [src]="getProductImageUrl(selectedOption.imageUrl)"
+                          [alt]="selectedOption.name"
+                        />
+                      </div>
+                      <div class="flex flex-col min-w-0">
+                        <span class="text-xs font-medium text-slate-800 truncate leading-tight">{{ selectedOption.name }}</span>
+                        <span class="text-[10px] text-indigo-600 font-medium leading-none">{{ selectedOption.sku }}</span>
+                      </div>
                     </div>
-                    <div class="flex flex-col min-w-0">
-                      <small class="text-[10px] font-normal text-indigo-500 uppercase leading-none truncate">{{ selectedOption.sku }}</small>
-                      <span class="text-sm font-normal text-gray-700 truncate">{{ selectedOption.name }}</span>
-                    </div>
-                  </div>
                   }
                 </ng-template>
+
                 <ng-template let-product #item>
-                  <div class="flex items-center gap-3 py-1">
-                    <div class="w-12 h-12 rounded-lg bg-gray-50 overflow-hidden border border-gray-100 flex-shrink-0">
+                  <div class="flex items-center gap-2.5 py-1">
+                    <div class="w-7 h-7 rounded-md bg-slate-100 overflow-hidden border border-slate-200 flex-shrink-0 flex items-center justify-center">
                       <img
                         class="w-full h-full object-cover"
                         [src]="getProductImageUrl(product.imageUrl)"
-                        alt=""
+                        [alt]="product.name"
                       />
                     </div>
-                    <div class="flex flex-col">
-                      <small class="text-[10px] font-normal text-indigo-500 uppercase leading-none">{{ product.sku }}</small>
-                      <span class="text-sm font-normal text-gray-700">{{ product.name }}</span>
+                    <div class="flex flex-col min-w-0">
+                      <span class="text-xs font-medium text-slate-800 truncate">{{ product.name }}</span>
+                      <span class="text-[10px] text-indigo-600 font-medium">SKU: {{ product.sku }}</span>
                     </div>
                   </div>
                 </ng-template>
               </p-select>
-              @if (movementForm.get('productId')?.invalid && movementForm.get('productId')?.touched)
-              {
-                <small class="text-rose-500 text-[10px] font-medium flex items-center mt-1">
-                  <i class="pi pi-exclamation-circle mr-1 text-[10px]!"></i>Seleccione un producto.
+              @if (movementForm.get('productId')?.invalid && movementForm.get('productId')?.touched) {
+                <small class="text-rose-500 text-[11px] font-medium flex items-center gap-1">
+                  <i class="pi pi-exclamation-circle text-[10px]"></i> Selecciona un producto.
                 </small>
               }
             </div>
 
-            <div class="flex flex-col gap-1.5 md:gap-1">
-              <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0" for="branch">
-                <i class="pi pi-building mr-1 text-xs! text-blue-500"></i>Sucursal <span class="text-red-700">*</span>
+            <!-- Sucursal -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-medium text-slate-700" for="branch">
+                Sucursal <span class="text-rose-500">*</span>
               </label>
               <p-select
                 [options]="availableBranches"
@@ -105,51 +102,26 @@
                 formControlName="branchId"
                 optionLabel="name"
                 optionValue="id"
-                placeholder="Seleccionar una sucursal"
+                placeholder="Seleccionar sucursal"
+                size="small"
                 class="w-full"
-                styleClass="!rounded-lg border-slate-300 h-[44px] sm:h-auto"
+                styleClass="w-full !rounded-md border-slate-300 text-xs"
               />
               @if (movementForm.get('branchId')?.invalid && movementForm.get('branchId')?.touched) {
-                <small class="text-rose-500 text-[10px] font-medium flex items-center mt-1">
-                  <i class="pi pi-exclamation-circle mr-1 text-[10px]!"></i>Seleccione una sucursal.
+                <small class="text-rose-500 text-[11px] font-medium flex items-center gap-1">
+                  <i class="pi pi-exclamation-circle text-[10px]"></i> Selecciona una sucursal.
                 </small>
               }
             </div>
           </div>
 
-          <div class="grid grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="flex flex-col gap-1.5 md:gap-1 col-span-2 lg:col-span-1">
-              <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0" for="quantity">
-                <i class="pi pi-pencil mr-1 text-xs! text-blue-500"></i>Cantidad <span class="text-red-700">*</span>
-              </label>
-              <p-inputnumber
-                formControlName="quantity"
-                mode="decimal"
-                [min]="0.01"
-                [minFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
-                [maxFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
-                placeholder="0.00"
-                [suffix]="'  ' + (selectedProduct?.unit?.abbreviation || '')"
-                styleClass="w-full !rounded-lg h-[44px] sm:h-auto"
-                fluid
-              />
-              <div class="flex flex-col gap-1 mt-1">
-                @if (currentStock !== null) {
-                  <small class="text-amber-600 text-[10px] font-medium flex items-center">
-                    <i class="pi pi-info-circle mr-1 text-[10px]!"></i>Stock disponible: {{ currentStock }} {{ selectedProduct?.unit?.abbreviation || '' }}
-                  </small>
-                } 
-                @if (movementForm.get('quantity')?.invalid && movementForm.get('quantity')?.touched) {
-                  <small class="text-rose-500 text-[10px] font-medium flex items-center">
-                    <i class="pi pi-exclamation-circle mr-1 text-[10px]!"></i>Ingrese una cantidad válida.
-                  </small>
-                }
-              </div>
-            </div>
-
-            <div class="flex flex-col gap-1.5 md:gap-1">
-              <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0" for="type">
-                <i class="pi pi-cog mr-1 text-xs! text-blue-500"></i>Tipo <span class="text-red-700">*</span>
+          <!-- Tipo, Concepto & Cantidad -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            
+            <!-- Tipo -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-medium text-slate-700" for="type">
+                Tipo <span class="text-rose-500">*</span>
               </label>
               <p-select
                 [options]="movementTypes"
@@ -157,26 +129,34 @@
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Tipo"
+                size="small"
                 class="w-full"
-                styleClass="!rounded-lg border-slate-300 h-[44px] sm:h-auto"
+                styleClass="w-full !rounded-md border-slate-300 text-xs"
               >
                 <ng-template let-option #item>
-                  <div class="flex flex-col">
-                    <span class="font-normal text-sm text-slate-700">{{ option.label }}</span>
-                    <small class="text-[10px] text-slate-400 font-normal">{{ option.description }}</small>
+                  <div class="flex items-center gap-2 py-0.5">
+                    <span 
+                      class="w-2 h-2 rounded-full flex-shrink-0" 
+                      [ngClass]="option.value === 'in' ? 'bg-emerald-500' : 'bg-rose-500'"
+                    ></span>
+                    <div class="flex flex-col">
+                      <span class="text-xs font-medium text-slate-700">{{ option.label }}</span>
+                      <span class="text-[10px] text-slate-400">{{ option.description }}</span>
+                    </div>
                   </div>
                 </ng-template>
               </p-select>
               @if (movementForm.get('type')?.invalid && movementForm.get('type')?.touched) {
-                <small class="text-rose-500 text-[10px] font-medium flex items-center mt-1">
-                  <i class="pi pi-exclamation-circle mr-1 text-[10px]!"></i>Seleccione tipo.
+                <small class="text-rose-500 text-[11px] font-medium flex items-center gap-1">
+                  <i class="pi pi-exclamation-circle text-[10px]"></i> Selecciona el tipo.
                 </small>
               }
             </div>
 
-            <div class="flex flex-col gap-1.5 md:gap-1">
-              <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0" for="concept">
-                <i class="pi pi-filter mr-1 text-xs! text-blue-500"></i>Concepto <span class="text-red-700">*</span>
+            <!-- Concepto -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-medium text-slate-700" for="concept">
+                Concepto <span class="text-rose-500">*</span>
               </label>
               <p-select
                 [options]="filteredConcepts"
@@ -184,57 +164,187 @@
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Concepto"
+                size="small"
                 class="w-full"
                 [disabled]="!movementForm.get('type')?.value"
-                styleClass="!rounded-lg border-slate-300 {{ !movementForm.get('type')?.value ? 'bg-slate-50' : '' }} h-[44px] sm:h-auto"
+                styleClass="w-full !rounded-md border-slate-300 text-xs {{ !movementForm.get('type')?.value ? 'bg-slate-50' : '' }}"
               />
               @if (movementForm.get('concept')?.invalid && movementForm.get('concept')?.touched) {
-                <small class="text-rose-500 text-[10px] font-medium flex items-center mt-1">
-                  <i class="pi pi-exclamation-circle mr-1 text-[10px]!"></i>Seleccione concepto.
+                <small class="text-rose-500 text-[11px] font-medium flex items-center gap-1">
+                  <i class="pi pi-exclamation-circle text-[10px]"></i> Selecciona el concepto.
+                </small>
+              }
+            </div>
+
+            <!-- Cantidad con Unidad aparte como input addon -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-medium text-slate-700" for="quantity">
+                Cantidad <span class="text-rose-500">*</span>
+              </label>
+              <div class="flex w-full">
+                <p-inputnumber
+                  formControlName="quantity"
+                  mode="decimal"
+                  size="small"
+                  [min]="0.01"
+                  [minFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
+                  [maxFractionDigits]="selectedProduct?.unit?.allowsDecimals ? 2 : 0"
+                  placeholder="0.00"
+                  class="flex-1 min-w-0"
+                  styleClass="w-full !rounded-r-none !rounded-l-md text-xs"
+                  inputStyleClass="w-full !rounded-r-none !rounded-l-md border-slate-300 text-xs"
+                  fluid
+                />
+                <span class="inline-flex items-center px-3 rounded-r-md border border-l-0 border-slate-300 bg-indigo-50/70 text-indigo-700 text-xs font-semibold select-none flex-shrink-0">
+                  {{ selectedProduct?.unit?.abbreviation || 'U' }}
+                </span>
+              </div>
+              @if (movementForm.get('quantity')?.invalid && movementForm.get('quantity')?.touched) {
+                <small class="text-rose-500 text-[11px] font-medium flex items-center gap-1">
+                  <i class="pi pi-exclamation-circle text-[10px]"></i> Ingresa una cantidad válida.
                 </small>
               }
             </div>
           </div>
 
-          <div class="flex flex-col gap-1.5 md:gap-1">
-            <label class="text-[10px] md:text-sm font-bold md:font-semibold uppercase md:capitalize text-gray-500 md:text-slate-700 tracking-widest md:tracking-normal pl-1 md:pl-0" for="notes">
-              <i class="pi pi-align-left mr-1 text-xs! text-blue-500"></i>Motivo / Notas
+          <!-- Motivo / Notas -->
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-medium text-slate-700" for="notes">
+              Motivo / Observaciones
             </label>
             <textarea
               pTextarea
               formControlName="notes"
               rows="3"
-              placeholder="Describa el motivo del movimiento..."
-              class="w-full !rounded-lg border-slate-300"
+              placeholder="Describa el motivo o justificación del movimiento..."
+              class="w-full !rounded-md border-slate-300 text-xs p-2.5"
             ></textarea>
           </div>
+
         </div>
       </div>
-    </div>
 
-    <!-- Right Column: Info -->
-    <div class="col-span-12 lg:col-span-4 flex flex-col gap-6 md:gap-8 mt-6 lg:mt-0">
-      <div class="p-5 md:p-8 rounded-none md:rounded-2xl bg-white border-y md:border border-slate-300 shadow-sm">
-        <h3 class="font-bold text-xl text-gray-800 mb-4 hidden md:block">Información</h3>
-        <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 md:p-5">
-          <div class="flex items-start gap-3">
-            <div class="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center text-white flex-shrink-0">
-              <i class="pi pi-info-circle text-lg"></i>
+      <!-- Right Column: Live Summary & Stock Impact -->
+      <div class="col-span-12 lg:col-span-5 xl:col-span-4 flex flex-col gap-4">
+        
+        <!-- Summary Card -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-4 md:p-5 flex flex-col gap-3.5">
+          @if (selectedProduct) {
+            <!-- Product Preview -->
+            <div class="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-slate-50 via-indigo-50/30 to-slate-50 border border-indigo-100 shadow-2xs">
+              <div class="w-10 h-10 rounded-md bg-white overflow-hidden border border-indigo-200/80 flex-shrink-0 flex items-center justify-center shadow-2xs">
+                <img
+                  class="w-full h-full object-cover"
+                  [src]="getProductImageUrl(selectedProduct.imageUrl)"
+                  [alt]="selectedProduct.name"
+                />
+              </div>
+              <div class="flex flex-col min-w-0">
+                <span class="text-xs font-semibold text-slate-800 truncate leading-tight">{{ selectedProduct.name }}</span>
+                <span class="text-[10px] text-indigo-700 font-semibold mt-0.5">SKU: {{ selectedProduct.sku }}</span>
+                @if (selectedBranchName) {
+                  <span class="text-[10px] text-slate-500 font-medium truncate mt-0.5 flex items-center gap-1">
+                    <i class="pi pi-map-marker text-[10px] text-rose-500"></i> {{ selectedBranchName }}
+                  </span>
+                }
+              </div>
             </div>
-            <div>
-              <p class="text-sm font-bold text-indigo-900 mb-1">Afectación de Stock</p>
-              <p class="text-xs text-indigo-700/80 leading-relaxed">
-                Este registro generará una transacción inmediata en el historial y actualizará las existencias en la sucursal seleccionada.
-              </p>
+
+            <!-- Stock Impact Calculation Card -->
+            <div class="bg-gradient-to-br from-slate-50 to-indigo-50/20 rounded-xl p-3 border border-slate-200 flex flex-col gap-2">
+              <div class="grid grid-cols-3 gap-2 text-center">
+                <!-- Stock Actual -->
+                <div class="flex flex-col p-2.5 bg-sky-50/70 rounded-lg border border-sky-200/80 shadow-2xs">
+                  <span class="text-[9px] uppercase font-bold text-sky-700 tracking-wider">Actual</span>
+                  <span class="text-xs md:text-sm font-semibold text-sky-900 tabular-nums truncate">
+                    {{ currentStock !== null ? currentStock : '---' }} {{ selectedProduct.unit?.abbreviation || '' }}
+                  </span>
+                </div>
+
+                <!-- Movimiento -->
+                <div 
+                  class="flex flex-col p-2.5 rounded-lg border shadow-2xs"
+                  [ngClass]="movementForm.get('type')?.value === 'in' ? 'bg-emerald-50/80 border-emerald-200/90' : 'bg-rose-50/80 border-rose-200/90'"
+                >
+                  <span 
+                    class="text-[9px] uppercase font-bold tracking-wider"
+                    [ngClass]="movementForm.get('type')?.value === 'in' ? 'text-emerald-700' : 'text-rose-700'"
+                  >
+                    Cambio
+                  </span>
+                  <span 
+                    class="text-xs md:text-sm font-bold tabular-nums truncate"
+                    [ngClass]="movementForm.get('type')?.value === 'in' ? 'text-emerald-800' : 'text-rose-800'"
+                  >
+                    {{ movementForm.get('type')?.value === 'in' ? '+' : '-' }}{{ movementForm.get('quantity')?.value || 0 }} {{ selectedProduct.unit?.abbreviation || '' }}
+                  </span>
+                </div>
+
+                <!-- Stock Resultante -->
+                <div 
+                  class="flex flex-col p-2.5 rounded-lg border shadow-2xs"
+                  [ngClass]="movementForm.get('type')?.value === 'in' ? 'bg-teal-50 border-teal-200/90' : 'bg-indigo-50/80 border-indigo-200/90'"
+                >
+                  <span 
+                    class="text-[9px] uppercase font-bold tracking-wider" 
+                    [ngClass]="movementForm.get('type')?.value === 'in' ? 'text-teal-700' : 'text-indigo-700'"
+                  >
+                    Resultante
+                  </span>
+                  <span 
+                    class="text-xs md:text-sm font-bold tabular-nums truncate"
+                    [ngClass]="movementForm.get('type')?.value === 'in' ? 'text-teal-900' : 'text-indigo-950'"
+                  >
+                    {{ predictedStock !== null ? predictedStock : '---' }} {{ selectedProduct.unit?.abbreviation || '' }}
+                  </span>
+                </div>
+              </div>
             </div>
+          } @else {
+            <!-- Empty state placeholder -->
+            <div class="flex flex-col items-center justify-center py-8 px-4 rounded-xl border border-dashed border-indigo-200 bg-indigo-50/30 text-center gap-2">
+              <div class="w-9 h-9 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                <i class="pi pi-box text-base"></i>
+              </div>
+              <p class="text-xs font-semibold text-slate-700 m-0">Selecciona un producto</p>
+              <p class="text-[11px] text-slate-400 m-0 leading-relaxed">Para calcular el impacto en inventario y ver las existencias actuales.</p>
+            </div>
+          }
+
+          <!-- Transaction Notice -->
+          <div class="bg-amber-50/90 border border-amber-200 rounded-xl p-3 flex items-start gap-2.5 shadow-2xs">
+            <i class="pi pi-info-circle text-amber-600 text-xs mt-0.5 flex-shrink-0"></i>
+            <p class="text-[11px] text-amber-900 leading-snug m-0">
+              Esta operación creará un registro de trazabilidad y afectará inmediatamente el stock de la sucursal seleccionada.
+            </p>
           </div>
         </div>
-        
-        <div class="mt-6 flex flex-col gap-4 items-center justify-center py-6 border-2 border-dashed border-slate-100 rounded-2xl">
-          <i class="pi pi-file-edit text-4xl text-slate-200"></i>
-          <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest text-center px-6">Complete todos los requeridos para habilitar el guardado</p>
-        </div>
+
       </div>
-    </div>
-  </form>
+
+    </form>
+  </div>
+
+  <!-- Bottom Action Bar / Footer -->
+  <div class="flex items-center justify-end gap-2.5 py-3.5 px-5 md:px-6 bg-slate-50/90 border-t border-slate-200 rounded-b-2xl flex-shrink-0">
+    <p-button 
+      label="Cancelar" 
+      icon="pi pi-times"
+      [outlined]="true" 
+      severity="secondary" 
+      size="small"
+      (onClick)="onCancel()" 
+      styleClass="!rounded-lg text-xs md:text-sm! font-semibold !text-slate-600 !border-slate-300 hover:!bg-slate-100 inline-flex items-center justify-center gap-1.5 cursor-pointer"
+    />
+    <p-button
+      label="Guardar"
+      icon="pi pi-check"
+      severity="primary"
+      size="small"
+      [loading]="submitting"
+      (onClick)="onSave()"
+      styleClass="!rounded-lg text-xs md:text-sm! font-semibold !bg-[#48021C] !text-white !border-[#48021C] hover:!bg-[#350114] inline-flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer"
+    />
+  </div>
 </div>
+

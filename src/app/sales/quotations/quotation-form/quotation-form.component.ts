@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService, ConfirmationService } from 'primeng/api';
@@ -33,6 +33,8 @@ import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../auth/auth.service';
 import { CashRegisterService } from '../../../inventory/services/cash-register.service';
 
+import { ConfirmationModalComponent } from '../../../shared/components/confirmation-modal/confirmation-modal.component';
+
 @Component({
   selector: 'app-quotation-form',
   standalone: true,
@@ -52,12 +54,14 @@ import { CashRegisterService } from '../../../inventory/services/cash-register.s
     IconFieldModule,
     InputIconModule,
     TooltipModule,
-    CurrencyPipe
+    CurrencyPipe,
+    ConfirmationModalComponent
   ],
   templateUrl: './quotation-form.component.html',
   styleUrls: ['./quotation-form.component.css']
 })
 export class QuotationFormComponent implements OnInit {
+  showCancelConfirmModal = false;
   private quickQuantityService = inject(QuickQuantityService);
   private fb = inject(FormBuilder);
   private quotationsService = inject(QuotationsService);
@@ -71,6 +75,8 @@ export class QuotationFormComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private authService = inject(AuthService);
   private cashRegisterService = inject(CashRegisterService);
+
+  @ViewChild('catalogContainer') catalogContainer!: ElementRef<HTMLDivElement>;
 
   quotationForm: FormGroup;
   isEditMode = false;
@@ -90,6 +96,30 @@ export class QuotationFormComponent implements OnInit {
   total = 0;
   subtotal = 0;
   tax = 0;
+
+  discountTypeOptions = [
+    { label: '%', value: 'percentage' },
+    { label: 'Q', value: 'fixed_amount' }
+  ];
+
+  scrollCatalog(direction: 'left' | 'right' | number): void {
+    if (this.catalogContainer?.nativeElement) {
+      const container = this.catalogContainer.nativeElement;
+      let amount = 0;
+      if (typeof direction === 'number') {
+        amount = direction;
+      } else {
+        const firstCard = container.firstElementChild as HTMLElement;
+        if (firstCard) {
+          const cardWidthWithGap = firstCard.offsetWidth + 12; // ancho de 1 tarjeta + 12px gap
+          amount = (direction === 'left' ? -1 : 1) * (cardWidthWithGap * 3);
+        } else {
+          amount = (direction === 'left' ? -1 : 1) * container.clientWidth;
+        }
+      }
+      container.scrollBy({ left: amount, behavior: 'smooth' });
+    }
+  }
 
   constructor() {
     this.quotationForm = this.fb.group({
@@ -136,8 +166,35 @@ export class QuotationFormComponent implements OnInit {
     return this.quotationForm.get('adjustments') as FormArray;
   }
 
+  get isFormValid(): boolean {
+    const branchId = this.quotationForm.get('branchId')?.value;
+    if (!branchId) return false;
+
+    if (this.customerType === 'registered') {
+      const customerId = this.quotationForm.get('customerId')?.value;
+      if (!customerId) return false;
+    } else {
+      const guestName = this.quotationForm.get('guestCustomer.name')?.value;
+      if (!guestName || !guestName.trim()) return false;
+    }
+
+    const validity = this.quotationForm.get('validityDays')?.value;
+    if (!validity || Number(validity) < 1) return false;
+
+    if (!this.items || this.items.length === 0 || this.items.invalid) return false;
+
+    return true;
+  }
+
   loadInitialData(): void {
-    this.branchesService.getBranches().subscribe(res => this.branches = res.data);
+    this.branchesService.getBranches().subscribe(res => {
+      this.branches = res.data || [];
+      if (!this.isEditMode && !this.quotationForm.get('branchId')?.value && this.branches.length > 0) {
+        const defaultBranchId = this.branches[0].id;
+        this.quotationForm.patchValue({ branchId: defaultBranchId });
+        this.previousBranchId = defaultBranchId;
+      }
+    });
     this.customersService.getCustomers().subscribe(res => this.customers = res.data);
 
     // Check cash session and roles
@@ -154,6 +211,7 @@ export class QuotationFormComponent implements OnInit {
   }
 
   loadProducts(branchId: string): void {
+    this.quickQuantityService.clearAll();
     this.loadingProducts = true;
     this.productsService.getQuotationCatalog(branchId).subscribe({
       next: (res) => {
@@ -302,6 +360,16 @@ export class QuotationFormComponent implements OnInit {
     this.calculateTotals();
   }
 
+  toggleDiscountType(index: number): void {
+    const item = this.items.at(index);
+    if (item) {
+      const current = item.get('discountType')?.value;
+      const next = current === 'percentage' ? 'fixed_amount' : 'percentage';
+      item.patchValue({ discountType: next });
+      this.calculateTotals();
+    }
+  }
+
   get filteredProducts(): Product[] {
     if (!this.searchProductQuery) return this.products;
     const q = this.searchProductQuery.toLowerCase();
@@ -337,6 +405,10 @@ export class QuotationFormComponent implements OnInit {
       lineTotal: [Number(product.price) * qty]
     });
     this.items.push(itemGroup);
+    
+    // Limpiamos la cantidad rápida para que vuelva a su valor base (1)
+    this.quickQuantityService.resetQuantity(product.id);
+
     const unitAbbr = product.unit?.abbreviation ? ` ${product.unit.abbreviation}` : '';
     this.messageService.add({ 
       severity: 'success', 
@@ -478,6 +550,15 @@ export class QuotationFormComponent implements OnInit {
   }
 
   onCancel() {
+    if (this.items.length > 0 || this.quotationForm.dirty) {
+      this.showCancelConfirmModal = true;
+      return;
+    }
+    this.router.navigate(['/sales/quotations']);
+  }
+
+  executeCancelExit() {
+    this.showCancelConfirmModal = false;
     this.router.navigate(['/sales/quotations']);
   }
 

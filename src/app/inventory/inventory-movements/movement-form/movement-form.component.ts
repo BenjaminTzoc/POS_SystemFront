@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Location } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { ProductsService } from '../../services/products.service';
 import { BranchesService } from '../../services/branches.service';
 import { MessageService } from 'primeng/api';
@@ -15,10 +15,22 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { TextareaModule } from 'primeng/textarea';
+import { TagModule } from 'primeng/tag';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-movement-form',
-  imports: [ReactiveFormsModule, Select, ButtonModule, InputTextModule, InputNumberModule, TextareaModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    Select,
+    ButtonModule,
+    InputTextModule,
+    InputNumberModule,
+    TextareaModule,
+    TagModule,
+    TooltipModule,
+  ],
   templateUrl: './movement-form.component.html',
   styleUrl: './movement-form.component.css',
 })
@@ -43,10 +55,11 @@ export class MovementFormComponent implements OnInit {
   selectedProduct: Product | undefined;
   isSuperAdmin: boolean = false;
   currentStock: number | null = null;
+  submitting: boolean = false;
 
   movementTypes = [
-    { label: 'Entrada', value: 'in', description: 'El stock disponible aumenta' },
-    { label: 'Salida', value: 'out', description: 'El stock disponible se reduce' },
+    { label: 'Entrada', value: 'in', description: 'El stock disponible aumenta (+)' },
+    { label: 'Salida', value: 'out', description: 'El stock disponible se reduce (-)' },
   ];
 
   concepts: { label: string; value: string; types: string[] }[] = [
@@ -62,8 +75,8 @@ export class MovementFormComponent implements OnInit {
       productId: [null, [Validators.required]],
       branchId: [{ value: null, disabled: true }, [Validators.required]],
       quantity: [null, [Validators.required, Validators.min(0.01)]],
-      type: [null, [Validators.required]],
-      concept: [null, [Validators.required]],
+      type: ['in', [Validators.required]],
+      concept: ['adjustment', [Validators.required]],
       notes: [null],
       movementDate: [new Date(), [Validators.required]],
     });
@@ -74,25 +87,50 @@ export class MovementFormComponent implements OnInit {
     this.loadProducts();
     this.loadBranches();
     this.setupFormSubscriptions();
+    this.updateFilteredConcepts('in');
   }
 
   setupFormSubscriptions() {
     // Listen to type changes to filter concepts
     this.movementForm.get('type')?.valueChanges.subscribe((type) => {
-      this.filteredConcepts = this.concepts
-        .filter((c) => c.types.includes(type))
-        .map((c) => ({ label: c.label, value: c.value }));
-
-      const currentConcept = this.movementForm.get('concept')?.value;
-      if (currentConcept && !this.filteredConcepts.find((c) => c.value === currentConcept)) {
-        this.movementForm.get('concept')?.setValue(null);
-      }
+      this.updateFilteredConcepts(type);
     });
 
     // Listen to branch changes to update current stock display
     this.movementForm.get('branchId')?.valueChanges.subscribe((branchId) => {
       this.updateCurrentStock(branchId);
     });
+  }
+
+  updateFilteredConcepts(type: string) {
+    this.filteredConcepts = this.concepts
+      .filter((c) => c.types.includes(type))
+      .map((c) => ({ label: c.label, value: c.value }));
+
+    const currentConcept = this.movementForm.get('concept')?.value;
+    if (currentConcept && !this.filteredConcepts.find((c) => c.value === currentConcept)) {
+      this.movementForm.get('concept')?.setValue(this.filteredConcepts[0]?.value || null);
+    }
+  }
+
+  get predictedStock(): number | null {
+    if (this.currentStock === null) return null;
+    const qty = this.movementForm.get('quantity')?.value;
+    if (qty === null || qty === undefined || qty <= 0) return this.currentStock;
+    const type = this.movementForm.get('type')?.value;
+    if (type === 'in') {
+      return Number((this.currentStock + qty).toFixed(2));
+    } else if (type === 'out') {
+      return Number((this.currentStock - qty).toFixed(2));
+    }
+    return this.currentStock;
+  }
+
+  get selectedBranchName(): string {
+    const branchId = this.movementForm.get('branchId')?.value;
+    if (!branchId) return '';
+    const branch = this.branches.find((b) => b.id === branchId);
+    return branch?.name || '';
   }
 
   updateCurrentStock(branchId: string | null) {
@@ -125,8 +163,6 @@ export class MovementFormComponent implements OnInit {
 
       if (userBranchId) {
         this.movementForm.get('branchId')?.setValue(userBranchId);
-        // Note: It stays disabled as initialized, but checkUserRole is called before onProductChange.
-        // We'll handle the logic in onProductChange to properly manage enabling.
       }
     }
   }
@@ -178,7 +214,6 @@ export class MovementFormComponent implements OnInit {
         if (response.statusCode === 200) {
           this.selectedProduct = response.data;
 
-          // Filter branches that have stock for this product
           const branchesWithStockIds =
             this.selectedProduct.inventories?.filter((i) => i.stock >= 0).map((i) => i.branch.id) ||
             [];
@@ -206,7 +241,7 @@ export class MovementFormComponent implements OnInit {
     });
   }
 
-  getProductImageUrl(imageUrl: string | null): string {
+  getProductImageUrl(imageUrl: string | null | undefined): string {
     if (!imageUrl) {
       return `${environment.baseUrl}/uploads/products/default-product.png`;
     }
@@ -239,16 +274,18 @@ export class MovementFormComponent implements OnInit {
       this.movementForm.markAllAsTouched();
       this.messageService.add({
         severity: 'warn',
-        summary: 'Formulario Inválido',
+        summary: 'Formulario incompleto',
         detail: 'Por favor completa todos los campos requeridos.',
       });
       return;
     }
 
+    this.submitting = true;
     const body = this.movementForm.getRawValue();
 
     this.inventoryMovementsService.createInventoryMovement(body).subscribe({
       next: (response) => {
+        this.submitting = false;
         if (response.statusCode === 201 || response.statusCode === 200) {
           this.messageService.add({
             severity: 'success',
@@ -263,10 +300,11 @@ export class MovementFormComponent implements OnInit {
         }
       },
       error: (error) => {
+        this.submitting = false;
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: `No se pudo registrar el movimiento: ${error.error.message}`,
+          detail: `No se pudo registrar el movimiento: ${error.error?.message || 'Error del servidor'}`,
         });
       },
     });

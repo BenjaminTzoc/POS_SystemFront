@@ -9,21 +9,7 @@ export class QuickQuantityService {
   private quantitiesMap = signal<Record<string, number>>({});
 
   constructor() {
-    this.loadFromStorage();
-  }
-
-  private loadFromStorage(): void {
-    try {
-      const data = localStorage.getItem(STORAGE_KEY);
-      if (data) {
-        const parsed = JSON.parse(data);
-        if (parsed && typeof parsed === 'object') {
-          this.quantitiesMap.set(parsed);
-        }
-      }
-    } catch (e) {
-      console.error('Error al cargar cantidades rápidas de localStorage:', e);
-    }
+    this.clearAll();
   }
 
   getQuantity(productId: string): number {
@@ -38,11 +24,20 @@ export class QuickQuantityService {
     current[productId] = validQty;
 
     this.quantitiesMap.set(current);
+  }
 
+  resetQuantity(productId: string): void {
+    const current = { ...this.quantitiesMap() };
+    delete current[productId];
+    this.quantitiesMap.set(current);
+  }
+
+  clearAll(): void {
+    this.quantitiesMap.set({});
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+      localStorage.removeItem(STORAGE_KEY);
     } catch (e) {
-      console.error('Error al guardar cantidad rápida en localStorage:', e);
+      console.error('Error al limpiar cantidades de localStorage:', e);
     }
   }
 }

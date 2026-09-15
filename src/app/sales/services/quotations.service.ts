@@ -58,7 +58,15 @@ export class QuotationsService {
     return this.http.get(`${this.apiUrl}/${id}/pdf`, { responseType: 'blob' });
   }
 
-  sendEmail(id: string, email: string): Observable<ApiResponse<void>> {
+  sendQuotationByEmail(id: string, pdfBase64?: string): Observable<ApiResponse<void>> {
+    return this.http.post<ApiResponse<void>>(`${this.apiUrl}/${id}/send-email`, { pdfBase64 });
+  }
+
+  sendEmail(id: string, email?: string): Observable<ApiResponse<void>> {
     return this.http.post<ApiResponse<void>>(`${this.apiUrl}/${id}/send-email`, { email });
+  }
+
+  sendQuotationByWhatsApp(id: string, pdfBase64?: string): Observable<ApiResponse<void>> {
+    return this.http.post<ApiResponse<void>>(`${this.apiUrl}/${id}/send-whatsapp`, { pdfBase64 });
   }
 }

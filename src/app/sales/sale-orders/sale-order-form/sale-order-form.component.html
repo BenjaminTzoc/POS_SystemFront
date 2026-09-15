@@ -1,164 +1,283 @@
-<div class="py-4 px-0 md:px-6 bg-slate-50/50 min-h-screen">
-  <!-- HEADER SECTION -->
-  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-4 md:mb-6" [formGroup]="orderForm">
-    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-      <div class="flex flex-col">
-        <div class="flex items-center gap-3 flex-wrap">
-          <h1 class="text-xl md:text-2xl font-semibold text-title-primary tracking-tight">
-            Orden #{{ orderForm.get('invoiceNumber')?.value || (isEditMode ? 'Cargando...' : 'Generando...') }}
+<div class="pt-4 pb-24 px-0 md:px-6 bg-slate-50/50 min-h-screen">
+  <!-- Top Card: Header & Parameters (Branch & Client) -->
+  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-4 md:mb-6">
+    <div class="bg-white rounded-2xl border border-slate-300 shadow-sm" [formGroup]="orderForm">
+      <!-- Card Header: Title -->
+      <div class="py-2.5 px-4 md:px-5 flex items-center justify-between border-b border-slate-100 bg-slate-50/50 rounded-t-2xl">
+        <div class="flex items-center gap-2">
+          <p-button 
+            icon="pi pi-arrow-left" 
+            [outlined]="true" 
+            severity="secondary" 
+            size="small" 
+            (onClick)="onBack()" 
+            styleClass="!w-6.5 !h-6.5 !p-0 text-slate-500 hover:text-[#48021C] bg-white hover:bg-slate-100 hover:border-slate-400! border border-slate-300! !rounded-md shadow-2xs hover:shadow-xs hover:scale-105 active:scale-95 transition-all duration-150 cursor-pointer [&_.p-button-icon]:!text-xs"
+          />
+          <h1 class="text-base md:text-lg font-semibold text-gray-900 tracking-tight leading-none">
+            {{ isEditMode ? 'Orden: #' + (orderForm.get('invoiceNumber')?.value || '...') : 'Nueva orden de venta' }}
           </h1>
-          <span
-            class="inline-flex items-center px-2.5 py-1 text-[11px] font-semibold rounded-lg border shadow-sm"
-            [ngClass]="{
-              'bg-amber-50 text-amber-600 border-amber-200': ['pending', 'on_hold'].includes(orderForm.get('status')?.value),
-              'bg-blue-50 text-blue-600 border-blue-200': orderForm.get('status')?.value === 'confirmed',
-              'bg-indigo-50 text-indigo-600 border-indigo-200': orderForm.get('status')?.value === 'preparing',
-              'bg-emerald-50 text-emerald-600 border-emerald-200': ['ready_for_pickup', 'out_for_delivery', 'delivered'].includes(orderForm.get('status')?.value),
-              'bg-rose-50 text-rose-600 border-rose-200': orderForm.get('status')?.value === 'cancelled'
-            }"
-          >
-            <span class="w-1.5 h-1.5 rounded-full mr-2 animate-pulse"
-              [ngClass]="{
-                'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]': ['pending', 'on_hold'].includes(orderForm.get('status')?.value),
-                'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]': orderForm.get('status')?.value === 'confirmed',
-                'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.4)]': orderForm.get('status')?.value === 'preparing',
-                'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]': ['ready_for_pickup', 'out_for_delivery', 'delivered'].includes(orderForm.get('status')?.value),
-                'bg-rose-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]': orderForm.get('status')?.value === 'cancelled'
-              }"
-            ></span>
-            {{ orderForm.get('status')?.value | saleStatus }}
+          <span *ngIf="!isEditMode" class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-brand-royal/10 text-brand-royal border border-brand-royal/20">
+            Borrador
           </span>
+          @if (isEditMode) {
+            <span
+              class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-full border shadow-2xs"
+              [ngClass]="{
+                'bg-amber-50 text-amber-600 border-amber-200': ['pending', 'on_hold'].includes(orderForm.get('status')?.value),
+                'bg-blue-50 text-blue-600 border-blue-200': orderForm.get('status')?.value === 'confirmed',
+                'bg-indigo-50 text-indigo-600 border-indigo-200': orderForm.get('status')?.value === 'preparing',
+                'bg-emerald-50 text-emerald-600 border-emerald-200': ['ready_for_pickup', 'out_for_delivery', 'delivered'].includes(orderForm.get('status')?.value),
+                'bg-rose-50 text-rose-600 border-rose-200': orderForm.get('status')?.value === 'cancelled'
+              }"
+            >
+              <span class="w-1.5 h-1.5 rounded-full mr-1.5"
+                [ngClass]="{
+                  'bg-amber-500': ['pending', 'on_hold'].includes(orderForm.get('status')?.value),
+                  'bg-blue-500': orderForm.get('status')?.value === 'confirmed',
+                  'bg-indigo-500': orderForm.get('status')?.value === 'preparing',
+                  'bg-emerald-500': ['ready_for_pickup', 'out_for_delivery', 'delivered'].includes(orderForm.get('status')?.value),
+                  'bg-rose-500': orderForm.get('status')?.value === 'cancelled'
+                }"
+              ></span>
+              {{ orderForm.get('status')?.value | saleStatus }}
+            </span>
+          }
         </div>
-        <p class="text-xs font-medium text-text-muted mt-0.5">
-          Gestione y realice el seguimiento de todos los detalles del pedido.
-        </p>
-        
-        <div class="mt-3 flex items-center gap-4 flex-wrap text-xs">
-          <div class="flex items-center gap-2">
-            <span class="font-semibold text-text-body">Sucursal en uso <span class="text-red-600 font-bold">*</span>:</span>
-            <p-select
-              [options]="branches"
-              formControlName="branchId"
-              optionLabel="name"
-              optionValue="id"
-              placeholder="Seleccionar sucursal"
-              [filter]="true"
-              filterBy="name"
-              styleClass="w-52 border-slate-300 h-8! text-xs! py-0!"
-              size="small"
-              appendTo="body"
-              (onChange)="onBranchChange($event)"
-            />
-          </div>
+
+        <div class="flex items-center gap-2">
+          @if (isCashClosed) {
+            <div class="bg-rose-50 border border-rose-200 rounded-lg py-1 px-3 flex items-center gap-2 shadow-2xs">
+              <i class="pi pi-lock text-rose-500 text-xs"></i>
+              <span class="font-bold text-rose-700 text-[10px] tracking-wider">Caja Cerrada</span>
+            </div>
+          }
           @if (showPaymentSection) {
             <p-button
               label="Ver pagos"
               icon="pi pi-receipt"
               [outlined]="true"
               size="small"
-              styleClass="!rounded-lg !px-3 font-semibold h-8! text-xs border-brand-royal/50! text-brand-royal! hover:bg-brand-royal/10"
+              styleClass="!rounded-lg !px-2.5 font-semibold h-6.5! text-xs border-brand-royal/50! text-brand-royal! hover:bg-brand-royal/10"
               (onClick)="scrollToPayments()"
             />
           }
         </div>
       </div>
 
-      <div class="flex flex-col items-start md:items-end gap-3 w-full md:w-auto">
-        @if (isCashClosed) {
-          <div class="bg-rose-50 border border-rose-200 rounded-xl py-2 px-6 flex items-center gap-4 shadow-sm w-full md:w-auto">
-            <i class="pi pi-lock text-rose-500 text-xl!"></i>
-            <div>
-              <h3 class="font-bold text-rose-700 text-[11px] tracking-wider">Caja Cerrada</h3>
-              <p class="text-[10px] text-rose-600 font-medium">No puedes procesar pedidos sin sesión activa</p>
+      <!-- Card Body: Compact Branch and Client Info Grid -->
+      <div class="p-3 md:p-3.5">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-start">
+          
+          <!-- Columna Izquierda: Sucursal con label alineado a la barra de tabs -->
+          <div class="md:col-span-3 lg:col-span-3 flex flex-col gap-1.5">
+            <div class="h-[28px] flex items-center">
+              <label class="text-xs font-medium text-slate-600 flex items-center gap-1">
+                Sucursal <span class="text-red-600 font-bold">*</span>
+              </label>
             </div>
+            <p-select
+              [options]="branches"
+              formControlName="branchId"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Sucursal..."
+              [filter]="true"
+              filterBy="name"
+              size="small"
+              appendTo="body"
+              [fluid]="true"
+              (onChange)="onBranchChange($event)"
+            />
           </div>
-        }
 
-        <div class="flex flex-col sm:flex-row gap-2.5 w-full md:w-auto">
-          @if (isCreateMode) {
-            <p-button 
-              label="Cancelar" 
-              [outlined]="true" 
-              severity="danger" 
-              (onClick)="onBack()" 
-              icon="pi pi-times"
-              styleClass="!rounded-lg !px-4 font-semibold h-8! hover:bg-cancel-red/5 transition-all w-full md:w-auto text-xs border-cancel-red! text-cancel-red!"
-            />
-            <p-button 
-              label="Generar Orden" 
-              (onClick)="onSaveOrder()"
-              [disabled]="isCashClosed"
-              [pTooltip]="isCashClosed ? 'Debe abrir caja para vender' : ''"
-              tooltipPosition="top"
-              icon="pi pi-check"
-              styleClass="!rounded-lg !px-5 shadow-sm transition-all font-semibold h-8! w-full md:w-auto justify-center text-xs bg-brand-deep! text-white border-brand-deep! hover:bg-brand-royal!"
-            />
-          } @else if (isEditMode) {
-            @if (orderForm.get('status')?.value === 'pending') {
-              @if (hasUnsavedChanges) {
-                <p-button 
-                  label="Deshacer" 
-                  [outlined]="true" 
-                  severity="secondary" 
-                  (onClick)="resetChanges()" 
-                  icon="pi pi-refresh"
-                  styleClass="!rounded-lg !px-4 font-semibold h-8! hover:bg-slate-100 transition-all w-full md:w-auto text-xs border-slate-300! text-slate-600!"
-                />
-                <p-button 
-                  label="Guardar cambios" 
-                  (onClick)="onSaveChanges()"
-                  [disabled]="isCashClosed"
-                  [pTooltip]="isCashClosed ? 'Debe abrir caja para guardar cambios' : ''"
-                  tooltipPosition="top"
-                  icon="pi pi-save"
-                  styleClass="!rounded-lg !px-5 shadow-sm transition-all font-semibold h-8! w-full md:w-auto justify-center text-xs bg-brand-deep! text-white border-brand-deep! hover:bg-brand-royal!"
-                />
-              } @else {
-                <p-button 
-                  label="Regresar" 
-                  [outlined]="true" 
-                  severity="secondary" 
-                  (onClick)="onBack()" 
-                  icon="pi pi-arrow-left"
-                  styleClass="!rounded-lg !px-4 font-semibold h-8! hover:bg-slate-100 transition-all w-full md:w-auto text-xs border-slate-300! text-slate-600!"
-                />
-                <p-button 
-                  label="Confirmar venta" 
-                  (onClick)="onConfirmSale()"
-                  [disabled]="isCashClosed"
-                  [pTooltip]="isCashClosed ? 'Debe abrir caja para confirmar' : ''"
-                  tooltipPosition="top"
-                  icon="pi pi-check"
-                  styleClass="!rounded-lg !px-5 shadow-sm transition-all font-semibold h-8! w-full md:w-auto justify-center text-xs bg-brand-deep! text-white border-brand-deep! hover:bg-brand-royal!"
-                />
+          <!-- Columna Derecha: Tipo y Selección de Cliente -->
+          <div class="md:col-span-9 lg:col-span-9 flex flex-col gap-1.5">
+            <div class="h-[28px] flex items-center justify-between flex-wrap gap-2">
+              <label class="text-xs font-medium text-slate-600 flex items-center gap-1">
+                Cliente <span class="text-red-600 font-bold">*</span>
+              </label>
+
+              @if (isCreateMode) {
+                <!-- Tabs de Tipo de Cliente con Color Vino Institucional -->
+                <div class="inline-flex p-0.5 bg-slate-100 rounded-lg border border-slate-200 text-xs">
+                  <button 
+                    type="button" 
+                    (click)="setCustomerType('registered')" 
+                    [class]="selectedCustomerType?.value === 'R' ? 'bg-[#48021C] text-white font-medium shadow-xs' : 'text-slate-600 hover:text-[#48021C]'" 
+                    class="px-2.5 py-1 rounded-md text-xs transition-all cursor-pointer"
+                  >
+                    Registrado
+                  </button>
+                  <button 
+                    type="button" 
+                    (click)="setCustomerType('guest')" 
+                    [class]="selectedCustomerType?.value === 'Q' ? 'bg-[#48021C] text-white font-medium shadow-xs' : 'text-slate-600 hover:text-[#48021C]'" 
+                    class="px-2.5 py-1 rounded-md text-xs transition-all cursor-pointer"
+                  >
+                    Consumidor Final / Invitado
+                  </button>
+                </div>
               }
+            </div>
+
+            @if (isCreateMode) {
+              <!-- Cliente Registrado: Selector y Campos en disposición en "L" siempre visibles -->
+              <div *ngIf="selectedCustomerType?.value === 'R'" class="flex flex-col gap-2.5 animate-in fade-in duration-150">
+                @let customer = getCustomerById(orderForm.get('customerId')?.value);
+                
+                <!-- Fila Superior: Selector de Cliente (con botón de gestión) + Campo NIT (50% / 50%) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-start">
+                  <div class="flex gap-1.5 w-full">
+                    <p-select
+                      [options]="customers"
+                      formControlName="customerId"
+                      optionLabel="name"
+                      optionValue="id"
+                      placeholder="Seleccione un cliente..."
+                      [filter]="true"
+                      filterBy="name"
+                      [showClear]="true"
+                      size="small"
+                      appendTo="body"
+                      [fluid]="true"
+                      class="flex-1 min-w-0"
+                      (onChange)="onCustomerChange($event)"
+                    />
+                    <button
+                      pButton
+                      type="button"
+                      icon="pi pi-book"
+                      (click)="openCustomerManager()"
+                      class="p-button-outlined !border-slate-300 !text-slate-600 hover:!text-[#48021C] !rounded-lg hover:!bg-slate-50 !h-[33px] !w-[33px] flex items-center justify-center shrink-0"
+                      pTooltip="Gestionar clientes"
+                      tooltipPosition="top"
+                    ></button>
+                  </div>
+
+                  <!-- Campo NIT alineado con el selector (50%) -->
+                  <div 
+                    class="flex items-center justify-between px-3 h-[33px] rounded-lg border text-xs transition-all duration-200"
+                    [class]="customer ? 'bg-sky-50/70 border-sky-200 text-sky-900 shadow-2xs' : 'bg-slate-50 rounded-lg border-slate-200 text-slate-400'"
+                  >
+                    <span class="text-[10px] font-semibold uppercase tracking-wider" [class]="customer ? 'text-sky-600' : 'text-slate-400'">
+                      NIT:
+                    </span>
+                    <span [class]="customer?.nit ? 'font-bold text-sky-900' : (customer ? 'text-sky-700/80 italic text-[11px]' : 'text-slate-400 italic text-[11px]')">
+                      {{ customer?.nit || 'Sin NIT' }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Fila Inferior (Base de la "L"): Correo y Teléfono -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div 
+                    class="flex items-center justify-between px-3 h-[31px] rounded-lg border text-xs transition-all duration-200"
+                    [class]="customer ? 'bg-sky-50/60 border-sky-200 text-sky-900 shadow-2xs' : 'bg-slate-50/80 border-slate-200/80 text-slate-400'"
+                  >
+                    <span class="text-[10px] font-semibold uppercase tracking-wider" [class]="customer ? 'text-sky-600' : 'text-slate-400'">
+                      Correo:
+                    </span>
+                    <span [class]="customer?.email ? 'font-medium text-sky-900 truncate max-w-[200px]' : (customer ? 'text-sky-700/80 italic text-[11px]' : 'text-slate-400 italic text-[11px]')">
+                      {{ customer?.email || 'Sin correo registrado' }}
+                    </span>
+                  </div>
+
+                  <div 
+                    class="flex items-center justify-between px-3 h-[31px] rounded-lg border text-xs transition-all duration-200"
+                    [class]="customer ? 'bg-sky-50/60 border-sky-200 text-sky-900 shadow-2xs' : 'bg-slate-50/80 border-slate-200/80 text-slate-400'"
+                  >
+                    <span class="text-[10px] font-semibold uppercase tracking-wider" [class]="customer ? 'text-sky-600' : 'text-slate-400'">
+                      Teléfono:
+                    </span>
+                    <span [class]="customer?.phone ? 'font-medium text-sky-900' : (customer ? 'text-sky-700/80 italic text-[11px]' : 'text-slate-400 italic text-[11px]')">
+                      {{ customer?.phone || 'Sin teléfono registrado' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Cliente Invitado: Campos en Card con fondo azul claro y en 2 filas -->
+              <div 
+                *ngIf="selectedCustomerType?.value === 'Q'" 
+                class="p-3 bg-sky-50/70 rounded-xl border border-sky-200 shadow-2xs animate-in fade-in duration-150" 
+                formGroupName="guestCustomer"
+              >
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-semibold text-sky-700 uppercase tracking-wider">
+                      Nombre completo <span class="text-red-600 font-bold">*</span>
+                    </label>
+                    <input pInputText formControlName="name" placeholder="Ej. Juan Pérez" size="small" class="w-full p-inputtext-sm bg-white" />
+                  </div>
+                  <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-semibold text-sky-700 uppercase tracking-wider">
+                      NIT / Facturación
+                    </label>
+                    <input pInputText formControlName="nit" placeholder="C/F o número" size="small" class="w-full p-inputtext-sm bg-white" />
+                  </div>
+                  <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-semibold text-sky-700 uppercase tracking-wider">
+                      Correo electrónico
+                    </label>
+                    <input pInputText formControlName="email" placeholder="cliente@correo.com" size="small" class="w-full p-inputtext-sm bg-white" />
+                  </div>
+                  <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-semibold text-sky-700 uppercase tracking-wider">
+                      Teléfono <span class="text-red-600 font-bold">*</span>
+                    </label>
+                    <input pInputText formControlName="phone" placeholder="7766-5544" size="small" class="w-full p-inputtext-sm bg-white" />
+                  </div>
+                  <div class="flex flex-col gap-1 sm:col-span-2">
+                    <label class="text-[10px] font-semibold text-sky-700 uppercase tracking-wider">
+                      Dirección física
+                    </label>
+                    <input pInputText formControlName="address" placeholder="Dirección de entrega" size="small" class="w-full p-inputtext-sm bg-white" />
+                  </div>
+                </div>
+              </div>
             } @else {
-              <p-button 
-                label="Regresar" 
-                [outlined]="true" 
-                severity="secondary" 
-                (onClick)="onBack()" 
-                icon="pi pi-arrow-left"
-                styleClass="!rounded-lg !px-4 font-semibold h-8! hover:bg-slate-100 transition-all w-full md:w-auto text-xs border-slate-300! text-slate-600!"
-              />
-              @if (sale?.status === 'confirmed') {
-                <p-button 
-                  label="Cancelar venta" 
-                  [outlined]="true" 
-                  severity="danger" 
-                  (onClick)="onCancelSale()" 
-                  icon="pi pi-times-circle"
-                  styleClass="!rounded-lg !px-4 font-semibold h-8! hover:bg-cancel-red/5 transition-all w-full md:w-auto text-xs border-cancel-red! text-cancel-red!"
-                />
-                <p-button 
-                  label="Entregar pedido" 
-                  (onClick)="onDeliverSale()"
-                  icon="pi pi-check-circle"
-                  styleClass="!rounded-lg !px-5 shadow-sm transition-all font-semibold h-8! w-full md:w-auto justify-center text-xs bg-brand-deep! text-white border-brand-deep! hover:bg-brand-royal!"
-                />
-              }
+              <!-- Edit Mode: Static Client Info -->
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-3 p-3 bg-brand-royal/5 rounded-lg border border-brand-royal/20 border-dashed">
+                @if (selectedCustomer) {
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-[10px] font-semibold text-text-muted">Cliente</span>
+                    <span class="text-xs font-semibold text-brand-deep">{{ selectedCustomer.name }}</span>
+                  </div>
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-[10px] font-semibold text-text-muted">Nit</span>
+                    <span class="text-xs font-semibold text-brand-deep">{{ selectedCustomer.nit || '---' }}</span>
+                  </div>
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-[10px] font-semibold text-text-muted">Correo electrónico</span>
+                    <span class="text-xs font-semibold text-brand-deep">{{ selectedCustomer.email || '---' }}</span>
+                  </div>
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-[10px] font-semibold text-text-muted">Teléfono</span>
+                    <span class="text-xs font-semibold text-brand-deep">{{ selectedCustomer.phone || '---' }}</span>
+                  </div>
+                } @else if (orderForm.get('guestCustomer')?.value) {
+                  @let guest = orderForm.get('guestCustomer')?.value;
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-[10px] font-semibold text-text-muted">Cliente Invitado</span>
+                    <span class="text-xs font-semibold text-brand-deep">{{ guest?.name || '---' }}</span>
+                  </div>
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-[10px] font-semibold text-text-muted">Nit</span>
+                    <span class="text-xs font-semibold text-brand-deep">{{ guest?.nit || '---' }}</span>
+                  </div>
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-[10px] font-semibold text-text-muted">Correo electrónico</span>
+                    <span class="text-xs font-semibold text-brand-deep">{{ guest?.email || '---' }}</span>
+                  </div>
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-[10px] font-semibold text-text-muted">Teléfono</span>
+                    <span class="text-xs font-semibold text-brand-deep">{{ guest?.phone || '---' }}</span>
+                  </div>
+                }
+              </div>
             }
-          }
+
+          </div>
         </div>
       </div>
     </div>
@@ -167,147 +286,6 @@
   <!-- MAIN CONTENT GRID -->
   <div class="grid grid-cols-12 gap-4 max-w-[1700px] mx-auto">
     <div class="col-span-12 lg:col-span-8 flex flex-col gap-4">
-      
-      <!-- CLIENT INFO CARD -->
-      <div class="bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm">
-        <div class="p-4 px-5">
-          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-            <div class="flex flex-col">
-               <span class="text-sm font-semibold text-title-secondary leading-none">Información del cliente</span>
-               <span class="text-[10px] font-medium text-text-muted mt-1">Registrado o venta al público</span>
-            </div>
-
-            @if (isCreateMode) {
-              <!-- Tab switch with customized brand colors -->
-              <div class="p-1 bg-brand-royal/5 rounded-lg hidden md:flex border border-brand-royal/10 self-start sm:self-auto">
-                <button type="button" (click)="setCustomerType('registered')" [class]="selectedCustomerType?.value === 'R' ? 'bg-brand-royal text-white shadow-sm border border-brand-royal/10' : 'text-text-muted hover:text-brand-royal'" class="px-4 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer">Registrado</button>
-                <button type="button" (click)="setCustomerType('guest')" [class]="selectedCustomerType?.value === 'Q' ? 'bg-brand-royal text-white shadow-sm border border-brand-royal/10' : 'text-text-muted hover:text-brand-royal'" class="px-4 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer">Invitado</button>
-              </div>
-            }
-          </div>
-
-          @if (isCreateMode) {
-            <div class="grid grid-cols-2 p-1 bg-brand-royal/5 rounded-lg md:hidden mb-4 border border-brand-royal/10">
-               <button type="button" (click)="setCustomerType('registered')" [class]="selectedCustomerType?.value === 'R' ? 'bg-brand-royal text-white shadow-sm border border-brand-royal/10' : 'text-text-muted'" class="py-2 rounded-md text-xs font-semibold transition-all cursor-pointer">Registrado</button>
-               <button type="button" (click)="setCustomerType('guest')" [class]="selectedCustomerType?.value === 'Q' ? 'bg-brand-royal text-white shadow-sm border border-brand-royal/10' : 'text-text-muted'" class="py-2 rounded-md text-xs font-semibold transition-all cursor-pointer">Invitado</button>
-            </div>
-
-            <div *ngIf="selectedCustomerType?.value === 'R'" class="flex flex-col gap-3 animate-in fade-in slide-in-from-top-1" [formGroup]="orderForm">
-               <div class="flex flex-col gap-1">
-                  <label class="text-xs font-semibold text-text-body">Buscar cliente <span class="text-red-600 font-bold">*</span></label>
-                  <div class="flex gap-2 w-full">
-                     <p-select
-                       [options]="customers"
-                       formControlName="customerId"
-                       optionLabel="name"
-                       optionValue="id"
-                       placeholder="Escribe el nombre del cliente..."
-                       [filter]="true"
-                       filterBy="name"
-                       [showClear]="true"
-                       styleClass="w-full border-slate-300 h-8! text-xs! py-0!"
-                       size="small"
-                       appendTo="body"
-                       class="flex-1 min-w-0"
-                       [fluid]="true"
-                       (onChange)="onCustomerChange($event)"
-                     />
-                     <button
-                       pButton
-                       type="button"
-                       icon="pi pi-book"
-                       (click)="openCustomerManager()"
-                       class="p-button-outlined !border-indigo-300 !text-indigo-600 !rounded-lg hover:!bg-indigo-50 !h-8 !w-8 flex items-center justify-center shrink-0"
-                       pTooltip="Gestionar clientes"
-                       tooltipPosition="top"
-                     ></button>
-                  </div>
-               </div>
-               
-               <!-- Selected client detail card styled with premium palette -->
-               <div *ngIf="orderForm.get('customerId')?.value" class="grid grid-cols-1 md:grid-cols-4 gap-3 p-3 bg-brand-royal/5 rounded-lg border border-brand-royal/20 border-dashed">
-                  <div class="flex flex-col gap-0.5">
-                     <span class="text-[10px] font-semibold text-text-muted">Nit</span>
-                     <span class="text-xs font-semibold text-brand-deep">{{ selectedCustomer?.nit || '---' }}</span>
-                  </div>
-                  <div class="flex flex-col gap-0.5 md:col-span-2">
-                     <span class="text-[10px] font-semibold text-text-muted">Correo electrónico</span>
-                     <span class="text-xs font-semibold text-brand-deep">{{ selectedCustomer?.email || '---' }}</span>
-                  </div>
-                  <div class="flex flex-col gap-0.5">
-                     <span class="text-[10px] font-semibold text-text-muted">Teléfono</span>
-                     <span class="text-xs font-semibold text-brand-deep">{{ selectedCustomer?.phone || '---' }}</span>
-                  </div>
-               </div>
-            </div>
-
-            <div *ngIf="selectedCustomerType?.value === 'Q'" class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 animate-in fade-in slide-in-from-top-1" [formGroup]="orderForm">
-               <div formGroupName="guestCustomer" class="grid grid-cols-1 md:grid-cols-2 col-span-2 gap-x-4 gap-y-3">
-                 <div class="flex flex-col gap-1">
-                    <label class="text-xs font-semibold text-text-body">Nombre completo <span class="text-red-600 font-bold">*</span></label>
-                    <input pInputText formControlName="name" placeholder="Ej. Juan Pérez" class="w-full h-8! py-1! px-2.5! text-xs! border-slate-300! focus:border-brand-deep!" size="small" />
-                 </div>
-                 <div class="flex flex-col gap-1">
-                    <label class="text-xs font-semibold text-text-body">Nit / Facturación</label>
-                    <input pInputText formControlName="nit" placeholder="C/F o número" class="w-full h-8! py-1! px-2.5! text-xs! border-slate-300! focus:border-brand-deep!" size="small" />
-                 </div>
-                 <div class="flex flex-col gap-1">
-                    <label class="text-xs font-semibold text-text-body">Correo electrónico</label>
-                    <input pInputText formControlName="email" placeholder="cliente@correo.com" class="w-full h-8! py-1! px-2.5! text-xs! border-slate-300! focus:border-brand-deep!" size="small" />
-                 </div>
-                 <div class="flex flex-col gap-1">
-                    <label class="text-xs font-semibold text-text-body">Teléfono <span class="text-red-600 font-bold">*</span></label>
-                    <input pInputText formControlName="phone" placeholder="7766-5544" class="w-full h-8! py-1! px-2.5! text-xs! border-slate-300! focus:border-brand-deep!" size="small" />
-                 </div>
-                 <div class="flex flex-col gap-1 col-span-2">
-                    <label class="text-xs font-semibold text-text-body">Dirección</label>
-                    <input pInputText formControlName="address" placeholder="Dirección física" class="w-full h-8! py-1! px-2.5! text-xs! border-slate-300! focus:border-brand-deep!" size="small" />
-                 </div>
-               </div>
-            </div>
-          } @else {
-            <!-- Edit Mode: Static Client Info -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-brand-royal/5 rounded-lg border border-brand-royal/20 border-dashed">
-              @if (selectedCustomer) {
-                <div class="flex flex-col gap-0.5">
-                  <span class="text-[10px] font-semibold text-text-muted">Cliente</span>
-                  <span class="text-xs font-semibold text-brand-deep">{{ selectedCustomer.name }}</span>
-                </div>
-                <div class="flex flex-col gap-0.5">
-                  <span class="text-[10px] font-semibold text-text-muted">Nit</span>
-                  <span class="text-xs font-semibold text-brand-deep">{{ selectedCustomer.nit || '---' }}</span>
-                </div>
-                <div class="flex flex-col gap-0.5">
-                  <span class="text-[10px] font-semibold text-text-muted">Correo electrónico</span>
-                  <span class="text-xs font-semibold text-brand-deep">{{ selectedCustomer.email || '---' }}</span>
-                </div>
-                <div class="flex flex-col gap-0.5">
-                  <span class="text-[10px] font-semibold text-text-muted">Teléfono</span>
-                  <span class="text-xs font-semibold text-brand-deep">{{ selectedCustomer.phone || '---' }}</span>
-                </div>
-              } @else if (orderForm.get('guestCustomer')?.value) {
-                @let guest = orderForm.get('guestCustomer')?.value;
-                <div class="flex flex-col gap-0.5">
-                  <span class="text-[10px] font-semibold text-text-muted">Cliente Invitado</span>
-                  <span class="text-xs font-semibold text-brand-deep">{{ guest?.name || '---' }}</span>
-                </div>
-                <div class="flex flex-col gap-0.5">
-                  <span class="text-[10px] font-semibold text-text-muted">Nit</span>
-                  <span class="text-xs font-semibold text-brand-deep">{{ guest?.nit || '---' }}</span>
-                </div>
-                <div class="flex flex-col gap-0.5">
-                  <span class="text-[10px] font-semibold text-text-muted">Correo electrónico</span>
-                  <span class="text-xs font-semibold text-brand-deep">{{ guest?.email || '---' }}</span>
-                </div>
-                <div class="flex flex-col gap-0.5">
-                  <span class="text-[10px] font-semibold text-text-muted">Teléfono</span>
-                  <span class="text-xs font-semibold text-brand-deep">{{ guest?.phone || '---' }}</span>
-                </div>
-              }
-            </div>
-          }
-        </div>
-      </div>
 
       <!-- RECUADRO DE ATAJOS RÁPIDOS DE PRODUCTOS -->
       <div class="bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm">
@@ -378,12 +356,13 @@
                       </div>
                       <div class="flex flex-col min-w-0">
                         <span class="font-bold text-slate-800 truncate leading-tight text-xs group-hover:text-brand-royal transition-colors">{{ p.name }}</span>
-                        <span class="text-[9px] text-slate-400 font-mono tracking-wider mt-0.5">{{ p.sku || 'SIN SKU' }}</span>
+                        <span class="text-[10px] text-slate-400 mt-0.5 truncate">{{ p.sku || '---' }}</span>
                       </div>
                     </div>
                     
-                    <div class="flex items-center gap-1.5 flex-shrink-0">
+                    <div class="flex flex-col items-end flex-shrink-0">
                       <span class="font-bold text-emerald-600 whitespace-nowrap text-xs">{{ p.price | currency:'Q ' }}</span>
+                      <span class="text-[10px] text-slate-500 font-medium whitespace-nowrap mt-0.5">Stock: {{ p.stock ?? 0 }} {{ p.unit.abbreviation || 'un' }}</span>
                     </div>
                   </div>
 
@@ -430,18 +409,27 @@
         </div>
       </div>
 
-      <!-- ITEMS SECTION WITH DYNAMIC HEIGHT -->
-      <div class="bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm">
-        <div class="p-3 md:px-5 border-b border-slate-300 flex items-center justify-between bg-brand-royal/5">
-          <div class="flex flex-col">
+      <!-- ITEMS SECTION WITH DYNAMIC HEIGHT AND SCROLL -->
+      <div class="bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm flex flex-col">
+        <div class="p-3 md:px-5 border-b border-slate-300 flex items-center justify-between bg-brand-royal/5 flex-shrink-0">
+          <div class="flex items-center gap-2">
              <h2 class="text-sm font-semibold text-title-secondary tracking-tight">Ítems del pedido</h2>
+             <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-brand-royal/10 text-brand-royal">
+               {{ details.length }} {{ details.length === 1 ? 'producto' : 'productos' }}
+             </span>
           </div>
         </div>
 
-        <div class="overflow-x-auto w-full">
-          <p-table [value]="details" styleClass="p-datatable-striped p-datatable-sm p-datatable-gridless">
+        <div class="overflow-x-auto w-full max-h-[480px] overflow-y-auto">
+          <p-table 
+            [value]="details" 
+            [scrollable]="true"
+            scrollHeight="480px"
+            styleClass="w-full p-datatable-striped p-datatable-sm p-datatable-gridless"
+            [tableStyle]="{ 'width': '100%', 'min-width': '680px' }"
+          >
             <ng-template pTemplate="header">
-              <tr class="h-11 bg-brand-royal/10 text-brand-royal text-[11px] font-semibold border-b border-brand-royal/20">
+              <tr class="h-11 bg-brand-royal/10 text-brand-royal text-[11px] font-semibold border-b border-brand-royal/20 sticky top-0 z-10 backdrop-blur-md">
                 <th class="!pl-6 text-left">Producto</th>
                 <th class="w-28 text-right pr-4">Precio</th>
                 <th class="w-36 text-center">Ajuste</th>
@@ -457,15 +445,15 @@
                   <div class="flex items-center gap-3 py-0.5">
                     <div class="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 bg-slate-50 flex items-center justify-center flex-shrink-0">
                       @if (detail.product?.imageUrl) {
-                        <img [src]="getProductImageUrl(detail.product.imageUrl)" class="w-full h-full object-cover" />
+                        <img [src]="getProductImageUrl(detail.product?.imageUrl)" class="w-full h-full object-cover" />
                       } @else {
                         <i class="pi pi-image text-slate-300 text-lg"></i>
                       }
                     </div>
                     <div class="flex flex-col overflow-hidden max-w-[200px] sm:max-w-none">
                       <span class="font-semibold text-text-body text-xs truncate leading-tight">{{ detail.product?.name }}</span>
-                      <span class="text-[9px] font-mono text-text-muted mt-0.5 truncate block">
-                        SKU: {{ detail.product?.sku }} • Stock: {{ detail.product?.stock }} {{ detail.product?.unit?.abbreviation }}
+                      <span class="text-[10px] text-text-muted mt-0.5 truncate block">
+                        {{ detail.product?.sku || '---' }}
                       </span>
                     </div>
                   </div>
@@ -513,21 +501,21 @@
 
                 <td class="py-2.5 !pl-4 align-middle">
                   <div class="w-32 mx-auto">
-                    <p-inputnumber
-                      [(ngModel)]="detail.quantity"
-                      mode="decimal"
-                      [min]="0.001"
-                      [max]="detail.product?.stock"
-                      [minFractionDigits]="detail.product?.unit?.allowsDecimals ? 2 : 0"
-                      [maxFractionDigits]="detail.product?.unit?.allowsDecimals ? 2 : 0"
-                      [showButtons]="false"
-                      [suffix]="' ' + detail.product?.unit?.abbreviation"
-                      (onInput)="onQuantityChanged(detail, $event)"
-                      [disabled]="!(isCreateMode || orderForm.get('status')?.value === 'pending')"
-                      styleClass="border-slate-300! h-8!"
-                      size="small"
-                      [fluid]="true"
-                      inputStyleClass="text-xs h-8! py-1! px-2! text-center border-slate-300! focus:border-brand-deep!"
+                    <p-inputnumber 
+                      [(ngModel)]="detail.quantity" 
+                      mode="decimal" 
+                      [min]="0.001" 
+                      [max]="detail.product?.stock" 
+                      [minFractionDigits]="detail.product?.unit?.allowsDecimals ? 2 : 0" 
+                      [maxFractionDigits]="detail.product?.unit?.allowsDecimals ? 2 : 0" 
+                      [showButtons]="false" 
+                      [suffix]="' ' + (detail.product?.unit?.abbreviation || '')" 
+                      (onInput)="onQuantityChanged(detail, $event)" 
+                      [disabled]="!(isCreateMode || orderForm.get('status')?.value === 'pending')" 
+                      styleClass="border-slate-300! h-8!" 
+                      size="small" 
+                      [fluid]="true" 
+                      inputStyleClass="text-xs h-8! py-1! px-2! text-center border-slate-300! focus:border-brand-deep!" 
                     />
                   </div>
                 </td>
@@ -544,12 +532,12 @@
 
             <ng-template pTemplate="emptymessage">
               <tr>
-                <td [attr.colspan]="(isCreateMode || orderForm.get('status')?.value === 'pending') ? 6 : 5" class="text-center !py-16">
-                  <div class="flex flex-col items-center justify-center gap-3 w-full h-full">
+                <td [attr.colspan]="(isCreateMode || orderForm.get('status')?.value === 'pending') ? 6 : 5" class="!text-center !p-0 w-full">
+                  <div class="flex flex-col items-center justify-center gap-3 w-full py-16 text-center">
                     <div class="w-12 h-12 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center shadow-sm">
                       <i class="pi pi-shopping-bag text-text-muted text-lg"></i>
                     </div>
-                    <div class="flex flex-col gap-1 max-w-[280px]">
+                    <div class="flex flex-col gap-1 max-w-[280px] text-center">
                       <span class="text-xs font-semibold text-title-secondary">Lista de productos vacía</span>
                       <span class="text-[10px] text-text-muted">Busca y añade productos para armar el pedido.</span>
                     </div>
@@ -841,6 +829,83 @@
       </div>
     </div>
   </div>
+
+  <!-- FLOATING BOTTOM-RIGHT ACTION BAR -->
+  <div class="fixed bottom-6 right-6 z-40 animate-in fade-in slide-in-from-bottom-3 duration-200">
+    <div class="bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-slate-300/80 shadow-xl flex items-center gap-3.5">
+      <!-- Resumen rápido del total -->
+      <div class="flex flex-col pr-3 border-r border-slate-200">
+        <span class="text-[10px] font-medium text-slate-500 leading-tight">Total</span>
+        <span class="text-sm font-bold text-emerald-600 leading-none">{{ totals.total | currency: 'Q ' }}</span>
+      </div>
+
+      <!-- Botón Cancelar -->
+      <p-button 
+        label="Cancelar" 
+        [outlined]="true" 
+        severity="danger" 
+        (onClick)="onCancel()" 
+        icon="pi pi-times"
+        styleClass="!rounded-lg !px-3.5 font-semibold h-9! hover:bg-cancel-red/5 transition-all text-xs border-cancel-red! text-cancel-red!"
+      />
+
+      <!-- Botones de Acción según Modo y Estado -->
+      @if (isCreateMode) {
+        <p-button 
+          label="Generar orden" 
+          (onClick)="onSaveOrder()" 
+          [disabled]="isCashClosed || details.length === 0"
+          icon="pi pi-check" 
+          styleClass="!rounded-lg !px-5 shadow-sm transition-all font-semibold h-9! justify-center text-xs !bg-[#48021C] !text-white !border-[#48021C] hover:!bg-[#350114] disabled:!opacity-40 disabled:!cursor-not-allowed"
+        />
+      } @else {
+        @if (orderForm.get('status')?.value === 'pending') {
+          @if (hasUnsavedChanges) {
+            <p-button 
+              label="Deshacer cambios" 
+              [outlined]="true" 
+              (onClick)="resetChanges()" 
+              icon="pi pi-refresh" 
+              styleClass="!rounded-lg !px-3.5 font-semibold h-9! text-xs border-slate-300! text-slate-700! hover:bg-slate-50"
+            />
+            <p-button 
+              label="Guardar cambios" 
+              (onClick)="onSaveChanges()" 
+              icon="pi pi-save" 
+              styleClass="!rounded-lg !px-4 shadow-sm font-semibold h-9! text-xs !bg-[#48021C] !text-white !border-[#48021C] hover:!bg-[#350114]"
+            />
+          }
+          
+          <p-button 
+            label="Confirmar venta" 
+            (onClick)="onConfirmSale()" 
+            [disabled]="isCashClosed || details.length === 0"
+            icon="pi pi-check-circle" 
+            styleClass="!rounded-lg !px-4 shadow-sm font-semibold h-9! text-xs bg-emerald-600! text-white! border-emerald-600! hover:bg-emerald-700! disabled:!opacity-40"
+          />
+        }
+
+        @if (orderForm.get('status')?.value === 'confirmed') {
+          <p-button 
+            label="Entregar pedido" 
+            (onClick)="onDeliverSale()" 
+            icon="pi pi-box" 
+            styleClass="!rounded-lg !px-4 shadow-sm font-semibold h-9! text-xs bg-indigo-600! text-white! border-indigo-600! hover:bg-indigo-700!"
+          />
+        }
+
+        @if (['pending', 'confirmed'].includes(orderForm.get('status')?.value)) {
+          <p-button 
+            label="Cancelar orden" 
+            (onClick)="onCancelSale()" 
+            icon="pi pi-times-circle" 
+            severity="danger"
+            styleClass="!rounded-lg !px-3.5 font-semibold h-9! text-xs bg-rose-600! text-white! border-rose-600! hover:bg-rose-700!"
+          />
+        }
+      }
+    </div>
+  </div>
 </div>
 
 <!-- Hidden Ticket for download generation -->
@@ -849,6 +914,64 @@
     <app-ticket-template *ngIf="sale" [sale]="sale"></app-ticket-template>
   </div>
 </div>
+
+<!-- MODAL DE CONFIRMACIÓN: CANCELAR / SALIR -->
+<app-confirmation-modal
+  [(visible)]="showCancelConfirmModal"
+  header="Confirmar cancelación"
+  title="¿Estás seguro de cancelar y salir?"
+  message="Tienes cambios o productos agregados en la orden que no se han guardado."
+  note="Si sales ahora, se perderán las modificaciones no guardadas."
+  type="warning"
+  icon="pi pi-exclamation-triangle"
+  confirmLabel="Salir"
+  cancelLabel="Continuar"
+  (onConfirm)="executeCancelExit()"
+/>
+
+<!-- MODAL DE CONFIRMACIÓN: CONFIRMAR VENTA -->
+<app-confirmation-modal
+  [(visible)]="showConfirmSaleModal"
+  header="Confirmar venta"
+  title="¿Estás seguro de confirmar esta venta?"
+  message="Una vez confirmada, los productos, cantidades y precios no podrán ser modificados."
+  note="Esta acción reservará el inventario y habilitará la entrega y tickets de pago."
+  type="success"
+  icon="pi pi-check-circle"
+  confirmLabel="Confirmar"
+  cancelLabel="Cancelar"
+  [loading]="isConfirmingSale"
+  (onConfirm)="executeConfirmSale()"
+/>
+
+<!-- MODAL DE CONFIRMACIÓN: ENTREGAR VENTA -->
+<app-confirmation-modal
+  [(visible)]="showDeliverSaleModal"
+  header="Confirmar entrega"
+  title="¿Confirmas que el pedido ha sido entregado?"
+  message="El pedido pasará al estado entregado y se registrará la salida definitiva del inventario."
+  type="info"
+  icon="pi pi-box"
+  confirmLabel="Entregar"
+  cancelLabel="Cancelar"
+  [loading]="isDeliveringSale"
+  (onConfirm)="executeDeliverSale()"
+/>
+
+<!-- MODAL DE CONFIRMACIÓN: ANULAR / CANCELAR VENTA -->
+<app-confirmation-modal
+  [(visible)]="showVoidSaleModal"
+  header="Confirmar anulación de venta"
+  title="¿Estás seguro de anular esta venta?"
+  message="Esta acción cancelará la orden de venta y liberará cualquier producto o reserva asociada."
+  note="Esta acción no se puede deshacer."
+  type="danger"
+  icon="pi pi-ban"
+  confirmLabel="Anular"
+  cancelLabel="Cerrar"
+  [loading]="isVoidingSale"
+  (onConfirm)="executeCancelSale()"
+/>
 
 <!-- ADJUSTMENTS DIALOG -->
 <p-dialog
