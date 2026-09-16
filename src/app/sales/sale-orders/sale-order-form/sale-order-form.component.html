@@ -574,17 +574,33 @@
          </div>
 
          <div class="flex flex-col gap-1">
-            <label class="text-xs font-semibold text-text-body">Fecha de vencimiento</label>
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-semibold text-text-body">Gestión de Cobro / Rango de Vigencia</label>
+              @if (billingRange && billingRange[0]) {
+                <span class="text-[10px] font-semibold text-[#48021C]">
+                  {{ billingRange[0] | date:'dd/MM/yy':'-0600' }} - {{ (billingRange[1] || billingRange[0]) | date:'dd/MM/yy':'-0600' }}
+                </span>
+              }
+            </div>
             <p-datepicker
-              formControlName="dueDate"
+              [ngModel]="billingRange"
+              (ngModelChange)="onBillingRangeChange($event)"
+              [ngModelOptions]="{ standalone: true }"
+              selectionMode="range"
               [iconDisplay]="'input'"
               [showIcon]="true"
+              [readonlyInput]="true"
+              placeholder="Inicio cobro - Vencimiento"
               styleClass="w-full border-slate-300 h-8!"
               size="small"
               [fluid]="true"
               appendTo="body"
               [disabled]="!(isCreateMode || orderForm.get('status')?.value === 'pending')"
             />
+            <div class="flex items-center justify-between text-[10px] text-slate-500 font-medium px-0.5">
+              <span>Inicio: <strong class="text-slate-700">{{ (orderForm.get('billingStartDate')?.value | date:'dd/MM/yyyy':'-0600') || '---' }}</strong></span>
+              <span>Vence: <strong class="text-slate-700">{{ (orderForm.get('dueDate')?.value | date:'dd/MM/yyyy':'-0600') || '---' }}</strong></span>
+            </div>
          </div>
 
          <!-- Acciones de ticket -->

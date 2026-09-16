@@ -199,6 +199,21 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   ];
 
   applyTax: boolean = false;
+  billingRange: Date[] | null = null;
+
+  onBillingRangeChange(dates: Date[] | null) {
+    this.billingRange = dates;
+    if (dates && dates.length > 0) {
+      const start = dates[0] ? new Date(dates[0]) : null;
+      const end = dates[1] ? new Date(dates[1]) : (dates[0] ? new Date(dates[0]) : null);
+      this.orderForm.get('billingStartDate')?.setValue(start);
+      this.orderForm.get('dueDate')?.setValue(end);
+    } else {
+      this.orderForm.get('billingStartDate')?.setValue(null);
+      this.orderForm.get('dueDate')?.setValue(null);
+    }
+    this.markAsChanged();
+  }
 
   payments: any[] = [];
   isAddingPayment: boolean = false;
@@ -401,10 +416,24 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
           customerId: res.data.customer?.id || null,
           guestCustomer: res.data.guestCustomer,
           date: res.data.date ? new Date(res.data.date) : null,
+          billingStartDate: res.data.billingStartDate ? new Date(res.data.billingStartDate) : null,
           dueDate: res.data.dueDate ? new Date(res.data.dueDate) : null,
           notes: res.data.notes,
           status: res.data.status,
         });
+
+        const start = res.data.billingStartDate ? new Date(res.data.billingStartDate) : null;
+        const end = res.data.dueDate ? new Date(res.data.dueDate) : null;
+        if (start && end) {
+          this.billingRange = [start, end];
+        } else if (start) {
+          this.billingRange = [start];
+        } else if (end) {
+          this.billingRange = [end, end];
+        } else {
+          this.billingRange = null;
+        }
+
         this.orderForm.get('branchId')?.disable();
         this.selectedCustomer = res.data.customer ?? null;
 
@@ -1059,7 +1088,8 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
         address: [''],
       }),
       date: [new Date(), [Validators.required]],
-      dueDate: [],
+      billingStartDate: [null],
+      dueDate: [null],
       notes: [''],
       status: ['pending', [Validators.required]],
     });

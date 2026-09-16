@@ -580,6 +580,24 @@
                     <span class="text-sm font-bold text-rose-700 block text-center">{{ order.pendingAmount | currency: 'Q ' }}</span>
                   </div>
                 </div>
+
+                <!-- Periodo de Cobro & Vencimiento -->
+                @if (order.billingStartDate || order.dueDate) {
+                  <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex flex-col gap-1 text-[11px]">
+                    <div class="flex items-center justify-between">
+                      <span class="text-slate-500 font-medium">Inicio de Cobro:</span>
+                      <span class="font-semibold text-slate-700">
+                        {{ (order.billingStartDate | date:'dd/MM/yyyy':'-0600') || '---' }}
+                      </span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="text-slate-500 font-medium">Fecha de Vencimiento:</span>
+                      <span class="font-semibold" [ngClass]="order.dueDate ? 'text-[#be123c]' : 'text-slate-700'">
+                        {{ (order.dueDate | date:'dd/MM/yyyy':'-0600') || '---' }}
+                      </span>
+                    </div>
+                  </div>
+                }
               </div>
             }
             

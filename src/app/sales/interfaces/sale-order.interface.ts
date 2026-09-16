@@ -8,7 +8,8 @@ export interface ISaleOrderResponse {
   updatedAt: Date;
   invoiceNumber: string;
   date: Date;
-  dueDate: Date;
+  billingStartDate?: Date | string | null;
+  dueDate?: Date | string | null;
   deliveredAt?: Date | string | null;
   type: string;
   status: string;
