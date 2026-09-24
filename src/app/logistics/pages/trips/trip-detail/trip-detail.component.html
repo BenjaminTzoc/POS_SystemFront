@@ -53,7 +53,7 @@
                 }
               }
             </div>
-            <p class="text-xs text-slate-500 mt-1">Monitoreo en tiempo real y certificación de paradas logísticas.</p>
+            <p class="text-xs text-slate-500 mt-1">Monitoreo, merma de bodega e incidencias para poder cerrar el viaje.</p>
           </div>
         </div>
 
@@ -89,7 +89,7 @@
               [disabled]="!canCompleteTrip()"
               [loading]="actionLoading()"
               styleClass="!rounded-lg text-sm! font-semibold !bg-emerald-600 !border-emerald-600 !text-white hover:!bg-emerald-700 disabled:!opacity-50 inline-flex items-center gap-1.5 shadow-sm transition-all"
-              [pTooltip]="!canCompleteTrip() ? 'Debe atender todas las paradas, recepcionar devoluciones y resolver incidencias' : 'Finalizar y cerrar viaje'"
+              [pTooltip]="completeBlockHint()"
             >
               <svg lucideCheckCircle2 class="w-4 h-4 stroke-[2.2]"></svg>
               <span>Finalizar Viaje</span>
@@ -112,13 +112,13 @@
             </div>
           </div>
 
-          <!-- 2. Camión -->
+          <!-- 2. Vehículo -->
           <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
             <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100">
               <svg lucideTruck class="w-5 h-5 stroke-[2]"></svg>
             </div>
             <div class="min-w-0">
-              <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Camión</span>
+              <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Vehículo</span>
               <span class="text-xs font-bold text-slate-800 truncate block">{{ trip()?.truck?.name }}</span>
               <span class="text-[10px] text-slate-500 font-mono">Placa: {{ trip()?.truck?.licensePlate }}</span>
             </div>
@@ -152,6 +152,22 @@
         </div>
       }
     </div>
+
+    @if (trip()?.status === 'on_route' && (hasPendingReturns() || hasOpenIncidents())) {
+      <div class="mb-6 p-3.5 rounded-2xl border border-amber-200 bg-amber-50 flex flex-col sm:flex-row sm:items-center gap-2">
+        <p class="text-xs font-semibold text-amber-900 m-0">
+          Bodega: el viaje no se puede completar todavía.
+        </p>
+        <p class="text-xs text-amber-800 m-0">
+          @if (hasPendingReturns()) {
+            Hay merma pendiente de recibir.
+          }
+          @if (hasOpenIncidents()) {
+            Hay incidencias abiertas.
+          }
+        </p>
+      </div>
+    }
 
     <!-- Main Content: Paradas de la Ruta -->
     <div class="bg-white rounded-2xl border border-slate-300 shadow-sm overflow-hidden mb-6">
@@ -280,7 +296,7 @@
                           styleClass="!text-xs !py-1.5 !px-3 !rounded-lg font-semibold shadow-none !bg-indigo-600 !border-indigo-600 !text-white hover:!bg-indigo-700 inline-flex items-center gap-1.5"
                         >
                           <svg lucideBoxes class="w-3.5 h-3.5 stroke-[2.2]"></svg>
-                          <span>Inspeccionar y Recibir</span>
+                          <span>Recibir traslado</span>
                         </p-button>
                       }
                     } @else if (item.status !== 'pending') {
@@ -307,7 +323,7 @@
         <div class="py-3 px-4 md:px-6 flex items-center justify-between border-b border-slate-100 bg-amber-50/30">
           <div class="flex items-center gap-2">
             <svg lucideRotateCcw class="w-4 h-4 text-amber-600 stroke-[2.2]"></svg>
-            <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Devoluciones en Retorno ({{ trip()?.returns?.length }})</h2>
+            <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Merma en retorno ({{ trip()?.returns?.length }})</h2>
           </div>
         </div>
 
@@ -319,11 +335,11 @@
                   <span class="text-xs font-bold text-slate-800">Devolución #{{ ret.id | slice:0:8 }}</span>
                   @if (ret.status === 'pending_receipt') {
                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
-                      En Tránsito / Pendiente en Bodega
+                      Pendiente en bodega
                     </span>
                   } @else {
                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                      Recepcionada en Bodega
+                    Recibida en bodega
                     </span>
                   }
                 </div>
@@ -333,7 +349,7 @@
                 <div class="mt-2 flex items-center gap-2 flex-wrap">
                   @for (item of ret.items; track item.id) {
                     <span class="inline-flex items-center gap-1 text-[11px] bg-white px-2 py-0.5 rounded border border-slate-200 text-slate-700">
-                      {{ item.product.name || 'Item' }}: <strong>{{ item.returnedQuantity }} unid.</strong>
+                      {{ item.product.name || 'Item' }}: <strong>{{ productQtyLabel(item.returnedQuantity, item.product) }}</strong>
                     </span>
                   }
                 </div>
@@ -347,12 +363,12 @@
                     styleClass="!text-xs !py-1.5 !px-3 !rounded-lg font-semibold shadow-none !bg-amber-600 !border-amber-600 !text-white hover:!bg-amber-700 inline-flex items-center gap-1.5"
                   >
                     <svg lucidePackage class="w-3.5 h-3.5 stroke-[2.2]"></svg>
-                    <span>Recepcionar en Bodega</span>
+                    <span>Recibir merma</span>
                   </p-button>
                 } @else {
                   <span class="text-xs text-emerald-600 font-semibold flex items-center gap-1">
                     <svg lucideCheck class="w-3.5 h-3.5 stroke-[2.5]"></svg>
-                    Stock Reingresado
+                    Merma recibida
                   </span>
                 }
               </div>
@@ -491,17 +507,20 @@
           Cantidades Entregadas
         </label>
         <div class="space-y-2 max-h-48 overflow-y-auto">
-          @for (item of saleDeliveryItems; track item.productId) {
+          @for (item of saleDeliveryItems; track item.saleDetailId) {
             <div class="flex items-center justify-between gap-2 p-2 bg-white rounded-lg border border-slate-200">
               <div class="min-w-0">
                 <span class="text-xs font-semibold text-slate-800 block truncate">{{ item.name }}</span>
-                <span class="text-[10px] text-slate-400">Pedido: {{ item.quantity }} unid.</span>
+                <span class="text-[10px] text-slate-400">Pedido: {{ qtyLabel(item.quantity, item.unit) }}</span>
               </div>
               <div class="flex items-center gap-1 shrink-0">
                 <p-inputNumber 
                   [(ngModel)]="item.deliveredQuantity" 
                   [min]="0" 
-                  [max]="item.quantity" 
+                  [max]="item.quantity"
+                  [step]="item.allowsDecimals ? 0.01 : 1"
+                  [minFractionDigits]="item.allowsDecimals ? 0 : 0"
+                  [maxFractionDigits]="item.allowsDecimals ? 4 : 0"
                   [showButtons]="true"
                   inputStyleClass="!w-16 !text-center !text-xs !h-8 !rounded-lg"
                 ></p-inputNumber>
@@ -549,139 +568,271 @@
 </p-dialog>
 
 <!-- ========================================== -->
-<!-- MODAL: Inspección de Traslado              -->
+<!-- MODAL: Recepción de Traslado               -->
 <!-- ========================================== -->
 <p-dialog 
-  header="Inspección Física y Recepción de Traslado" 
+  [header]="transferStep === 'review' ? 'Confirmar recepción' : 'Recibir traslado'" 
   [(visible)]="transferModalVisible" 
   [modal]="true" 
-  [style]="{ width: '90vw', maxWidth: '650px' }"
+  [style]="{ width: '90vw', maxWidth: '720px' }"
   [draggable]="false"
   [resizable]="false"
+  (onHide)="closeTransferModal()"
   styleClass="!rounded-2xl shadow-2xl"
 >
   <div class="p-1 space-y-4">
-    <p class="text-xs text-slate-500">
-      Verifique físicamente los productos descargados en la sucursal de destino. Ingrese la cantidad recibida conforme.
-    </p>
+    @if (transferStep === 'quantities') {
+      <p class="text-xs text-slate-500">
+        Indica cuánto llegó de cada producto. No se puede recibir de más. Si falta algo, el traslado queda en discrepancia.
+      </p>
+    } @else {
+      <p class="text-xs text-slate-500">
+        Revisa las cantidades. Esta lista ya no se puede editar. Al confirmar, entra a inventario solo lo recibido.
+      </p>
+    }
 
-    <!-- Lista de Items del Traslado -->
-    <div class="space-y-2 max-h-60 overflow-y-auto">
-      @for (item of transferInspectionItems; track item.productId) {
-        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
+    <div class="hidden sm:grid grid-cols-[minmax(0,1fr)_6.5rem_8.5rem_6.5rem] gap-2 px-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+      <span>Producto</span>
+      <span class="text-center">Enviado</span>
+      <span class="text-center">Recibido</span>
+      <span class="text-center">Faltante</span>
+    </div>
+
+    <div class="space-y-2 max-h-72 overflow-y-auto">
+      @for (item of transferInspectionItems; track item.transferItemId || item.productId) {
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_6.5rem_8.5rem_6.5rem] gap-2 items-center">
           <div class="min-w-0">
             <span class="text-xs font-bold text-slate-800 block truncate">{{ item.name }}</span>
-            <span class="text-[10px] text-slate-500 font-mono">SKU: {{ item.sku }} • Solicitado: <strong>{{ item.requestedQuantity }}</strong></span>
+            <span class="text-[10px] text-slate-500 font-mono">SKU: {{ item.sku }}</span>
           </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <label class="text-[11px] font-semibold text-slate-600">Recibido:</label>
-            <p-inputNumber 
-              [(ngModel)]="item.receivedQuantity" 
-              [min]="0" 
-              [showButtons]="true"
-              inputStyleClass="!w-20 !text-center !text-xs !h-8 !rounded-lg"
-            ></p-inputNumber>
+          <div class="text-left sm:text-center">
+            <span class="sm:hidden text-[10px] font-bold uppercase text-slate-400">Enviado</span>
+            <p class="text-xs font-bold text-slate-700 m-0">{{ qtyLabel(item.requestedQuantity, item.unit) }}</p>
+          </div>
+          @if (transferStep === 'quantities') {
+            <div>
+              <label class="sm:hidden text-[10px] font-bold uppercase text-slate-400">Recibido</label>
+              <div class="flex items-stretch rounded-lg border border-slate-300 bg-white overflow-hidden">
+                <p-inputNumber 
+                  [(ngModel)]="item.receivedQuantity" 
+                  [min]="0"
+                  [max]="item.requestedQuantity"
+                  [step]="item.allowsDecimals ? 0.01 : 1"
+                  [minFractionDigits]="item.allowsDecimals ? 2 : 0"
+                  [maxFractionDigits]="item.allowsDecimals ? 2 : 0"
+                  [showButtons]="false"
+                  inputStyleClass="!w-full !text-center !text-xs !h-9 !border-0 !rounded-none"
+                ></p-inputNumber>
+                @if (item.unit) {
+                  <span class="shrink-0 px-2 inline-flex items-center text-[10px] font-extrabold text-slate-600 bg-slate-100 border-l border-slate-200">{{ item.unit }}</span>
+                }
+              </div>
+            </div>
+          } @else {
+            <div class="text-left sm:text-center">
+              <span class="sm:hidden text-[10px] font-bold uppercase text-slate-400">Recibido</span>
+              <p class="text-xs font-bold text-slate-800 m-0">{{ qtyLabel(item.receivedQuantity, item.unit) }}</p>
+            </div>
+          }
+          <div class="text-left sm:text-center">
+            <span class="sm:hidden text-[10px] font-bold uppercase text-slate-400">Faltante</span>
+            <p
+              class="text-xs font-bold m-0"
+              [class.text-amber-700]="missingQty(item) > 0"
+              [class.text-emerald-700]="missingQty(item) === 0"
+            >
+              {{ qtyLabel(missingQty(item), item.unit) }}
+            </p>
           </div>
         </div>
       }
     </div>
 
-    <!-- Observaciones -->
-    <div>
-      <label class="text-xs font-semibold text-slate-700 block mb-1">Notas de Inspección / Discrepancias</label>
-      <textarea 
-        pTextarea 
-        [(ngModel)]="transferNotes" 
-        rows="2" 
-        placeholder="Opcional: Si existieron productos dañados o faltantes, indíquelo aquí..."
-        class="!w-full !rounded-xl !border-slate-300 text-xs"
-      ></textarea>
-    </div>
+    @if (transferStep === 'quantities') {
+      <div>
+        <label class="text-xs font-semibold text-slate-700 block mb-1">Notas</label>
+        <textarea 
+          pTextarea 
+          [(ngModel)]="transferNotes" 
+          rows="2" 
+          [placeholder]="hasTransferShortage() ? 'Indica qué faltó o llegó dañado' : 'Opcional'"
+          class="!w-full !rounded-xl !border-slate-300 text-xs"
+        ></textarea>
+      </div>
+    } @else if (transferNotes.trim()) {
+      <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500 m-0 mb-1">Notas</p>
+        <p class="text-xs text-slate-700 m-0 whitespace-pre-wrap">{{ transferNotes }}</p>
+      </div>
+    }
   </div>
 
   <ng-template #footer>
     <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-      <p-button 
-        label="Cancelar" 
-        [text]="true" 
-        severity="secondary" 
-        (onClick)="transferModalVisible = false"
-        styleClass="!rounded-lg text-xs font-semibold"
-      />
-      <p-button 
-        label="Confirmar Recepción" 
-        [loading]="actionLoading()" 
-        (onClick)="submitTransferDelivery()"
-        styleClass="!rounded-lg text-xs font-semibold !bg-indigo-600 !border-indigo-600 !text-white hover:!bg-indigo-700"
-      />
+      @if (transferStep === 'quantities') {
+        <p-button 
+          label="Cancelar" 
+          [text]="true" 
+          severity="secondary" 
+          (onClick)="closeTransferModal()"
+          styleClass="!rounded-lg text-xs font-semibold"
+        />
+        <p-button 
+          label="Recibir" 
+          (onClick)="goToTransferReview()"
+          styleClass="!rounded-lg text-xs font-semibold !bg-indigo-600 !border-indigo-600 !text-white hover:!bg-indigo-700"
+        />
+      } @else {
+        <p-button 
+          label="Volver" 
+          [text]="true" 
+          severity="secondary" 
+          [disabled]="actionLoading()"
+          (onClick)="backToTransferQuantities()"
+          styleClass="!rounded-lg text-xs font-semibold"
+        />
+        <p-button 
+          label="Confirmar recepción" 
+          [loading]="actionLoading()" 
+          (onClick)="submitTransferDelivery()"
+          styleClass="!rounded-lg text-xs font-semibold !bg-indigo-600 !border-indigo-600 !text-white hover:!bg-indigo-700"
+        />
+      }
     </div>
   </ng-template>
 </p-dialog>
 
 <!-- ========================================== -->
-<!-- MODAL: Recepción de Devolución en Bodega   -->
+<!-- MODAL: Recepción de merma en bodega        -->
 <!-- ========================================== -->
 <p-dialog 
-  header="Recepcionar Devolución en Bodega Origen" 
+  [header]="returnStep === 'review' ? 'Confirmar merma' : 'Recibir merma'" 
   [(visible)]="returnModalVisible" 
   [modal]="true" 
-  [style]="{ width: '90vw', maxWidth: '600px' }"
+  [style]="{ width: '90vw', maxWidth: '720px' }"
   [draggable]="false"
   [resizable]="false"
+  (onHide)="closeReturnModal()"
   styleClass="!rounded-2xl shadow-2xl"
 >
   <div class="p-1 space-y-4">
-    <p class="text-xs text-slate-500">
-      Confirme el reingreso físico de la mercadería retornada al inventario de la bodega de origen.
-    </p>
+    @if (returnStep === 'quantities') {
+      <p class="text-xs text-slate-500">
+        Cuenta lo que volvió a planta. No se puede recibir de más. Si falta algo, se abre una incidencia. La reserva se libera; no entra stock.
+      </p>
+    } @else {
+      <p class="text-xs text-slate-500">
+        Revisa las cantidades. Esta lista ya no se edita. Al confirmar, bodega cierra la merma.
+      </p>
+    }
 
-    <div class="space-y-2 max-h-56 overflow-y-auto">
-      @for (item of returnInspectionItems; track item.productId) {
-        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
+    <div class="hidden sm:grid grid-cols-[minmax(0,1fr)_6.5rem_8.5rem_6.5rem] gap-2 px-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+      <span>Producto</span>
+      <span class="text-center">Debía volver</span>
+      <span class="text-center">Recibido</span>
+      <span class="text-center">Faltante</span>
+    </div>
+
+    <div class="space-y-2 max-h-72 overflow-y-auto">
+      @for (item of returnInspectionItems; track item.productId + item.sku) {
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_6.5rem_8.5rem_6.5rem] gap-2 items-center">
           <div class="min-w-0">
             <span class="text-xs font-bold text-slate-800 block truncate">{{ item.name }}</span>
-            <span class="text-[10px] text-slate-500">En Retorno: <strong>{{ item.returnedQuantity }} unid.</strong></span>
+            <span class="text-[10px] text-slate-500 font-mono">SKU: {{ item.sku }}</span>
           </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <label class="text-[11px] font-semibold text-slate-600">Reingresado:</label>
-            <p-inputNumber 
-              [(ngModel)]="item.receivedQuantity" 
-              [min]="0" 
-              [showButtons]="true"
-              inputStyleClass="!w-20 !text-center !text-xs !h-8 !rounded-lg"
-            ></p-inputNumber>
+          <div class="text-left sm:text-center">
+            <span class="sm:hidden text-[10px] font-bold uppercase text-slate-400">Debía volver</span>
+            <p class="text-xs font-bold text-slate-700 m-0">{{ qtyLabel(item.returnedQuantity, item.unit) }}</p>
+          </div>
+          @if (returnStep === 'quantities') {
+            <div>
+              <label class="sm:hidden text-[10px] font-bold uppercase text-slate-400">Recibido</label>
+              <div class="flex items-stretch rounded-lg border border-slate-300 bg-white overflow-hidden">
+                <p-inputNumber 
+                  [(ngModel)]="item.receivedQuantity" 
+                  [min]="0"
+                  [max]="item.returnedQuantity"
+                  [step]="item.allowsDecimals ? 0.01 : 1"
+                  [minFractionDigits]="item.allowsDecimals ? 2 : 0"
+                  [maxFractionDigits]="item.allowsDecimals ? 2 : 0"
+                  [showButtons]="false"
+                  inputStyleClass="!w-full !text-center !text-xs !h-9 !border-0 !rounded-none"
+                ></p-inputNumber>
+                @if (item.unit) {
+                  <span class="shrink-0 px-2 inline-flex items-center text-[10px] font-extrabold text-slate-600 bg-slate-100 border-l border-slate-200">{{ item.unit }}</span>
+                }
+              </div>
+            </div>
+          } @else {
+            <div class="text-left sm:text-center">
+              <span class="sm:hidden text-[10px] font-bold uppercase text-slate-400">Recibido</span>
+              <p class="text-xs font-bold text-slate-800 m-0">{{ qtyLabel(item.receivedQuantity, item.unit) }}</p>
+            </div>
+          }
+          <div class="text-left sm:text-center">
+            <span class="sm:hidden text-[10px] font-bold uppercase text-slate-400">Faltante</span>
+            <p
+              class="text-xs font-bold m-0"
+              [class.text-amber-700]="missingReturnQty(item) > 0"
+              [class.text-emerald-700]="missingReturnQty(item) === 0"
+            >
+              {{ qtyLabel(missingReturnQty(item), item.unit) }}
+            </p>
           </div>
         </div>
       }
     </div>
 
-    <div>
-      <label class="text-xs font-semibold text-slate-700 block mb-1">Notas de Recepción en Bodega</label>
-      <textarea 
-        pTextarea 
-        [(ngModel)]="returnNotes" 
-        rows="2" 
-        placeholder="Notas sobre el estado físico de los productos devueltos..."
-        class="!w-full !rounded-xl !border-slate-300 text-xs"
-      ></textarea>
-    </div>
+    @if (returnStep === 'quantities') {
+      <div>
+        <label class="text-xs font-semibold text-slate-700 block mb-1">Notas</label>
+        <textarea 
+          pTextarea 
+          [(ngModel)]="returnNotes" 
+          rows="2" 
+          [placeholder]="hasReturnShortage() ? 'Indica qué faltó' : 'Opcional'"
+          class="!w-full !rounded-xl !border-slate-300 text-xs"
+        ></textarea>
+      </div>
+    } @else if (returnNotes.trim()) {
+      <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500 m-0 mb-1">Notas</p>
+        <p class="text-xs text-slate-700 m-0 whitespace-pre-wrap">{{ returnNotes }}</p>
+      </div>
+    }
   </div>
 
   <ng-template #footer>
     <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-      <p-button 
-        label="Cancelar" 
-        [text]="true" 
-        severity="secondary" 
-        (onClick)="returnModalVisible = false"
-        styleClass="!rounded-lg text-xs font-semibold"
-      />
-      <p-button 
-        label="Confirmar Reingreso de Stock" 
-        [loading]="actionLoading()" 
-        (onClick)="submitReturnReception()"
-        styleClass="!rounded-lg text-xs font-semibold !bg-amber-600 !border-amber-600 !text-white hover:!bg-amber-700"
-      />
+      @if (returnStep === 'quantities') {
+        <p-button 
+          label="Cancelar" 
+          [text]="true" 
+          severity="secondary" 
+          (onClick)="closeReturnModal()"
+          styleClass="!rounded-lg text-xs font-semibold"
+        />
+        <p-button 
+          label="Recibir" 
+          (onClick)="goToReturnReview()"
+          styleClass="!rounded-lg text-xs font-semibold !bg-amber-600 !border-amber-600 !text-white hover:!bg-amber-700"
+        />
+      } @else {
+        <p-button 
+          label="Volver" 
+          [text]="true" 
+          severity="secondary" 
+          [disabled]="actionLoading()"
+          (onClick)="backToReturnQuantities()"
+          styleClass="!rounded-lg text-xs font-semibold"
+        />
+        <p-button 
+          label="Confirmar recepción" 
+          [loading]="actionLoading()" 
+          (onClick)="submitReturnReception()"
+          styleClass="!rounded-lg text-xs font-semibold !bg-amber-600 !border-amber-600 !text-white hover:!bg-amber-700"
+        />
+      }
     </div>
   </ng-template>
 </p-dialog>

@@ -236,8 +236,8 @@
               <p *ngIf="receiptsData()?.customer?.phone || sale.customer?.phone || sale.guestCustomer?.phone">
                 <strong>Teléfono:</strong> {{ receiptsData()?.customer?.phone || (sale.customer ? sale.customer.phone : sale.guestCustomer?.phone) }}
               </p>
-              <p *ngIf="sale.customer?.address || sale.guestCustomer?.address">
-                <strong>Dirección:</strong> {{ sale.customer ? sale.customer.address : sale.guestCustomer?.address }}
+              <p *ngIf="sale.deliveryAddress || sale.customer?.address || sale.guestCustomer?.address">
+                <strong>Dirección:</strong> {{ sale.deliveryAddress || (sale.customer ? sale.customer.address : sale.guestCustomer?.address) }}
               </p>
             </div>
             <div class="info-block">

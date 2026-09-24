@@ -50,8 +50,11 @@ export class QuotationsService {
     return this.http.patch<IQuotationDetailResponse>(`${this.apiUrl}/${id}/status`, { status });
   }
 
-  convertToSale(id: string): Observable<IQuotationConvertResponse> {
-    return this.http.post<IQuotationConvertResponse>(`${this.apiUrl}/${id}/convert`, {});
+  convertToSale(id: string, body: { deliveryAddress?: string } = {}): Observable<IQuotationConvertResponse> {
+    const payload: { deliveryAddress?: string } = {};
+    const deliveryAddress = body.deliveryAddress?.trim();
+    if (deliveryAddress) payload.deliveryAddress = deliveryAddress;
+    return this.http.post<IQuotationConvertResponse>(`${this.apiUrl}/${id}/convert`, payload);
   }
 
   downloadPdf(id: string): Observable<Blob> {

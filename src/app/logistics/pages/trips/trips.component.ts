@@ -6,6 +6,7 @@ import { SelectModule } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
+import { AuthService } from '../../../auth/auth.service';
 import { TripsService } from '../../services/trips.service';
 import { BranchesService } from '../../../inventory/services/branches.service';
 import { Trip, TripStatus } from '../../interfaces/trip.interface';
@@ -44,6 +45,7 @@ export class TripsComponent implements OnInit {
   private branchesService = inject(BranchesService);
   private messageService = inject(MessageService);
   private router = inject(Router);
+  private auth = inject(AuthService);
 
   trips = signal<Trip[]>([]);
   branches = signal<Branch[]>([]);
@@ -52,7 +54,11 @@ export class TripsComponent implements OnInit {
   searchTerm = signal<string>('');
   selectedStatus = signal<TripStatus | null>(null);
   selectedOriginBranch = signal<string | null>(null);
-  dateRange: Date[] | null = null;
+  selectedDate: Date | null = null;
+
+  get isSuperAdmin(): boolean {
+    return this.auth.isSuperAdmin;
+  }
 
   selectedTrip: Trip | null = null;
   showDepartureModal = false;
@@ -85,7 +91,7 @@ export class TripsComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.loadBranches();
+    if (this.isSuperAdmin) this.loadBranches();
     this.loadTrips();
   }
 
@@ -99,13 +105,9 @@ export class TripsComponent implements OnInit {
   loadTrips(): void {
     this.loading.set(true);
 
-    const originBranchId = this.selectedOriginBranch() || undefined;
+    const originBranchId = this.isSuperAdmin ? this.selectedOriginBranch() || undefined : undefined;
     const status = this.selectedStatus() || undefined;
-    let dateStr: string | undefined;
-
-    if (this.dateRange && this.dateRange[0]) {
-      dateStr = this.dateRange[0].toISOString().split('T')[0];
-    }
+    const dateStr = this.formatDate(this.selectedDate);
 
     this.tripsService.getTrips(originBranchId, status, dateStr).subscribe({
       next: (res) => {
@@ -237,5 +239,21 @@ export class TripsComponent implements OnInit {
 
   getSalesCount(trip: Trip): number {
     return (trip.items || []).filter((i) => i.type === 'sale_order').length;
+  }
+
+  pendingReturnsCount(trip: Trip): number {
+    return (trip.returns || []).filter((item) => item.status === 'pending_receipt').length;
+  }
+
+  openIncidentsCount(trip: Trip): number {
+    return (trip.incidents || []).filter((item) => item.status === 'open').length;
+  }
+
+  private formatDate(value: Date | null): string | undefined {
+    if (!value) return undefined;
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, '0');
+    const day = String(value.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }

@@ -26,6 +26,7 @@ export interface ISaleOrderResponse {
   loyaltyPointsEarned: number;
   loyaltyPointsRedeemed: number;
   notes: string;
+  deliveryAddress?: string | null;
   customer?: ICustomer;
   branch?: any;
   guestCustomer?: any;

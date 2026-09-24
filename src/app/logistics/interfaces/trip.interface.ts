@@ -11,6 +11,12 @@ export interface TripReturnItem {
     name: string;
     sku: string;
     imageUrl?: string;
+    unit?: {
+      id?: string;
+      name?: string;
+      abbreviation?: string;
+      allowsDecimals?: boolean;
+    } | null;
   };
   returnedQuantity: number;
   receivedQuantity?: number | null;
@@ -110,8 +116,9 @@ export interface DeliverSalePayload {
   outcome: 'full' | 'partial' | 'rejected';
   reason?: string;
   deliveredItems?: {
-    productId: string;
+    saleDetailId: string;
     deliveredQuantity: number;
+    productId?: string;
   }[];
 }
 
@@ -120,6 +127,7 @@ export interface DeliverTransferPayload {
   items: {
     productId: string;
     receivedQuantity: number;
+    transferItemId?: string;
   }[];
 }
 

@@ -32,7 +32,7 @@ export class LoginComponent implements OnInit {
 
   ngOnInit(): void {
     if (this.authService.isAuthenticated) {
-      const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+      const returnUrl = this.route.snapshot.queryParams['returnUrl'] || this.authService.postLoginRoute;
       this.router.navigateByUrl(returnUrl);
       this.errorMessage.set('¡Bienvenido de nuevo! Te redirigimos al dashboard.');
       this.messageService.add({
@@ -65,7 +65,7 @@ export class LoginComponent implements OnInit {
         console.log(response);
         this.isLoading.set(false);
         if (response.statusCode === 200) {
-          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || this.authService.postLoginRoute;
           this.router.navigateByUrl(returnUrl);
           this.messageService.add({
             severity: 'success',

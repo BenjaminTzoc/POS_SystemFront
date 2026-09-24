@@ -1,0 +1,18 @@
+<div class="piloto-shell">
+  <header class="piloto-top">
+    <div class="min-w-0">
+      <p class="piloto-kicker">CABEN · Ruta</p>
+      <h1 class="piloto-title">Ruta del piloto</h1>
+    </div>
+    <button type="button" class="piloto-logout" (click)="logout()">
+      <i class="pi pi-sign-out"></i>
+      <span>Salir</span>
+    </button>
+  </header>
+
+  <p class="piloto-user">{{ userName }}</p>
+
+  <main class="piloto-main">
+    <router-outlet />
+  </main>
+</div>

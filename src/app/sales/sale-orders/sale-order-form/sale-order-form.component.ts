@@ -435,6 +435,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
           isPreorder: !!res.data.isPreorder,
           promisedDeliveryDate: res.data.promisedDeliveryDate ? new Date(res.data.promisedDeliveryDate) : null,
           notes: res.data.notes,
+          deliveryAddress: res.data.deliveryAddress || '',
           status: res.data.status,
         });
         this.applyPreorderValidators(!!res.data.isPreorder);
@@ -685,6 +686,9 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
 
     if (!selectedCustomerId) {
       this.selectedCustomer = null;
+      if (!this.isEditMode) {
+        this.orderForm.get('deliveryAddress')?.setValue('');
+      }
       return;
     }
 
@@ -692,6 +696,9 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
       next: (res) => {
         if (res.statusCode === 200) {
           this.selectedCustomer = res.data;
+          if (!this.isEditMode) {
+            this.orderForm.get('deliveryAddress')?.setValue(res.data.address?.trim() || '');
+          }
         }
       },
       error: (err) => {
@@ -1114,6 +1121,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
       isPreorder: [false],
       promisedDeliveryDate: [null],
       notes: [''],
+      deliveryAddress: [''],
       status: ['pending', [Validators.required]],
     });
 
@@ -1398,6 +1406,15 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
       payload.promisedDeliveryDate = this.toIsoDate(payload.promisedDeliveryDate);
     } else {
       payload.promisedDeliveryDate = null;
+    }
+
+    const deliveryAddress = (payload.deliveryAddress ?? '').toString().trim();
+    if (deliveryAddress) {
+      payload.deliveryAddress = deliveryAddress;
+    } else if (this.isEditMode) {
+      payload.deliveryAddress = null;
+    } else {
+      delete payload.deliveryAddress;
     }
 
     console.log('FINAL PAYLOAD TO SEND:', payload);

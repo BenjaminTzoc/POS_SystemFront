@@ -185,7 +185,7 @@
               @if (transfer.status === 'SHIPPED') {
                 <button
                   type="button"
-                  (click)="confirmStatusChange(transfer, 'RECEIVED')"
+                  (click)="openReceiveTransfer(transfer)"
                   class="px-2 py-1 rounded-md text-[11px] font-semibold inline-flex items-center gap-1 border border-emerald-500/45 bg-emerald-500/[0.08] text-emerald-600 hover:bg-emerald-500/[0.18] hover:border-emerald-500/85 hover:text-emerald-700 transition-all cursor-pointer shadow-2xs active:scale-95"
                 >
                   <i class="pi pi-check text-[9px]"></i>
@@ -347,4 +347,137 @@
 </div>
 
 <p-confirmDialog />
+
+<p-dialog
+  [header]="receiveStep === 'review' ? 'Confirmar recepción' : 'Recibir traslado'"
+  [(visible)]="receiveModalVisible"
+  [modal]="true"
+  [style]="{ width: '90vw', maxWidth: '720px' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="closeReceiveModal()"
+  styleClass="!rounded-2xl shadow-2xl"
+>
+  <div class="p-1 space-y-4">
+    @if (receiveStep === 'quantities') {
+      <p class="text-xs text-slate-500">
+        Indica cuánto llegó de cada producto. No se puede recibir de más. Si falta algo, el traslado queda en discrepancia.
+      </p>
+    } @else {
+      <p class="text-xs text-slate-500">
+        Revisa las cantidades. Esta lista ya no se puede editar. Al confirmar, entra a inventario solo lo recibido.
+      </p>
+    }
+
+    <div class="hidden sm:grid grid-cols-[minmax(0,1fr)_6.5rem_8.5rem_6.5rem] gap-2 px-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+      <span>Producto</span>
+      <span class="text-center">Enviado</span>
+      <span class="text-center">Recibido</span>
+      <span class="text-center">Faltante</span>
+    </div>
+
+    <div class="space-y-2 max-h-72 overflow-y-auto">
+      @for (item of receiveItems; track item.transferItemId || item.productId) {
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_6.5rem_8.5rem_6.5rem] gap-2 items-center">
+          <div class="min-w-0">
+            <span class="text-xs font-bold text-slate-800 block truncate">{{ item.name }}</span>
+            <span class="text-[10px] text-slate-500 font-mono">SKU: {{ item.sku }}</span>
+          </div>
+          <div class="text-left sm:text-center">
+            <span class="sm:hidden text-[10px] font-bold uppercase text-slate-400">Enviado</span>
+            <p class="text-xs font-bold text-slate-700 m-0">{{ qtyLabel(item.requestedQuantity, item.unit) }}</p>
+          </div>
+          @if (receiveStep === 'quantities') {
+            <div>
+              <label class="sm:hidden text-[10px] font-bold uppercase text-slate-400">Recibido</label>
+              <div class="flex items-stretch rounded-lg border border-slate-300 bg-white overflow-hidden">
+                <p-inputNumber
+                  [(ngModel)]="item.receivedQuantity"
+                  [min]="0"
+                  [max]="item.requestedQuantity"
+                  [step]="item.allowsDecimals ? 0.01 : 1"
+                  [minFractionDigits]="item.allowsDecimals ? 2 : 0"
+                  [maxFractionDigits]="item.allowsDecimals ? 2 : 0"
+                  [showButtons]="false"
+                  inputStyleClass="!w-full !text-center !text-xs !h-9 !border-0 !rounded-none"
+                ></p-inputNumber>
+                @if (item.unit) {
+                  <span class="shrink-0 px-2 inline-flex items-center text-[10px] font-extrabold text-slate-600 bg-slate-100 border-l border-slate-200">{{ item.unit }}</span>
+                }
+              </div>
+            </div>
+          } @else {
+            <div class="text-left sm:text-center">
+              <span class="sm:hidden text-[10px] font-bold uppercase text-slate-400">Recibido</span>
+              <p class="text-xs font-bold text-slate-800 m-0">{{ qtyLabel(item.receivedQuantity, item.unit) }}</p>
+            </div>
+          }
+          <div class="text-left sm:text-center">
+            <span class="sm:hidden text-[10px] font-bold uppercase text-slate-400">Faltante</span>
+            <p
+              class="text-xs font-bold m-0"
+              [class.text-amber-700]="missingQty(item) > 0"
+              [class.text-emerald-700]="missingQty(item) === 0"
+            >
+              {{ qtyLabel(missingQty(item), item.unit) }}
+            </p>
+          </div>
+        </div>
+      }
+    </div>
+
+    @if (receiveStep === 'quantities') {
+      <div>
+        <label class="text-xs font-semibold text-slate-700 block mb-1">Notas</label>
+        <textarea
+          pTextarea
+          [(ngModel)]="receiveNotes"
+          rows="2"
+          [placeholder]="hasReceiveShortage() ? 'Indica qué faltó o llegó dañado' : 'Opcional'"
+          class="!w-full !rounded-xl !border-slate-300 text-xs"
+        ></textarea>
+      </div>
+    } @else if (receiveNotes.trim()) {
+      <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500 m-0 mb-1">Notas</p>
+        <p class="text-xs text-slate-700 m-0 whitespace-pre-wrap">{{ receiveNotes }}</p>
+      </div>
+    }
+  </div>
+
+  <ng-template #footer>
+    <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+      @if (receiveStep === 'quantities') {
+        <p-button
+          label="Cancelar"
+          [text]="true"
+          severity="secondary"
+          (onClick)="closeReceiveModal()"
+          styleClass="!rounded-lg text-xs font-semibold"
+        />
+        <p-button
+          label="Recibir"
+          (onClick)="goToReceiveReview()"
+          styleClass="!rounded-lg text-xs font-semibold !bg-emerald-600 !border-emerald-600 !text-white hover:!bg-emerald-700"
+        />
+      } @else {
+        <p-button
+          label="Volver"
+          [text]="true"
+          severity="secondary"
+          [disabled]="receiveSubmitting"
+          (onClick)="backToReceiveQuantities()"
+          styleClass="!rounded-lg text-xs font-semibold"
+        />
+        <p-button
+          label="Confirmar recepción"
+          [loading]="receiveSubmitting"
+          (onClick)="submitReceiveTransfer()"
+          styleClass="!rounded-lg text-xs font-semibold !bg-emerald-600 !border-emerald-600 !text-white hover:!bg-emerald-700"
+        />
+      }
+    </div>
+  </ng-template>
+</p-dialog>
+
 

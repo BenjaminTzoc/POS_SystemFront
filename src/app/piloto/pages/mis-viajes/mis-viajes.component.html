@@ -1,0 +1,64 @@
+<div class="page-head">
+  <h2>Mis viajes</h2>
+</div>
+
+<div class="toolbar">
+  <label class="date-field">
+    <span>Día</span>
+    <div class="date-wrap">
+      <input
+        type="date"
+        [class.is-empty]="!dateFilter()"
+        [ngModel]="dateFilter()"
+        (ngModelChange)="onDateChange($event)"
+      />
+      @if (!dateFilter()) {
+        <span class="date-placeholder">Todos</span>
+      }
+    </div>
+  </label>
+  <button
+    type="button"
+    class="ghost icon"
+    [class.is-hidden]="!dateFilter()"
+    [disabled]="!dateFilter()"
+    (click)="clearDate()"
+    aria-label="Quitar fecha"
+  >
+    <i class="pi pi-times"></i>
+  </button>
+  <button type="button" class="ghost icon" (click)="load()" [disabled]="loading()">
+    <i class="pi" [class.pi-spin]="loading()" [class.pi-refresh]="true"></i>
+  </button>
+</div>
+
+@if (loading()) {
+  <div class="state">
+    <i class="pi pi-spin pi-spinner"></i>
+    <p>Cargando tus viajes…</p>
+  </div>
+} @else if (!hasTrips()) {
+  <div class="state">
+    <i class="pi pi-map"></i>
+    <p>No tienes viajes por salir o en ruta.</p>
+  </div>
+} @else {
+  <div class="cards">
+    @for (trip of tripsList(); track trip.id) {
+      <button type="button" class="trip-card" (click)="openTrip(trip)">
+        <div class="trip-card-top">
+          <span class="trip-no">{{ trip.tripNumber }}</span>
+          <span class="pill" [class]="statusClass(trip.status)">{{ statusLabel(trip.status) }}</span>
+        </div>
+        <p class="trip-date">{{ trip.date | date: 'EEEE d MMM y':'-0600' }}</p>
+        <p class="trip-truck">
+          <i class="pi pi-car"></i>
+          {{ vehicleLabel(trip) }}
+        </p>
+        <p class="trip-stops">
+          {{ stopCount(trip) }} paradas · {{ pendingCount(trip) }} pendientes
+        </p>
+      </button>
+    }
+  </div>
+}

@@ -31,6 +31,10 @@ export interface InventoryTransfer {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
+  tripId?: string;
+  tripItemId?: string;
+  trip?: { id: string };
+  tripItem?: { id: string };
   items?: InventoryTransferItem[];
 }
 

@@ -155,4 +155,22 @@ export class AuthService {
   get currentUser(): User | null {
     return this.authSubject.value;
   }
+
+  get isSuperAdmin(): boolean {
+    return this.currentUser?.roles?.some((role) => role.isSuperAdmin) ?? false;
+  }
+
+  get isPilot(): boolean {
+    const user = this.currentUser;
+    if (!user || this.isSuperAdmin) return false;
+    if (user.email?.toLowerCase() === 'piloto@pos.com') return true;
+    return (user.roles ?? []).some((role) => {
+      const name = (role.name ?? '').toLowerCase().trim();
+      return name === 'piloto' || name === 'pilot' || name === 'driver' || name === 'chofer';
+    });
+  }
+
+  get postLoginRoute(): string {
+    return this.isPilot ? '/piloto' : '/dashboard';
+  }
 }

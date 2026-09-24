@@ -1,0 +1,213 @@
+@if (loading()) {
+  <div class="state">
+    <i class="pi pi-spin pi-spinner"></i>
+    <p>Cargando parada…</p>
+  </div>
+} @else if (stop(); as current) {
+  <button type="button" class="back" (click)="step() === 'choose' ? back() : cancelFlow()">
+    <i class="pi pi-chevron-left"></i>
+    {{ step() === 'choose' ? 'Paradas' : 'Volver' }}
+  </button>
+
+  <section
+    class="hero"
+    [class.is-delivered]="current.status === 'delivered'"
+    [class.is-partial]="current.status === 'partially_delivered'"
+    [class.is-failed]="current.status === 'rejected' || current.status === 'failed'"
+  >
+    <div class="hero-row">
+      <h2>{{ current.type === 'sale_order' ? customerName(current.sale) : destBranch(current) }}</h2>
+      <span
+        class="pill"
+        [class.is-delivered]="current.status === 'delivered'"
+        [class.is-partial]="current.status === 'partially_delivered'"
+        [class.is-failed]="current.status === 'rejected' || current.status === 'failed'"
+      >{{ statusLabel(current.status) }}</span>
+    </div>
+    <p class="meta">
+      {{ current.type === 'sale_order' ? invoiceLabel(current.sale) : ('Traslado ' + (transferNumber(current) || '')) }}
+    </p>
+    @if (deliveryAddress(current)) {
+      <p class="address">{{ deliveryAddress(current) }}</p>
+    }
+  </section>
+
+  @if (step() !== 'capture') {
+    @if (notes()) {
+      <section class="card">
+        <h3>Notas</h3>
+        <p>{{ notes() }}</p>
+      </section>
+    }
+
+    <section class="card">
+      <h3>Productos</h3>
+      <ul class="lines">
+        @if (current.type === 'sale_order') {
+          @for (line of saleLinesList(); track $index) {
+            <li>
+              <span>{{ line.quantity }}{{ lineUnit(line) ? ' ' + lineUnit(line) : '' }} × {{ lineName(line) }}</span>
+              @if (lineSku(line)) {
+                <small>{{ lineSku(line) }}</small>
+              }
+            </li>
+          }
+        } @else {
+          @for (line of transferLinesList(); track $index) {
+            <li>
+              <span>{{ line.quantity }}{{ lineUnit(line) ? ' ' + lineUnit(line) : '' }} × {{ lineName(line) }}</span>
+              @if (lineSku(line)) {
+                <small>{{ lineSku(line) }}</small>
+              }
+            </li>
+          } @empty {
+            <li>Sin productos en este traslado.</li>
+          }
+        }
+      </ul>
+    </section>
+  }
+
+  @if (current.type === 'transfer') {
+    <p class="help">La recepción la confirma la sucursal destino. Aquí solo ves qué debes dejar.</p>
+  }
+
+  @if (canDeliverSale()) {
+    @if (step() === 'choose') {
+      <section class="card">
+        <h3>¿Cómo quedó la entrega?</h3>
+        <div class="outcomes">
+          <button type="button" (click)="choose('full')">Completa</button>
+          <button type="button" (click)="choose('partial')">Parcial</button>
+          <button type="button" (click)="choose('rejected')">Rechazada</button>
+        </div>
+      </section>
+    }
+
+    @if (step() === 'confirm') {
+      <section class="confirm-box">
+        <p><strong>{{ confirmTitle() }}</strong></p>
+        <p>{{ confirmText() }}</p>
+        <div class="confirm-actions">
+          <button type="button" class="ghost" (click)="cancelFlow()">No</button>
+          <button type="button" class="depart compact" (click)="acceptConfirm()">Sí, continuar</button>
+        </div>
+      </section>
+    }
+
+    @if (step() === 'capture') {
+      <section class="card">
+        @if (outcome() === 'partial') {
+          <h3>Cantidades</h3>
+          <p class="help tight">Lo no entregado regresa a planta. Pedido = entregado + devuelto.</p>
+          <ul class="qty-list">
+            @for (line of saleDeliverLines(); track line.key) {
+              <li>
+                <div class="qty-head">
+                  <strong>{{ line.name }}</strong>
+                  <span>{{ formatQty(line.ordered, line.allowsDecimals) }}{{ line.unit ? ' ' + line.unit : '' }}</span>
+                </div>
+                <div class="qty-fields">
+                  <label>
+                    Entregado
+                    <span class="qty-control">
+                      <input
+                        type="text"
+                        [attr.inputmode]="line.allowsDecimals ? 'decimal' : 'numeric'"
+                        autocomplete="off"
+                        [value]="deliveredDraft()[line.key] ?? ''"
+                        (focus)="selectAll($event)"
+                        (mouseup)="$event.preventDefault()"
+                        (input)="setDelivered(line.key, line.ordered, $any($event.target).value, line.allowsDecimals)"
+                        (blur)="setDelivered(line.key, line.ordered, $any($event.target).value, line.allowsDecimals, true)"
+                      />
+                      <span class="qty-unit">{{ line.unit || '—' }}</span>
+                    </span>
+                  </label>
+                  <label>
+                    Devuelto
+                    <span class="qty-control">
+                      <input
+                        type="text"
+                        [attr.inputmode]="line.allowsDecimals ? 'decimal' : 'numeric'"
+                        autocomplete="off"
+                        [value]="returnedDraft()[line.key] ?? ''"
+                        (focus)="selectAll($event)"
+                        (mouseup)="$event.preventDefault()"
+                        (input)="setReturned(line.key, line.ordered, $any($event.target).value, line.allowsDecimals)"
+                        (blur)="setReturned(line.key, line.ordered, $any($event.target).value, line.allowsDecimals, true)"
+                      />
+                      <span class="qty-unit">{{ line.unit || '—' }}</span>
+                    </span>
+                  </label>
+                </div>
+              </li>
+            }
+          </ul>
+        } @else {
+          <h3>OTP del cliente</h3>
+          <p class="help tight">Pídele el código de 6 dígitos. No viene en el viaje.</p>
+        }
+
+        @if (outcome() === 'partial') {
+          <h3 class="otp-title">OTP del cliente</h3>
+          <p class="help tight">Pídele el código de 6 dígitos. No viene en el viaje.</p>
+        }
+
+        <input
+          class="otp"
+          type="text"
+          inputmode="numeric"
+          autocomplete="one-time-code"
+          maxlength="6"
+          placeholder="000000"
+          [value]="otp()"
+          (focus)="selectAll($event)"
+          (mouseup)="$event.preventDefault()"
+          (input)="onOtp($any($event.target).value)"
+        />
+
+        @if (outcome() === 'partial' || outcome() === 'rejected') {
+          <label class="field-label">Motivo</label>
+          <textarea
+            rows="2"
+            [value]="reason()"
+            (focus)="selectAll($event)"
+            (input)="reason.set($any($event.target).value)"
+            [placeholder]="outcome() === 'rejected' ? '¿Por qué se rechazó?' : '¿Por qué no se entregó todo?'"
+          ></textarea>
+        }
+
+        <div class="confirm-actions">
+          <button type="button" class="ghost" (click)="cancelFlow()">Cancelar</button>
+          <button type="button" class="depart compact" (click)="submitSale()" [disabled]="submitting()">
+            {{ submitting() ? 'Validando…' : 'Validar OTP' }}
+          </button>
+        </div>
+      </section>
+    }
+  }
+
+  @if (trip()?.status === 'on_route' && step() === 'choose') {
+    @if (!incidentOpen()) {
+      <button type="button" class="ghost full" (click)="openIncidentForm()">Reportar incidencia</button>
+    } @else {
+      <section class="card">
+        <h3>Nueva incidencia</h3>
+        <p class="help tight">Queda ligada a esta parada.</p>
+        <textarea
+          rows="3"
+          [value]="incidentDraft()"
+          (input)="incidentDraft.set($any($event.target).value)"
+          placeholder="Ej. Cliente agresivo"
+        ></textarea>
+        <div class="confirm-actions">
+          <button type="button" class="ghost" (click)="cancelIncident()" [disabled]="reporting()">Cancelar</button>
+          <button type="button" class="depart compact" (click)="submitIncident()" [disabled]="reporting()">
+            {{ reporting() ? 'Enviando…' : 'Reportar' }}
+          </button>
+        </div>
+      </section>
+    }
+  }
+}

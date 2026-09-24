@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './auth/auth.guard';
+import { pilotoGuard } from './piloto/piloto.guard';
 import { DashboardLayoutComponent } from './layout/dashboard-layout/dashboard-layout.component';
 
 export const routes: Routes = [
@@ -11,6 +12,11 @@ export const routes: Routes = [
   {
     path: 'auth',
     loadChildren: () => import('./auth/auth.routes').then((m) => m.AUTH_ROUTES),
+  },
+  {
+    path: 'piloto',
+    canActivate: [authGuard, pilotoGuard],
+    loadChildren: () => import('./piloto/piloto.routes').then((m) => m.PILOTO_ROUTES),
   },
   {
     path: '',

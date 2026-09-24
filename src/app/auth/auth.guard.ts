@@ -31,7 +31,7 @@ export const authGuard: CanActivateFn = (route, state) => {
 
   // bloquear acceso al login si ya está autenticado
   if (state.url.includes('/auth/login')) {
-    router.navigateByUrl('/dashboard');
+    router.navigateByUrl(authService.postLoginRoute);
     return false;
   }
 

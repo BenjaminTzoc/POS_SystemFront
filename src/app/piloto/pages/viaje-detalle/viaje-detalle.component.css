@@ -1,0 +1,390 @@
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 2.5rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #48021c;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.state {
+  margin-top: 2.5rem;
+  text-align: center;
+  color: #6e3757;
+  font-weight: 600;
+}
+
+.hero {
+  margin: 0.4rem 0 1rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: #fff;
+  border: 1px solid rgb(72 2 28 / 0.16);
+}
+
+.hero-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.hero h2 {
+  margin: 0;
+  min-width: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #48021c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hero .pill {
+  flex-shrink: 0;
+  font-size: 0.6rem;
+  letter-spacing: 0.02em;
+  padding: 0.18rem 0.42rem;
+  white-space: nowrap;
+}
+
+.hero p {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6e3757;
+  text-transform: capitalize;
+}
+
+.vehicle {
+  text-transform: none !important;
+  color: #3b141e !important;
+}
+
+.pill {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.pill.small {
+  background: #f3e4eb;
+  color: #48021c;
+}
+
+.depart {
+  width: 100%;
+  min-height: 3.1rem;
+  border: 0;
+  border-radius: 1rem;
+  background: #48021c;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+
+.depart.compact {
+  margin: 0;
+  min-height: 2.75rem;
+  font-size: 0.9rem;
+  width: auto;
+  padding: 0 0.9rem;
+}
+
+.depart:disabled {
+  opacity: 0.65;
+}
+
+.confirm-box {
+  margin-bottom: 1rem;
+  padding: 0.9rem;
+  border-radius: 1rem;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+}
+
+.confirm-box p {
+  margin: 0 0 0.7rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #9a3412;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.ghost {
+  min-height: 2.75rem;
+  padding: 0 0.8rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgb(72 2 28 / 0.16);
+  background: #fff;
+  color: #48021c;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.section-title {
+  margin: 0.4rem 0 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #48021c;
+}
+
+.empty,
+.hint {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #6e3757;
+}
+
+.hint {
+  margin-top: 1.2rem;
+  line-height: 1.4;
+}
+
+.stops {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.stop {
+  padding: 0.9rem;
+  border-radius: 1rem;
+  background: #fff;
+  border: 1px solid rgb(72 2 28 / 0.14);
+  cursor: pointer;
+}
+
+.stop.is-delivered {
+  background: #ecfdf5;
+  border-color: #6ee7b7;
+}
+
+.stop.is-delivered .seq {
+  background: #047857;
+}
+
+.stop.is-delivered .kind,
+.stop.is-delivered .stop-title,
+.stop.is-delivered .stop-meta,
+.stop.is-delivered .stop-address,
+.stop.is-delivered .stop-chevron {
+  color: #065f46;
+}
+
+.stop.is-delivered .pill.small {
+  background: #059669;
+  color: #fff;
+}
+
+.stop.is-partial {
+  background: #fff7ed;
+  border-color: #fdba74;
+}
+
+.stop.is-partial .pill.small {
+  background: #ea580c;
+  color: #fff;
+}
+
+.stop.is-failed {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.stop.is-failed .pill.small {
+  background: #dc2626;
+  color: #fff;
+}
+
+.stop-chevron {
+  font-size: 0.7rem;
+  color: #9f6587;
+}
+
+.stop-head {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.45rem;
+}
+
+.seq {
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 999px;
+  background: #48021c;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kind {
+  flex: 1;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #9f6587;
+}
+
+.stop-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #3b141e;
+}
+
+.stop-meta {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6e3757;
+}
+
+.stop-address {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #3b141e;
+}
+
+.side-list {
+  list-style: none;
+  margin: 0 0 0.8rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.side-list li {
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.9rem;
+  background: #fff;
+  border: 1px solid rgb(72 2 28 / 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.side-list strong {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: #9f6587;
+}
+
+.side-list span {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #3b141e;
+}
+
+.side-list small {
+  color: #6e3757;
+}
+
+.side-list li.is-open {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.side-list li.is-open strong {
+  color: #b91c1c;
+}
+
+.ghost.full {
+  width: 100%;
+  margin-bottom: 0.85rem;
+}
+
+.card-form {
+  margin-bottom: 1rem;
+  padding: 0.9rem;
+  border-radius: 1rem;
+  background: #fff;
+  border: 1px solid rgb(72 2 28 / 0.14);
+}
+
+.form-title {
+  margin: 0 0 0.55rem;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #48021c;
+}
+
+.field-label {
+  display: block;
+  margin: 0.45rem 0 0.25rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6e3757;
+}
+
+.card-form textarea,
+.card-form select {
+  width: 100%;
+  border-radius: 0.85rem;
+  border: 1px solid rgb(72 2 28 / 0.2);
+  padding: 0.65rem 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #3b141e;
+  background: #fff;
+}
+
+.card-form textarea {
+  resize: none;
+}
+
+.complete {
+  width: 100%;
+  min-height: 3.1rem;
+  border: 0;
+  border-radius: 1rem;
+  background: #047857;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  margin: 0.4rem 0 1rem;
+}
+
+.complete.compact {
+  margin: 0;
+  min-height: 2.75rem;
+  font-size: 0.9rem;
+  width: auto;
+  padding: 0 0.9rem;
+}
+
+.complete:disabled {
+  opacity: 0.65;
+}

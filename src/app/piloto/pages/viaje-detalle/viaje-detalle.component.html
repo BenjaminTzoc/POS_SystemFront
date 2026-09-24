@@ -1,0 +1,162 @@
+@if (loading()) {
+  <div class="state">
+    <i class="pi pi-spin pi-spinner"></i>
+    <p>Cargando viaje…</p>
+  </div>
+} @else if (trip(); as current) {
+  <button type="button" class="back" (click)="back()">
+    <i class="pi pi-chevron-left"></i>
+    Mis viajes
+  </button>
+
+  <section class="hero">
+    <div class="hero-row">
+      <h2>{{ current.tripNumber }}</h2>
+      <span class="pill">{{ statusLabel(current.status) }}</span>
+    </div>
+    <p>{{ current.date | date: 'EEEE d MMMM y':'-0600' }}</p>
+    <p class="vehicle"><i class="pi pi-car"></i> {{ vehicleLabel(current) }}</p>
+  </section>
+
+  @if (canDepart()) {
+    @if (!confirmOpen()) {
+      <button type="button" class="depart" (click)="askDepart()" [disabled]="departing()">
+        Salir a ruta
+      </button>
+    } @else {
+      <div class="confirm-box">
+        <p>¿Confirmas la salida? El viaje pasa a <strong>en ruta</strong>.</p>
+        <div class="confirm-actions">
+          <button type="button" class="ghost" (click)="cancelDepart()" [disabled]="departing()">Cancelar</button>
+          <button type="button" class="depart compact" (click)="confirmDepart()" [disabled]="departing()">
+            {{ departing() ? 'Saliendo…' : 'Confirmar salida' }}
+          </button>
+        </div>
+      </div>
+    }
+  }
+
+  <h3 class="section-title">Paradas</h3>
+  @if (stops().length === 0) {
+    <p class="empty">Este viaje aún no tiene paradas.</p>
+  } @else {
+    <ol class="stops">
+      @for (stop of stops(); track stop.id) {
+        <li
+          class="stop"
+          [class.is-delivered]="stop.status === 'delivered'"
+          [class.is-partial]="stop.status === 'partially_delivered'"
+          [class.is-failed]="stop.status === 'rejected' || stop.status === 'failed'"
+          (click)="openStop(stop)"
+        >
+          <div class="stop-head">
+            <span class="seq">{{ stop.sequence }}</span>
+            <span class="kind">{{ stop.type === 'sale_order' ? 'Venta' : 'Traslado' }}</span>
+            <span class="pill small">{{ statusLabel(stop.status) }}</span>
+            <i class="pi pi-chevron-right stop-chevron"></i>
+          </div>
+          @if (stop.type === 'sale_order') {
+            <p class="stop-title">{{ customerName(stop.sale) }}</p>
+            <p class="stop-meta">{{ invoiceLabel(stop.sale) }}</p>
+          } @else {
+            <p class="stop-title">{{ destBranch(stop) }}</p>
+            @if (transferNumber(stop)) {
+              <p class="stop-meta">Traslado {{ transferNumber(stop) }}</p>
+            }
+          }
+          @if (deliveryAddress(stop)) {
+            <p class="stop-address">{{ deliveryAddress(stop) }}</p>
+          }
+        </li>
+      }
+    </ol>
+  }
+
+  @if (pendingReturns().length) {
+    <h3 class="section-title">Devoluciones</h3>
+    <ul class="side-list">
+      @for (ret of pendingReturns(); track ret.id) {
+        <li>
+          <strong>Pendiente de recibir</strong>
+          <span>{{ returnSummary(ret) }}</span>
+          @if (ret.reason) {
+            <small>{{ ret.reason }}</small>
+          }
+        </li>
+      }
+    </ul>
+  }
+
+  <h3 class="section-title">Incidencias</h3>
+  @if ((current.incidents ?? []).length) {
+    <ul class="side-list">
+      @for (incident of current.incidents; track incident.id) {
+        <li [class.is-open]="incident.status === 'open'">
+          <strong>{{ incident.status === 'open' ? 'Abierta' : 'Resuelta' }}</strong>
+          <span>{{ incidentText(incident) }}</span>
+          @if (incidentStopLabel(incident)) {
+            <small>{{ incidentStopLabel(incident) }}</small>
+          }
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="empty">Sin incidencias.</p>
+  }
+
+  @if (canReportIncident()) {
+    @if (!incidentOpen()) {
+      <button type="button" class="ghost full" (click)="openIncidentForm()">Reportar incidencia</button>
+    } @else {
+      <section class="card-form">
+        <p class="form-title">Nueva incidencia</p>
+        <label class="field-label">Qué pasó</label>
+        <textarea
+          rows="3"
+          [value]="incidentDraft()"
+          (input)="incidentDraft.set($any($event.target).value)"
+          placeholder="Ej. Pinchazo en km 12"
+        ></textarea>
+        <label class="field-label">Parada (opcional)</label>
+        <select [value]="incidentStopId()" (change)="incidentStopId.set($any($event.target).value)">
+          <option value="">Sin parada</option>
+          @for (stop of stops(); track stop.id) {
+            <option [value]="stop.id">{{ stopOptionLabel(stop) }}</option>
+          }
+        </select>
+        <div class="confirm-actions">
+          <button type="button" class="ghost" (click)="cancelIncident()" [disabled]="reporting()">Cancelar</button>
+          <button type="button" class="depart compact" (click)="submitIncident()" [disabled]="reporting()">
+            {{ reporting() ? 'Enviando…' : 'Reportar' }}
+          </button>
+        </div>
+      </section>
+    }
+  }
+
+  @if (current.status === 'on_route') {
+    @if (canComplete()) {
+      @if (!completeOpen()) {
+        <button type="button" class="complete" (click)="askComplete()" [disabled]="completing()">
+          Completar viaje
+        </button>
+      } @else {
+        <div class="confirm-box">
+          <p>¿Cerrar el viaje? Todas las paradas quedaron atendidas.</p>
+          <div class="confirm-actions">
+            <button type="button" class="ghost" (click)="cancelComplete()" [disabled]="completing()">Cancelar</button>
+            <button type="button" class="complete compact" (click)="confirmComplete()" [disabled]="completing()">
+              {{ completing() ? 'Cerrando…' : 'Sí, completar' }}
+            </button>
+          </div>
+        </div>
+      }
+    } @else {
+      <p class="hint">{{ completeBlockHint() }}</p>
+    }
+  } @else if (current.status === 'draft') {
+    <p class="hint">Confirma la salida para poder entregar cada parada.</p>
+  } @else if (current.status === 'completed') {
+    <p class="hint">Este viaje ya está cerrado.</p>
+  }
+}
