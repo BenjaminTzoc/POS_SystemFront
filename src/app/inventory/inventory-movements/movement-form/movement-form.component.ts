@@ -139,7 +139,7 @@ export class MovementFormComponent implements OnInit {
       return;
     }
 
-    const inventory = this.selectedProduct.inventories.find((i) => i.branch.id === branchId);
+    const inventory = this.selectedProduct.inventories.find((i) => (i.branch?.id || i.branchId) === branchId);
     this.currentStock = inventory ? inventory.stock : 0;
   }
 
@@ -168,18 +168,20 @@ export class MovementFormComponent implements OnInit {
   }
 
   loadProducts() {
-    this.productsService.getProducts().subscribe({
-      next: (response) => {
-        this.products = response.data;
-      },
-      error: (error) => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: `Error cargando los productos: ${error.error.message}`,
-        });
-      },
-    });
+    this.productsService
+      .getProducts(undefined, false, undefined, undefined, false, undefined, true)
+      .subscribe({
+        next: (response) => {
+          this.products = response.data;
+        },
+        error: (error) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: `Error cargando los productos: ${error.error.message}`,
+          });
+        },
+      });
   }
 
   loadBranches(): void {
@@ -215,8 +217,10 @@ export class MovementFormComponent implements OnInit {
           this.selectedProduct = response.data;
 
           const branchesWithStockIds =
-            this.selectedProduct.inventories?.filter((i) => i.stock >= 0).map((i) => i.branch.id) ||
-            [];
+            this.selectedProduct.inventories
+              ?.filter((i) => i.stock >= 0)
+              .map((i) => i.branch?.id || i.branchId)
+              .filter((id): id is string => !!id) || [];
 
           this.availableBranches = this.branches.filter((b) => branchesWithStockIds.includes(b.id));
 

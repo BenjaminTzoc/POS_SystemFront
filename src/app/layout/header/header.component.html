@@ -94,6 +94,8 @@
   [showHeader]="false"
   [draggable]="false"
   [resizable]="false"
+  [closeOnEscape]="true"
+  [dismissableMask]="true"
   [breakpoints]="{ '960px': '85vw', '640px': '95vw' }"
   [style]="{ width: '560px' }"
   styleClass="spotlight-dialog !rounded-2xl !overflow-hidden !border-none !shadow-2xl"
@@ -110,7 +112,16 @@
         class="w-full bg-transparent border-none outline-none text-sm font-medium text-slate-800 placeholder-slate-400"
         autofocus
       />
-      <span class="px-2 py-0.5 bg-slate-200 text-slate-600 text-[10px] font-bold rounded">ESC para salir</span>
+      <!-- Botón X para cerrar modal -->
+      <button 
+        type="button" 
+        (click)="closeSpotlight()" 
+        class="w-7 h-7 rounded-lg bg-slate-200/70 hover:bg-slate-300 text-slate-600 hover:text-slate-900 flex items-center justify-center border-none cursor-pointer transition-colors shrink-0"
+        pTooltip="Cerrar (Esc)"
+        tooltipPosition="left"
+      >
+        <i class="pi pi-times text-xs"></i>
+      </button>
     </div>
 
     <!-- Filtered Results List -->

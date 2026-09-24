@@ -1,0 +1,332 @@
+<div class="py-4 pb-24 px-0 md:px-6 bg-[#9f6587]/[0.06] min-h-screen">
+  <!-- Top Card: Header con Sucursal y Cliente -->
+  <app-page-header
+    [title]="isEditMode ? ('Cotización: ' + (correlative || 'Edición')) : 'Nueva Cotización'"
+    [showBackButton]="true"
+    backTooltip="Volver a cotizaciones"
+    (onBack)="onCancel()"
+    [badge]="isEditMode ? 'Edición' : 'Borrador'"
+    [badgeSeverity]="isEditMode ? 'warn' : 'burgundy'"
+    colorScheme="burgundy"
+  >
+    <!-- Filtros Superiores: Sucursal y Cliente -->
+    <ng-container filters>
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-4 w-full items-start">
+        
+        <!-- Columna Izquierda: Selector de Sucursal -->
+        <div class="md:col-span-3 lg:col-span-3 flex flex-col gap-1.5">
+          <div class="h-[28px] flex items-center">
+            <label class="text-xs font-semibold text-[#48021C] flex items-center gap-1">
+              Sucursal <span class="text-rose-500 font-bold">*</span>
+            </label>
+          </div>
+          <app-branch-select
+            [branches]="branches"
+            [(ngModel)]="selectedBranchId"
+            (selectionChange)="onBranchChange($event)"
+            [placeholder]="loadingBranches ? 'Cargando sucursales...' : 'Seleccionar sucursal...'"
+            [showClear]="false"
+            [disabled]="loadingBranches"
+            widthClass="w-full"
+          />
+        </div>
+
+        <!-- Columna Derecha: Tipo y Selección de Cliente (Alineado con ancho contenido) -->
+        <div class="md:col-span-9 lg:col-span-9 flex flex-col gap-1.5 max-w-2xl">
+          <div class="h-[28px] flex items-center justify-between flex-wrap gap-2">
+            <label class="text-xs font-semibold text-[#48021C] flex items-center gap-1">
+              Cliente <span class="text-rose-500 font-bold">*</span>
+            </label>
+
+            <!-- Tabs de Tipo de Cliente con Color Vino Institucional -->
+            <div class="inline-flex p-0.5 bg-[#9f6587]/10 rounded-lg border border-[#9f6587]/25 text-xs">
+              <button 
+                type="button" 
+                (click)="customerType = 'registered'" 
+                [class]="customerType === 'registered' ? 'bg-[#48021C] text-white font-medium shadow-xs' : 'text-[#48021C]/80 hover:text-[#48021C] hover:bg-[#9f6587]/15'" 
+                class="px-2.5 py-1 rounded-md text-xs transition-all cursor-pointer"
+              >
+                Registrado
+              </button>
+              <button 
+                type="button" 
+                (click)="customerType = 'guest'" 
+                [class]="customerType === 'guest' ? 'bg-[#48021C] text-white font-medium shadow-xs' : 'text-[#48021C]/80 hover:text-[#48021C] hover:bg-[#9f6587]/15'" 
+                class="px-2.5 py-1 rounded-md text-xs transition-all cursor-pointer"
+              >
+                Consumidor Final / Invitado
+              </button>
+            </div>
+          </div>
+
+          <!-- Cliente Registrado: Selector + NIT (Fila 1) y Correo + Teléfono (Fila 2) con ancho contenido -->
+          <div *ngIf="customerType === 'registered'" class="flex flex-col gap-2.5">
+            @let customer = getCustomerById(selectedCustomerId);
+            
+            <!-- Fila Superior: Selector de Cliente + Campo NIT (50% / 50%) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-start">
+              <div class="min-h-[36px] w-full">
+                <app-customer-select
+                  [customers]="customers"
+                  [(ngModel)]="selectedCustomerId"
+                  (selectionChange)="onCustomerChange($event)"
+                  [placeholder]="loadingCustomers ? 'Cargando clientes...' : 'Seleccione un cliente...'"
+                  [showClear]="true"
+                  [disabled]="loadingCustomers"
+                  widthClass="w-full"
+                />
+              </div>
+
+              <!-- Campo NIT alineado con el selector (50%) -->
+              <div 
+                class="flex items-center justify-between px-3.5 h-9 rounded-xl border text-xs transition-all duration-200"
+                [class]="customer ? 'bg-sky-50/75 border-sky-200 text-sky-900 shadow-2xs' : 'bg-slate-50 rounded-xl border-slate-200 text-slate-400'"
+              >
+                <span class="text-xs font-bold" [class]="customer ? 'text-sky-700' : 'text-slate-500'">
+                  NIT:
+                </span>
+                <span [class]="customer?.nit ? 'font-bold text-sky-950 text-xs truncate max-w-[180px]' : (customer ? 'text-sky-700/80 italic text-xs' : 'text-slate-400 italic text-xs')">
+                  {{ customer?.nit || 'Sin NIT' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Fila Inferior: Correo y Teléfono (50% / 50%) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div 
+                class="flex items-center justify-between px-3.5 h-9 rounded-xl border text-xs transition-all duration-200"
+                [class]="customer ? 'bg-sky-50/65 border-sky-200 text-sky-900 shadow-2xs' : 'bg-slate-50/80 border-slate-200/80 text-slate-400'"
+              >
+                <span class="text-xs font-bold" [class]="customer ? 'text-sky-700' : 'text-slate-500'">
+                  Correo:
+                </span>
+                <span [class]="customer?.email ? 'font-semibold text-sky-950 text-xs truncate max-w-[200px]' : (customer ? 'text-sky-700/80 italic text-xs' : 'text-slate-400 italic text-xs')">
+                  {{ customer?.email || 'Sin correo registrado' }}
+                </span>
+              </div>
+
+              <div 
+                class="flex items-center justify-between px-3.5 h-9 rounded-xl border text-xs transition-all duration-200"
+                [class]="customer ? 'bg-sky-50/65 border-sky-200 text-sky-900 shadow-2xs' : 'bg-slate-50/80 border-slate-200/80 text-slate-400'"
+              >
+                <span class="text-xs font-bold" [class]="customer ? 'text-sky-700' : 'text-slate-500'">
+                  Teléfono:
+                </span>
+                <span [class]="customer?.phone ? 'font-semibold text-sky-950 text-xs truncate max-w-[180px]' : (customer ? 'text-sky-700/80 italic text-xs' : 'text-slate-400 italic text-xs')">
+                  {{ customer?.phone || 'Sin teléfono registrado' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cliente Invitado: Campos en Card con estilo institucional en 2 filas con ancho contenido -->
+          <div 
+            *ngIf="customerType === 'guest'" 
+            class="p-3 bg-rose-50/30 rounded-xl border border-[#48021C]/20 shadow-2xs max-w-2xl" 
+          >
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold text-[#48021C]">
+                  Nombre completo <span class="text-rose-500 font-bold">*</span>
+                </label>
+                <input pInputText [(ngModel)]="guestCustomer.name" placeholder="Ej. Juan Pérez" class="w-full h-9! text-xs font-medium !bg-rose-50/40 !border-[#48021C]/25 hover:!border-[#48021C]/60 hover:!bg-white focus:!border-[#48021C] focus:!ring-2 focus:!ring-[#48021C]/10 !rounded-xl transition-all duration-200" />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold text-[#48021C]">
+                  NIT / Facturación
+                </label>
+                <input pInputText [(ngModel)]="guestCustomer.nit" placeholder="C/F o número" class="w-full h-9! text-xs font-medium !bg-rose-50/40 !border-[#48021C]/25 hover:!border-[#48021C]/60 hover:!bg-white focus:!border-[#48021C] focus:!ring-2 focus:!ring-[#48021C]/10 !rounded-xl transition-all duration-200" />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold text-[#48021C]">
+                  Correo electrónico
+                </label>
+                <input pInputText [(ngModel)]="guestCustomer.email" placeholder="cliente@correo.com" class="w-full h-9! text-xs font-medium !bg-rose-50/40 !border-[#48021C]/25 hover:!border-[#48021C]/60 hover:!bg-white focus:!border-[#48021C] focus:!ring-2 focus:!ring-[#48021C]/10 !rounded-xl transition-all duration-200" />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold text-[#48021C]">
+                  Teléfono
+                </label>
+                <input pInputText [(ngModel)]="guestCustomer.phone" placeholder="7766-5544" class="w-full h-9! text-xs font-medium !bg-rose-50/40 !border-[#48021C]/25 hover:!border-[#48021C]/60 hover:!bg-white focus:!border-[#48021C] focus:!ring-2 focus:!ring-[#48021C]/10 !rounded-xl transition-all duration-200" />
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </ng-container>
+  </app-page-header>
+
+  <!-- GRID PRINCIPAL DE CONTENIDO -->
+  <div class="max-w-[1700px] mx-auto">
+    
+    <!-- GRID DE 12 COLUMNAS: CATÁLOGO Y TABLA (8 COLS) + TOTALES Y CONFIGURACIÓN (4 COLS) -->
+    <div class="grid grid-cols-12 gap-4 items-start">
+      
+      <!-- Columna Izquierda: Cinta y Tabla de Ítems (8 cols) -->
+      <div class="col-span-12 lg:col-span-8 flex flex-col gap-4">
+        <!-- CINTA / CATÁLOGO RÁPIDO DE PRODUCTOS (Mismo ancho que la tabla) -->
+        <app-product-ribbon
+          [products]="products"
+          [loading]="loadingProducts"
+          title="Catálogo Rápido de Productos"
+          subtitle="Haz clic en un producto para agregarlo al detalle"
+          emptyMessage="Selecciona una sucursal activa para cargar los productos disponibles."
+          [isSelectedFn]="isProductSelected"
+          [getSelectedQuantityFn]="getItemQuantity"
+          (productSelect)="onProductSelectFromRibbon($event)"
+        />
+
+        <!-- TABLA DE PRODUCTOS -->
+        <app-products-table
+          [items]="items"
+          title="Ítems de la Cotización"
+          emptyTitle="Ningún producto agregado a la cotización"
+          emptySubtitle="Haz clic en una tarjeta del catálogo superior para agregar productos al detalle de la cotización."
+          [showPrice]="true"
+          [showDiscount]="true"
+          [showTotals]="false"
+          (itemRemove)="removeItem($event)"
+          (clearAll)="clearAllItems()"
+        />
+      </div>
+
+      <!-- Columna Derecha: Configuración y Totales (4 cols) -->
+      <div class="col-span-12 lg:col-span-4 flex flex-col gap-4">
+        <div class="bg-white rounded-2xl border-2 border-[#48021C]/25 p-4.5 md:p-5 shadow-xs flex flex-col gap-4">
+          
+          <!-- Encabezado de la tarjeta -->
+          <div class="flex items-center gap-2 pb-3 border-b border-[#48021C]/15">
+            <div class="w-7 h-7 rounded-lg bg-[#48021C]/10 text-[#48021C] flex items-center justify-center border border-[#48021C]/20 shrink-0">
+              <i class="pi pi-sliders-h text-xs"></i>
+            </div>
+            <h3 class="font-bold text-[#48021C] text-sm leading-none m-0">Configuración y Totales</h3>
+          </div>
+
+          <!-- Switch IVA -->
+          <div class="flex items-center justify-between bg-rose-50/40 p-3 rounded-xl border border-[#48021C]/20">
+            <div class="flex flex-col">
+              <span class="text-xs font-bold text-[#48021C]">Impuesto IVA (12%)</span>
+              <span class="text-[11px] text-slate-500">Aplica el 12% sobre el subtotal</span>
+            </div>
+            <p-toggleswitch [(ngModel)]="applyTax" />
+          </div>
+
+          <!-- Días de Validez -->
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-bold text-[#48021C] flex items-center gap-1">
+              Días de validez <span class="text-rose-500 font-bold">*</span>
+            </label>
+            <p-inputnumber 
+              [(ngModel)]="validityDays" 
+              [min]="1" 
+              [max]="365"
+              [fluid]="true" 
+              suffix=" días" 
+              styleClass="w-full h-9!" 
+              inputStyleClass="w-full h-9! text-xs font-semibold !bg-rose-50/40 !border-[#48021C]/25 hover:!border-[#48021C]/60 hover:!bg-white focus:!border-[#48021C] focus:!ring-2 focus:!ring-[#48021C]/10 !rounded-xl transition-all duration-200" 
+            />
+          </div>
+
+          <!-- Observaciones / Notas -->
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-bold text-[#48021C]">
+              Observaciones / Notas
+            </label>
+            <textarea 
+              pTextarea 
+              [(ngModel)]="notes" 
+              rows="3" 
+              placeholder="Notas o condiciones para el cliente..." 
+              class="w-full text-xs font-medium !bg-rose-50/40 !border-[#48021C]/25 hover:!border-[#48021C]/60 hover:!bg-white focus:!border-[#48021C] focus:!ring-2 focus:!ring-[#48021C]/10 !rounded-xl p-2.5 transition-all duration-200 resize-none"
+            ></textarea>
+          </div>
+
+          <!-- Desglose de Totales -->
+          <div class="bg-rose-50/60 border border-[#48021C]/20 p-4 rounded-xl flex flex-col gap-2.5">
+            <div class="flex justify-between text-xs font-medium text-slate-600">
+              <span>Subtotal:</span>
+              <span class="text-slate-900 font-bold tabular-nums">{{ subtotal | currency: 'Q ' }}</span>
+            </div>
+            
+            <div class="flex justify-between text-xs font-medium text-slate-600">
+              <span>IVA (12%):</span>
+              <span class="text-slate-900 font-bold tabular-nums">{{ tax | currency: 'Q ' }}</span>
+            </div>
+
+            <div class="h-px bg-[#48021C]/15 my-0.5"></div>
+
+            <div class="flex justify-between items-center pt-1">
+              <span class="text-sm font-bold text-[#48021C]">Total Estimado:</span>
+              <span class="text-lg font-extrabold text-[#48021C] tabular-nums">{{ total | currency: 'Q ' }}</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- BARRA FLOTANTE INFERIOR DE ACCIONES -->
+  <div class="fixed bottom-6 right-6 z-40 animate-in fade-in slide-in-from-bottom-3 duration-200">
+    <div class="bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl border-2 border-[#48021C]/25 shadow-xl flex items-center gap-3.5">
+      <!-- Resumen rápido del total -->
+      <div class="flex flex-col pr-3 border-r border-[#48021C]/15">
+        <span class="text-[10px] font-medium text-slate-500 leading-tight">Total</span>
+        <span class="text-sm font-extrabold text-[#48021C] leading-none tabular-nums">{{ total | currency: 'Q ' }}</span>
+      </div>
+
+      <!-- Botón Cancelar -->
+      <p-button 
+        label="Cancelar" 
+        [outlined]="true" 
+        severity="danger" 
+        (onClick)="onCancel()" 
+        icon="pi pi-times"
+        styleClass="!rounded-xl !px-3.5 font-semibold h-9! hover:!bg-rose-50 transition-all text-xs"
+      />
+
+      <!-- Botón Guardar / Generar -->
+      <p-button 
+        [label]="isEditMode ? 'Actualizar cotización' : 'Generar cotización'" 
+        (onClick)="onSave()"
+        [loading]="saving"
+        [disabled]="!isFormValid || saving"
+        icon="pi pi-check"
+        styleClass="!rounded-xl !px-5 shadow-sm transition-all font-semibold h-9! justify-center text-xs !bg-[#48021C] !text-white !border-[#48021C] hover:!bg-[#350114] disabled:!opacity-40 disabled:!cursor-not-allowed"
+      />
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DE CONFIRMACIÓN: CANCELAR COTIZACIÓN -->
+<app-confirmation-modal
+  [(visible)]="showCancelConfirmModal"
+  header="Confirmar cancelación"
+  title="¿Estás seguro de cancelar y salir?"
+  message="Tienes cambios o productos agregados en la cotización que no se han guardado."
+  note="Si sales ahora, se perderán las modificaciones no guardadas."
+  type="warning"
+  icon="pi pi-exclamation-triangle"
+  confirmLabel="Salir"
+  cancelLabel="Continuar editando"
+  (onConfirm)="executeCancelExit()"
+/>
+
+<!-- MODAL DE CONFIRMACIÓN: CAMBIO DE SUCURSAL -->
+<app-confirmation-modal
+  [(visible)]="showBranchChangeConfirmModal"
+  header="Confirmar cambio de sucursal"
+  title="¿Deseas cambiar de sucursal?"
+  message="Si cambias la sucursal, se limpiarán los productos agregados en la lista de cotización."
+  note="Los productos pertenecen al inventario de la sucursal seleccionada."
+  type="warning"
+  icon="pi pi-exclamation-triangle"
+  confirmLabel="Sí, cambiar"
+  cancelLabel="Cancelar"
+  (onConfirm)="confirmBranchChange()"
+  (onCancel)="cancelBranchChange()"
+/>
+

@@ -12,5 +12,6 @@ export interface Inventory {
   stock: number;
   minStock?: number;
   maxStock?: number;
+  isAvailable?: boolean;
   lastMovementDate?: string;
 }

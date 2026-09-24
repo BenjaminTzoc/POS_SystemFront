@@ -19,7 +19,8 @@ export class ProductsService {
     hasRecipe?: boolean,
     isMaster?: boolean,
     excludeTypes?: string,
-    manageStock?: boolean
+    manageStock?: boolean,
+    minimal?: boolean
   ): Observable<ApiResponse<Product[]>> {
     let params = new HttpParams();
     if (includeDeleted === true) {
@@ -43,6 +44,9 @@ export class ProductsService {
     if (manageStock !== undefined) {
       params = params.set('manageStock', manageStock.toString());
     }
+    if (minimal !== undefined) {
+      params = params.set('minimal', minimal.toString());
+    }
 
     return this.http.get<ApiResponse<Product[]>>(`${this.API_URL}`, { params });
   }
@@ -59,7 +63,8 @@ export class ProductsService {
     type?: string,
     hasRecipe?: boolean,
     isMaster?: boolean,
-    excludeTypes?: string
+    excludeTypes?: string,
+    minimal?: boolean
   ): Observable<ApiResponse<Product[]>> {
     let params = new HttpParams().set('q', query).set('includeDeleted', includeDeleted.toString());
 
@@ -78,16 +83,19 @@ export class ProductsService {
     if (excludeTypes) {
       params = params.set('excludeTypes', excludeTypes);
     }
+    if (minimal !== undefined) {
+      params = params.set('minimal', minimal.toString());
+    }
 
     return this.http.get<ApiResponse<Product[]>>(`${this.API_URL}/search`, { params });
   }
 
-  createProduct(formData: FormData) {
-    return this.http.post<ApiResponse<any>>(`${this.API_URL}`, formData, {});
+  createProduct(data: FormData | any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.API_URL}`, data);
   }
 
-  updateProduct(id: string, formData: FormData) {
-    return this.http.put<ApiResponse<any>>(`${this.API_URL}/${id}`, formData, {});
+  updateProduct(id: string, data: FormData | any): Observable<ApiResponse<any>> {
+    return this.http.put<ApiResponse<any>>(`${this.API_URL}/${id}`, data);
   }
 
   deleteProduct(productId: string): Observable<ApiResponse<any>> {
@@ -136,12 +144,26 @@ export class ProductsService {
     return this.http.get<ApiResponse<Product[]>>(`${this.API_URL}/top-selling`, { params });
   }
 
-  getBranchCatalog(branchId: string): Observable<ApiResponse<any[]>> {
-    return this.http.get<ApiResponse<any[]>>(`${this.API_URL}/branch/${branchId}/catalog`);
+  getBranchCatalog(branchId: string, isMaster: boolean = false, manageStock?: boolean, hasStock?: boolean): Observable<ApiResponse<any[]>> {
+    let params = new HttpParams();
+    if (isMaster !== undefined) {
+      params = params.set('isMaster', isMaster.toString());
+    }
+    if (manageStock !== undefined) {
+      params = params.set('manageStock', manageStock.toString());
+    }
+    if (hasStock !== undefined) {
+      params = params.set('hasStock', hasStock.toString());
+    }
+    return this.http.get<ApiResponse<any[]>>(`${this.API_URL}/branch/${branchId}/catalog`, { params });
   }
 
-  getQuotationCatalog(branchId: string): Observable<ApiResponse<any[]>> {
-    return this.http.get<ApiResponse<any[]>>(`${this.API_URL}/branch/${branchId}/quotation-catalog`);
+  getQuotationCatalog(branchId: string, isMaster: boolean = false): Observable<ApiResponse<any[]>> {
+    let params = new HttpParams();
+    if (isMaster !== undefined) {
+      params = params.set('isMaster', isMaster.toString());
+    }
+    return this.http.get<ApiResponse<any[]>>(`${this.API_URL}/branch/${branchId}/quotation-catalog`, { params });
   }
 
   getDispatchCatalog(branchId?: string): Observable<ApiResponse<Product[]>> {

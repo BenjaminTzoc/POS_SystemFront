@@ -299,14 +299,16 @@ export class ProductFormComponent implements OnInit {
     }
   }
 
-  createInitialStockForm(stock: any): FormGroup {
+  createInitialStockForm(stock: any = {}): FormGroup {
+    const isManage = this.productForm?.get('manageStock')?.value !== false;
     return this.fb.group({
-      id: [stock.id, Validators.required],
-      branchId: [{ value: stock.branchId || stock.branch?.id, disabled: this.isEditMode }, Validators.required],
+      id: [stock.id || this.generateUniqueId()],
+      branchId: [{ value: stock.branchId || stock.branch?.id || null, disabled: this.isEditMode }, Validators.required],
       quantity: [
-        { value: stock.stock, disabled: this.isEditMode },
-        [Validators.required, Validators.min(0)],
+        { value: stock.stock ?? stock.quantity ?? (isManage ? null : 0), disabled: this.isEditMode },
+        isManage ? [Validators.required, Validators.min(0)] : [],
       ],
+      isAvailable: [stock.isAvailable !== undefined ? stock.isAvailable : true],
     });
   }
 
@@ -330,7 +332,7 @@ export class ProductFormComponent implements OnInit {
         this.productForm.get('manageStock')?.disable();
 
         this.initialStocks.clear();
-        response.data.inventories?.forEach((inv) => {
+        response.data.inventories?.forEach((inv: any) => {
           this.initialStocks.push(this.createInitialStockForm(inv));
         });
 
@@ -382,9 +384,15 @@ export class ProductFormComponent implements OnInit {
   }
 
   onManageStockChange(value: boolean) {
-    if (!value) {
-      this.productForm.get('initialStocks')?.reset();
-    }
+    this.initialStocks.controls.forEach((control) => {
+      const qtyCtrl = control.get('quantity');
+      if (value) {
+        qtyCtrl?.setValidators([Validators.required, Validators.min(0)]);
+      } else {
+        qtyCtrl?.clearValidators();
+      }
+      qtyCtrl?.updateValueAndValidity();
+    });
   }
 
   initForm() {
@@ -512,7 +520,6 @@ export class ProductFormComponent implements OnInit {
 
   onSaveProduct(): void {
     this.productForm.markAllAsTouched();
-    console.log(this.productForm.value);
 
     if (this.productForm.invalid) {
       this.messageService.add({
@@ -524,14 +531,18 @@ export class ProductFormComponent implements OnInit {
     }
 
     const isMasterProduct = this.productForm.get('isMasterProduct')?.value === true;
+    const manageStock = this.productForm.get('manageStock')?.value === true;
     const hasInitialStocks =
       this.initialStocks.length > 0 &&
       this.initialStocks.controls.some((control) => {
+        if (!manageStock) {
+          return !!control.get('branchId')?.value;
+        }
         const qty = control.get('quantity')?.value;
         return qty !== null && qty !== undefined && Number(qty) > 0;
       });
 
-    if (!this.isEditMode && !isMasterProduct && !hasInitialStocks) {
+    if (!this.isEditMode && !isMasterProduct && manageStock && !hasInitialStocks) {
       this.showNoStockConfirmDialog.set(true);
       return;
     }
@@ -544,13 +555,96 @@ export class ProductFormComponent implements OnInit {
     this.executeSaveProduct();
   }
 
+  private buildPayloadData(): { jsonPayload: any; formData: FormData; hasImage: boolean } {
+    const formValue = this.productForm.getRawValue();
+    const isMaster = formValue['isMasterProduct'] === true;
+    const parentId = formValue['parentId'];
+    const manageStock = formValue['manageStock'] === true;
+
+    const initialStocks = (formValue['initialStocks'] || [])
+      .filter((s: any) => !!s.branchId)
+      .map((s: any) => {
+        if (manageStock) {
+          const item: any = {
+            branchId: s.branchId,
+            quantity: Number(s.quantity) || 0,
+          };
+          if (s.isAvailable !== undefined) {
+            item.isAvailable = s.isAvailable;
+          }
+          return item;
+        } else {
+          return {
+            branchId: s.branchId,
+            isAvailable: s.isAvailable !== undefined ? s.isAvailable : true,
+          };
+        }
+      });
+
+    const hasImage = this.uploadedFiles.length > 0;
+
+    // JSON Payload
+    const jsonPayload: any = {
+      name: formValue.name,
+      type: formValue.type,
+      cost: Number(formValue.cost) || 0,
+      price: Number(formValue.price) || 0,
+      manageStock: manageStock,
+      isActive: formValue.isActive,
+      isVisible: formValue.isVisible,
+      stockAvailability: formValue.stockAvailability || 'in_stock',
+      isMaster: !parentId ? isMaster : false,
+      isVariant: !!parentId,
+    };
+
+    if (formValue.description) jsonPayload.description = formValue.description;
+    if (formValue.sku) jsonPayload.sku = formValue.sku;
+    if (formValue.barcode) jsonPayload.barcode = formValue.barcode;
+    if (formValue.categoryId) jsonPayload.categoryId = formValue.categoryId;
+    if (formValue.unitId) jsonPayload.unitId = formValue.unitId;
+    if (parentId) jsonPayload.parentId = parentId;
+
+    if (!this.isEditMode && initialStocks.length > 0) {
+      jsonPayload.initialStocks = initialStocks;
+    }
+
+    // FormData Payload
+    const formData = new FormData();
+    Object.keys(jsonPayload).forEach((key) => {
+      if (key === 'initialStocks') {
+        initialStocks.forEach((stock: any, index: number) => {
+          formData.append(`initialStocks[${index}][branchId]`, stock.branchId);
+          if (manageStock) {
+            formData.append(`initialStocks[${index}][quantity]`, (stock.quantity ?? 0).toString());
+          }
+          if (stock.isAvailable !== undefined) {
+            formData.append(`initialStocks[${index}][isAvailable]`, stock.isAvailable.toString());
+          }
+        });
+      } else if (jsonPayload[key] !== null && jsonPayload[key] !== undefined) {
+        formData.append(key, jsonPayload[key]);
+      }
+    });
+
+    if (hasImage) {
+      this.uploadedFiles.forEach((file) => {
+        formData.append('image', file, file.name);
+      });
+    } else if (this.isEditMode && this.isImageRemoved) {
+      formData.append('imageUrl', '');
+    }
+
+    return { jsonPayload, formData, hasImage: hasImage || (this.isEditMode && this.isImageRemoved) };
+  }
+
   private executeSaveProduct(): void {
-    const formData = this.createFormData();
+    const { jsonPayload, formData, hasImage } = this.buildPayloadData();
+    const payloadToSend = hasImage ? formData : jsonPayload;
     this.isSaving = true;
 
     if (this.isEditMode) {
-      this.productsService.updateProduct(this.productId!, formData).subscribe({
-        next: (response) => {
+      this.productsService.updateProduct(this.productId!, payloadToSend).subscribe({
+        next: () => {
           this.messageService.add({
             severity: 'success',
             summary: 'Éxito',
@@ -562,15 +656,15 @@ export class ProductFormComponent implements OnInit {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: `Error actualizando el producto: ${error.error.message}`,
+            detail: `Error actualizando el producto: ${error.error?.message || error.message || 'Error desconocido'}`,
           });
           this.isSaving = false;
         },
         complete: () => (this.isSaving = false),
       });
     } else {
-      this.productsService.createProduct(formData).subscribe({
-        next: (response) => {
+      this.productsService.createProduct(payloadToSend).subscribe({
+        next: () => {
           this.messageService.add({
             severity: 'success',
             summary: 'Éxito',
@@ -582,70 +676,13 @@ export class ProductFormComponent implements OnInit {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: `Error creando el producto: ${error.error.message}`,
+            detail: `Error creando el producto: ${error.error?.message || error.message || 'Error desconocido'}`,
           });
           this.isSaving = false;
         },
         complete: () => (this.isSaving = false),
       });
     }
-  }
-
-  private createFormData(): FormData {
-    const formData = new FormData();
-    const formValue = this.productForm.getRawValue();
-
-    // Agregar CADA CAMPO individualmente al FormData
-    Object.keys(formValue).forEach((key) => {
-      // Excluir 'id' e 'initialStocks', 'isMasterProduct' cuando es actualización
-      if (this.isEditMode && (key === 'id' || key === 'initialStocks' || key === 'isMasterProduct')) {
-        return; // Saltar estos campos en modo edición
-      }
-
-      if (key === 'isMasterProduct' || key === 'isVariant' || key === 'parentId') {
-        return; // Procesados debajo
-      }
-
-      if (key === 'sku' && !this.isEditMode && !formValue[key]) {
-        return; // No enviar SKU si está vacío en creación (el server lo generará)
-      }
-
-      if (key === 'initialStocks') {
-        formValue[key].forEach((stock: any, index: number) => {
-          formData.append(`initialStocks[${index}][branchId]`, stock.branchId);
-          formData.append(`initialStocks[${index}][quantity]`, stock.quantity.toString());
-        });
-      } else {
-        // Enviar solo si no es null para evitar enviar el string "null"
-        if (formValue[key] !== null && formValue[key] !== undefined) {
-          formData.append(key, formValue[key]);
-        }
-      }
-    });
-
-    const isMaster = formValue['isMasterProduct'] === true;
-    const parentId = formValue['parentId'];
-
-    if (parentId) {
-      formData.append('isVariant', 'true');
-      formData.append('parentId', parentId);
-      formData.append('isMaster', 'false');
-    } else {
-      formData.append('isVariant', 'false');
-      formData.append('isMaster', String(isMaster));
-    }
-
-    // Agregar imagen
-    if (this.uploadedFiles.length > 0) {
-      this.uploadedFiles.forEach((file) => {
-        formData.append('image', file, file.name);
-      });
-    } else if (this.isEditMode && this.isImageRemoved) {
-      // Enviamos imageUrl vacío para indicar remoción al backend
-      formData.append('imageUrl', ''); 
-    }
-
-    return formData;
   }
 
   get initialStocks(): FormArray {
@@ -676,12 +713,14 @@ export class ProductFormComponent implements OnInit {
       this.messageService.add({
         severity: 'warn',
         summary: 'Información incompleta',
-        detail: 'Debe seleccionar una sucursal y asignar un stock inicial antes de agregar otra.',
+        detail: 'Debe seleccionar una sucursal y completar los datos antes de agregar otra.',
       });
       return;
     }
 
-    if (!this.selectedUnit) {
+    const isManage = this.productForm.get('manageStock')?.value !== false;
+
+    if (isManage && !this.selectedUnit) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Advertencia',
@@ -693,7 +732,8 @@ export class ProductFormComponent implements OnInit {
     const newStockGroup = this.fb.group({
       id: [this.generateUniqueId()],
       branchId: [null, Validators.required],
-      quantity: [null, [Validators.required, Validators.min(0)]],
+      quantity: [isManage ? null : 0, isManage ? [Validators.required, Validators.min(0)] : []],
+      isAvailable: [true],
     });
 
     this.initialStocks.push(newStockGroup);

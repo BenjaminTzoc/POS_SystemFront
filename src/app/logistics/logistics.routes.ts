@@ -3,6 +3,22 @@ import { AreasComponent } from './pages/areas/areas.component';
 
 export const LOGISTICS_ROUTES: Routes = [
   {
+    path: 'trips',
+    loadComponent: () => import('./pages/trips/trips.component').then(m => m.TripsComponent),
+  },
+  {
+    path: 'trips/new',
+    loadComponent: () => import('./pages/trips/trip-form/trip-form.component').then(m => m.TripFormComponent),
+  },
+  {
+    path: 'trips/:id',
+    loadComponent: () => import('./pages/trips/trip-detail/trip-detail.component').then(m => m.TripDetailComponent),
+  },
+  {
+    path: 'trucks',
+    loadComponent: () => import('./pages/trucks/trucks.component').then(m => m.TrucksComponent),
+  },
+  {
     path: 'areas',
     component: AreasComponent,
   },

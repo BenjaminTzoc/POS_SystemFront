@@ -1,0 +1,218 @@
+<div class="bg-white rounded-2xl border-2 border-[#48021C]/25 overflow-hidden shadow-xs flex flex-col">
+  <!-- Encabezado de la tabla -->
+  <div class="py-2.5 px-4 md:px-6 border-b border-[#48021C]/15 flex items-center justify-between bg-rose-50/60 rounded-t-2xl flex-shrink-0">
+    <div class="flex items-center gap-2">
+      <div class="w-7 h-7 rounded-lg bg-[#48021C]/10 text-[#48021C] flex items-center justify-center border border-[#48021C]/20 shrink-0">
+        <i class="pi pi-list text-xs"></i>
+      </div>
+      <span class="text-xs sm:text-sm font-bold text-[#48021C]">{{ title }}</span>
+      <span class="text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-white text-[#48021C] border border-[#48021C]/25 shadow-2xs">
+        {{ items.length }} {{ items.length === 1 ? 'producto' : 'productos' }}
+      </span>
+    </div>
+
+    @if (items.length > 0 && !disabled) {
+      <button 
+        type="button" 
+        (click)="onClearAll()"
+        class="px-2.5 py-1 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 border border-rose-500/40 bg-rose-500/[0.08] text-rose-700 hover:bg-rose-500/[0.18] hover:border-rose-500/80 transition-all cursor-pointer shadow-2xs active:scale-95"
+      >
+        <i class="pi pi-trash text-[10px]"></i>
+        <span>Limpiar lista</span>
+      </button>
+    }
+  </div>
+
+  <!-- Estado Vacío -->
+  @if (items.length === 0) {
+    <div class="py-12 flex flex-col items-center justify-center text-slate-400 border-2 border-dashed border-[#48021C]/20 rounded-xl text-center m-4 md:m-6 bg-rose-50/[0.15]">
+      <div class="w-12 h-12 rounded-full bg-[#48021C]/10 text-[#48021C] flex items-center justify-center mb-2.5 border border-[#48021C]/15">
+        <i class="pi pi-shopping-bag text-lg"></i>
+      </div>
+      <p class="font-bold text-xs sm:text-sm text-[#48021C]">{{ emptyTitle }}</p>
+      <p class="text-xs text-slate-500 mt-1 max-w-sm">
+        {{ emptySubtitle }}
+      </p>
+    </div>
+  } @else {
+    <!-- Tabla de ítems con scroll horizontal si es necesario -->
+    <div class="overflow-x-auto w-full max-h-[460px] overflow-y-auto">
+      <table class="w-full text-left text-xs border-collapse">
+        <thead class="sticky top-0 bg-rose-100/70 text-[#48021C] border-b border-[#48021C]/20 z-10">
+          <tr class="h-9 text-[11.5px] font-bold">
+            <th class="px-4 py-2 text-left border-r border-[#48021C]/15 min-w-[170px]">Producto</th>
+            <th *ngIf="showPrice" class="px-3 py-2 text-center border-r border-[#48021C]/15 w-[110px]">Precio Unit.</th>
+            <th class="px-3 py-2 text-center border-r border-[#48021C]/15 w-[125px]">Cantidad</th>
+            <th *ngIf="showDiscount" class="px-3 py-2 text-center border-r border-[#48021C]/15 w-[105px]">Descuento</th>
+            <th class="px-4 py-2 text-right border-r border-[#48021C]/15 w-[120px]">Subtotal</th>
+            <th *ngIf="!disabled" class="px-3 py-2 text-center w-[55px]">Acción</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[#48021C]/10 bg-white">
+          @for (item of items; track $index; let i = $index) {
+            <tr class="hover:bg-rose-50/40 transition-colors border-b border-[#48021C]/10 text-xs">
+              <!-- Producto Info con SKU debajo del nombre -->
+              <td class="px-4 py-2.5 border-r border-[#48021C]/10 font-semibold text-slate-800 align-middle">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-9 h-9 rounded-lg border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0 bg-white shadow-2xs">
+                    <img *ngIf="item.imageUrl" [src]="getProductImageUrl(item.imageUrl)" class="w-full h-full object-cover" />
+                    <i *ngIf="!item.imageUrl" class="pi pi-image text-slate-300 text-xs"></i>
+                  </div>
+                  <div class="flex flex-col min-w-0">
+                    <span class="font-bold text-slate-800 text-xs leading-snug truncate" [title]="item.name">{{ item.name }}</span>
+                    <span class="text-[11px] font-bold text-[#6b3353] mt-0.5">
+                      {{ item.sku || '---' }}
+                    </span>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Precio Unitario -->
+              <td *ngIf="showPrice" class="px-2.5 py-2.5 align-middle border-r border-[#48021C]/10 text-center">
+                @if (disabled) {
+                  <span class="text-xs font-bold text-slate-800 tabular-nums">{{ item.price | currency:'Q ' }}</span>
+                } @else {
+                  <div class="w-[96px] mx-auto">
+                    <p-inputnumber 
+                      [(ngModel)]="item.price"
+                      (ngModelChange)="emitItemChange(i, item)"
+                      mode="currency" 
+                      currency="GTQ" 
+                      locale="es-GT"
+                      [min]="0"
+                      [minFractionDigits]="2"
+                      [maxFractionDigits]="2"
+                      styleClass="border-[#48021C]/20! h-7! w-full" 
+                      size="small" 
+                      [fluid]="true" 
+                      inputStyleClass="text-[11px] h-7! py-1! px-1.5! text-right font-bold text-slate-800 border-[#48021C]/20! focus:border-[#48021C]! rounded-lg" 
+                    />
+                  </div>
+                }
+              </td>
+
+              <!-- Cantidad -->
+              <td class="px-2.5 py-2.5 align-middle border-r border-[#48021C]/10 text-center">
+                @if (disabled) {
+                  <span class="text-xs font-bold text-slate-800 tabular-nums">
+                    {{ item.quantity | number:(item.allowsDecimals ? '1.2-2' : '1.0-0') }}
+                    @if (item.unitAbbreviation) {
+                      <span class="text-[10px] font-bold text-[#48021C] ml-0.5">{{ item.unitAbbreviation }}</span>
+                    }
+                  </span>
+                } @else {
+                  <div class="w-[108px] mx-auto">
+                    <p-inputgroup class="w-full !h-7">
+                      <p-inputnumber 
+                        [(ngModel)]="item.quantity"
+                        (ngModelChange)="emitItemChange(i, item)"
+                        mode="decimal" 
+                        locale="en-US"
+                        [useGrouping]="false"
+                        [min]="item.allowsDecimals ? 0.01 : 1" 
+                        [minFractionDigits]="item.allowsDecimals ? 2 : 0" 
+                        [maxFractionDigits]="item.allowsDecimals ? 2 : 0" 
+                        [showButtons]="false"
+                        styleClass="border-[#48021C]/25! h-7! w-full" 
+                        size="small" 
+                        [fluid]="true" 
+                        inputStyleClass="text-[11px] h-7! py-1! px-1.5! text-right font-bold text-slate-800 border-[#48021C]/25! focus:border-[#48021C]!" 
+                      />
+                      @if (item.unitAbbreviation) {
+                        <p-inputgroup-addon class="!text-[10px] !font-bold !text-[#48021C] !bg-rose-100/70 !px-1.5 !h-7 flex items-center select-none border border-l-0 border-[#48021C]/25">
+                          {{ item.unitAbbreviation }}
+                        </p-inputgroup-addon>
+                      }
+                    </p-inputgroup>
+                  </div>
+                }
+              </td>
+
+              <!-- Descuento con selector % / Q -->
+              <td *ngIf="showDiscount" class="px-2.5 py-2.5 align-middle border-r border-[#48021C]/10 text-center">
+                @if (disabled) {
+                  <span class="text-xs font-bold tabular-nums" [class]="(item.discount || 0) > 0 ? 'text-rose-700' : 'text-slate-500'">
+                    @if (!(item.discount || 0)) {
+                      —
+                    } @else if (item.discountType === 'percentage') {
+                      {{ item.discount }}%
+                    } @else {
+                      {{ item.discount | currency:'Q ' }}
+                    }
+                  </span>
+                } @else {
+                  <div class="w-[92px] mx-auto">
+                    <p-inputgroup class="w-full !h-7">
+                      <p-inputnumber 
+                        [(ngModel)]="item.discount"
+                        (ngModelChange)="emitItemChange(i, item)"
+                        [mode]="item.discountType === 'percentage' ? 'decimal' : 'currency'" 
+                        [currency]="item.discountType === 'percentage' ? undefined : 'GTQ'" 
+                        locale="es-GT"
+                        [min]="0"
+                        [max]="item.discountType === 'percentage' ? 100 : ((item.quantity * item.price) || 0)"
+                        [minFractionDigits]="item.discountType === 'percentage' ? 0 : 2"
+                        [maxFractionDigits]="2"
+                        styleClass="border-[#48021C]/25! h-7! w-full" 
+                        size="small" 
+                        [fluid]="true" 
+                        inputStyleClass="text-[11px] h-7! py-1! px-1.5! text-right font-bold text-rose-700 border-[#48021C]/25! focus:border-[#48021C]!" 
+                      />
+                      <button
+                        type="button"
+                        (click)="toggleDiscountType(item, i)"
+                        class="px-1.5 h-7 text-[10.5px] font-bold text-[#48021C] bg-rose-100/80 hover:bg-rose-200/90 border border-l-0 border-[#48021C]/25 rounded-r-lg transition-all cursor-pointer flex items-center justify-center select-none active:scale-95"
+                        pTooltip="Cambiar a {{ item.discountType === 'percentage' ? 'Monto fijo (Q)' : 'Porcentaje (%)' }}"
+                        tooltipPosition="top"
+                      >
+                        {{ item.discountType === 'percentage' ? '%' : 'Q' }}
+                      </button>
+                    </p-inputgroup>
+                  </div>
+                }
+              </td>
+
+              <!-- Subtotal de Línea (penúltima columna) -->
+              <td class="px-4 py-2.5 text-right font-bold text-[#48021C] border-r border-[#48021C]/10 align-middle tabular-nums"
+                  [class.border-r-0]="disabled">
+                {{ getItemSubtotal(item) | currency:'Q ' }}
+              </td>
+
+              <!-- Botón Eliminar (última columna) -->
+              <td *ngIf="!disabled" class="px-3 py-2.5 text-center align-middle">
+                <button
+                  type="button"
+                  (click)="removeItem(i)"
+                  class="w-7 h-7 rounded-lg text-xs font-semibold inline-flex items-center justify-center border border-rose-500/40 bg-rose-500/[0.08] text-rose-600 hover:bg-rose-500/[0.2] hover:border-rose-500/80 hover:text-rose-700 transition-all cursor-pointer shadow-2xs active:scale-95"
+                  pTooltip="Quitar de la lista"
+                  tooltipPosition="top"
+                >
+                  <i class="pi pi-trash text-[11px]"></i>
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Barra inferior de totales de la tabla -->
+    <div *ngIf="showTotals" class="bg-rose-50/80 border-t border-[#48021C]/20 p-3 px-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+      <div class="flex items-center gap-3 text-xs text-slate-700">
+        <span>Líneas: <strong class="text-[#48021C] font-bold">{{ items.length }}</strong></span>
+        <span>•</span>
+        <span>Total Unidades: <strong class="text-[#48021C] font-bold">{{ totalUnitsCount }}</strong></span>
+        @if (showDiscount && totalDiscount > 0) {
+          <span>•</span>
+          <span>Desc. Total: <strong class="text-rose-600 font-bold">{{ totalDiscount | currency:'Q ' }}</strong></span>
+        }
+      </div>
+      <div class="flex items-center justify-between sm:justify-end gap-2.5">
+        <span class="text-xs font-semibold text-[#48021C]">Subtotal Ítems:</span>
+        <span class="text-sm font-bold text-[#48021C] tabular-nums">
+          {{ totalEstimatedValue | currency:'Q ' }}
+        </span>
+      </div>
+    </div>
+  }
+</div>

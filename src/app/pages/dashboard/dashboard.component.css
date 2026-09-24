@@ -1,3 +1,39 @@
+.dash-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.dash-head-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #48021C;
+  line-height: 1.2;
+}
+
+.dash-head-sub {
+  margin: 0.2rem 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #9f6587;
+  line-height: 1.35;
+}
+
+@media (min-width: 640px) {
+  .dash-head {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+
+  .dash-head-title {
+    font-size: 1.25rem;
+  }
+}
+
 :host ::ng-deep .p-datatable-sm .p-datatable-tbody > tr > td {
   padding: 0;
 }
@@ -145,4 +181,32 @@ thead th.sticky {
   font-size: 10px !important;
   padding: 4px 8px !important;
   min-width: auto !important;
+}
+
+.calendar-payments-row {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.today-payments-slot {
+  min-width: 0;
+}
+
+@media (min-width: 1280px) {
+  .calendar-payments-row {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .today-payments-slot {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 16rem;
+  }
+
+  .today-payments-slot > * {
+    position: absolute;
+    inset: 0;
+  }
 }

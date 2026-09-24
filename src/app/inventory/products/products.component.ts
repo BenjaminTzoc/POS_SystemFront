@@ -1,6 +1,6 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ViewChild } from '@angular/core';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { TableModule } from 'primeng/table';
+import { Table, TableModule } from 'primeng/table';
 import { CurrencyPipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -16,6 +16,12 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { CommonModule } from '@angular/common';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
+import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { RefreshButtonComponent } from '../../shared/components/refresh-button/refresh-button.component';
+import { PrimaryButtonComponent } from '../../shared/components/primary-button/primary-button.component';
+import { SearchInputComponent } from '../../shared/components/search-input/search-input.component';
+import { StandardTableComponent } from '../../shared/components/standard-table/standard-table.component';
+import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 
 @Component({
   selector: 'app-products',
@@ -31,11 +37,20 @@ import { TooltipModule } from 'primeng/tooltip';
     CommonModule,
     TagModule,
     TooltipModule,
+    PageHeaderComponent,
+    RefreshButtonComponent,
+    PrimaryButtonComponent,
+    SearchInputComponent,
+    StandardTableComponent,
+    StatusBadgeComponent,
   ],
   templateUrl: './products.component.html',
   styleUrl: './products.component.css',
 })
 export class ProductsComponent implements OnInit {
+  @ViewChild('productsDesktopTable') productsDesktopTable?: StandardTableComponent;
+  @ViewChild('productsMobileTable') productsMobileTable?: Table;
+
   private productsService = inject(ProductsService);
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
@@ -70,6 +85,12 @@ export class ProductsComponent implements OnInit {
       ...this.expandedRows,
       [id]: !this.expandedRows[id]
     };
+  }
+
+  onSearch(query: string): void {
+    this.searchTerm = query;
+    this.productsDesktopTable?.filterGlobal(query, 'contains');
+    this.productsMobileTable?.filterGlobal(query, 'contains');
   }
 
   loadProducts(branchId?: string): void {
@@ -219,5 +240,20 @@ export class ProductsComponent implements OnInit {
       default:
         return 'secondary';
     }
+  }
+
+  copyToClipboard(text: string, label: string, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Copiado',
+        detail: `${label} "${text}" copiado al portapapeles`,
+        life: 2000,
+      });
+    });
   }
 }

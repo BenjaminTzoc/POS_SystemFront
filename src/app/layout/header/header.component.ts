@@ -220,6 +220,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.searchModalVisible.set(true);
   }
 
+  closeSpotlight() {
+    this.searchModalVisible.set(false);
+  }
+
   executeCommand(route: string) {
     this.searchModalVisible.set(false);
     this.router.navigate([route]);

@@ -18,7 +18,10 @@ import {
   ProductConsolidationItemDto,
   CustomerConsolidationItemDto,
   WeeklyDataConsolidationDto,
-  ProductMonthlyTrendDto
+  ProductMonthlyTrendDto,
+  CustomerWeeklySummaryDto,
+  TodayPulseDto,
+  TodayPaymentsDto,
 } from '../models/reports.models';
 import { ApiResponse } from '../models/api-response.model';
 
@@ -126,5 +129,44 @@ export class ReportsService {
       `${this.apiUrl}/products/monthly-trends`,
       { params }
     );
+  }
+
+  getCustomersWeeklySummary(
+    weekStartDate: string,
+    branchId?: string,
+    limit: number = 50
+  ): Observable<ApiResponse<CustomerWeeklySummaryDto>> {
+    let params = new HttpParams()
+      .set('weekStartDate', weekStartDate)
+      .set('limit', limit.toString());
+    if (branchId) params = params.set('branchId', branchId);
+
+    return this.http.get<ApiResponse<CustomerWeeklySummaryDto>>(
+      `${this.apiUrl}/customers/weekly-summary`,
+      { params }
+    );
+  }
+
+  getTodayPulse(
+    branchId?: string,
+    lowStockLimit: number = 3
+  ): Observable<ApiResponse<TodayPulseDto>> {
+    let params = new HttpParams().set('lowStockLimit', lowStockLimit.toString());
+    if (branchId) params = params.set('branchId', branchId);
+
+    return this.http.get<ApiResponse<TodayPulseDto>>(`${this.apiUrl}/dashboard/today-pulse`, {
+      params,
+    });
+  }
+
+  getTodayPayments(
+    branchId?: string,
+    limit: number = 50,
+  ): Observable<ApiResponse<TodayPaymentsDto>> {
+    let params = new HttpParams().set('limit', limit.toString());
+    if (branchId) params = params.set('branchId', branchId);
+    return this.http.get<ApiResponse<TodayPaymentsDto>>(`${this.apiUrl}/dashboard/today-payments`, {
+      params,
+    });
   }
 }

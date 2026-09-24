@@ -1,0 +1,351 @@
+<div class="py-4 pb-8 px-0 md:px-6 bg-[#9f6587]/[0.06] min-h-screen">
+  <app-page-header
+    title="Planificar nuevo viaje"
+    icon="pi pi-compass"
+    [showBackButton]="true"
+    backTooltip="Volver a viajes"
+    (onBack)="onCancel()"
+    badge="Borrador"
+    badgeSeverity="burgundy"
+    colorScheme="burgundy"
+  >
+    <div actions class="flex items-center gap-2 flex-wrap">
+      <app-secondary-button
+        label="Cancelar"
+        icon="pi pi-times"
+        (clicked)="onCancel()"
+      />
+      <app-primary-button
+        label="Guardar viaje"
+        icon="pi pi-check"
+        [loading]="saving()"
+        (clicked)="onSaveTrip()"
+      />
+    </div>
+  </app-page-header>
+
+  <div class="max-w-[1700px] mx-auto px-4 md:px-0 grid grid-cols-12 gap-4">
+    <div class="col-span-12 lg:col-span-4 flex flex-col gap-4">
+      <div
+        class="bg-white rounded-2xl border-2 border-[#48021C]/25 p-4 shadow-xs flex flex-col gap-3.5"
+        [formGroup]="tripForm"
+      >
+        <div class="flex items-center gap-2 pb-2.5 border-b border-[#48021C]/15">
+          <div class="w-7 h-7 rounded-lg bg-[#48021C]/10 text-[#48021C] flex items-center justify-center border border-[#48021C]/20 shrink-0">
+            <i class="pi pi-sliders-h text-xs"></i>
+          </div>
+          <div class="flex flex-col min-w-0">
+            <h3 class="font-bold text-[#48021C] text-sm leading-none m-0">Información del viaje</h3>
+            <span class="text-[10px] text-[#9f6587] font-medium mt-1">Salida y asignación del vehículo</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-semibold text-[#48021C]">
+            Fecha de salida <span class="text-rose-500">*</span>
+          </label>
+          <p-datepicker
+            formControlName="date"
+            [showIcon]="true"
+            [iconDisplay]="'input'"
+            dateFormat="dd/mm/yy"
+            appendTo="body"
+            size="small"
+            [fluid]="true"
+            styleClass="w-full h-9!"
+            inputStyleClass="w-full h-9! text-xs font-semibold !bg-rose-50/40 !border-[#48021C]/25 hover:!border-[#48021C]/60 hover:!bg-white focus:!border-[#48021C] focus:!ring-2 focus:!ring-[#48021C]/10 !rounded-xl"
+          />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-semibold text-[#48021C]">
+            Planta / bodega de origen <span class="text-rose-500">*</span>
+          </label>
+          <p-select
+            [options]="branches()"
+            formControlName="originBranchId"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Seleccionar planta de salida..."
+            (onChange)="onOriginBranchChange()"
+            appendTo="body"
+            size="small"
+            [fluid]="true"
+            styleClass="w-full !rounded-lg !border-[#9f6587]/35 focus-within:!border-[#9f6587] focus-within:!ring-2 focus-within:!ring-[#9f6587]/20 text-xs font-medium"
+          />
+          <span class="text-[10px] text-slate-500">Determina las operaciones pendientes disponibles</span>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-semibold text-[#48021C]">
+            Camión / vehículo <span class="text-rose-500">*</span>
+          </label>
+          <p-select
+            [options]="trucks()"
+            formControlName="truckId"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Seleccionar camión..."
+            (onChange)="onTruckChange()"
+            appendTo="body"
+            size="small"
+            [fluid]="true"
+            styleClass="w-full !rounded-lg !border-[#9f6587]/35 focus-within:!border-[#9f6587] focus-within:!ring-2 focus-within:!ring-[#9f6587]/20 text-xs font-medium"
+          />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-semibold text-[#48021C]">
+            Conductor / piloto asignado <span class="text-rose-500">*</span>
+          </label>
+          <p-select
+            [options]="drivers()"
+            formControlName="driverId"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Seleccionar piloto..."
+            [filter]="true"
+            filterPlaceholder="Buscar conductor..."
+            appendTo="body"
+            size="small"
+            [fluid]="true"
+            styleClass="w-full !rounded-lg !border-[#9f6587]/35 focus-within:!border-[#9f6587] focus-within:!ring-2 focus-within:!ring-[#9f6587]/20 text-xs font-medium"
+          />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-semibold text-[#48021C]">Notas / instrucciones</label>
+          <textarea
+            pTextarea
+            formControlName="notes"
+            rows="2"
+            placeholder="Observaciones de ruta, peajes, entrega..."
+            class="w-full text-xs font-medium !bg-rose-50/40 !border-[#48021C]/25 hover:!border-[#48021C]/60 hover:!bg-white focus:!border-[#48021C] focus:!ring-2 focus:!ring-[#48021C]/10 !rounded-xl p-2.5 resize-none"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border-2 border-[#48021C]/25 p-4 shadow-xs flex flex-col gap-3">
+        <div class="flex items-center justify-between pb-2.5 border-b border-[#48021C]/15">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-[#48021C]/10 text-[#48021C] flex items-center justify-center border border-[#48021C]/20 shrink-0">
+              <i class="pi pi-map-marker text-xs"></i>
+            </div>
+            <h3 class="font-bold text-[#48021C] text-sm leading-none m-0">Ruta planificada</h3>
+          </div>
+          <span class="px-2 py-0.5 bg-[#48021C]/10 text-[#48021C] text-[10px] font-bold rounded-md border border-[#48021C]/20">
+            {{ totalSelectedStops() }} paradas
+          </span>
+        </div>
+
+        @if (totalSelectedStops() === 0) {
+          <div class="py-6 text-center text-slate-400 text-xs">
+            <p class="m-0 font-medium text-slate-600">No has seleccionado operaciones para esta ruta.</p>
+            <p class="text-[11px] text-slate-400 mt-1 m-0">Marca los traslados u órdenes en la lista de la derecha.</p>
+          </div>
+        } @else {
+          <div class="max-h-[280px] overflow-y-auto flex flex-col gap-2 pr-1">
+            @for (t of selectedTransfers(); track t.id; let idx = $index) {
+              <div class="flex items-center justify-between p-2.5 bg-indigo-50/60 border border-indigo-200/80 rounded-xl text-xs">
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 font-bold text-[10px] flex items-center justify-center flex-shrink-0">
+                    {{ idx + 1 }}
+                  </span>
+                  <div class="flex flex-col min-w-0">
+                    <span class="font-bold text-indigo-900 truncate">{{ t.transferNumber }}</span>
+                    <span class="text-[10px] text-slate-500 truncate">Destino: {{ t.destinationBranchName || t.destinationBranch?.name }}</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  (click)="removeTransfer(t.id)"
+                  class="text-slate-400 hover:text-rose-600 p-1 rounded transition-colors border-none bg-transparent cursor-pointer"
+                >
+                  <i class="pi pi-times text-[10px]"></i>
+                </button>
+              </div>
+            }
+
+            @for (s of selectedSales(); track s.id; let idx = $index) {
+              <div class="flex items-center justify-between p-2.5 bg-emerald-50/60 border border-emerald-200/80 rounded-xl text-xs">
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 font-bold text-[10px] flex items-center justify-center flex-shrink-0">
+                    {{ selectedTransfers().length + idx + 1 }}
+                  </span>
+                  <div class="flex flex-col min-w-0">
+                    <span class="font-bold text-emerald-900 truncate">Fact. #{{ s.invoiceNumber }}</span>
+                    <span class="text-[10px] text-slate-500 truncate">{{ s.customer?.name || s.guestCustomer?.name || 'Cliente' }}</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  (click)="removeSale(s.id)"
+                  class="text-slate-400 hover:text-rose-600 p-1 rounded transition-colors border-none bg-transparent cursor-pointer"
+                >
+                  <i class="pi pi-times text-[10px]"></i>
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="col-span-12 lg:col-span-8 flex flex-col gap-4">
+      <div class="bg-white rounded-2xl border-2 border-[#48021C]/25 overflow-hidden shadow-xs flex flex-col">
+        <div class="py-2.5 px-4 md:px-6 border-b border-[#48021C]/15 bg-rose-50/60 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-[#48021C]/10 text-[#48021C] flex items-center justify-center border border-[#48021C]/20 shrink-0">
+              <i class="pi pi-box text-sm"></i>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-sm font-semibold text-[#48021C] leading-none">Operaciones pendientes de envío</span>
+              <span class="text-xs text-[#9f6587] font-medium mt-1">Traslados y pedidos listos en la planta de origen</span>
+            </div>
+          </div>
+
+          <div class="inline-flex p-0.5 bg-[#9f6587]/10 rounded-lg border border-[#9f6587]/25 text-xs self-start sm:self-auto">
+            <button
+              type="button"
+              (click)="activeTab = 'sales'"
+              [class]="activeTab === 'sales' ? 'bg-[#48021C] text-white font-medium shadow-xs' : 'text-[#48021C]/80 hover:text-[#48021C] hover:bg-[#9f6587]/15'"
+              class="px-2.5 py-1 rounded-md text-xs transition-all cursor-pointer inline-flex items-center gap-1.5"
+            >
+              <span>Órdenes</span>
+              <span
+                class="px-1.5 py-0.5 text-[10px] font-bold rounded-full"
+                [class]="activeTab === 'sales' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700'"
+              >
+                {{ pendingSales().length }}
+              </span>
+            </button>
+            <button
+              type="button"
+              (click)="activeTab = 'transfers'"
+              [class]="activeTab === 'transfers' ? 'bg-[#48021C] text-white font-medium shadow-xs' : 'text-[#48021C]/80 hover:text-[#48021C] hover:bg-[#9f6587]/15'"
+              class="px-2.5 py-1 rounded-md text-xs transition-all cursor-pointer inline-flex items-center gap-1.5"
+            >
+              <span>Traslados</span>
+              <span
+                class="px-1.5 py-0.5 text-[10px] font-bold rounded-full"
+                [class]="activeTab === 'transfers' ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'"
+              >
+                {{ pendingTransfers().length }}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div class="p-3 md:p-4">
+          @if (!tripForm.get('originBranchId')?.value) {
+            <div class="py-16 text-center flex flex-col items-center justify-center gap-2">
+              <i class="pi pi-building text-3xl text-slate-300"></i>
+              <p class="text-sm font-semibold text-slate-600 m-0">Selecciona una planta de origen</p>
+              <p class="text-xs text-slate-400 m-0">Se listarán los traslados y órdenes listos en esa ubicación.</p>
+            </div>
+          } @else if (loadingOperations()) {
+            <div class="py-16 text-center flex flex-col items-center justify-center gap-2 text-slate-500">
+              <i class="pi pi-spin pi-spinner text-2xl text-[#48021C]"></i>
+              <p class="text-xs font-semibold m-0">Cargando operaciones pendientes...</p>
+            </div>
+          } @else if (activeTab === 'transfers') {
+            <app-standard-table
+              [value]="pendingTransfers()"
+              [paginator]="false"
+              dataKey="id"
+              colorScheme="navy"
+              emptyIcon="pi pi-send"
+              emptyMessage="No hay traslados pendientes de envío en esta planta."
+            >
+              <ng-template #header>
+                <tr class="h-11 text-xs bg-[#eddde1] border-b border-[#762f41]/40 text-[#3b141e] font-bold sticky top-0 z-10">
+                  <th class="!text-center border-r border-[#762f41]/35 w-12 !px-1"></th>
+                  <th class="!text-left !pl-3 border-r border-[#762f41]/35 w-[150px] text-[#3b141e]">No. Traslado</th>
+                  <th class="!text-left !pl-3 border-r border-[#762f41]/35 text-[#3b141e]">Sucursal destino</th>
+                  <th class="!text-center border-r border-[#762f41]/35 w-[110px] text-[#3b141e]">Ítems</th>
+                  <th class="!text-right !pr-4 w-[120px] text-[#3b141e]">Fecha</th>
+                </tr>
+              </ng-template>
+              <ng-template #body let-transfer>
+                <tr
+                  (click)="toggleTransfer(transfer)"
+                  [class]="isTransferSelected(transfer) ? 'bg-[#eddde1]/40' : 'odd:bg-[#a65a6b]/[0.05]'"
+                  class="hover:!bg-[#eddde1]/45 transition-colors duration-150 border-b border-[#762f41]/18 last:border-0 text-xs cursor-pointer"
+                >
+                  <td class="!py-2.5 !px-1 text-center border-r border-[#762f41]/18" (click)="$event.stopPropagation()">
+                    <p-checkbox
+                      [binary]="true"
+                      [ngModel]="isTransferSelected(transfer)"
+                      (onChange)="toggleTransfer(transfer)"
+                    />
+                  </td>
+                  <td class="!py-2.5 !pl-3 border-r border-[#762f41]/18 font-bold text-indigo-900">
+                    {{ transfer.transferNumber }}
+                  </td>
+                  <td class="!py-2.5 !pl-3 border-r border-[#762f41]/18 font-semibold text-slate-800">
+                    {{ transfer.destinationBranchName || transfer.destinationBranch?.name }}
+                  </td>
+                  <td class="!py-2.5 text-center border-r border-[#762f41]/18 font-medium text-slate-700">
+                    {{ transfer.items?.length || transfer.totalItems || 0 }}
+                  </td>
+                  <td class="!py-2.5 !pr-4 text-right font-medium text-slate-600">
+                    {{ transfer.createdAt | date: 'dd/MM/yyyy' }}
+                  </td>
+                </tr>
+              </ng-template>
+            </app-standard-table>
+          } @else {
+            <app-standard-table
+              [value]="pendingSales()"
+              [paginator]="false"
+              dataKey="id"
+              colorScheme="navy"
+              emptyIcon="pi pi-shopping-cart"
+              emptyMessage="No hay órdenes de venta listas para despacho en esta planta."
+            >
+              <ng-template #header>
+                <tr class="h-11 text-xs bg-[#eddde1] border-b border-[#762f41]/40 text-[#3b141e] font-bold sticky top-0 z-10">
+                  <th class="!text-center border-r border-[#762f41]/35 w-12 !px-1"></th>
+                  <th class="!text-left !pl-3 border-r border-[#762f41]/35 w-[140px] text-[#3b141e]">Factura</th>
+                  <th class="!text-left !pl-3 border-r border-[#762f41]/35 text-[#3b141e]">Cliente / destino</th>
+                  <th class="!text-right !pr-3 border-r border-[#762f41]/35 w-[130px] text-[#3b141e]">Total</th>
+                  <th class="!text-right !pr-4 w-[120px] text-[#3b141e]">Fecha</th>
+                </tr>
+              </ng-template>
+              <ng-template #body let-sale>
+                <tr
+                  (click)="toggleSale(sale)"
+                  [class]="isSaleSelected(sale) ? 'bg-[#eddde1]/40' : 'odd:bg-[#a65a6b]/[0.05]'"
+                  class="hover:!bg-[#eddde1]/45 transition-colors duration-150 border-b border-[#762f41]/18 last:border-0 text-xs cursor-pointer"
+                >
+                  <td class="!py-2.5 !px-1 text-center border-r border-[#762f41]/18" (click)="$event.stopPropagation()">
+                    <p-checkbox
+                      [binary]="true"
+                      [ngModel]="isSaleSelected(sale)"
+                      (onChange)="toggleSale(sale)"
+                    />
+                  </td>
+                  <td class="!py-2.5 !pl-3 border-r border-[#762f41]/18 font-bold text-emerald-800">
+                    #{{ sale.invoiceNumber }}
+                  </td>
+                  <td class="!py-2.5 !pl-3 border-r border-[#762f41]/18">
+                    <div class="flex flex-col min-w-0">
+                      <span class="font-semibold text-slate-800 truncate">{{ sale.customer?.name || sale.guestCustomer?.name || 'Venta al Público' }}</span>
+                      <span class="text-[10.5px] text-slate-500 truncate">{{ sale.deliveryAddress || sale.customer?.address || 'Entrega en ruta' }}</span>
+                    </div>
+                  </td>
+                  <td class="!py-2.5 !pr-3 text-right font-bold text-slate-900 border-r border-[#762f41]/18 tabular-nums">
+                    {{ sale.total | currency: 'Q ' }}
+                  </td>
+                  <td class="!py-2.5 !pr-4 text-right font-medium text-slate-600">
+                    {{ sale.date | date: 'dd/MM/yyyy' }}
+                  </td>
+                </tr>
+              </ng-template>
+            </app-standard-table>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

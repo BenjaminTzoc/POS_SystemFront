@@ -1,0 +1,27 @@
+<div [ngClass]="widthClass">
+  <div class="relative flex items-center w-full">
+    <p-iconfield class="w-full group">
+      <p-inputicon class="!left-3 flex items-center justify-center text-[#48021C]/70 group-hover:text-[#48021C]">
+        <i class="pi pi-search text-xs"></i>
+      </p-inputicon>
+      <input 
+        type="text" 
+        pInputText 
+        [ngModel]="value"
+        (ngModelChange)="onModelChange($event)"
+        [placeholder]="placeholder"
+        autocomplete="off" 
+        class="w-full text-xs h-9! !pl-8.5 !pr-8 !rounded-xl !bg-rose-50/40 !border-[#48021C]/25 hover:!border-[#48021C]/60 hover:!bg-white focus:!bg-white focus:!border-[#48021C] focus:!ring-2 focus:!ring-[#48021C]/10 !text-[#48021C] font-semibold placeholder:!text-slate-400 placeholder:font-normal transition-all duration-200"
+      />
+      @if (value) {
+        <button 
+          type="button"
+          (click)="clear()"
+          class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-slate-200 hover:bg-[#48021C] hover:text-white text-slate-500 flex items-center justify-center text-[9px] transition-colors cursor-pointer"
+        >
+          <i class="pi pi-times"></i>
+        </button>
+      }
+    </p-iconfield>
+  </div>
+</div>

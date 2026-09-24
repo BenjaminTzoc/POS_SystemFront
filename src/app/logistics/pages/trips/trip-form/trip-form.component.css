@@ -1,0 +1,5 @@
+/* Estilos para el formulario de planificación de viaje */
+:host {
+  display: block;
+  width: 100%;
+}

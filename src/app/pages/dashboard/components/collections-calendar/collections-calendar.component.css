@@ -1,0 +1,394 @@
+:host {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.cal-card {
+  display: inline-flex;
+  flex-direction: column;
+  padding: 1rem;
+  background: linear-gradient(180deg, #f8eef3 0%, #fdf7f9 48%, #ffffff 100%);
+  border: 1px solid #d9b8c8;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 0 rgb(72 2 28 / 0.08);
+  width: fit-content;
+  max-width: 100%;
+}
+
+.cal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.legend::before {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+}
+
+.legend-due::before {
+  background: #d97706;
+}
+
+.legend-overdue::before {
+  background: #e11d48;
+}
+
+.cal-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.kpi-chip {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background: rgb(248 250 252 / 0.7);
+}
+
+.kpi-chip.kpi-teal {
+  border-color: #9ecad6;
+  background: #e8f4f7;
+}
+
+.kpi-chip.kpi-rose {
+  border-color: #fecdd3;
+  background: #fff1f2;
+}
+
+.kpi-chip.kpi-sky {
+  border-color: #bae6fd;
+  background: #f0f9ff;
+}
+
+.kpi-chip.kpi-amber {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.kpi-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #48021C;
+}
+
+.kpi-value {
+  margin-top: 0.1rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #6e3757;
+}
+
+.cal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.cal-picker {
+  width: fit-content;
+  max-width: 100%;
+  flex-shrink: 0;
+}
+
+.cal-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(255 255 255 / 0.7);
+  border-radius: 0.5rem;
+}
+
+.cal-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 2.75rem;
+  border-radius: 0.5rem;
+  padding: 0.15rem 0.1rem 0.2rem;
+  box-sizing: border-box;
+  border: 1.5px solid transparent;
+}
+
+.cal-day.has-due {
+  background: #fffbeb;
+}
+
+.cal-day.has-overdue {
+  background: #fff1f2;
+}
+
+.cal-day.is-today {
+  box-shadow: inset 0 0 0 1.5px #48021C;
+}
+
+.cal-num {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: #334155;
+}
+
+.cal-amt {
+  margin-top: 0.1rem;
+  font-size: 8px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #b45309;
+  line-height: 1;
+}
+
+.cal-day.has-overdue .cal-amt {
+  color: #be123c;
+}
+
+.cal-detail {
+  flex: 0 1 24.65rem;
+  width: 24.65rem;
+  max-width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #d9b8c8;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  align-self: flex-start;
+}
+
+.detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.7rem;
+  background: #f3e4eb;
+  border-bottom: 1px solid #d9b8c8;
+}
+
+.detail-list {
+  max-height: 20.5rem;
+  overflow-y: auto;
+}
+
+.detail-row {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.55rem;
+  padding: 0.55rem 0.7rem;
+  text-align: left;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fff;
+  cursor: pointer;
+}
+
+.detail-row:hover {
+  background: #f8fafc;
+}
+
+.row-main {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.row-meta {
+  margin-top: 0.15rem;
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.row-pay {
+  margin-top: 0.15rem;
+  font-size: 10px;
+  font-weight: 600;
+  color: #48021C;
+}
+
+.row-remind {
+  margin-top: 0.1rem;
+  font-size: 10px;
+  font-weight: 600;
+  color: #48021C;
+}
+
+.row-note {
+  margin-top: 0.2rem;
+  font-size: 10px;
+  font-style: italic;
+  color: #48021C;
+  line-height: 1.35;
+}
+
+.row-side {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+}
+
+.pay-bar {
+  width: 4.25rem;
+  height: 4px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.pay-bar span {
+  display: block;
+  height: 100%;
+  background: #48021C;
+}
+
+.row-actions {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.act-btn {
+  width: 1.55rem;
+  height: 1.55rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.4rem;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+}
+
+.act-btn i {
+  font-size: 0.7rem;
+}
+
+.act-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.act-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.act-pay {
+  color: #48021C;
+  border-color: #e4c9d5;
+  background: #fff1f2;
+}
+
+.detail-empty {
+  padding: 1.1rem 0.85rem;
+  text-align: center;
+}
+
+:host ::ng-deep .cobros-calendar.p-datepicker,
+:host ::ng-deep .cobros-calendar .p-datepicker {
+  width: 22.75rem !important;
+  max-width: 100%;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+:host ::ng-deep .cobros-calendar .p-datepicker-calendar-container,
+:host ::ng-deep .cobros-calendar .p-datepicker-calendar {
+  width: 100% !important;
+}
+
+:host ::ng-deep .cobros-calendar .p-datepicker-calendar {
+  table-layout: fixed !important;
+}
+
+:host ::ng-deep .cobros-calendar .p-datepicker-header {
+  background: transparent !important;
+  border-bottom: 1px solid #d9b8c8 !important;
+  padding: 0 0 0.6rem !important;
+  margin-bottom: 0.4rem !important;
+}
+
+:host ::ng-deep .cobros-calendar .p-datepicker-calendar th {
+  color: #48021C !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  padding: 0.3rem 0 !important;
+  width: 3.15rem !important;
+}
+
+:host ::ng-deep .cobros-calendar .p-datepicker-calendar td {
+  padding: 2px !important;
+  width: 3.15rem !important;
+}
+
+:host ::ng-deep .cobros-calendar .p-datepicker-calendar td > span,
+:host ::ng-deep .cobros-calendar .p-datepicker-day-cell {
+  width: 100% !important;
+  height: auto !important;
+  border-radius: 0.5rem !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+:host ::ng-deep .cobros-calendar .p-datepicker-day-selected,
+:host ::ng-deep .cobros-calendar td span.p-highlight {
+  background: transparent !important;
+  color: inherit !important;
+  box-shadow: none !important;
+}
+
+:host ::ng-deep .cobros-calendar td span.p-highlight .cal-day,
+:host ::ng-deep .cobros-calendar .p-datepicker-day-selected .cal-day {
+  box-shadow: inset 0 0 0 1.5px #6e3757;
+}
+
+:host ::ng-deep .cobros-calendar td span.p-highlight .cal-day.is-today,
+:host ::ng-deep .cobros-calendar .p-datepicker-day-selected .cal-day.is-today {
+  box-shadow: inset 0 0 0 1.5px #48021C;
+}
+
+@media (min-width: 640px) {
+  .cal-kpis {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .cal-body {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .detail-list {
+    max-height: 20.5rem;
+  }
+}

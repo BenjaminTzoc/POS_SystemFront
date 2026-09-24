@@ -1,214 +1,189 @@
 <div class="py-4 px-0 md:px-6 bg-slate-50/50 min-h-screen">
-  <!-- Top Card: Header & Filters -->
-  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-6">
-    <div class="bg-white rounded-2xl border border-slate-300 shadow-sm">
-      <div class="py-2.5 px-4 md:px-6 flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/50 rounded-t-2xl">
-        <h1 class="text-lg md:text-xl font-semibold text-gray-900 tracking-tight leading-none">
-          Cotizaciones
-        </h1>
+  <!-- Top Card: Reusable Page Header -->
+  <app-page-header
+    title="Cotizaciones"
+    icon="pi pi-file-edit"
+    colorScheme="burgundy"
+  >
+    <!-- Botones Superiores de Acción -->
+    <ng-container actions>
+      <app-refresh-button [loading]="loading" (refresh)="loadQuotations()" />
 
-        <div class="flex items-center gap-2">
-          <p-button 
-            [outlined]="true"
-            styleClass="!rounded-lg text-sm! font-semibold !border-[1.5px] !border-[#1e3a5f] !text-[#1e3a5f] !bg-white hover:!bg-[#1e3a5f] hover:!text-white inline-flex items-center gap-1.5 shadow-sm transition-all"
-            [loading]="loading"
-            (onClick)="loadQuotations()"
-            pTooltip="Actualizar lista de cotizaciones"
-            tooltipPosition="bottom"
-          >
-            <svg lucideRefreshCw class="w-4 h-4 stroke-[2.2]" [class.animate-spin]="loading"></svg>
-            <span>Actualizar</span>
-          </p-button>
-        </div>
+      <app-primary-button 
+        label="Nueva Cotización" 
+        icon="pi pi-plus"
+        (clicked)="goToNewQuotation()" 
+      />
+    </ng-container>
+
+    <!-- Filtros Inferiores -->
+    <ng-container filters>
+      <!-- Status Filter -->
+      <div class="flex flex-col gap-1 w-full md:w-auto">
+        <label class="text-xs font-semibold text-[#48021C]">Estado</label>
+        <p-select
+          [options]="statusOptions"
+          [(ngModel)]="selectedStatus"
+          optionLabel="label"
+          optionValue="value"
+          [showClear]="true"
+          (onChange)="loadQuotations()"
+          placeholder="Todos los estados"
+          appendTo="body"
+          size="small"
+          class="w-full md:w-auto"
+          styleClass="!rounded-lg !border-[#9f6587]/35 focus-within:!border-[#9f6587] focus-within:!ring-2 focus-within:!ring-[#9f6587]/20 w-full md:w-56 text-xs font-medium"
+        />
       </div>
 
-      <!-- Card Body: Status and Branch Filters -->
-      <div class="p-4 md:px-6 flex flex-col md:flex-row items-stretch md:items-center gap-3">
+      <!-- Branch Filter -->
+      @if (isSuperAdmin()) {
         <div class="flex flex-col gap-1 w-full md:w-auto">
-          <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Estado</label>
+          <label class="text-xs font-semibold text-[#48021C]">Sucursal</label>
           <p-select
-            [options]="statusOptions"
-            [(ngModel)]="selectedStatus"
-            optionLabel="label"
-            optionValue="value"
+            [options]="branches()"
+            [(ngModel)]="selectedBranch"
+            optionLabel="name"
+            optionValue="id"
             [showClear]="true"
             (onChange)="loadQuotations()"
-            placeholder="Todos los estados"
+            placeholder="Todas las sucursales"
             appendTo="body"
-            class="!rounded-xl shadow-none w-full md:w-auto"
-            styleClass="!rounded-xl border-slate-200 w-full md:w-56 text-xs h-9!"
+            size="small"
+            class="w-full md:w-auto"
+            styleClass="!rounded-lg !border-[#9f6587]/35 focus-within:!border-[#9f6587] focus-within:!ring-2 focus-within:!ring-[#9f6587]/20 w-full md:w-60 text-xs font-medium"
           />
         </div>
+      }
 
-        @if (isSuperAdmin()) {
-          <div class="flex flex-col gap-1 w-full md:w-auto">
-            <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Sucursal</label>
-            <p-select
-              [options]="branches()"
-              [(ngModel)]="selectedBranch"
-              optionLabel="name"
-              optionValue="id"
-              [showClear]="true"
-              (onChange)="loadQuotations()"
-              placeholder="Todas las sucursales"
-              appendTo="body"
-              class="!rounded-xl shadow-none w-full md:w-auto"
-              styleClass="!rounded-xl border-slate-200 w-full md:w-[16rem] text-xs h-9!"
-            />
-          </div>
-        }
+      <!-- Search Input -->
+      <div class="flex flex-col gap-1 w-full md:w-80">
+        <label class="text-xs font-semibold text-[#48021C]">Búsqueda rápida</label>
+        <p-iconfield class="w-full">
+          <p-inputicon class="pi pi-search text-xs text-[#9f6587]" />
+          <input 
+            [(ngModel)]="searchTerm"
+            (input)="loadQuotations()"
+            type="text" 
+            pInputText 
+            pSize="small"
+            placeholder="Buscar por No. correlativo o cliente..."
+            autocomplete="off"
+            class="w-full !rounded-lg font-medium p-inputtext-sm !border-[#9f6587]/35 focus:!border-[#9f6587] focus:!ring-2 focus:!ring-[#9f6587]/20 text-xs"
+          />
+        </p-iconfield>
       </div>
-    </div>
-  </div>
+
+      <!-- Reset Filters Button -->
+      @if (selectedStatus || selectedBranch || searchTerm) {
+        <div class="flex items-end">
+          <p-button
+            icon="pi pi-filter-slash"
+            [outlined]="true"
+            severity="secondary"
+            size="small"
+            (onClick)="resetFilters()"
+            pTooltip="Limpiar todos los filtros"
+            tooltipPosition="top"
+            styleClass="!h-8 !px-2.5 text-xs text-slate-600 hover:text-[#48021C] border-[#9f6587]/35 hover:bg-[#9f6587]/15 !rounded-lg"
+          />
+        </div>
+      }
+    </ng-container>
+  </app-page-header>
 
   <!-- Table Card: List of Quotations -->
   <div class="max-w-[1700px] mx-auto px-4 md:px-0">
     
-    <!-- DESKTOP VIEW CARD -->
-    <div class="hidden lg:block bg-white rounded-2xl border border-slate-300 overflow-hidden shadow-sm">
-      <!-- Card Header: Title & Actions (Buscador y Botón Nueva Cotización alineados a la derecha) -->
-      <div class="py-3 px-4 md:px-6 flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-200 bg-slate-50/50">
-        <div class="flex items-center gap-2.5">
-          <h2 class="text-base font-semibold text-gray-900 tracking-tight leading-none m-0">
-            Listado de Cotizaciones
-          </h2>
-          <span class="px-2.5 py-0.5 bg-slate-200/80 text-slate-700 text-xs font-semibold rounded-full">
-            {{ quotations.length }}
-          </span>
-        </div>
-
-        <div class="flex items-center gap-2 w-full md:w-auto justify-end">
-          <div class="flex-1 md:w-72">
-            <p-iconfield>
-              <p-inputicon class="pi pi-search" />
-              <input 
-                [(ngModel)]="searchTerm"
-                (input)="loadQuotations()"
-                type="text" 
-                pInputText 
-                placeholder="Buscar por No. o Cliente..."
-                autocomplete="off"
-                class="!rounded-xl border-slate-200 text-xs h-9!"
-                fluid
-              />
-            </p-iconfield>
-          </div>
-
-          <p-button 
-            styleClass="!rounded-lg text-sm! !bg-[#48021C] !border-[#48021C] !text-white hover:!bg-[#350114] inline-flex items-center gap-1.5 shadow-sm"
-            (onClick)="goToNewQuotation()"
-          >
-            <svg lucideCirclePlus class="w-4 h-4"></svg>
-            <span>Nueva Cotización</span>
-          </p-button>
-        </div>
-      </div>
-
-      <p-table
+    <!-- DESKTOP VIEW (Tabla Estándar) -->
+    <div class="hidden lg:block">
+      <app-standard-table
+        #quotationsDesktopTable
         [value]="quotations"
         [loading]="loading"
         [paginator]="true"
         [rows]="10"
         [rowsPerPageOptions]="[10, 20, 50, 100]"
         dataKey="id"
-        [expandedRowKeys]="expandedRows()"
-        (expandedRowKeysChange)="expandedRows.set($event)"
-        [rowExpandMode]="'single'"
-        [stripedRows]="true"
-        [rowHover]="true"
-        styleClass="p-datatable-modern"
+        colorScheme="navy"
+        emptyIcon="pi pi-file-edit"
+        emptyMessage="No se encontraron cotizaciones. Prueba ajustando los filtros de búsqueda o crea una nueva."
       >
-        <ng-template pTemplate="header">
-          <tr class="h-10! text-xs! bg-slate-50 border-b border-slate-200">
-            <th style="width: 3.5rem" class="!px-3 !py-2 text-center text-slate-500 font-semibold border-r border-slate-200"></th>
-            <th class="tracking-wider text-slate-500 font-semibold !px-4 !py-2 w-[130px] border-r border-slate-200">Estado</th>
-            <th class="tracking-wider text-slate-500 font-semibold !px-4 !py-2 w-[145px] border-r border-slate-200">Cotización</th>
-            <th class="tracking-wider text-slate-500 font-semibold !px-4 !py-2 border-r border-slate-200">Cliente / Sucursal</th>
-            <th class="tracking-wider text-slate-500 font-semibold !px-4 !py-2 w-[130px] border-r border-slate-200">Vigencia</th>
-            <th class="tracking-wider text-slate-500 font-semibold !px-4 !py-2 text-right! w-[170px] border-r border-slate-200">Total</th>
-            <th class="tracking-wider text-slate-500 font-semibold !px-4 !py-2 text-right w-[350px]">Acciones</th>
+        <ng-template #header>
+          <tr class="h-11 text-xs bg-[#eddde1] border-b border-[#762f41]/40 text-[#3b141e] font-bold sticky top-0 z-10">
+            <th class="!text-center border-r border-[#762f41]/35 w-10 !px-0.5"></th>
+            <th class="!text-left !pl-3 border-r border-[#762f41]/35 w-[130px] text-[#3b141e]">Estado</th>
+            <th class="!text-left !pl-3 border-r border-[#762f41]/35 w-[140px] text-[#3b141e]">Cotización</th>
+            <th class="!text-left !pl-3 border-r border-[#762f41]/35 w-[200px] max-w-[200px] text-[#3b141e]">Cliente / Sucursal</th>
+            <th class="!text-left !pl-3 border-r border-[#762f41]/35 w-[125px] text-[#3b141e]">Vigencia</th>
+            <th class="!text-right !pr-4 border-r border-[#762f41]/35 w-[135px] text-[#3b141e]">Total</th>
+            <th class="!text-right !pr-4 w-[350px] text-[#3b141e]">Acciones</th>
           </tr>
         </ng-template>
 
-        <ng-template pTemplate="body" let-quotation let-expanded="expanded" let-rowIndex="rowIndex">
+        <ng-template #body let-quotation let-expanded="expanded">
           <tr 
             [ngClass]="{ 
-              'bg-slate-100/60': expanded,
-              'bg-slate-50/60': !expanded && rowIndex % 2 === 1,
-              'bg-white': !expanded && rowIndex % 2 === 0
+              'bg-[#eddde1]/25': expanded,
+              'odd:bg-[#a65a6b]/[0.05]': !expanded
             }" 
-            class="hover:bg-slate-100/80 transition-colors border-b border-slate-200 text-sm cursor-pointer"
+            (click)="toggleRowExpansion(quotation, quotationsDesktopTable, $event)"
+            class="hover:!bg-[#eddde1]/45 transition-colors duration-150 border-b border-[#762f41]/18 last:border-0 text-xs cursor-pointer"
           >
             <!-- 0. Expander Button -->
-            <td class="!px-3 !py-2.5 text-center border-r border-slate-200">
-              <p-button
+            <td class="!text-center !py-2.5 border-r border-[#762f41]/18 w-10 !px-0.5">
+              <button
                 type="button"
-                pRipple
-                [pRowToggler]="quotation"
-                [text]="true"
-                severity="secondary"
-                [rounded]="true"
+                pButton
                 [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
-                styleClass="!w-7 !h-7 !p-0"
+                class="p-button-text p-button-rounded !w-7 !h-7 !p-0 hover:!bg-[#eddde1]/60 !text-[#762f41] inline-flex items-center justify-center cursor-pointer"
+                (click)="toggleRowExpansion(quotation, quotationsDesktopTable, $event)"
+                [pTooltip]="expanded ? 'Ocultar detalles' : 'Ver productos'"
+              ></button>
+            </td>
+
+            <!-- 1. Estado (app-status-badge con color secondary/slate para CANCELLED) -->
+            <td class="!py-2.5 !pl-3 border-r border-[#762f41]/18 w-[130px]">
+              <app-status-badge
+                [severity]="getSeverity(quotation.status)"
+                [value]="getStatusLabel(quotation.status)"
+                size="xs"
               />
             </td>
 
-            <!-- 1. Estado -->
-            <td class="!px-4 !py-2.5 border-r border-slate-200">
-              <span
-                class="inline-flex items-center px-2.5 py-1 text-[11px] font-semibold rounded-md border"
-                [ngClass]="{
-                  'bg-amber-50/70 text-amber-800 border-amber-300/60': quotation.status === 'PENDING',
-                  'bg-emerald-50/70 text-emerald-800 border-emerald-300/60': quotation.status === 'CONVERTED',
-                  'bg-rose-50/70 text-rose-800 border-rose-300/60': quotation.status === 'EXPIRED',
-                  'bg-slate-50/70 text-slate-800 border-slate-300/60': quotation.status === 'CANCELLED'
-                }"
-              >
-                <span class="w-1.5 h-1.5 rounded-full mr-2"
-                  [ngClass]="{
-                    'bg-amber-600': quotation.status === 'PENDING',
-                    'bg-emerald-600': quotation.status === 'CONVERTED',
-                    'bg-rose-600': quotation.status === 'EXPIRED',
-                    'bg-slate-600': quotation.status === 'CANCELLED'
-                  }"
-                ></span>
-                {{ getStatusLabel(quotation.status) }}
-              </span>
-            </td>
-
             <!-- 2. Cotización -->
-            <td class="!px-4 !py-2.5 border-r border-slate-200">
-              <div class="flex flex-col gap-1 items-start">
-                <span class="px-2 py-0.5 bg-[#93c5fd]/50 text-[#172554] rounded-md text-[12px] font-semibold border border-[#2563eb]/60">
+            <td class="!py-2.5 !pl-3 border-r border-[#762f41]/18 w-[140px]">
+              <div class="flex flex-col gap-0.5 items-start">
+                <span class="px-1.5 py-0.5 bg-[#93c5fd]/50 text-[#172554] rounded-md text-[11px] font-bold border border-[#2563eb]/60">
                   {{ quotation.correlative }}
                 </span>
-                <span class="text-[11px] font-medium text-slate-500 leading-tight">
+                <span class="text-[10.5px] font-medium text-slate-500 leading-tight">
                   {{ quotation.createdAt | date: 'dd/MM/yyyy' }}
                 </span>
               </div>
             </td>
 
             <!-- 3. Cliente / Sucursal -->
-            <td class="!px-4 !py-2.5 text-left border-r border-slate-200">
-              <div class="flex flex-col">
-                <span class="font-normal capitalize text-slate-800 leading-tight">
+            <td class="!py-2.5 !pl-3 text-left border-r border-[#762f41]/18 w-[200px] max-w-[200px]">
+              <div class="flex flex-col min-w-0">
+                <span class="font-semibold capitalize text-slate-800 leading-tight truncate" [pTooltip]="quotation.customerName || quotation.guestCustomer?.name || 'Consumidor Final'" tooltipPosition="top">
                   {{ quotation.customerName || quotation.guestCustomer?.name || 'Consumidor Final' }}
                 </span>
-                <span class="text-xs font-medium text-slate-500 mt-0.5">
+                <span class="text-[11px] font-medium text-slate-500 mt-0.5 truncate">
                   {{ quotation.branchName || 'Sin sucursal' }}
                 </span>
               </div>
             </td>
 
             <!-- 4. Vigencia -->
-            <td class="!px-4 !py-2.5 text-left border-r border-slate-200">
+            <td class="!py-2.5 !pl-3 text-left border-r border-[#762f41]/18">
               @let validity = getValidityInfo(quotation.validUntil);
               <div class="flex flex-col">
-                <span class="font-normal text-slate-800 leading-tight">
+                <span class="font-semibold text-slate-800 leading-tight">
                   {{ quotation.validUntil | date: 'dd/MM/yyyy' }}
                 </span>
                 <span 
-                  class="text-[11px] mt-0.5"
+                  class="text-[10.5px] mt-0.5"
                   [ngClass]="validity.isExpired ? 'text-rose-600 font-semibold' : 'text-slate-500 font-medium'"
                 >
                   {{ validity.text }}
@@ -217,83 +192,99 @@
             </td>
 
             <!-- 5. Total -->
-            <td class="!px-4 !py-2.5 text-right! border-r border-slate-200">
+            <td class="!py-2.5 !pr-4 text-right border-r border-[#762f41]/18">
               <div class="flex flex-col items-end">
-                <span class="font-[600] text-slate-900 leading-tight text-sm">
+                <span class="font-bold text-slate-900 leading-tight text-xs tabular-nums">
                   {{ quotation.total | currency: 'Q ' }}
                 </span>
-                <span class="text-[11px] font-medium text-slate-500 mt-0.5">
-                  {{ quotation.applyTax ? ('IVA incluido: ' + (quotation.taxAmount | currency:'Q ')) : 'Sin IVA' }}
+                <span class="text-[10px] font-medium text-slate-500 mt-0.5">
+                  {{ quotation.applyTax ? ('IVA: ' + (quotation.taxAmount | currency:'Q ')) : 'Sin IVA' }}
                 </span>
               </div>
             </td>
 
             <!-- 6. Acciones -->
-            <td class="!px-4 !py-2.5 text-right">
-              <div class="flex items-center justify-end gap-1.5">
-                <p-button 
-                  [outlined]="true" 
-                  (onClick)="onEditQuotation(quotation.id)" 
-                  styleClass="!text-[13px] !py-1 !px-2.5 !rounded-lg font-semibold shadow-none !border-[1.5px] !border-[#1e3a5f] !text-[#1e3a5f] hover:!bg-[#1e3a5f] hover:!text-white hover:!border-[#1e3a5f] transition-all inline-flex items-center gap-1.5"
-                >
-                  <svg lucideSquarePen class="w-3.5 h-3.5 stroke-[2.2]"></svg>
-                  <span>Editar</span>
-                </p-button>
-                <p-button 
-                  [outlined]="true" 
-                  (onClick)="showDetails(quotation)" 
-                  styleClass="!text-[13px] !py-1 !px-2.5 !rounded-lg font-semibold shadow-none !border-[1.5px] !border-[#1e3a5f] !text-[#1e3a5f] hover:!bg-[#1e3a5f] hover:!text-white hover:!border-[#1e3a5f] transition-all inline-flex items-center gap-1.5"
-                >
-                  <svg lucideFileText class="w-3.5 h-3.5 stroke-[2.2]"></svg>
-                  <span>Enviar</span>
-                </p-button>
+            <td class="!pr-4 !text-right !py-2.5">
+              <div class="flex items-center justify-end gap-1.5" (click)="$event.stopPropagation()">
+                <!-- Ver (Anulada): Tono slate neutro -->
+                @if (quotation.status === 'CANCELLED') {
+                  <button
+                    type="button"
+                    (click)="showDetails(quotation)"
+                    class="px-2 py-1 rounded-md text-[11px] font-semibold inline-flex items-center gap-1 border border-slate-400/50 bg-slate-100 text-slate-700 hover:bg-slate-200 hover:border-slate-500 hover:text-slate-900 transition-all cursor-pointer shadow-2xs active:scale-95"
+                    pTooltip="Ver detalle histórico (Anulada)"
+                    tooltipPosition="top"
+                  >
+                    <i class="pi pi-eye text-[9px]"></i>
+                    <span>Ver</span>
+                  </button>
+                } @else {
+                  <!-- Enviar: Tono institucional guinda/vino (#48021C / #9f6587) -->
+                  <button
+                    type="button"
+                    (click)="showDetails(quotation)"
+                    class="px-2 py-1 rounded-md text-[11px] font-semibold inline-flex items-center gap-1 border border-[#48021C]/45 bg-[#48021C]/[0.08] text-[#48021C] hover:bg-[#48021C]/[0.18] hover:border-[#48021C]/85 hover:text-[#350114] transition-all cursor-pointer shadow-2xs active:scale-95"
+                    pTooltip="Ver y Enviar documento"
+                    tooltipPosition="top"
+                  >
+                    <i class="pi pi-send text-[9px]"></i>
+                    <span>Enviar</span>
+                  </button>
+                }
+
+                <!-- Editar: Solo para PENDING o EXPIRED (para renovar/ajustar) -->
+                @if (quotation.status === 'PENDING' || quotation.status === 'EXPIRED') {
+                  <button
+                    type="button"
+                    (click)="onEditQuotation(quotation.id)"
+                    class="px-2 py-1 rounded-md text-[11px] font-semibold inline-flex items-center gap-1 border border-amber-600/45 bg-amber-500/[0.08] text-amber-700 hover:bg-amber-500/[0.18] hover:border-amber-600/85 hover:text-amber-800 transition-all cursor-pointer shadow-2xs active:scale-95"
+                    pTooltip="Modificar cotización"
+                    tooltipPosition="top"
+                  >
+                    <i class="pi pi-pencil text-[9px]"></i>
+                    <span>Editar</span>
+                  </button>
+                }
+
+                <!-- Consolidar & Anular: Exclusivo de PENDING -->
                 @if (quotation.status === 'PENDING') {
-                  <p-button 
-                    [outlined]="true" 
-                    (onClick)="confirmConvert(quotation)" 
-                    styleClass="!text-[13px] !py-1 !px-2.5 !rounded-lg font-semibold shadow-none !border-[1.5px] !border-[#15803d] !text-[#15803d] hover:!bg-[#15803d] hover:!text-white hover:!border-[#15803d] transition-all inline-flex items-center gap-1.5"
+                  <button
+                    type="button"
+                    (click)="confirmConvert(quotation)"
+                    class="px-2 py-1 rounded-md text-[11px] font-semibold inline-flex items-center gap-1 border border-emerald-500/45 bg-emerald-500/[0.08] text-emerald-600 hover:bg-emerald-500/[0.18] hover:border-emerald-500/85 hover:text-emerald-700 transition-all cursor-pointer shadow-2xs active:scale-95"
+                    pTooltip="Convertir a Orden de Venta"
+                    tooltipPosition="top"
                   >
-                    <svg lucideShoppingCart class="w-3.5 h-3.5 stroke-[2.2]"></svg>
-                    <span>Consolidar</span>
-                  </p-button>
-                  <p-button 
-                    [outlined]="true" 
-                    (onClick)="confirmCancel(quotation)" 
-                    styleClass="!text-[13px] !py-1 !px-2.5 !rounded-lg font-semibold shadow-none !border-[1.5px] !border-[#e11d48] !text-[#e11d48] hover:!bg-[#e11d48] hover:!text-white hover:!border-[#e11d48] transition-all inline-flex items-center gap-1.5"
+                    <i class="pi pi-shopping-cart text-[9px]"></i>
+                    <span>Convertir a orden</span>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="confirmCancel(quotation)"
+                    class="px-2 py-1 rounded-md text-[11px] font-semibold inline-flex items-center gap-1 border border-rose-500/45 bg-rose-500/[0.08] text-rose-600 hover:bg-rose-500/[0.18] hover:border-rose-500/85 hover:text-rose-700 transition-all cursor-pointer shadow-2xs active:scale-95"
+                    pTooltip="Anular cotización"
+                    tooltipPosition="top"
                   >
-                    <svg lucideBan class="w-3.5 h-3.5 stroke-[2.2]"></svg>
+                    <i class="pi pi-trash text-[9px]"></i>
                     <span>Anular</span>
-                  </p-button>
+                  </button>
                 }
               </div>
             </td>
           </tr>
         </ng-template>
 
+        <!-- Expanded Row Template -->
         <ng-template #expandedrow let-quotation>
           <tr>
-            <td colspan="7" class="!p-0 border-none bg-transparent">
-              <div class="p-6 bg-slate-50/50 border-t border-slate-100">
+            <td colspan="7" class="!p-0 border-b border-[#7c5aac]/25 bg-transparent">
+              <div class="px-4 sm:px-7 py-4 bg-[#7c5aac]/[0.06] border-l-4 border-[#7c5aac]">
                 <ng-container *ngTemplateOutlet="expandedDetails; context: { $implicit: quotation }"></ng-container>
               </div>
             </td>
           </tr>
         </ng-template>
-
-        <ng-template pTemplate="emptymessage">
-          <tr>
-            <td colspan="7" class="text-center !py-32">
-              <div class="flex flex-col items-center justify-center gap-3 w-full h-full">
-                <i class="pi pi-file-edit text-[#95abce]" style="font-size: 4rem"></i>
-                <div class="flex flex-col items-center gap-1">
-                  <p class="text-[#627ca7] font-bold text-base">No se encontraron cotizaciones.</p>
-                  <p class="text-[#627ca7] text-xs font-medium">Prueba ajustando los filtros de búsqueda o crea una nueva.</p>
-                </div>
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
+      </app-standard-table>
     </div>
 
     <!-- MOBILE VIEW -->
@@ -359,25 +350,11 @@
                           {{ quotation.customerName || quotation.guestCustomer?.name || 'Venta al Público' }}
                         </h3>
                       </div>
-                      <span
-                        class="inline-flex items-center px-2.5 py-1 text-[10px] font-semibold rounded-md border"
-                        [ngClass]="{
-                          'bg-amber-50/70 text-amber-800 border-amber-300/60': quotation.status === 'PENDING',
-                          'bg-emerald-50/70 text-emerald-800 border-emerald-300/60': quotation.status === 'CONVERTED',
-                          'bg-rose-50/70 text-rose-800 border-rose-300/60': quotation.status === 'EXPIRED',
-                          'bg-slate-50/70 text-slate-800 border-slate-300/60': quotation.status === 'CANCELLED',
-                        }"
-                      >
-                        <span class="w-1.5 h-1.5 rounded-full mr-1.5"
-                          [ngClass]="{
-                            'bg-amber-600': quotation.status === 'PENDING',
-                            'bg-emerald-600': quotation.status === 'CONVERTED',
-                            'bg-rose-600': quotation.status === 'EXPIRED',
-                            'bg-slate-600': quotation.status === 'CANCELLED'
-                          }"
-                        ></span>
-                        {{ getStatusLabel(quotation.status) }}
-                      </span>
+                      <app-status-badge
+                        [severity]="getSeverity(quotation.status)"
+                        [value]="getStatusLabel(quotation.status)"
+                        size="xs"
+                      />
                     </div>
                     <div class="flex items-center gap-4 mt-2">
                       <div>
@@ -404,22 +381,37 @@
                 </div>
 
                 <div class="bg-slate-50/50 border-t border-slate-100 p-2.5 px-3 flex items-center justify-end gap-2 flex-wrap">
-                  <p-button 
-                    [outlined]="true" 
-                    (onClick)="onEditQuotation(quotation.id)" 
-                    styleClass="!text-[12px] !py-1 !px-2.5 !rounded-lg font-semibold shadow-none !border-[1.5px] !border-[#1e3a5f] !text-[#1e3a5f] hover:!bg-[#1e3a5f] hover:!text-white hover:!border-[#1e3a5f] transition-all inline-flex items-center gap-1.5"
-                  >
-                    <svg lucideSquarePen class="w-3.5 h-3.5 stroke-[2.2]"></svg>
-                    <span>Editar</span>
-                  </p-button>
-                  <p-button 
-                    [outlined]="true" 
-                    (onClick)="showDetails(quotation)" 
-                    styleClass="!text-[12px] !py-1 !px-2.5 !rounded-lg font-semibold shadow-none !border-[1.5px] !border-[#1e3a5f] !text-[#1e3a5f] hover:!bg-[#1e3a5f] hover:!text-white hover:!border-[#1e3a5f] transition-all inline-flex items-center gap-1.5"
-                  >
-                    <svg lucideFileText class="w-3.5 h-3.5 stroke-[2.2]"></svg>
-                    <span>Enviar</span>
-                  </p-button>
+                  @if (quotation.status === 'CANCELLED') {
+                    <p-button 
+                      [outlined]="true" 
+                      (onClick)="showDetails(quotation)" 
+                      styleClass="!text-[12px] !py-1 !px-2.5 !rounded-lg font-semibold shadow-none !border-[1.5px] !border-slate-400 !text-slate-700 hover:!bg-slate-200 transition-all inline-flex items-center gap-1.5"
+                    >
+                      <i class="pi pi-eye text-[11px]"></i>
+                      <span>Ver</span>
+                    </p-button>
+                  } @else {
+                    <p-button 
+                      [outlined]="true" 
+                      (onClick)="showDetails(quotation)" 
+                      styleClass="!text-[12px] !py-1 !px-2.5 !rounded-lg font-semibold shadow-none !border-[1.5px] !border-[#48021C] !text-[#48021C] hover:!bg-[#48021C] hover:!text-white transition-all inline-flex items-center gap-1.5"
+                    >
+                      <i class="pi pi-send text-[11px]"></i>
+                      <span>Enviar</span>
+                    </p-button>
+                  }
+
+                  @if (quotation.status === 'PENDING' || quotation.status === 'EXPIRED') {
+                    <p-button 
+                      [outlined]="true" 
+                      (onClick)="onEditQuotation(quotation.id)" 
+                      styleClass="!text-[12px] !py-1 !px-2.5 !rounded-lg font-semibold shadow-none !border-[1.5px] !border-amber-600 !text-amber-700 hover:!bg-amber-600 hover:!text-white hover:!border-amber-600 transition-all inline-flex items-center gap-1.5"
+                    >
+                      <svg lucideSquarePen class="w-3.5 h-3.5 stroke-[2.2]"></svg>
+                      <span>Editar</span>
+                    </p-button>
+                  }
+
                   @if (quotation.status === 'PENDING') {
                     <p-button 
                       [outlined]="true" 
@@ -427,7 +419,7 @@
                       styleClass="!text-[12px] !py-1 !px-2.5 !rounded-lg font-semibold shadow-none !border-[1.5px] !border-[#15803d] !text-[#15803d] hover:!bg-[#15803d] hover:!text-white hover:!border-[#15803d] transition-all inline-flex items-center gap-1.5"
                     >
                       <svg lucideShoppingCart class="w-3.5 h-3.5 stroke-[2.2]"></svg>
-                      <span>Consolidar</span>
+                      <span>Convertir a orden</span>
                     </p-button>
                     <p-button 
                       [outlined]="true" 
@@ -599,20 +591,21 @@
 <!-- MODAL DE CONFIRMACIÓN: CONSOLIDAR COTIZACIÓN A ORDEN DE VENTA -->
 <app-confirmation-modal
   [(visible)]="showConvertConfirmDialog"
-  header="Confirmar consolidación"
-  title="¿Estás seguro de consolidar esta cotización en una Orden de Venta?"
+  header="Convertir a orden"
+  title="¿Convertir esta cotización en una orden de venta?"
   type="success"
   icon="pi pi-shopping-cart"
-  confirmLabel="Consolidar"
+  confirmLabel="Convertir a orden"
   confirmIcon="pi pi-check-circle"
   [loading]="isConverting"
-  note="Esta acción creará una orden de venta y actualizará el estado de la cotización a convertida."
+  note="La orden quedará pendiente. Si es un pedido a futuro, márcala como preorden en la venta."
   (onConfirm)="executeConvertToSale()"
 >
   <p class="text-xs md:text-sm text-slate-600 font-medium mb-3 leading-relaxed">
     Se generará una orden de venta para el cliente
     <strong class="text-slate-800 font-bold">"{{ quotationToConvert?.customerName || quotationToConvert?.guestCustomer?.name || 'Venta al Público' }}"</strong>
     a partir de la cotización <strong class="text-slate-800 font-bold">#{{ quotationToConvert?.correlative }}</strong>.
+    Luego podrás marcarla como preorden si la entrega es a futuro.
   </p>
 </app-confirmation-modal>
 

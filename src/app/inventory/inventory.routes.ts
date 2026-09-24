@@ -91,4 +91,11 @@ export const INVENTORY_ROUTES: Routes = [
         (m) => m.TransferFormComponent,
       ),
   },
+  {
+    path: 'edit-transfer/:id',
+    loadComponent: () =>
+      import('./inventory-transfers/transfer-form/transfer-form.component').then(
+        (m) => m.TransferFormComponent,
+      ),
+  },
 ];

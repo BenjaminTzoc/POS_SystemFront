@@ -12,11 +12,36 @@
   (onHide)="onClose()"
 >
   <div class="preview-content flex flex-col h-full min-h-0 max-h-[88vh]">
-    <!-- Header with Title and Close Button (Compacto y sin icono) -->
-    <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 flex-shrink-0">
-      <h3 class="text-sm font-semibold text-slate-800 tracking-tight leading-none">
-        Comprobante de Venta <span *ngIf="sale?.invoiceNumber" class="text-spiced-purple text-xs font-bold">#{{ sale.invoiceNumber }}</span>
-      </h3>
+    <!-- Header with Title, Tabs and Close Button -->
+    <div class="flex items-center justify-between pb-3 mb-2 border-b border-slate-100 flex-shrink-0 gap-3">
+      <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+        <h3 class="text-sm font-semibold text-slate-800 tracking-tight leading-none m-0">
+          Comprobante de Venta <span *ngIf="sale?.invoiceNumber" class="text-spiced-purple text-xs font-bold">#{{ sale.invoiceNumber }}</span>
+        </h3>
+
+        <!-- Pestañas Institucionales: Factura vs Recibos de Abono -->
+        <div class="inline-flex p-0.5 bg-[#48021C]/10 rounded-lg border border-[#48021C]/20 text-xs">
+          <button 
+            type="button" 
+            (click)="activeTab = 'invoice'" 
+            [class]="activeTab === 'invoice' ? 'bg-[#48021C] text-white font-semibold shadow-xs' : 'text-[#48021C]/80 hover:text-[#48021C] hover:bg-[#48021C]/10'" 
+            class="px-2.5 py-1 rounded-md text-xs transition-all cursor-pointer flex items-center gap-1.5"
+          >
+            <i class="pi pi-file text-[10px]"></i>
+            <span>Factura</span>
+          </button>
+          <button 
+            type="button" 
+            (click)="activeTab = 'receipts'" 
+            [class]="activeTab === 'receipts' ? 'bg-[#48021C] text-white font-semibold shadow-xs' : 'text-[#48021C]/80 hover:text-[#48021C] hover:bg-[#48021C]/10'" 
+            class="px-2.5 py-1 rounded-md text-xs transition-all cursor-pointer flex items-center gap-1.5"
+          >
+            <i class="pi pi-receipt text-[10px]"></i>
+            <span>Recibo de Abonos</span>
+          </button>
+        </div>
+      </div>
+
       <button 
         type="button" 
         (click)="onClose()"
@@ -27,12 +52,298 @@
       </button>
     </div>
 
-    <!-- The actual ticket template that will be captured (ÚNICO SCROLL) -->
-    <div class="ticket-wrapper flex-1 min-h-0 overflow-y-auto">
+    <!-- PESTAÑA 1: FACTURA (TICKET ORIGINAL) -->
+    <div *ngIf="activeTab === 'invoice'" class="ticket-wrapper flex-1 min-h-0 overflow-y-auto">
       <app-ticket-template *ngIf="sale" [sale]="sale"></app-ticket-template>
     </div>
 
-    <!-- Actions Footer Grid (Fijo Abajo) -->
+    <!-- PESTAÑA 2: RECIBOS DE ABONO -->
+    <div *ngIf="activeTab === 'receipts'" class="ticket-wrapper flex-1 min-h-0 overflow-y-auto">
+      @if (loadingReceipts()) {
+        <div class="flex flex-col items-center justify-center py-16 gap-2 text-slate-400">
+          <i class="pi pi-spin pi-spinner text-2xl text-[#48021C]"></i>
+          <span class="text-xs font-semibold text-slate-600">Cargando recibo de abonos...</span>
+        </div>
+      } @else if (selectedReceipt()) {
+        <!-- VISTA DE UN RECIBO SELECCIONADO (FORMATO COMPROBANTE HORIZONTAL PRESERVADO) -->
+        @let r = selectedReceipt()!;
+        <div class="flex flex-col items-center gap-3 w-full">
+          <!-- Barra superior de navegación para volver -->
+          <div class="flex items-center justify-between w-[210mm] max-w-full bg-white p-2.5 px-3 rounded-xl border border-slate-200 shadow-2xs">
+            <button 
+              type="button" 
+              (click)="clearSelectedReceipt()"
+              class="px-2.5 py-1 text-xs font-semibold text-[#48021C] bg-[#48021C]/10 hover:bg-[#48021C]/20 border border-[#48021C]/30 rounded-lg transition-all cursor-pointer inline-flex items-center gap-1.5"
+            >
+              <i class="pi pi-arrow-left text-[10px]"></i>
+              <span>Volver a la lista / Recibo de Abonos</span>
+            </button>
+
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                (click)="printReceipt()"
+                class="px-2.5 py-1 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <i class="pi pi-print text-[11px]"></i>
+                <span>Imprimir Recibo Individual</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Documento Formato Horizontal Moderno y Corporativo (PRESERVADO) -->
+          <div id="printable-receipt-area" class="horizontal-voucher">
+            
+            <!-- HEADER HORIZONTAL CON LOGO Y BADGE -->
+            <div class="hv-header">
+              <div class="hv-logo-brand">
+                <img [src]="companyInfo.logo" class="hv-logo" alt="Logo" />
+                <div class="hv-company-info">
+                  <span class="hv-company-sub" *ngIf="companyInfo.nit">NIT: {{ companyInfo.nit }} • Tel: {{ companyInfo.phone }}</span>
+                  <span class="hv-company-sub" *ngIf="receiptsData()?.branch?.name || sale.branch?.name">Sucursal: {{ receiptsData()?.branch?.name || sale.branch?.name }}</span>
+                </div>
+              </div>
+
+              <div class="hv-badge-box">
+                <h2 class="hv-main-title">{{ r.isDownPayment ? 'Recibo de Abono' : 'Recibo de Pago' }}</h2>
+                <div class="hv-doc-number">Nº: {{ receiptsData()?.invoiceNumber || sale.invoiceNumber }}</div>
+                <span class="hv-emission-date">Emisión: {{ r.date | date: 'dd/MM/yyyy • HH:mm' }}</span>
+              </div>
+            </div>
+
+            <!-- GRID DE 2 COLUMNAS (CLIENTE/PAGO VS SALDOS) -->
+            <div class="hv-grid">
+              
+              <!-- Columna Izquierda: Información del Cliente y Método de Pago -->
+              <div class="hv-card">
+                <span class="hv-card-title">Datos del Cliente y Operación</span>
+                
+                <!-- Formato label: \n Dato -->
+                <div class="flex flex-col gap-1.5 py-0.5">
+                  <div class="flex flex-col">
+                    <span class="text-[7.5pt] text-slate-500 font-bold uppercase tracking-wider">Cliente:</span>
+                    <span class="text-[9pt] font-semibold text-slate-800 pl-3.5">{{ receiptsData()?.customer?.name || (sale.customer ? sale.customer.name : sale.guestCustomer?.name || 'Consumidor Final') }}</span>
+                  </div>
+
+                  <div class="flex flex-col">
+                    <span class="text-[7.5pt] text-slate-500 font-bold uppercase tracking-wider">NIT / Identificación:</span>
+                    <span class="text-[8.5pt] font-medium text-slate-700 pl-3.5">{{ receiptsData()?.customer?.nit || (sale.customer ? sale.customer.nit : sale.guestCustomer?.nit) || 'C/F' }}</span>
+                  </div>
+
+                  <div class="flex flex-col" *ngIf="receiptsData()?.customer?.phone || sale.customer?.phone || sale.guestCustomer?.phone">
+                    <span class="text-[7.5pt] text-slate-500 font-bold uppercase tracking-wider">Teléfono:</span>
+                    <span class="text-[8.5pt] font-medium text-slate-700 pl-3.5">{{ receiptsData()?.customer?.phone || (sale.customer ? sale.customer.phone : sale.guestCustomer?.phone) }}</span>
+                  </div>
+                </div>
+
+                <div class="hv-payment-chip">
+                  <div class="flex justify-between items-center">
+                    <span class="font-bold text-purple-900">Método: {{ r.paymentMethod.name || 'Efectivo' }}</span>
+                    <span class="font-bold text-emerald-700">{{ r.amount | currency: 'Q' }}</span>
+                  </div>
+                  <div *ngIf="r.bankAccount || r.referenceNumber" class="text-[7.5pt] text-purple-700 mt-1 pt-1 border-t border-purple-200/50 flex flex-wrap gap-2">
+                    <span *ngIf="r.bankAccount"><strong>Banco:</strong> {{ r.bankAccount.bankName }} ({{ r.bankAccount.accountNumber }})</span>
+                    <span *ngIf="r.referenceNumber"><strong>Ref:</strong> {{ r.referenceNumber }}</span>
+                  </div>
+                  <div *ngIf="r.notes" class="text-[7.5pt] text-slate-500 italic mt-0.5">
+                    "{{ r.notes }}"
+                  </div>
+                </div>
+              </div>
+
+              <!-- Columna Derecha: Balance Financiero y Saldos -->
+              <div class="hv-card">
+                <span class="hv-card-title">Resumen de Saldos</span>
+
+                <div class="hv-balance-list">
+                  <div class="hv-balance-row subtotal" *ngIf="receiptsData()?.financialSummary">
+                    <span>Total de la Orden:</span>
+                    <span class="font-semibold text-slate-700 tabular-nums">{{ receiptsData()!.financialSummary.totalSale | currency: 'Q' }}</span>
+                  </div>
+
+                  <div class="hv-balance-row">
+                    <span>Saldo Anterior:</span>
+                    <span class="font-medium text-slate-700 tabular-nums">{{ r.previousBalance | currency: 'Q' }}</span>
+                  </div>
+
+                  <div class="hv-balance-row paid">
+                    <span>{{ r.isDownPayment ? 'Abono Realizado:' : 'Monto Pagado:' }}</span>
+                    <span class="font-bold tabular-nums">-{{ r.amount | currency: 'Q' }}</span>
+                  </div>
+
+                  <div class="hv-balance-row final">
+                    <span>Saldo Restante:</span>
+                    <span class="tabular-nums font-bold" [ngClass]="+r.remainingBalance > 0 ? 'text-slate-900' : 'text-emerald-700'">
+                      {{ r.remainingBalance | currency: 'Q' }}
+                    </span>
+                  </div>
+                </div>
+
+                <div *ngIf="receiptsData()?.financialSummary" class="text-[7.5pt] text-slate-400 text-right mt-auto pt-1 border-t border-slate-200/60">
+                  Abonado acumulado: {{ receiptsData()!.financialSummary.totalPaid | currency: 'Q' }}
+                </div>
+              </div>
+
+            </div>
+
+            <!-- PIE LEGAL -->
+            <div class="hv-legal">
+              Control Interno - Comprobante de {{ r.isDownPayment ? 'Abono a Cuenta' : 'Pago Completo' }}
+            </div>
+
+          </div>
+        </div>
+      } @else if (!receiptsData() || !receiptsData()?.payments?.length) {
+        <div class="flex flex-col items-center justify-center py-16 gap-3 text-center w-full">
+          <div class="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
+            <i class="pi pi-receipt text-xl"></i>
+          </div>
+          <div class="flex flex-col gap-0.5">
+            <span class="font-bold text-slate-700 text-sm">Sin recibos de abono registrados</span>
+            <span class="text-xs text-slate-400">Esta orden aún no registra abonos o pagos parciales.</span>
+          </div>
+        </div>
+      } @else {
+        <!-- ================================================================= -->
+        <!-- DOCUMENTO CONSOLIDADO: RECIBO DE ABONOS                          -->
+        <!-- ================================================================= -->
+        <div id="printable-receipt-area" class="ticket-container">
+          
+          <!-- HEADER SECTION -->
+          <div class="header">
+            <div class="logo-container">
+              <img [src]="companyInfo.logo" class="logo" alt="Logo de la Empresa" />
+              <div class="company-details">
+                <p class="company-info" *ngIf="companyInfo.address">{{ companyInfo.address }}</p>
+                <p class="company-info" *ngIf="companyInfo.phone">Tel: {{ companyInfo.phone }}</p>
+                <p class="company-info" *ngIf="companyInfo.nit">NIT: {{ companyInfo.nit }}</p>
+              </div>
+            </div>
+            <div class="document-badge">
+              <h2 class="ticket-title">Recibo de Abonos</h2>
+              <div class="document-number">Nº: {{ receiptsData()?.invoiceNumber || sale.invoiceNumber }}</div>
+            </div>
+          </div>
+
+          <!-- SALE & CUSTOMER INFORMATION -->
+          <div class="info-section">
+            <div class="info-block">
+              <h3>Información del Cliente</h3>
+              <p><strong>Nombre:</strong> {{ receiptsData()?.customer?.name || (sale.customer ? sale.customer.name : sale.guestCustomer?.name || 'Consumidor Final') }}</p>
+              <p>
+                <strong>NIT:</strong> {{ receiptsData()?.customer?.nit || (sale.customer ? sale.customer.nit : sale.guestCustomer?.nit) || 'C/F' }}
+              </p>
+              <p *ngIf="receiptsData()?.customer?.phone || sale.customer?.phone || sale.guestCustomer?.phone">
+                <strong>Teléfono:</strong> {{ receiptsData()?.customer?.phone || (sale.customer ? sale.customer.phone : sale.guestCustomer?.phone) }}
+              </p>
+              <p *ngIf="sale.customer?.address || sale.guestCustomer?.address">
+                <strong>Dirección:</strong> {{ sale.customer ? sale.customer.address : sale.guestCustomer?.address }}
+              </p>
+            </div>
+            <div class="info-block">
+              <h3>Detalles de la Emisión</h3>
+              <p><strong>Fecha de Emisión:</strong> {{ sale.date | date: 'dd/MM/yyyy HH:mm' }}</p>
+              <p *ngIf="receiptsData()?.branch?.name || sale.branch?.name">
+                <strong>Sucursal:</strong> {{ receiptsData()?.branch?.name || sale.branch?.name }}
+              </p>
+              <p><strong>Estado:</strong> {{ sale.status | saleStatus }}</p>
+              <p *ngIf="receiptsData()?.isPreorder || sale.isPreorder"><strong>Tipo:</strong> Preorden</p>
+              <p *ngIf="receiptsData()?.promisedDeliveryDate || sale.promisedDeliveryDate">
+                <strong>Fecha de entrega:</strong>
+                {{ (receiptsData()?.promisedDeliveryDate || sale.promisedDeliveryDate) | date: 'dd/MM/yyyy' }}
+              </p>
+            </div>
+          </div>
+
+          <!-- TABLA DE HISTORIAL DE ABONOS / PAGOS -->
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th style="width: 22%">Fecha</th>
+                <th style="width: 27%">Forma de Pago</th>
+                <th style="width: 17%; text-align: right">Saldo Anterior</th>
+                <th style="width: 17%; text-align: right">Abono</th>
+                <th style="width: 17%; text-align: right">Saldo Restante</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let p of receiptsData()!.payments">
+                <td style="font-family: monospace; font-size: 8.5pt; color: #475569;">
+                  {{ p.date | date: 'dd/MM/yyyy' }}
+                </td>
+                <td>
+                  <span style="font-weight: 500; color: #334155;">{{ p.paymentMethod.name || 'Efectivo' }}</span>
+                  <div *ngIf="p.bankAccount || p.referenceNumber" style="font-size: 8pt; color: #7c3aed; margin-top: 0.5mm;">
+                    <span *ngIf="p.bankAccount">{{ p.bankAccount.bankName }} ({{ p.bankAccount.accountNumber }})</span>
+                    <span *ngIf="p.bankAccount && p.referenceNumber"> • </span>
+                    <span *ngIf="p.referenceNumber">Ref: {{ p.referenceNumber }}</span>
+                  </div>
+                  <small *ngIf="p.notes" class="discount-text" style="color: #64748b; font-style: italic; display: block;">
+                    {{ p.notes }}
+                  </small>
+                </td>
+                <td class="text-right" style="color: #475569;">
+                  {{ p.previousBalance | currency: 'Q' }}
+                </td>
+                <td class="text-right" style="font-weight: 600; color: #15803d;">
+                  {{ p.amount | currency: 'Q' }}
+                </td>
+                <td class="text-right" style="font-weight: 600;" [ngClass]="+p.remainingBalance > 0 ? 'text-slate-800' : 'text-emerald-700'">
+                  {{ p.remainingBalance | currency: 'Q' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- SECCIÓN INFERIOR DE TOTALES Y RESUMEN FINANCIERO -->
+          <div class="totals-and-payments">
+            <!-- Estado de Liquidación -->
+            <div class="payments-info">
+              <div class="mb-1">
+                <strong [ngClass]="receiptsData()!.financialSummary.isFullyPaid ? 'text-emerald-700' : 'text-slate-700'">
+                  {{ receiptsData()!.financialSummary.isFullyPaid ? 'Completamente Pagado' : 'Saldo Pendiente de Pago' }}
+                </strong>
+              </div>
+              <p style="margin: 0; font-size: 8.5pt; color: #64748b; line-height: 1.4;">
+                {{ receiptsData()!.financialSummary.isFullyPaid 
+                  ? 'Esta orden ha sido saldada en su totalidad.' 
+                  : 'Esta orden mantiene un saldo pendiente conforme al historial de abonos.' }}
+              </p>
+            </div>
+
+            <!-- Totales -->
+            <div class="totals">
+              <div class="total-row">
+                <span>Total de la Venta:</span>
+                <span>{{ receiptsData()!.financialSummary.totalSale | currency: 'Q' }}</span>
+              </div>
+              <div class="total-row" style="color: #15803d; font-weight: 600;">
+                <span>Total Abonado:</span>
+                <span>-{{ receiptsData()!.financialSummary.totalPaid | currency: 'Q' }}</span>
+              </div>
+              <div class="total-row grand-total">
+                <span>Saldo Pendiente:</span>
+                <span [ngClass]="+receiptsData()!.financialSummary.currentPending > 0 ? 'text-rose-700' : 'text-emerald-700'">
+                  {{ receiptsData()!.financialSummary.currentPending | currency: 'Q' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- FOOTER -->
+          <div class="footer">
+            <p>¡Gracias por su preferencia!</p>
+            <p>Historial y Estado de Cuenta Consolidado de Abonos</p>
+            <div class="legal-text">
+              <small>Documento para validación y conciliación de abonos</small>
+            </div>
+          </div>
+
+        </div>
+      }
+    </div>
+
+    <!-- Actions Footer Grid (Visible en ambas pestañas o Factura) -->
     <div class="actions-grid mt-2.5 pt-2.5 border-t border-slate-100 flex-shrink-0">
       <p-button
         label="Imprimir"
@@ -55,6 +366,7 @@
       </p-button>
 
       <p-button
+        *ngIf="activeTab === 'invoice'"
         label="Enviar Email"
         icon="pi pi-envelope"
         severity="info"
@@ -65,6 +377,7 @@
       </p-button>
 
       <p-button
+        *ngIf="activeTab === 'invoice'"
         label="WhatsApp"
         icon="pi pi-whatsapp"
         severity="success"

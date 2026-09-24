@@ -28,6 +28,14 @@ export interface Unit {
   description: string;
 }
 
+export interface InitialProductStock {
+  branchId: string;
+  quantity?: number;
+  isAvailable?: boolean;
+  minStock?: number;
+  maxStock?: number;
+}
+
 export interface Product {
   id: string;
   createdAt: string;
@@ -46,9 +54,11 @@ export interface Product {
   stock?: number;
   manageStock?: boolean;
   stockAvailability?: string;
+  isAvailable?: boolean;
   isActive?: boolean;
   isVisible?: boolean;
-  inventories?: any[];
+  inventories?: Inventory[];
+  initialStocks?: InitialProductStock[];
   isMaster?: boolean;
   isVariant?: boolean;
   variants?: Product[];
@@ -69,6 +79,7 @@ export interface ProductWithInventory {
   imageUrl: string;
   manageStock: boolean;
   stockAvailability: string;
+  isAvailable?: boolean;
   isActive: boolean;
   isVisible: boolean;
   type?: ProductType;
@@ -77,6 +88,7 @@ export interface ProductWithInventory {
     branchId: string;
     branchName: string;
     stock: number;
+    isAvailable?: boolean;
   }>;
   category: {
     name: string;
@@ -104,6 +116,7 @@ export interface ProductInventoryCard {
   price: number;
   imageUrl: string;
   manageStock: boolean;
+  isAvailable?: boolean;
   isActive: boolean;
   isVisible: boolean;
   type?: ProductType;
@@ -118,6 +131,7 @@ export interface ProductInventoryCard {
     branchId: string;
     branchName: string;
     currentStock: number;
+    isAvailable?: boolean;
   }>;
 
   // Totales

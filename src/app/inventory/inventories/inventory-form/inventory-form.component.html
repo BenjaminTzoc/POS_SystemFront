@@ -1,4 +1,4 @@
-<div [class]="isModal ? 'p-0 bg-transparent min-h-0 flex flex-col max-h-[80vh]' : 'py-4 px-0 md:px-6 bg-slate-50/50 min-h-screen'">
+<div [class]="isModal ? 'p-0 bg-transparent min-h-0 flex flex-col max-h-[80vh] w-full' : 'py-4 px-0 md:px-6 bg-slate-50/50 min-h-screen'">
   <!-- Header Section (Solo si no es modal) -->
   @if (!isModal) {
     <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-6 md:mb-8">
@@ -49,257 +49,345 @@
         </p>
       </div>
     </div>
-  } @else {
-    <!-- Modal Header Compacto & Limpio (Fijo arriba) -->
-    <div class="flex items-start justify-between pb-3 mb-3 border-b border-slate-100 flex-shrink-0">
-      <div>
-        <h2 class="text-lg font-semibold text-slate-800 tracking-tight leading-tight">Generar Nuevo Inventario</h2>
-        <p class="text-xs text-slate-500 font-normal mt-0.5">Establece existencias iniciales y límites para un producto en sucursal.</p>
-      </div>
-      <button 
-        type="button" 
-        (click)="onCancelProccess()"
-        class="w-7 h-7 -mr-1 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors border-none bg-transparent cursor-pointer"
-      >
-        <i class="pi pi-times text-xs"></i>
-      </button>
-    </div>
   }
 
-  <!-- Modal Loader en medio del modal -->
-  @if (isModal && isLoadingData) {
-    <div class="flex flex-col items-center justify-center py-16 gap-3 flex-1">
-      <i class="pi pi-spin pi-spinner text-3xl text-spiced-purple"></i>
-      <span class="text-xs font-semibold text-slate-500 tracking-wide">Cargando catálogo y sucursales...</span>
-    </div>
-  }
-
-  <form *ngIf="!isModal || !isLoadingData" class="grid grid-cols-12 gap-3 md:gap-4 max-w-[1700px] mx-auto flex-1 min-h-0" [formGroup]="inventoryForm">
+  <form class="w-full grid grid-cols-12 gap-3 md:gap-4 max-w-[1700px] mx-auto flex-1 min-h-0" [formGroup]="inventoryForm">
     <!-- Left Column: Selection & Stock -->
-    <div [class]="isModal ? 'col-span-12 flex flex-col min-h-0 flex-1' : 'col-start-1 col-span-12 lg:col-span-8 flex flex-col gap-6 md:gap-8'">
-      <div [class]="isModal ? 'p-0 bg-transparent border-0 flex flex-col min-h-0 flex-1' : 'p-5 md:p-8 rounded-none md:rounded-lg bg-white border-y md:border border-slate-300'">
+    <div [class]="isModal ? 'w-full col-span-12 flex flex-col min-h-0 flex-1' : 'col-start-1 col-span-12 lg:col-span-8 flex flex-col gap-6 md:gap-8'">
+      <div [class]="isModal ? 'w-full p-0 bg-transparent border-0 flex flex-col min-h-0 flex-1' : 'p-5 md:p-8 rounded-none md:rounded-lg bg-white border-y md:border border-slate-300'">
 
-        <!-- Branch Selector (Fijo arriba en el modal) -->
+        <!-- Branch Selector (Fijo arriba en el modal con ancho ajustado) -->
         <div class="flex flex-col gap-1 mb-3 flex-shrink-0">
           <label class="text-xs font-semibold text-slate-700" for="branch">
             Sucursal de Destino <span class="text-rose-500">*</span>
           </label>
-          <p-select
-            [options]="branches"
-            [checkmark]="true"
+          <app-branch-select
+            [branches]="branches"
             [showClear]="true"
+            [disabled]="isLoadingBranches || isSaving"
             formControlName="branchId"
-            optionLabel="name"
-            optionValue="id"
-            placeholder="Seleccionar sucursal para los productos..."
-            class="w-full"
-            styleClass="!rounded-lg border-slate-200 text-xs"
-            size="small"
+            [placeholder]="isLoadingBranches ? 'Cargando sucursales...' : 'Seleccionar sucursal...'"
+            widthClass="w-full sm:w-80 md:w-96"
           />
           @if (inventoryForm.get('branchId')?.invalid && inventoryForm.get('branchId')?.touched) {
             <small class="text-rose-500 text-[11px] font-medium flex items-center mt-0.5">
-              <i class="pi pi-exclamation-circle mr-1 text-[10px]"></i>Seleccione una sucursal.
+              <i class="pi pi-exclamation-circle mr-1 text-[10px]"></i>Seleccione una sucursal para ver los productos.
             </small>
           }
         </div>
 
-        <!-- Section header with Add Item Button (Fijo) -->
-        <div class="flex items-center justify-between pt-2 pb-1 border-t border-slate-100 mb-2 flex-shrink-0">
-          <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">
-            Productos a Registrar ({{ items.length }})
-          </span>
-          <p-button
-            type="button"
-            label="Añadir Producto"
-            icon="pi pi-plus"
-            (onClick)="addItem()"
-            [disabled]="!hasAvailableProducts()"
-            styleClass="!rounded-lg !py-1 px-2.5 font-semibold text-xs"
-            severity="info"
-            size="small"
-            [outlined]="true"
-          />
+        <!-- RECUADRO DE ATAJOS RÁPIDOS DE PRODUCTOS (Estándar de Órdenes de Venta) -->
+        <div class="bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm mb-3 flex-shrink-0">
+          <div class="p-3.5 px-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-brand-royal/5">
+            <div class="flex flex-col">
+              <span class="text-sm font-semibold text-title-secondary leading-none">Catálogo Rápido de Productos</span>
+              <span class="text-xs font-semibold text-brand-royal mt-1">Haz clic en un producto para agregarlo al inventario</span>
+            </div>
+
+            <!-- Buscador integrado en la cabecera -->
+            <div class="w-full sm:w-64">
+              <p-iconfield>
+                <p-inputicon class="pi pi-search text-text-muted text-xs" />
+                <input 
+                  type="text" 
+                  pInputText 
+                  [(ngModel)]="productSearchTerm" 
+                  [ngModelOptions]="{standalone: true}"
+                  placeholder="Buscar por nombre o SKU..." 
+                  class="w-full h-8.5! py-1.5! px-8! text-xs! border-slate-300! focus:border-brand-deep! !rounded-lg"
+                />
+              </p-iconfield>
+            </div>
+          </div>
+
+          <div class="py-3.5 px-0">
+            @if (isLoadingProducts) {
+              <div class="flex items-center justify-center py-6 gap-2 text-text-muted text-xs">
+                <i class="pi pi-spin pi-spinner text-lg text-brand-royal"></i>
+                <span>Cargando catálogo de productos...</span>
+              </div>
+            } @else if (products.length === 0) {
+              <div class="text-center py-6 text-text-muted text-xs italic">
+                No se encontraron productos disponibles para gestionar stock.
+              </div>
+            } @else if (filteredRibbonProducts.length === 0) {
+              <div class="text-center py-6 text-text-muted text-xs italic">
+                No hay productos que coincidan con "{{ productSearchTerm }}".
+              </div>
+            } @else {
+              <div class="flex items-stretch w-full px-2 gap-1.5">
+                <!-- Botón Izquierdo Ocupando Espacio Layout -->
+                <button
+                  type="button"
+                  (click)="scrollRibbon('left')"
+                  pTooltip="Anterior"
+                  tooltipPosition="top"
+                  class="w-7 md:w-8 flex-shrink-0 flex items-center justify-center bg-transparent hover:bg-slate-100 text-slate-600 hover:text-brand-royal transition-all cursor-pointer rounded-lg focus:outline-none border border-transparent hover:border-slate-200"
+                >
+                  <i class="pi pi-chevron-left text-lg font-bold"></i>
+                </button>
+
+                <!-- Contenedor Horizontal con 3 Tarjetas por Vista -->
+                <div 
+                  #ribbonContainer 
+                  class="flex-1 min-w-0 flex flex-row overflow-x-auto gap-3 py-1 px-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth"
+                >
+                  <div 
+                    *ngFor="let p of filteredRibbonProducts" 
+                    (click)="toggleProduct(p)"
+                    [class]="isProductSelected(p.id) ? 'border-brand-royal bg-indigo-50/50 shadow-2xs ring-1 ring-brand-royal/30' : 'border-slate-200/80 bg-slate-50/50 hover:bg-white hover:border-indigo-300 hover:shadow-xs'"
+                    class="w-[calc((100%-1.5rem)/3)] min-w-[210px] flex-shrink-0 flex flex-col justify-between gap-2 p-3 rounded-xl border transition-all text-xs cursor-pointer select-none group"
+                  >
+                    <!-- Fila Superior: Info + Check/Plus -->
+                    <div class="flex items-start justify-between gap-2">
+                      <div class="flex items-start gap-2.5 min-w-0 flex-1">
+                        <div class="w-9 h-9 rounded-lg border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0 bg-white shadow-2xs mt-0.5">
+                          <img *ngIf="p.imageUrl" [src]="getProductImageUrl(p.imageUrl)" class="w-full h-full object-cover" />
+                          <i *ngIf="!p.imageUrl" class="pi pi-image text-slate-300 text-sm"></i>
+                        </div>
+                        <div class="flex flex-col min-w-0 flex-1">
+                          <span class="text-[10px] font-bold text-brand-royal uppercase tracking-wider leading-none mb-1">{{ p.sku || '---' }}</span>
+                          <span class="font-bold text-slate-800 leading-snug text-xs break-words group-hover:text-brand-royal transition-colors">
+                            {{ p.name }}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div class="flex items-center flex-shrink-0">
+                        <span *ngIf="isProductSelected(p.id)" class="w-5 h-5 rounded-full bg-brand-royal text-white flex items-center justify-center shadow-2xs text-[9px] font-bold">
+                          <i class="pi pi-check text-[9px]"></i>
+                        </span>
+                        <span *ngIf="!isProductSelected(p.id)" class="w-5 h-5 rounded-full bg-slate-100 group-hover:bg-indigo-50 text-slate-400 group-hover:text-brand-royal flex items-center justify-center transition-colors text-[9px]">
+                          <i class="pi pi-plus text-[9px]"></i>
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Fila Inferior: Unidad y Estado -->
+                    <div class="flex items-center justify-between pt-1.5 border-t border-slate-200/60 text-[10px]">
+                      <span class="text-slate-600 font-semibold bg-white px-2 py-0.5 rounded border border-slate-200">
+                        {{ p.unit.abbreviation || 'un' }}
+                      </span>
+                      <span class="font-semibold" [class]="isProductSelected(p.id) ? 'text-brand-royal font-bold' : 'text-slate-400 group-hover:text-slate-600'">
+                        {{ isProductSelected(p.id) ? '✓ Agregado' : '+ Seleccionar' }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Botón Derecho Ocupando Espacio Layout -->
+                <button
+                  type="button"
+                  (click)="scrollRibbon('right')"
+                  pTooltip="Siguiente"
+                  tooltipPosition="top"
+                  class="w-7 md:w-8 flex-shrink-0 flex items-center justify-center bg-transparent hover:bg-slate-100 text-slate-600 hover:text-brand-royal transition-all cursor-pointer rounded-lg focus:outline-none border border-transparent hover:border-slate-200"
+                >
+                  <i class="pi pi-chevron-right text-lg font-bold"></i>
+                </button>
+              </div>
+            }
+          </div>
         </div>
 
-        <!-- Dynamic Items FormArray List (ÚNICO SCROLL AQUÍ) -->
-        <div formArrayName="items" class="flex flex-col gap-2.5 overflow-y-auto pr-1 flex-1 min-h-0 max-h-[50vh]">
-          @for (item of items.controls; track $index) {
-            <div [formGroupName]="$index" 
-                 class="relative p-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-slate-300 transition-all flex flex-col gap-2.5 group">
-              
-              <!-- Product and Delete Button Row -->
-              <div class="flex items-start gap-2">
-                <div class="flex-1 min-w-0">
-                  <p-select
-                    [options]="getAvailableProducts($index)"
-                    [filter]="true"
-                    [filterFields]="['name', 'sku']"
-                    [showClear]="true"
-                    (onChange)="onProductChange($event, $index)"
-                    formControlName="productId"
-                    optionLabel="name"
-                    optionValue="id"
-                    placeholder="Seleccionar producto..."
-                    class="w-full"
-                    styleClass="!rounded-lg border-slate-200 text-xs"
-                    size="small"
-                    appendTo="body"
-                  >
-                    <ng-template #selectedItem let-selectedOption>
-                      <div class="flex items-center gap-2">
-                        <div class="w-6 h-6 rounded bg-gray-100 overflow-hidden border border-gray-100 flex-shrink-0">
-                          <img
-                            class="w-full h-full object-cover"
-                            [src]="getProductImageUrl(selectedOption.imageUrl)"
-                            alt=""
-                          />
-                        </div>
-                        <div class="flex items-center gap-1.5 min-w-0">
-                          <small class="text-[9px] font-medium text-indigo-500 uppercase">{{ selectedOption.sku }}</small>
-                          <span class="text-xs font-medium text-slate-800 truncate">{{ selectedOption.name }}</span>
-                        </div>
-                      </div>
-                    </ng-template>
-                    <ng-template let-product #item>
-                      <div class="flex items-center gap-2 py-0.5">
-                        <div class="w-7 h-7 rounded bg-gray-50 overflow-hidden border border-gray-100 flex-shrink-0">
-                          <img
-                            class="w-full h-full object-cover"
-                            [src]="getProductImageUrl(product.imageUrl)"
-                            alt=""
-                          />
-                        </div>
-                        <div class="flex flex-col min-w-0">
-                          <small class="text-[9px] font-medium text-indigo-500 uppercase leading-none">{{ product.sku }}</small>
-                          <span class="text-xs font-normal text-slate-700 truncate">{{ product.name }}</span>
-                        </div>
-                      </div>
-                    </ng-template>
-                  </p-select>
-                </div>
-
-                <!-- Remove Row Button -->
-                <p-button
-                  icon="pi pi-trash"
-                  (onClick)="removeItem($index)"
-                  [disabled]="items.length === 1"
-                  severity="danger"
-                  [text]="true"
-                  styleClass="!w-8 !h-8 !rounded-lg text-rose-500 hover:!bg-rose-50"
-                  size="small"
-                />
-              </div>
-
-              <!-- Numeric Stock Inputs Grid -->
-              <div class="grid grid-cols-3 gap-3 items-start">
-                <!-- Stock Inicial -->
-                <div class="flex flex-col gap-1.5">
-                  <div class="flex items-center h-6">
-                    <label class="text-xs font-semibold text-slate-700 leading-none">Stock Inicial</label>
-                  </div>
-                  <p-inputgroup class="w-full">
-                    <p-inputnumber
-                      formControlName="stock"
-                      mode="decimal"
-                      [min]="0"
-                      [minFractionDigits]="item.get('allowsDecimals')?.value ? 2 : 0"
-                      [maxFractionDigits]="item.get('allowsDecimals')?.value ? 2 : 0"
-                      placeholder="0"
-                      styleClass="w-full !bg-white"
-                      size="small"
-                      fluid
-                    />
-                    @if (item.get('unitAbbreviation')?.value) {
-                      <p-inputgroup-addon class="!text-xs !font-medium !text-slate-600 !bg-slate-100 !px-2 select-none">
-                        {{ item.get('unitAbbreviation')?.value }}
-                      </p-inputgroup-addon>
-                    }
-                  </p-inputgroup>
-                </div>
-
-                <!-- Mínimo -->
-                <div class="flex flex-col gap-1.5">
-                  <div class="flex items-center justify-between h-6">
-                    <label class="text-xs font-semibold text-slate-700 leading-none">Mínimo</label>
-                    <div class="flex items-center justify-center -my-1">
-                      <p-toggleswitch formControlName="minStockActivated" styleClass="!scale-[0.65] origin-right" />
-                    </div>
-                  </div>
-                  <p-inputgroup class="w-full">
-                    <p-inputnumber
-                      [disabled]="!item.get('minStockActivated')?.value"
-                      formControlName="minStock"
-                      mode="decimal"
-                      [min]="0"
-                      [minFractionDigits]="item.get('allowsDecimals')?.value ? 2 : 0"
-                      [maxFractionDigits]="item.get('allowsDecimals')?.value ? 2 : 0"
-                      placeholder="0"
-                      styleClass="w-full !bg-white"
-                      size="small"
-                      fluid
-                    />
-                    @if (item.get('unitAbbreviation')?.value) {
-                      <p-inputgroup-addon class="!text-xs !font-medium !text-slate-600 !bg-slate-100 !px-2 select-none">
-                        {{ item.get('unitAbbreviation')?.value }}
-                      </p-inputgroup-addon>
-                    }
-                  </p-inputgroup>
-                </div>
-
-                <!-- Máximo -->
-                <div class="flex flex-col gap-1.5">
-                  <div class="flex items-center justify-between h-6">
-                    <label class="text-xs font-semibold text-slate-700 leading-none">Máximo</label>
-                    <div class="flex items-center justify-center -my-1">
-                      <p-toggleswitch formControlName="maxStockActivated" styleClass="!scale-[0.65] origin-right" />
-                    </div>
-                  </div>
-                  <p-inputgroup class="w-full">
-                    <p-inputnumber
-                      [disabled]="!item.get('maxStockActivated')?.value"
-                      formControlName="maxStock"
-                      mode="decimal"
-                      [min]="0"
-                      [minFractionDigits]="item.get('allowsDecimals')?.value ? 2 : 0"
-                      [maxFractionDigits]="item.get('allowsDecimals')?.value ? 2 : 0"
-                      placeholder="0"
-                      styleClass="w-full !bg-white"
-                      size="small"
-                      fluid
-                    />
-                    @if (item.get('unitAbbreviation')?.value) {
-                      <p-inputgroup-addon class="!text-xs !font-medium !text-slate-600 !bg-slate-100 !px-2 select-none">
-                        {{ item.get('unitAbbreviation')?.value }}
-                      </p-inputgroup-addon>
-                    }
-                  </p-inputgroup>
-                </div>
-              </div>
+        <!-- Section: Configuración de Existencias de Productos Seleccionados -->
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs flex flex-col flex-1 min-h-0">
+          <div class="p-3 px-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 flex-shrink-0">
+            <div class="flex items-center gap-2">
+              <h2 class="text-xs sm:text-sm font-semibold text-slate-800 tracking-tight">Configuración de existencias</h2>
+              <span class="text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                {{ items.length }} {{ items.length === 1 ? 'producto' : 'productos' }}
+              </span>
             </div>
-          }
+
+            @if (items.length > 0) {
+              <button 
+                type="button" 
+                (click)="clearAllItems()"
+                class="text-[11px] font-semibold text-rose-500 hover:text-rose-700 transition-colors bg-transparent border-none cursor-pointer p-0"
+              >
+                Limpiar lista
+              </button>
+            }
+          </div>
+
+          <div class="p-3 flex-1 min-h-0 flex flex-col">
+            <!-- Empty State (No items selected) -->
+            @if (items.length === 0) {
+              <div class="p-6 rounded-xl bg-slate-50 border border-dashed border-slate-200 flex flex-col items-center justify-center text-center gap-2 my-auto">
+                <div class="w-10 h-10 rounded-full bg-brand-royal/10 text-brand-royal flex items-center justify-center">
+                  <i class="pi pi-box text-lg"></i>
+                </div>
+                <div>
+                  <p class="text-xs sm:text-sm font-bold text-slate-800">Ningún producto seleccionado</p>
+                  <p class="text-xs text-slate-600 font-medium mt-1 max-w-sm leading-relaxed">
+                    Haz clic en las tarjetas del catálogo superior para añadir productos y configurar su existencia inicial y límites.
+                  </p>
+                </div>
+              </div>
+            } @else {
+              <!-- Dynamic Items FormArray List -->
+              <div formArrayName="items" class="flex flex-col gap-2.5 overflow-y-auto pr-1 flex-1 min-h-0 max-h-[38vh]">
+                @for (item of items.controls; track $index) {
+                  <div [formGroupName]="$index" 
+                       class="p-3 rounded-xl border border-slate-200/90 bg-slate-50/50 hover:bg-white hover:border-slate-300 transition-all flex flex-col gap-2.5 shadow-2xs">
+                    
+                    <!-- Row Header: Product Info & Remove Button -->
+                    <div class="flex items-center justify-between gap-2">
+                      <div class="flex items-center gap-2 min-w-0 flex-1">
+                        <div class="w-7 h-7 rounded-lg bg-white overflow-hidden border border-slate-200 flex-shrink-0 flex items-center justify-center">
+                          @if (item.get('imageUrl')?.value) {
+                            <img [src]="getProductImageUrl(item.get('imageUrl')?.value)" class="w-full h-full object-cover" />
+                          } @else {
+                            <i class="pi pi-image text-slate-300 text-xs"></i>
+                          }
+                        </div>
+                        <div class="flex items-center gap-1.5 min-w-0 flex-1">
+                          <span class="text-[10px] font-bold text-brand-royal bg-brand-royal/10 border border-brand-royal/20 px-1.5 py-0.5 rounded uppercase flex-shrink-0">
+                            {{ item.get('sku')?.value }}
+                          </span>
+                          <span class="text-xs font-semibold text-slate-800 break-words leading-tight" [title]="item.get('name')?.value">
+                            {{ item.get('name')?.value }}
+                          </span>
+                        </div>
+                      </div>
+
+                      <p-button
+                        icon="pi pi-trash"
+                        (onClick)="removeItem($index)"
+                        severity="danger"
+                        [text]="true"
+                        styleClass="!w-7 !h-7 !rounded-lg text-rose-500 hover:!bg-rose-50 p-0 flex-shrink-0"
+                        size="small"
+                        pTooltip="Quitar producto"
+                        tooltipPosition="left"
+                      />
+                    </div>
+
+                    <!-- Stock Inputs Grid for manageStock === true OR Availability Toggle for manageStock === false -->
+                    @if (item.get('manageStock')?.value) {
+                      <div class="grid grid-cols-3 gap-2.5 items-start pt-1.5 border-t border-slate-200/60">
+                        <!-- Stock Inicial -->
+                        <div class="flex flex-col gap-1">
+                          <div class="flex items-center justify-between h-5">
+                            <label class="text-[11px] font-semibold text-slate-700 leading-none">
+                              Stock Inicial <span class="text-rose-500">*</span>
+                            </label>
+                          </div>
+                          <p-inputgroup class="w-full">
+                            <p-inputnumber
+                              formControlName="stock"
+                              mode="decimal"
+                              [min]="0"
+                              [minFractionDigits]="item.get('allowsDecimals')?.value ? 2 : 0"
+                              [maxFractionDigits]="item.get('allowsDecimals')?.value ? 2 : 0"
+                              placeholder="0"
+                              styleClass="w-full !bg-white text-xs"
+                              size="small"
+                              fluid
+                            />
+                            @if (item.get('unitAbbreviation')?.value) {
+                              <p-inputgroup-addon class="!text-[11px] !font-semibold !text-slate-600 !bg-slate-100 !px-2 select-none">
+                                {{ item.get('unitAbbreviation')?.value }}
+                              </p-inputgroup-addon>
+                            }
+                          </p-inputgroup>
+                        </div>
+
+                        <!-- Mínimo -->
+                        <div class="flex flex-col gap-1">
+                          <div class="flex items-center justify-between h-5">
+                            <label class="text-[11px] font-semibold text-slate-700 leading-none">Mínimo</label>
+                            <p-toggleswitch formControlName="minStockActivated" styleClass="!scale-[0.6] origin-right" />
+                          </div>
+                          <p-inputgroup class="w-full">
+                            <p-inputnumber
+                              [disabled]="!item.get('minStockActivated')?.value"
+                              formControlName="minStock"
+                              mode="decimal"
+                              [min]="0"
+                              [minFractionDigits]="item.get('allowsDecimals')?.value ? 2 : 0"
+                              [maxFractionDigits]="item.get('allowsDecimals')?.value ? 2 : 0"
+                              placeholder="0"
+                              styleClass="w-full !bg-white text-xs"
+                              size="small"
+                              fluid
+                            />
+                            @if (item.get('unitAbbreviation')?.value) {
+                              <p-inputgroup-addon class="!text-[11px] !font-semibold !text-slate-600 !bg-slate-100 !px-2 select-none">
+                                {{ item.get('unitAbbreviation')?.value }}
+                              </p-inputgroup-addon>
+                            }
+                          </p-inputgroup>
+                        </div>
+
+                        <!-- Máximo -->
+                        <div class="flex flex-col gap-1">
+                          <div class="flex items-center justify-between h-5">
+                            <label class="text-[11px] font-semibold text-slate-700 leading-none">Máximo</label>
+                            <p-toggleswitch formControlName="maxStockActivated" styleClass="!scale-[0.6] origin-right" />
+                          </div>
+                          <p-inputgroup class="w-full">
+                            <p-inputnumber
+                              [disabled]="!item.get('maxStockActivated')?.value"
+                              formControlName="maxStock"
+                              mode="decimal"
+                              [min]="0"
+                              [minFractionDigits]="item.get('allowsDecimals')?.value ? 2 : 0"
+                              [maxFractionDigits]="item.get('allowsDecimals')?.value ? 2 : 0"
+                              placeholder="0"
+                              styleClass="w-full !bg-white text-xs"
+                              size="small"
+                              fluid
+                            />
+                            @if (item.get('unitAbbreviation')?.value) {
+                              <p-inputgroup-addon class="!text-[11px] !font-semibold !text-slate-600 !bg-slate-100 !px-2 select-none">
+                                {{ item.get('unitAbbreviation')?.value }}
+                              </p-inputgroup-addon>
+                            }
+                          </p-inputgroup>
+                        </div>
+                      </div>
+                    } @else {
+                      <div class="flex items-center justify-between pt-2 border-t border-slate-200/60 bg-amber-50/60 rounded-lg px-3 py-2">
+                        <div class="flex items-center gap-2">
+                          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                            <i class="pi pi-info-circle mr-1 text-[9px]"></i>
+                            Sin gestión de Stock
+                          </span>
+                          <span class="text-[11px] text-slate-800">Cambia esta configuración en el módulo Productos.</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                          <span class="text-[11px] font-medium" [ngClass]="item.get('isAvailable')?.value ? 'text-emerald-600 font-bold' : 'text-slate-400'">
+                            {{ item.get('isAvailable')?.value ? 'Disponible' : 'No disponible' }}
+                          </span>
+                          <p-toggleSwitch formControlName="isAvailable" severity="success" />
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
         </div>
       </div>
 
       <!-- Modal Action Buttons Footer (Fijo abajo) -->
       @if (isModal) {
         <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 flex-shrink-0">
-          <p-button 
+          <app-secondary-button 
             label="Cancelar" 
-            (onClick)="onCancelProccess()" 
-            variant="outlined" 
-            severity="secondary" 
             icon="pi pi-times"
-            styleClass="h-[36px] px-4 !rounded-lg text-xs"
+            [disabled]="isSaving"
+            (clicked)="onCancelProccess()" 
           />
-          <p-button
-            (onClick)="onSaveInventory()"
+          <app-primary-button
             [label]="items.length > 1 ? 'Guardar ' + items.length + ' Inventarios' : 'Guardar Inventario'"
-            severity="success"
-            [raised]="true"
-            [disabled]="!isFormValid() || isSaving"
-            styleClass="h-[36px] px-5 !rounded-lg font-semibold text-xs"
-            [loading]="isSaving"
             icon="pi pi-check"
+            [disabled]="!isFormValid() || isSaving"
+            [loading]="isSaving"
+            (clicked)="onSaveInventory()"
           />
         </div>
       }

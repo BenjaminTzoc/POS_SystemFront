@@ -50,6 +50,16 @@ export interface CreateInventoryTransferDto {
   }[];
 }
 
+export interface UpdateInventoryTransferDto {
+  originBranchId?: string;
+  destinationBranchId?: string;
+  notes?: string;
+  items?: {
+    productId: string;
+    quantity: number;
+  }[];
+}
+
 export interface UpdateTransferStatusDto {
   status: TransferStatus;
 }

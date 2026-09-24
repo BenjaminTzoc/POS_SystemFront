@@ -24,7 +24,28 @@ export class InventoryService {
     return this.http.post<ApiResponse<any>>(`${this.API_URL}`, body);
   }
 
-  createBulkInventories(body: { branchId: string; items: any[] }): Observable<ApiResponse<any>> {
+  updateInventory(
+    inventoryId: string,
+    body: Partial<{
+      stock: number;
+      minStock: number | null;
+      maxStock: number | null;
+      isAvailable: boolean;
+    }>
+  ): Observable<ApiResponse<Inventory>> {
+    return this.http.put<ApiResponse<Inventory>>(`${this.API_URL}/${inventoryId}`, body);
+  }
+
+  createBulkInventories(body: {
+    branchId: string;
+    items: Array<{
+      productId: string;
+      stock: number;
+      isAvailable?: boolean;
+      minStock?: number | null;
+      maxStock?: number | null;
+    }>;
+  }): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.API_URL}/bulk`, body);
   }
 
@@ -33,8 +54,6 @@ export class InventoryService {
   }
 
   getInventoryByProductAndBranch(productId: string, branchId: string): Observable<ApiResponse<Inventory>> {
-    // Según el requerimiento el path es /inventory/product/:id/branch/:id
-    // El API_URL base es /api/v1/inventories, así que navegamos un nivel arriba
     return this.http.get<ApiResponse<Inventory>>(`${environment.apiUrl}/inventories/product/${productId}/branch/${branchId}`);
   }
 }

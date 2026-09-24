@@ -19,6 +19,12 @@ import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 
+import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { RefreshButtonComponent } from '../../shared/components/refresh-button/refresh-button.component';
+import { PrimaryButtonComponent } from '../../shared/components/primary-button/primary-button.component';
+import { StandardTableComponent } from '../../shared/components/standard-table/standard-table.component';
+import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
+
 @Component({
   selector: 'app-inventory-transfers',
   standalone: true,
@@ -37,6 +43,11 @@ import { InputIconModule } from 'primeng/inputicon';
     InputTextModule,
     IconFieldModule,
     InputIconModule,
+    PageHeaderComponent,
+    RefreshButtonComponent,
+    PrimaryButtonComponent,
+    StandardTableComponent,
+    StatusBadgeComponent,
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './inventory-transfers.component.html',
@@ -76,19 +87,22 @@ export class InventoryTransfersComponent implements OnInit {
     this.loadTransfers();
   }
 
-  onRowExpand(event: any): void {
-    const transfer = event.data as InventoryTransfer;
-    // Si ya tiene items, no necesitamos volver a cargarlos
+  toggleRowExpansion(transfer: InventoryTransfer, table: StandardTableComponent, event: Event): void {
+    event.stopPropagation();
+    table.toggleRow(transfer, event);
+    this.fetchTransferDetailsIfNeeded(transfer);
+  }
+
+  fetchTransferDetailsIfNeeded(transfer: InventoryTransfer): void {
     if (transfer.items && transfer.items.length > 0) return;
 
-    // Cargamos los detalles completos
     this.transfersService.getTransferById(transfer.id).subscribe({
       next: (res) => {
         const fullTransfer = res.data;
-        // Actualizamos el objeto en la lista para que la expansión muestre los datos
+        Object.assign(transfer, fullTransfer);
         const index = this.transfers.findIndex((t) => t.id === transfer.id);
         if (index !== -1) {
-          this.transfers[index] = { ...fullTransfer };
+          this.transfers[index] = { ...transfer, ...fullTransfer };
         }
       },
       error: (err) => {
@@ -100,6 +114,11 @@ export class InventoryTransfersComponent implements OnInit {
         });
       },
     });
+  }
+
+  onRowExpand(event: any): void {
+    const transfer = event.data as InventoryTransfer;
+    this.fetchTransferDetailsIfNeeded(transfer);
   }
 
   loadTransfers(): void {
@@ -151,6 +170,10 @@ export class InventoryTransfersComponent implements OnInit {
 
   goToNewTransfer(): void {
     this.router.navigate(['/inventory/new-transfer']);
+  }
+
+  editTransfer(transfer: InventoryTransfer): void {
+    this.router.navigate(['/inventory/edit-transfer', transfer.id]);
   }
 
   confirmStatusChange(transfer: InventoryTransfer, newStatus: TransferStatus): void {
@@ -237,6 +260,11 @@ export class InventoryTransfersComponent implements OnInit {
       default:
         return 'pi pi-info-circle';
     }
+  }
+
+  getTotalUnits(transfer: InventoryTransfer): number {
+    if (!transfer.items || !transfer.items.length) return 0;
+    return transfer.items.reduce((acc, item) => acc + (Number(item.quantity) || 0), 0);
   }
 
   getProductImageUrl(imageUrl?: string): string {

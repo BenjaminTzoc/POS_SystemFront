@@ -20,15 +20,8 @@
 
 .actions-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
   width: 100%;
-}
-
-@media (min-width: 640px) {
-  .actions-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
 }
 
 .ticket-wrapper::-webkit-scrollbar {

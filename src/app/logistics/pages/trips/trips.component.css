@@ -1,0 +1,5 @@
+/* Estilos de la vista de listado de viajes */
+:host {
+  display: block;
+  width: 100%;
+}

@@ -32,6 +32,9 @@ export class TicketTemplateComponent implements OnInit {
           this.companyInfo.phone = res.data.phone;
           this.companyInfo.nit = res.data.nit;
           this.companyInfo.name = res.data.companyName;
+          if (res.data.logoUrl) {
+            this.companyInfo.logo = res.data.logoUrl;
+          }
         }
       }
     });

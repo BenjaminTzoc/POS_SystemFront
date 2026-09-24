@@ -1,0 +1,100 @@
+.spark-bar {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  min-height: 2px;
+  background: #48021C;
+  transition: height 0.2s ease;
+}
+
+.spark-bar.is-empty {
+  background: #e2e8f0;
+  min-height: 2px;
+  height: 2px !important;
+}
+
+:host ::ng-deep .customer-week-picker {
+  width: 2rem;
+}
+
+:host ::ng-deep .customer-week-picker input,
+:host ::ng-deep .customer-week-picker .p-inputtext {
+  display: none !important;
+}
+
+:host ::ng-deep .customer-week-picker .p-datepicker-dropdown,
+:host ::ng-deep .customer-week-picker button {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.75rem;
+  border-color: #d9b8c8 !important;
+  color: #48021C !important;
+  background: #fff !important;
+}
+
+:host {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  height: 100%;
+}
+
+.widget-card {
+  width: 100%;
+  max-width: calc(4 * 13.5rem + 3 * 0.625rem + 2rem);
+  height: 100%;
+  background: linear-gradient(180deg, #f8eef3 0%, #fdf7f9 48%, #ffffff 100%);
+  border: 1px solid #d9b8c8;
+  box-shadow: 0 1px 0 rgb(72 2 28 / 0.08);
+}
+
+.kpi-toolbar,
+.widget-span {
+  width: 100%;
+}
+
+.customer-week-table-frame {
+  height: calc(2.25rem + 5 * 3.75rem);
+  overflow-y: auto;
+}
+
+.customer-week-table {
+  table-layout: fixed;
+}
+
+.customer-week-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f3e4eb;
+}
+
+.customer-week-table th,
+.customer-week-table td {
+  overflow: hidden;
+}
+
+.customer-week-table tbody tr {
+  height: 3.75rem;
+}
+
+.customer-week-table tbody tr.is-empty {
+  pointer-events: none;
+}
+
+.trend-icon {
+  font-size: 0.65rem !important;
+  line-height: 1;
+  width: 0.65rem;
+  height: 0.65rem;
+}
+
+:host ::ng-deep app-search-input input.p-inputtext,
+:host ::ng-deep app-search-input input {
+  font-size: 0.8125rem !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+}
+
+:host ::ng-deep app-search-input .pi-search {
+  font-size: 0.8125rem !important;
+}

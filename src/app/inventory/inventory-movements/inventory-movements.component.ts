@@ -3,7 +3,7 @@ import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { InventoryMovement } from '../interfaces/inventory-movement.interface';
 import { InventoryMovementsService } from '../services/inventory-movements.service';
-import { DatePipe, Location } from '@angular/common';
+import { DatePipe, DecimalPipe, Location } from '@angular/common';
 import { InventoryMovementTypePipe } from '../../shared/pipes/inventory-movement-type.pipe';
 import { TagModule } from 'primeng/tag';
 import { environment } from '../../../environments/environment';
@@ -16,6 +16,10 @@ import { Dialog } from 'primeng/dialog';
 import { FormsModule } from '@angular/forms';
 import { TextareaModule } from 'primeng/textarea';
 import { ConfirmationModalComponent } from '../../shared/components/confirmation-modal/confirmation-modal.component';
+import { RefreshButtonComponent } from '../../shared/components/refresh-button/refresh-button.component';
+import { PrimaryButtonComponent } from '../../shared/components/primary-button/primary-button.component';
+import { StandardTableComponent } from '../../shared/components/standard-table/standard-table.component';
+import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 import { MovementFormComponent } from './movement-form/movement-form.component';
 
 @Component({
@@ -25,6 +29,7 @@ import { MovementFormComponent } from './movement-form/movement-form.component';
     ButtonModule,
     TableModule,
     DatePipe,
+    DecimalPipe,
     InventoryMovementTypePipe,
     TagModule,
     InventoryMovementConceptPipe,
@@ -34,6 +39,10 @@ import { MovementFormComponent } from './movement-form/movement-form.component';
     FormsModule,
     TextareaModule,
     ConfirmationModalComponent,
+    RefreshButtonComponent,
+    PrimaryButtonComponent,
+    StandardTableComponent,
+    StatusBadgeComponent,
     MovementFormComponent,
   ],
   providers: [ConfirmationService, MessageService],
@@ -42,11 +51,16 @@ import { MovementFormComponent } from './movement-form/movement-form.component';
 })
 export class InventoryMovementsComponent implements OnInit {
   @Input() isModal = false;
+  @Input() selectedBranchId: string | null = null;
   @Output() onClose = new EventEmitter<void>();
   @Output() onMovementChange = new EventEmitter<void>();
 
   inventoryMovements: InventoryMovement[] = [];
   loading: boolean = false;
+  totalRecords: number = 0;
+  page: number = 1;
+  limit: number = 10;
+  first: number = 0;
   stats: any = null;
   showNewMovementModal = false;
 
@@ -79,7 +93,7 @@ export class InventoryMovementsComponent implements OnInit {
   }
 
   loadStats(): void {
-    this.inventoryMovementsService.getStats().subscribe({
+    this.inventoryMovementsService.getStats(this.selectedBranchId || undefined).subscribe({
       next: (res) => {
         this.stats = res.data;
       },
@@ -87,11 +101,33 @@ export class InventoryMovementsComponent implements OnInit {
     });
   }
 
-  loadInventoryMovements(): void {
+  loadInventoryMovements(branchId?: string | null): void {
+    if (branchId !== undefined) {
+      this.selectedBranchId = branchId;
+      this.page = 1;
+      this.first = 0;
+    }
     this.loading = true;
-    this.inventoryMovementsService.getInventoryMovements().subscribe({
+    const filters: any = {
+      page: this.page,
+      limit: this.limit,
+    };
+    if (this.selectedBranchId) {
+      filters.branchId = this.selectedBranchId;
+    }
+    this.inventoryMovementsService.getInventoryMovements(filters).subscribe({
       next: (res) => {
-        this.inventoryMovements = res.data;
+        if (res.data && Array.isArray(res.data.items)) {
+          this.inventoryMovements = res.data.items;
+          this.totalRecords = res.data.total ?? 0;
+          this.page = res.data.page ?? 1;
+        } else if (Array.isArray(res.data)) {
+          this.inventoryMovements = res.data;
+          this.totalRecords = res.data.length;
+        } else {
+          this.inventoryMovements = [];
+          this.totalRecords = 0;
+        }
         this.loading = false;
       },
       error: (error) => {
@@ -99,6 +135,14 @@ export class InventoryMovementsComponent implements OnInit {
         this.loading = false;
       },
     });
+  }
+
+  onPageChange(event: any): void {
+    const pageIndex = Math.floor(event.first / event.rows) + 1;
+    this.page = pageIndex;
+    this.limit = event.rows || 10;
+    this.first = event.first;
+    this.loadInventoryMovements();
   }
 
   recordMovement(): void {

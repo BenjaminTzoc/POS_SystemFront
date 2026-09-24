@@ -1,0 +1,5 @@
+/* Estilos personalizados para la vista de camiones */
+:host {
+  display: block;
+  width: 100%;
+}

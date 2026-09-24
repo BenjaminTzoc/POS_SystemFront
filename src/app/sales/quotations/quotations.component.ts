@@ -26,6 +26,11 @@ import { Branch } from '../../inventory/interfaces/branch.interface';
 
 import { QuotationPreviewComponent } from './quotation-preview/quotation-preview.component';
 import { ConfirmationModalComponent } from '../../shared/components/confirmation-modal/confirmation-modal.component';
+import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { RefreshButtonComponent } from '../../shared/components/refresh-button/refresh-button.component';
+import { PrimaryButtonComponent } from '../../shared/components/primary-button/primary-button.component';
+import { StandardTableComponent } from '../../shared/components/standard-table/standard-table.component';
+import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 
 @Component({
   selector: 'app-quotations',
@@ -48,13 +53,16 @@ import { ConfirmationModalComponent } from '../../shared/components/confirmation
     SelectModule,
     RippleModule,
     LucideCirclePlus,
-    LucideRefreshCw,
     LucideSquarePen,
     LucideBan,
     LucideShoppingCart,
-    LucideFileText,
     QuotationPreviewComponent,
-    ConfirmationModalComponent
+    ConfirmationModalComponent,
+    PageHeaderComponent,
+    RefreshButtonComponent,
+    PrimaryButtonComponent,
+    StandardTableComponent,
+    StatusBadgeComponent,
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './quotations.component.html',
@@ -136,6 +144,19 @@ export class QuotationsComponent implements OnInit {
     });
   }
 
+  resetFilters(): void {
+    this.searchTerm = '';
+    this.selectedStatus = null;
+    this.selectedBranch = null;
+    this.loadQuotations();
+  }
+
+  toggleRowExpansion(quotation: IQuotation, tableRef: any, event?: Event): void {
+    if (tableRef) {
+      tableRef.toggleRow(quotation, event);
+    }
+  }
+
   goToNewQuotation(): void {
     this.router.navigate(['/sales/new-quotation']);
   }
@@ -161,12 +182,17 @@ export class QuotationsComponent implements OnInit {
       next: (res) => {
         this.isConverting = false;
         this.showConvertConfirmDialog = false;
+        const saleId = res.data?.saleId;
         this.messageService.add({
           severity: 'success',
           summary: 'Convertido',
-          detail: 'Cotización convertida a venta exitosamente.',
+          detail: 'Cotización convertida a orden. Si es un pedido a futuro, márcala como preorden en la venta.',
         });
-        this.router.navigate(['/sales/orders']);
+        if (saleId) {
+          this.router.navigate(['/sales/new-order'], { queryParams: { id: saleId } });
+        } else {
+          this.router.navigate(['/sales/orders']);
+        }
       },
       error: (err) => {
         this.isConverting = false;
@@ -274,16 +300,16 @@ export class QuotationsComponent implements OnInit {
 
   getSeverity(
     status: QuotationStatus,
-  ): 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' {
+  ): 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' | string {
     switch (status) {
       case 'PENDING':
-        return 'info';
+        return 'warn';
       case 'CONVERTED':
         return 'success';
       case 'EXPIRED':
-        return 'warn';
-      case 'CANCELLED':
         return 'danger';
+      case 'CANCELLED':
+        return 'secondary';
       default:
         return 'secondary';
     }

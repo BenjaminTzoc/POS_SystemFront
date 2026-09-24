@@ -76,6 +76,7 @@
               <div 
                 (click)="addProduct(p)"
                 class="flex-shrink-0 w-32 p-2.5 rounded-xl border border-slate-200 hover:border-brand-royal/30 hover:bg-brand-royal/5 transition-all cursor-pointer group flex flex-col items-center text-center gap-1 bg-white shadow-sm hover:shadow-md"
+                [class.opacity-60]="p.isAvailable === false"
               >
                 <div class="w-full aspect-square rounded-lg overflow-hidden bg-slate-50 border border-slate-100 mb-0.5">
                   @if (p.imageUrl) {
@@ -95,7 +96,15 @@
                 <div class="mt-auto pt-1.5 w-full border-t border-slate-100 flex items-center justify-between">
                   <div class="flex flex-col items-start min-w-0">
                     <span class="text-xs font-bold text-accent-rust truncate w-full">{{ p.price | currency:'Q ' }}</span>
-                    @if (p.stock !== undefined) {
+                    @if (p.isAvailable === false) {
+                      <span class="text-[10px] font-bold mt-0.5 truncate w-full text-rose-500">
+                        No disp.
+                      </span>
+                    } @else if (p.manageStock === false) {
+                      <span class="text-[10px] font-bold mt-0.5 truncate w-full text-emerald-600">
+                        Disponible
+                      </span>
+                    } @else if (p.stock !== undefined) {
                       <span class="text-[10px] font-bold mt-0.5 truncate w-full" [ngClass]="p.stock > 0 ? 'text-emerald-500' : 'text-rose-500'">
                         {{ p.stock }} disp.
                       </span>

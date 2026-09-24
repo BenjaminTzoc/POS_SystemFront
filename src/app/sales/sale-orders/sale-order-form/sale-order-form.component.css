@@ -81,3 +81,17 @@
     filter: brightness(0.95);
     transform: translateY(-1px);
 }
+
+:host ::ng-deep .billing-range-picker .p-inputtext,
+:host ::ng-deep .billing-range-picker input {
+    text-align: center;
+}
+
+:host ::ng-deep .billing-range-picker.p-datepicker,
+:host ::ng-deep .billing-range-picker {
+    position: relative;
+}
+
+.billing-range-labels {
+    padding-inline: 0.5rem 2.25rem;
+}

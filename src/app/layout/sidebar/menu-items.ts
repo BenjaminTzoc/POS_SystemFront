@@ -176,6 +176,18 @@ export const MENU_ITEMS: MenuItem[] = [
     permission: '',
     children: [
       {
+        label: 'Planificación de Viajes',
+        icon: 'pi pi-map',
+        route: '/logistics/trips',
+        permission: '',
+      },
+      {
+        label: 'Camiones',
+        icon: 'pi pi-truck',
+        route: '/logistics/trucks',
+        permission: '',
+      },
+      {
         label: 'Despachos de Ruta',
         icon: 'pi pi-send',
         route: '/logistics/dispatches',

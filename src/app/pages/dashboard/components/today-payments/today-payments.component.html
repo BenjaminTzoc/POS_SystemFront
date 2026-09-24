@@ -1,0 +1,82 @@
+<div class="pay-card">
+  <div class="pay-head">
+    <div class="min-w-0">
+      <h3 class="text-base font-semibold tracking-tight text-[#48021C]">Abonos de hoy</h3>
+      @if (errorMessage()) {
+        <p class="text-[10px] font-medium text-rose-500 mt-0.5">{{ errorMessage() }}</p>
+      }
+    </div>
+    <p class="text-[10px] font-semibold text-[#48021C]/70 shrink-0">
+      {{ summary().count }} movimiento{{ summary().count === 1 ? '' : 's' }}
+    </p>
+  </div>
+
+  <div class="pay-kpis">
+    <article class="kpi-chip kpi-green">
+      <p class="kpi-label text-emerald-700">Cobrado hoy</p>
+      <p class="kpi-value text-[#15803d]">{{ summary().total | currency:'GTQ':'symbol':'1.0-0' }}</p>
+    </article>
+    <article class="kpi-chip kpi-teal">
+      <p class="kpi-label text-[#1B768E]">Efectivo</p>
+      <p class="kpi-value">{{ summary().cash | currency:'GTQ':'symbol':'1.0-0' }}</p>
+    </article>
+    <article class="kpi-chip kpi-sky">
+      <p class="kpi-label text-sky-700">Transferencia</p>
+      <p class="kpi-value">{{ summary().transfer | currency:'GTQ':'symbol':'1.0-0' }}</p>
+    </article>
+    <article class="kpi-chip kpi-amber">
+      <p class="kpi-label text-amber-700">Liquidadas</p>
+      <p class="kpi-value">{{ summary().settled }}</p>
+    </article>
+  </div>
+
+  <div class="pay-list">
+    @if (isLoading() && !data()) {
+      <div class="pay-empty">
+        <i class="pi pi-spin pi-spinner text-xl text-[#48021C]"></i>
+      </div>
+    } @else {
+      @for (row of payments(); track row.id) {
+        <button type="button" class="pay-row" (click)="openPayment(row)">
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="text-[11px] font-semibold tabular-nums text-slate-500">{{ row.time }}</span>
+              <span class="text-[11px] font-semibold text-slate-700">#{{ row.invoiceNumber }}</span>
+              @if (row.isDownPayment) {
+                <app-status-badge value="Enganche" severity="purple" size="xs" />
+              }
+              @if (row.remainingBalance <= 0) {
+                <app-status-badge value="Liquidada" severity="success" size="xs" />
+              }
+            </div>
+            <p class="text-xs font-medium text-slate-700 truncate">{{ row.customerName }}</p>
+            <p class="row-meta">
+              {{ row.methodName }}
+              @if (row.reference) {
+                <span>·</span>
+                {{ row.reference }}
+              }
+              @if (row.branchName) {
+                <span>·</span>
+                {{ row.branchName }}
+              }
+            </p>
+          </div>
+          <div class="text-right shrink-0">
+            <p class="text-xs font-bold tabular-nums text-[#15803d]">{{ row.amount | currency:'GTQ':'symbol':'1.0-0' }}</p>
+            @if (row.remainingBalance > 0) {
+              <p class="text-[10px] font-semibold text-slate-400">queda {{ row.remainingBalance | currency:'GTQ':'symbol':'1.0-0' }}</p>
+            } @else {
+              <p class="text-[10px] font-semibold text-emerald-600">saldo 0</p>
+            }
+          </div>
+        </button>
+      } @empty {
+        <div class="pay-empty">
+          <p class="text-xs font-semibold text-slate-500">Sin abonos hoy</p>
+          <p class="text-[11px] text-slate-400 mt-1">Cuando registren un pago, aparece aquí.</p>
+        </div>
+      }
+    }
+  </div>
+</div>

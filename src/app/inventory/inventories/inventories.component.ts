@@ -7,7 +7,6 @@ import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { InventoryService } from '../services/inventory.service';
 import { Inventory } from '../interfaces/inventory.interface';
-import { Select } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../auth/auth.service';
 import { BranchesService } from '../services/branches.service';
@@ -18,6 +17,13 @@ import { InputIconModule } from 'primeng/inputicon';
 import { TooltipModule } from 'primeng/tooltip';
 import { DialogModule } from 'primeng/dialog';
 import { ConfirmationModalComponent } from '../../shared/components/confirmation-modal/confirmation-modal.component';
+import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { RefreshButtonComponent } from '../../shared/components/refresh-button/refresh-button.component';
+import { PrimaryButtonComponent } from '../../shared/components/primary-button/primary-button.component';
+import { SecondaryButtonComponent } from '../../shared/components/secondary-button/secondary-button.component';
+import { BranchSelectComponent } from '../../shared/components/branch-select/branch-select.component';
+import { SearchInputComponent } from '../../shared/components/search-input/search-input.component';
+import { StandardModalComponent } from '../../shared/components/standard-modal/standard-modal.component';
 import { InventoryMovementsComponent } from '../inventory-movements/inventory-movements.component';
 import { InventoryFormComponent } from './inventory-form/inventory-form.component';
 
@@ -28,7 +34,6 @@ import { InventoryFormComponent } from './inventory-form/inventory-form.componen
     TableModule,
     CurrencyPipe,
     DatePipe,
-    Select,
     FormsModule,
     CommonModule,
     InputTextModule,
@@ -37,6 +42,13 @@ import { InventoryFormComponent } from './inventory-form/inventory-form.componen
     DialogModule,
     TooltipModule,
     ConfirmationModalComponent,
+    PageHeaderComponent,
+    RefreshButtonComponent,
+    PrimaryButtonComponent,
+    SecondaryButtonComponent,
+    BranchSelectComponent,
+    SearchInputComponent,
+    StandardModalComponent,
     InventoryMovementsComponent,
     InventoryFormComponent,
   ],
@@ -118,7 +130,7 @@ export class InventoriesComponent implements OnInit {
   }
 
   loadBranches() {
-    this.branchesService.getBranches().subscribe({
+    this.branchesService.getBranches({ minimal: true }).subscribe({
       next: (response) => {
         this.branches = response.data;
       },
@@ -196,6 +208,30 @@ export class InventoriesComponent implements OnInit {
     this.showMovementsModal = true;
   }
 
+  toggleInventoryAvailability(inventory: Inventory, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    const newStatus = inventory.isAvailable === false ? true : false;
+    this.inventoryService.updateInventory(inventory.id, { isAvailable: newStatus }).subscribe({
+      next: () => {
+        inventory.isAvailable = newStatus;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Disponibilidad actualizada',
+          detail: `Producto marcado como ${newStatus ? 'Disponible' : 'No disponible'} en esta sucursal.`,
+        });
+      },
+      error: (error) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `No se pudo actualizar la disponibilidad: ${error.error?.message || error.message || 'Error desconocido'}`,
+        });
+      },
+    });
+  }
+
   getProductImageUrl(imageUrl: string | null | undefined): string {
     if (!imageUrl) {
       return `${environment.baseUrl}/uploads/products/default-product.png`;
@@ -206,5 +242,44 @@ export class InventoriesComponent implements OnInit {
     }
 
     return `${environment.baseUrl}${imageUrl}`;
+  }
+
+  getStockStatus(inventory: Inventory): { textClass: string; label: string; iconClass: string; icon: string } {
+    if (inventory.product?.manageStock === false) {
+      return {
+        textClass: 'text-slate-600',
+        label: 'Sin Control',
+        iconClass: 'text-slate-400 bg-white border-[#48021C]/15',
+        icon: 'pi pi-ban'
+      };
+    }
+
+    const stock = Number(inventory.stock) || 0;
+    const minStock = inventory.minStock !== undefined && inventory.minStock !== null ? Number(inventory.minStock) : 5;
+
+    if (stock <= 0) {
+      return {
+        textClass: 'text-[#9f1239]',
+        label: 'Agotado',
+        iconClass: 'text-[#9f1239] bg-rose-50 border-[#9f1239]/30',
+        icon: 'pi pi-exclamation-circle'
+      };
+    }
+
+    if (stock <= minStock) {
+      return {
+        textClass: 'text-[#92400e]',
+        label: 'Stock Bajo',
+        iconClass: 'text-[#92400e] bg-amber-50 border-[#92400e]/30',
+        icon: 'pi pi-exclamation-triangle'
+      };
+    }
+
+    return {
+      textClass: 'text-[#14532d]',
+      label: 'En stock',
+      iconClass: 'text-[#14532d] bg-emerald-50/70 border-[#14532d]/30',
+      icon: 'pi pi-box'
+    };
   }
 }

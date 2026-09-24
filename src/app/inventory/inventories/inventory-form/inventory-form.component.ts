@@ -1,12 +1,14 @@
-import { Component, inject, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, inject, OnInit, Input, Output, EventEmitter, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { InputTextModule } from 'primeng/inputtext';
-import { Select } from 'primeng/select';
 import { InputNumber } from 'primeng/inputnumber';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { InputGroup } from 'primeng/inputgroup';
 import { InputGroupAddon } from 'primeng/inputgroupaddon';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { TooltipModule } from 'primeng/tooltip';
 import {
   FormArray,
   FormBuilder,
@@ -24,7 +26,12 @@ import { Branch } from '../../interfaces/branch.interface';
 import { InventoryService } from '../../services/inventory.service';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../auth/auth.service';
+
 import { forkJoin } from 'rxjs';
+
+import { BranchSelectComponent } from '../../../shared/components/branch-select/branch-select.component';
+import { PrimaryButtonComponent } from '../../../shared/components/primary-button/primary-button.component';
+import { SecondaryButtonComponent } from '../../../shared/components/secondary-button/secondary-button.component';
 
 @Component({
   selector: 'app-inventory-form',
@@ -32,7 +39,9 @@ import { forkJoin } from 'rxjs';
   imports: [
     CommonModule,
     InputTextModule,
-    Select,
+    BranchSelectComponent,
+    PrimaryButtonComponent,
+    SecondaryButtonComponent,
     InputNumber,
     InputGroup,
     InputGroupAddon,
@@ -40,11 +49,16 @@ import { forkJoin } from 'rxjs';
     ReactiveFormsModule,
     ToggleSwitchModule,
     FormsModule,
+    IconFieldModule,
+    InputIconModule,
+    TooltipModule,
   ],
   templateUrl: './inventory-form.component.html',
   styleUrl: './inventory-form.component.css',
 })
 export class InventoryFormComponent implements OnInit {
+  @ViewChild('ribbonContainer') ribbonContainer?: ElementRef<HTMLDivElement>;
+
   private productsService = inject(ProductsService);
   private branchesService = inject(BranchesService);
   private inventoryService = inject(InventoryService);
@@ -61,9 +75,24 @@ export class InventoryFormComponent implements OnInit {
   inventoryForm!: FormGroup;
   products: Product[] = [];
   branches: Branch[] = [];
+  productSearchTerm: string = '';
   isSuperAdmin: boolean = false;
   isSaving: boolean = false;
-  isLoadingData: boolean = true;
+  isLoadingBranches: boolean = true;
+  isLoadingProducts: boolean = true;
+
+  get filteredRibbonProducts(): Product[] {
+    if (!this.productSearchTerm.trim()) {
+      return this.products;
+    }
+    const term = this.productSearchTerm.trim().toLowerCase();
+    return this.products.filter(
+      (p) =>
+        p.name?.toLowerCase().includes(term) ||
+        p.sku?.toLowerCase().includes(term) ||
+        p.category?.name?.toLowerCase().includes(term)
+    );
+  }
 
   ngOnInit(): void {
     this.initForm();
@@ -72,22 +101,43 @@ export class InventoryFormComponent implements OnInit {
   }
 
   loadInitialData(): void {
-    this.isLoadingData = true;
-    forkJoin({
-      products: this.productsService.getProducts(),
-      branches: this.branchesService.getBranches(),
-    }).subscribe({
+    this.isLoadingBranches = true;
+    this.isLoadingProducts = true;
+
+    this.branchesService.getBranches({ minimal: true }).subscribe({
       next: (res) => {
-        this.products = res.products.data || [];
-        this.branches = res.branches.data || [];
-        this.isLoadingData = false;
+        this.branches = res.data || [];
+        this.isLoadingBranches = false;
+
+        // Seleccionar por defecto la primera sucursal con flag isPlant
+        if (this.branches.length > 0 && !this.inventoryForm.get('branchId')?.value) {
+          const plantBranch = this.branches.find((b) => b.isPlant);
+          if (plantBranch) {
+            this.inventoryForm.patchValue({ branchId: plantBranch.id });
+          }
+        }
       },
-      error: (err) => {
-        this.isLoadingData = false;
+      error: () => {
+        this.isLoadingBranches = false;
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'Error al cargar los datos necesarios.',
+          detail: 'Error al cargar las sucursales.',
+        });
+      },
+    });
+
+    this.productsService.getProducts(undefined, false, undefined, undefined, false, undefined, undefined, true).subscribe({
+      next: (res) => {
+        this.products = res.data || [];
+        this.isLoadingProducts = false;
+      },
+      error: () => {
+        this.isLoadingProducts = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Error al cargar los productos.',
         });
       },
     });
@@ -98,42 +148,63 @@ export class InventoryFormComponent implements OnInit {
       branchId: ['', [Validators.required]],
       items: this.fb.array([], [Validators.required]),
     });
-
-    this.addItem(); // Start with at least 1 item
   }
 
   get items(): FormArray {
     return this.inventoryForm.get('items') as FormArray;
   }
 
-  createItem(): FormGroup {
-    return this.fb.group({
-      productId: ['', [Validators.required]],
-      stock: [null, [Validators.required, Validators.min(0.000001)]],
+  isProductSelected(productId: string): boolean {
+    return this.items.controls.some((ctrl) => ctrl.get('productId')?.value === productId);
+  }
+
+  scrollRibbon(direction: 'left' | 'right'): void {
+    if (!this.ribbonContainer?.nativeElement) return;
+    const scrollAmount = 280;
+    this.ribbonContainer.nativeElement.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    });
+  }
+
+  toggleProduct(product: Product): void {
+    const existingIndex = this.items.controls.findIndex((ctrl) => ctrl.get('productId')?.value === product.id);
+    if (existingIndex > -1) {
+      this.removeItem(existingIndex);
+    } else {
+      this.addProduct(product);
+    }
+  }
+
+  addProduct(product: Product): void {
+    const isManageStock = product.manageStock !== false;
+    const itemGroup = this.fb.group({
+      productId: [product.id, [Validators.required]],
+      name: [product.name || ''],
+      sku: [product.sku || ''],
+      manageStock: [isManageStock],
+      stock: [
+        isManageStock ? null : 0,
+        isManageStock ? [Validators.required, Validators.min(0.000001)] : [],
+      ],
+      isAvailable: [true],
       minStockActivated: [false],
       maxStockActivated: [false],
       minStock: [0],
       maxStock: [0],
-      unitAbbreviation: [''],
-      allowsDecimals: [false],
-      imageUrl: [''],
+      unitAbbreviation: [product.unit?.abbreviation || ''],
+      allowsDecimals: [product.unit?.allowsDecimals ?? false],
+      imageUrl: [product.imageUrl || ''],
     });
-  }
-
-  addItem() {
-    this.items.push(this.createItem());
+    this.items.push(itemGroup);
   }
 
   removeItem(index: number) {
-    if (this.items.length > 1) {
-      this.items.removeAt(index);
-    }
+    this.items.removeAt(index);
   }
 
-  hasAvailableProducts(): boolean {
-    if (!this.products || this.products.length === 0) return false;
-    const selectedCount = this.items.controls.filter((c) => !!c.get('productId')?.value).length;
-    return this.items.length < this.products.length && selectedCount < this.products.length;
+  clearAllItems(): void {
+    this.items.clear();
   }
 
   isFormValid(): boolean {
@@ -150,56 +221,30 @@ export class InventoryFormComponent implements OnInit {
       return false;
     }
 
-    // Verify each item has a product selected, stock > 0, and valid min/max ranges if enabled
+    // Verify each item
     for (let i = 0; i < this.items.length; i++) {
       const itemGroup = this.items.at(i) as FormGroup;
       const val = itemGroup.getRawValue();
-      if (!val.productId || val.stock === null || val.stock === undefined || Number(val.stock) <= 0) {
+      if (!val.productId) {
         return false;
       }
-      if (val.minStockActivated && (val.minStock === null || val.minStock === undefined || Number(val.minStock) < 0)) {
-        return false;
-      }
-      if (val.maxStockActivated && (val.maxStock === null || val.maxStock === undefined || Number(val.maxStock) < 0)) {
-        return false;
-      }
-      if (val.minStockActivated && val.maxStockActivated && Number(val.minStock) > Number(val.maxStock)) {
-        return false;
+      if (val.manageStock) {
+        if (val.stock === null || val.stock === undefined || Number(val.stock) <= 0) {
+          return false;
+        }
+        if (val.minStockActivated && (val.minStock === null || val.minStock === undefined || Number(val.minStock) < 0)) {
+          return false;
+        }
+        if (val.maxStockActivated && (val.maxStock === null || val.maxStock === undefined || Number(val.maxStock) < 0)) {
+          return false;
+        }
+        if (val.minStockActivated && val.maxStockActivated && Number(val.minStock) > Number(val.maxStock)) {
+          return false;
+        }
       }
     }
 
     return true;
-  }
-
-  getAvailableProducts(index: number): Product[] {
-    const selectedProductIds = this.items.controls
-      .map((control, i) => (i !== index ? control.get('productId')?.value : null))
-      .filter((id) => id);
-
-    return this.products.filter((p) => !selectedProductIds.includes(p.id));
-  }
-
-  onProductChange(event: any, index: number) {
-    const productId = event.value;
-    const itemGroup = this.items.at(index) as FormGroup;
-
-    if (!productId) {
-      itemGroup.patchValue({
-        unitAbbreviation: '',
-        allowsDecimals: false,
-        imageUrl: '',
-      });
-      return;
-    }
-
-    const prod = this.products.find((p) => p.id === productId);
-    if (prod) {
-      itemGroup.patchValue({
-        unitAbbreviation: prod.unit?.abbreviation || '',
-        allowsDecimals: prod.unit?.allowsDecimals ?? false,
-        imageUrl: prod.imageUrl || '',
-      });
-    }
   }
 
   checkUserRole() {
@@ -228,22 +273,27 @@ export class InventoryFormComponent implements OnInit {
   }
 
   loadProducts() {
-    this.productsService.getProducts().subscribe({
-      next: (response) => {
-        this.products = response.data;
-      },
-      error: (error) => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: `Error cargando los productos: ${error.error.message}`,
-        });
-      },
-    });
+    this.isLoadingProducts = true;
+    this.productsService
+      .getProducts(undefined, false, undefined, undefined, false, undefined, undefined, true)
+      .subscribe({
+        next: (response) => {
+          this.products = response.data || [];
+          this.isLoadingProducts = false;
+        },
+        error: (error) => {
+          this.isLoadingProducts = false;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: `Error cargando los productos: ${error.error?.message || error.message || 'Error desconocido'}`,
+          });
+        },
+      });
   }
 
   loadBranches(): void {
-    this.branchesService.getBranches().subscribe({
+    this.branchesService.getBranches({ minimal: true }).subscribe({
       next: (response) => {
         this.branches = response.data;
       },
@@ -292,7 +342,7 @@ export class InventoryFormComponent implements OnInit {
     // Validate stock ranges
     for (let i = 0; i < itemsValue.length; i++) {
       const item = itemsValue[i];
-      if (item.minStockActivated && item.maxStockActivated && item.minStock > item.maxStock) {
+      if (item.manageStock && item.minStockActivated && item.maxStockActivated && Number(item.minStock) > Number(item.maxStock)) {
         this.messageService.add({
           severity: 'error',
           summary: 'Rango Inválido',
@@ -307,9 +357,10 @@ export class InventoryFormComponent implements OnInit {
       branchId: branchId,
       items: itemsValue.map((item: any) => ({
         productId: item.productId,
-        stock: item.stock,
-        minStock: item.minStockActivated ? item.minStock : null,
-        maxStock: item.maxStockActivated ? item.maxStock : null,
+        stock: item.manageStock ? (Number(item.stock) || 0) : 0,
+        isAvailable: item.isAvailable !== undefined ? item.isAvailable : true,
+        minStock: item.manageStock && item.minStockActivated && item.minStock !== null ? Number(item.minStock) : null,
+        maxStock: item.manageStock && item.maxStockActivated && item.maxStock !== null ? Number(item.maxStock) : null,
       })),
     };
 

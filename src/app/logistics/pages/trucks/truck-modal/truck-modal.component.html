@@ -1,0 +1,148 @@
+<app-standard-modal
+  [(visible)]="visible"
+  [title]="modalTitle"
+  width="92vw"
+  maxWidth="560px"
+  maxHeight="90vh"
+  (closed)="onClose()"
+>
+  <form [formGroup]="form" (ngSubmit)="onSave()" class="flex flex-col gap-3.5 overflow-y-auto min-h-0 pr-0.5">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-semibold text-[#48021C]">
+          Placa de circulación <span class="text-rose-500">*</span>
+        </label>
+        <input
+          type="text"
+          pInputText
+          formControlName="licensePlate"
+          placeholder="Ej. C-123XYZ"
+          class="w-full p-inputtext-sm !rounded-lg !border-[#9f6587]/35 focus:!border-[#9f6587] focus:!ring-2 focus:!ring-[#9f6587]/20 text-xs font-semibold uppercase h-9!"
+        />
+        @if (form.get('licensePlate')?.invalid && form.get('licensePlate')?.touched) {
+          <small class="text-rose-500 text-[10px] font-medium">La placa es requerida</small>
+        }
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-semibold text-[#48021C]">
+          Nombre / descripción <span class="text-rose-500">*</span>
+        </label>
+        <input
+          type="text"
+          pInputText
+          formControlName="name"
+          placeholder="Ej. Camión Isuzu 5 Toneladas"
+          class="w-full p-inputtext-sm !rounded-lg !border-[#9f6587]/35 focus:!border-[#9f6587] focus:!ring-2 focus:!ring-[#9f6587]/20 text-xs font-medium h-9!"
+        />
+        @if (form.get('name')?.invalid && form.get('name')?.touched) {
+          <small class="text-rose-500 text-[10px] font-medium">El nombre es requerido</small>
+        }
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-semibold text-[#48021C]">Marca</label>
+        <input
+          type="text"
+          pInputText
+          formControlName="brand"
+          placeholder="Ej. Isuzu / Hino"
+          class="w-full p-inputtext-sm !rounded-lg !border-[#9f6587]/35 focus:!border-[#9f6587] focus:!ring-2 focus:!ring-[#9f6587]/20 text-xs font-medium h-9!"
+        />
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-semibold text-[#48021C]">Modelo</label>
+        <input
+          type="text"
+          pInputText
+          formControlName="model"
+          placeholder="Ej. Forward / NPR"
+          class="w-full p-inputtext-sm !rounded-lg !border-[#9f6587]/35 focus:!border-[#9f6587] focus:!ring-2 focus:!ring-[#9f6587]/20 text-xs font-medium h-9!"
+        />
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-semibold text-[#48021C]">Año</label>
+        <p-inputnumber
+          formControlName="year"
+          [useGrouping]="false"
+          placeholder="2022"
+          styleClass="w-full"
+          inputStyleClass="!rounded-lg !border-[#9f6587]/35 focus:!border-[#9f6587] text-xs font-medium h-9! w-full"
+        />
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-semibold text-[#48021C]">Capacidad (kg)</label>
+        <p-inputnumber
+          formControlName="capacity"
+          [min]="0"
+          placeholder="Ej. 5000"
+          styleClass="w-full"
+          inputStyleClass="!rounded-lg !border-[#9f6587]/35 focus:!border-[#9f6587] text-xs font-medium h-9! w-full"
+        />
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-semibold text-[#48021C]">
+          Estado operativo <span class="text-rose-500">*</span>
+        </label>
+        <p-select
+          [options]="statusOptions"
+          formControlName="status"
+          optionLabel="label"
+          optionValue="value"
+          [fluid]="true"
+          size="small"
+          appendTo="body"
+          styleClass="w-full !rounded-lg !border-[#9f6587]/35 focus-within:!border-[#9f6587] focus-within:!ring-2 focus-within:!ring-[#9f6587]/20 text-xs font-medium"
+        />
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-[#48021C]">Conductor asignado por defecto</label>
+      <p-select
+        [options]="drivers"
+        formControlName="defaultDriverId"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Seleccionar conductor..."
+        [showClear]="true"
+        [filter]="true"
+        filterPlaceholder="Buscar conductor..."
+        [fluid]="true"
+        size="small"
+        appendTo="body"
+        styleClass="w-full !rounded-lg !border-[#9f6587]/35 focus-within:!border-[#9f6587] focus-within:!ring-2 focus-within:!ring-[#9f6587]/20 text-xs font-medium"
+      />
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-[#48021C]">Observaciones</label>
+      <textarea
+        pTextarea
+        formControlName="notes"
+        rows="2"
+        placeholder="Notas u observaciones adicionales del vehículo..."
+        class="w-full text-xs font-medium !bg-rose-50/40 !border-[#48021C]/25 hover:!border-[#48021C]/60 hover:!bg-white focus:!border-[#48021C] focus:!ring-2 focus:!ring-[#48021C]/10 !rounded-xl p-2.5 resize-none"
+      ></textarea>
+    </div>
+  </form>
+
+  <div footer class="flex items-center justify-end gap-2 w-full">
+    <app-secondary-button
+      label="Cancelar"
+      icon="pi pi-times"
+      (clicked)="onClose()"
+    />
+    <app-primary-button
+      [label]="truck ? 'Guardar cambios' : 'Registrar camión'"
+      icon="pi pi-check"
+      [loading]="saving"
+      (clicked)="onSave()"
+    />
+  </div>
+</app-standard-modal>

@@ -254,7 +254,7 @@ export class QuickSaleComponent implements OnInit, OnDestroy {
     }
 
     this.loadingProducts.set(true);
-    this.productsService.getBranchCatalog(branchId).subscribe({
+    this.productsService.getBranchCatalog(branchId, false).subscribe({
       next: (res) => {
         this.products.set(res.data);
         this.loadingProducts.set(false);
@@ -307,6 +307,15 @@ export class QuickSaleComponent implements OnInit, OnDestroy {
 
   addProduct(product: Product): void {
     if (!product) return;
+
+    if (product.isAvailable === false) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'No disponible',
+        detail: `El producto "${product.name}" no se encuentra disponible en esta sucursal.`,
+      });
+      return;
+    }
 
     const detailGroup = this.fb.group({
       productId: [product.id, Validators.required],

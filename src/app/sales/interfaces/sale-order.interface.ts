@@ -10,7 +10,9 @@ export interface ISaleOrderResponse {
   date: Date;
   billingStartDate?: Date | string | null;
   dueDate?: Date | string | null;
+  promisedDeliveryDate?: Date | string | null;
   deliveredAt?: Date | string | null;
+  isPreorder?: boolean;
   type: string;
   status: string;
   subtotal: string;

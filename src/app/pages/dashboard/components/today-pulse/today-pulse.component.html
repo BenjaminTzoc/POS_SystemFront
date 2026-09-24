@@ -1,0 +1,162 @@
+<div class="pulse-rail">
+  <div class="pulse-head">
+    <h3 class="text-base font-semibold tracking-tight text-[#48021C]">Pulso de hoy</h3>
+    @if (errorMessage()) {
+      <p class="text-[10px] font-medium text-rose-500">{{ errorMessage() }}</p>
+    }
+  </div>
+
+  @if (isLoading() && !data()) {
+    <div class="pulse-empty">
+      <i class="pi pi-spin pi-spinner text-xl text-[#48021C]"></i>
+    </div>
+  } @else {
+    <article class="pulse-card pulse-card-sales">
+      <div class="pulse-main">
+        <p class="pulse-label text-[#1B768E]">Ventas de hoy</p>
+        <p class="pulse-value text-[#1B768E]">{{ sales()?.total || 0 | currency:'GTQ':'symbol':'1.2-2' }}</p>
+        @if (salesTrend() === 'up') {
+          <p class="trend-up">
+            <i class="pi pi-arrow-up-right"></i>
+            {{ sales()?.changePercent }}% · {{ salesDelta() | currency:'GTQ':'symbol':'1.0-0' }} vs ayer
+          </p>
+        } @else if (salesTrend() === 'down') {
+          <p class="trend-down">
+            <i class="pi pi-arrow-down-left"></i>
+            {{ sales()?.changePercent }}% · {{ salesDelta() | currency:'GTQ':'symbol':'1.0-0' }} vs ayer
+          </p>
+        } @else {
+          <p class="trend-flat">0% vs ayer</p>
+        }
+      </div>
+      <dl class="pulse-side">
+        <div>
+          <dt>Tickets</dt>
+          <dd>{{ sales()?.ticketCount || 0 }}</dd>
+        </div>
+        <div>
+          <dt>Ticket promedio</dt>
+          <dd>{{ sales()?.averageTicket || 0 | currency:'GTQ':'symbol':'1.0-0' }}</dd>
+        </div>
+      </dl>
+      <dl class="pulse-foot is-wide">
+        <div>
+          <dt>Efectivo</dt>
+          <dd>{{ sales()?.cashToday || 0 | currency:'GTQ':'symbol':'1.0-0' }}</dd>
+        </div>
+        <div>
+          <dt>Crédito</dt>
+          <dd>{{ sales()?.creditToday || 0 | currency:'GTQ':'symbol':'1.0-0' }}</dd>
+        </div>
+        <div>
+          <dt>Otros</dt>
+          <dd>{{ sales()?.otherToday || 0 | currency:'GTQ':'symbol':'1.0-0' }}</dd>
+        </div>
+        <div>
+          <dt>Hora pico</dt>
+          <dd>{{ sales()?.peakHour?.label || '—' }}</dd>
+        </div>
+      </dl>
+    </article>
+
+    <article class="pulse-card pulse-card-pending">
+      <div class="pulse-main">
+        <p class="pulse-label text-amber-700">Órdenes pendientes</p>
+        <p class="pulse-value text-amber-700">{{ pending()?.total || 0 }}</p>
+        @if (pending()?.oldestMinutes != null) {
+          <p class="pulse-hint">Más antigua: {{ formatWait(pending()?.oldestMinutes) }}</p>
+        } @else {
+          <p class="pulse-hint">Sin cola</p>
+        }
+      </div>
+      <dl class="pulse-side">
+        <div>
+          <dt>Por preparar</dt>
+          <dd>{{ pending()?.preparing || 0 }}</dd>
+        </div>
+        <div>
+          <dt>Por entregar</dt>
+          <dd>{{ pending()?.delivery || 0 }}</dd>
+        </div>
+      </dl>
+      <dl class="pulse-foot is-next">
+        <div>
+          <dt>Preorden</dt>
+          <dd>{{ pending()?.preorder || 0 }}</dd>
+        </div>
+        <div>
+          <dt>Siguiente</dt>
+          @if (pending()?.nextCustomer?.saleId) {
+            <dd class="pulse-name">
+              <button
+                type="button"
+                class="pulse-link cursor-pointer"
+                (click)="openSale(pending()?.nextCustomer?.saleId)"
+              >
+                {{ pending()?.nextCustomer?.name }}
+              </button>
+            </dd>
+          } @else {
+            <dd class="pulse-name">{{ pending()?.nextCustomer?.name || '—' }}</dd>
+          }
+        </div>
+      </dl>
+    </article>
+
+    <article class="pulse-card pulse-card-alert">
+      <div class="pulse-main">
+        <p class="pulse-label text-rose-700">Por cobrar</p>
+        <p class="pulse-value text-rose-700">{{ receivable()?.total || 0 | currency:'GTQ':'symbol':'1.2-2' }}</p>
+        <p class="pulse-hint text-rose-500/80">{{ receivable()?.invoiceCount || 0 }} facturas abiertas</p>
+      </div>
+      <dl class="pulse-side">
+        <div>
+          <dt>Vencido</dt>
+          <dd class="text-rose-700">{{ receivable()?.overdue || 0 | currency:'GTQ':'symbol':'1.0-0' }}</dd>
+        </div>
+        <div>
+          <dt>Vence hoy</dt>
+          <dd>{{ receivable()?.dueToday || 0 | currency:'GTQ':'symbol':'1.0-0' }}</dd>
+        </div>
+      </dl>
+      <dl class="pulse-foot is-debtor">
+        <div>
+          <dt>Mayor saldo</dt>
+          <dd class="pulse-name">{{ receivable()?.topDebtor?.name || '—' }}</dd>
+        </div>
+        <div>
+          <dt>Monto</dt>
+          <dd>{{ receivable()?.topDebtor?.amount || 0 | currency:'GTQ':'symbol':'1.0-0' }}</dd>
+        </div>
+      </dl>
+    </article>
+
+    <article class="pulse-card pulse-card-attention">
+      <div class="pulse-main">
+        <p class="pulse-label text-sky-700">Atención</p>
+        <p class="pulse-value text-sky-800">{{ attention()?.lowStockCount || 0 }} SKUs bajos</p>
+        <p class="pulse-hint">{{ attention()?.preordersForToday || 0 }} preórdenes para hoy</p>
+      </div>
+      @if ((attention()?.lowStock?.length || 0) > 0) {
+        <ul class="pulse-side pulse-list">
+          @for (item of attention()!.lowStock.slice(0, 2); track item.productId) {
+            <li>
+              <span class="truncate">{{ item.name }}</span>
+              <span class="tabular-nums shrink-0">{{ stockLabel(item) }}</span>
+            </li>
+          }
+        </ul>
+        <ul class="pulse-foot pulse-list">
+          @for (item of attention()!.lowStock.slice(2); track item.productId) {
+            <li>
+              <span class="truncate">{{ item.name }}</span>
+              <span class="tabular-nums shrink-0">{{ stockLabel(item) }}</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="pulse-side pulse-hint">Sin alertas de stock</p>
+      }
+    </article>
+  }
+</div>

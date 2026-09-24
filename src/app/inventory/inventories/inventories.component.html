@@ -1,150 +1,169 @@
 <div class="py-4 px-0 md:px-6 bg-slate-50/50 min-h-screen">
-  <!-- Top Card: Header & Filters -->
-  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-6">
-    <div class="bg-white rounded-2xl border border-slate-300 shadow-sm">
-      <!-- Card Header -->
-      <div class="py-2.5 px-4 md:px-6 flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/50 rounded-t-2xl">
-        <h1 class="text-lg md:text-xl font-semibold text-gray-900 tracking-tight leading-none">
-          Inventarios
-        </h1>
+  <!-- Top Card: Reusable Page Header -->
+  <app-page-header
+    title="Inventarios"
+    icon="pi pi-box"
+    colorScheme="burgundy"
+  >
+    <!-- Botones Superiores de Acción -->
+    <ng-container actions>
+      <app-refresh-button [loading]="loading" (refresh)="loadInventories()" />
 
-        <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-          <p-button 
-            [outlined]="true"
-            styleClass="!rounded-lg text-sm! font-semibold !border-[1.5px] !border-[#1e3a5f] !text-[#1e3a5f] !bg-white hover:!bg-[#1e3a5f] hover:!text-white inline-flex items-center gap-1.5 shadow-sm transition-all"
-            [loading]="loading"
-            (onClick)="loadInventories()"
-            pTooltip="Actualizar lista de inventarios"
-            tooltipPosition="bottom"
-          >
-            <i class="pi pi-refresh text-xs" [class.pi-spin]="loading"></i>
-            <span>Actualizar</span>
-          </p-button>
+      <app-secondary-button 
+        label="Movimientos" 
+        icon="pi pi-history" 
+        (clicked)="goToMovements()" 
+      />
 
-          <p-button 
-            [outlined]="true"
-            styleClass="!rounded-lg text-sm! font-semibold !border-[1.5px] !border-indigo-600 !text-indigo-700 !bg-indigo-50/60 hover:!bg-indigo-600 hover:!text-white inline-flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
-            (onClick)="goToMovements()"
-            pTooltip="Ver historial de movimientos de inventario"
-            tooltipPosition="bottom"
-          >
-            <i class="pi pi-history text-xs font-semibold text-indigo-600 group-hover:text-white"></i>
-            <span>Movimientos</span>
-          </p-button>
+      <app-primary-button 
+        label="Nuevo Inventario" 
+        (clicked)="createNewInventory()" 
+      />
+    </ng-container>
 
-          <p-button 
-            (onClick)="createNewInventory()"
-            styleClass="!rounded-lg text-sm! font-semibold !bg-[#48021C] !text-white !border-[#48021C] hover:!bg-[#350114] inline-flex items-center gap-1.5 shadow-sm transition-all"
-            pTooltip="Registrar nuevo inventario"
-            tooltipPosition="bottom"
-          >
-            <i class="pi pi-plus text-xs"></i>
-            <span>Nuevo Inventario</span>
-          </p-button>
-        </div>
-      </div>
+    <!-- Filtros Inferiores -->
+    <ng-container filters>
+      <!-- Branch Select Reutilizable -->
+      <app-branch-select
+        [branches]="branches"
+        [(ngModel)]="selectedBranchId"
+        [showClear]="isSuperAdmin"
+        [disabled]="!isSuperAdmin"
+        (selectionChange)="loadInventories()"
+      />
 
-      <!-- Card Body: Branch Select & Search Filter -->
-      <div class="p-4 md:px-6 flex flex-col md:flex-row items-stretch md:items-center gap-3">
-        <!-- Branch Select -->
-        <div class="flex flex-col gap-1 w-full md:w-auto">
-          <p-select
-            [options]="branches"
-            [(ngModel)]="selectedBranchId"
-            optionLabel="name"
-            optionValue="id"
-            [showClear]="isSuperAdmin"
-            placeholder="Todas las sucursales"
-            (onChange)="loadInventories()"
-            [disabled]="!isSuperAdmin"
-            appendTo="body"
-            class="!rounded-xl shadow-none w-full md:w-auto"
-            styleClass="!rounded-xl border-slate-200 w-full md:w-[16rem] text-xs h-9!"
-          />
-        </div>
-
-        <!-- Search Input -->
-        <div class="w-full md:w-[28rem]">
-          <p-iconfield>
-            <p-inputicon class="pi pi-search text-slate-400" />
-            <input 
-              type="text" 
-              pInputText 
-              [(ngModel)]="searchTerm"
-              placeholder="Buscar por producto o SKU..."
-              autocomplete="off" 
-              class="w-full text-xs h-9! border-slate-200! rounded-xl!"
-            />
-          </p-iconfield>
-        </div>
-      </div>
-    </div>
-  </div>
+      <!-- Search Input Reutilizable -->
+      <app-search-input 
+        [(ngModel)]="searchTerm" 
+        placeholder="Buscar por producto o SKU..." 
+      />
+    </ng-container>
+  </app-page-header>
 
   <div class="max-w-[1700px] mx-auto space-y-8 md:space-y-12">
     @if (loading) {
       <div class="flex flex-col items-center justify-center py-32 gap-3">
-        <i class="pi pi-spin pi-spinner text-4xl text-spiced-purple"></i>
+        <i class="pi pi-spin pi-spinner text-4xl text-[#48021C]"></i>
         <span class="text-sm font-semibold text-slate-500 tracking-wide">Cargando inventarios...</span>
       </div>
     } @else {
       @for (group of groupedInventories; track group.branch) {
         <div class="space-y-4 md:space-y-6">
           <div class="flex items-center gap-2 md:gap-4 px-4 md:px-0">
-            <div class="h-[1px] flex-1 bg-slate-200"></div>
-            <div class="flex items-center gap-2 px-4 py-1.5 bg-white rounded-full border border-slate-200 shadow-sm">
-              <i class="pi pi-building text-marionberry text-xs"></i>
-              <span class="text-[12px] md:text-sm font-semibold text-marionberry tracking-widest">{{ group.branch }}</span>
-              <span class="bg-marionberry text-white text-[11px] px-2 py-0.5 rounded-full font-semibold">
+            <div class="h-[1px] flex-1 bg-[#48021C]/25"></div>
+            <div class="flex items-center gap-2 px-4 py-1.5 bg-white rounded-full border border-[#48021C]/25 shadow-2xs">
+              <i class="pi pi-building text-[#48021C] text-xs"></i>
+              <span class="text-[12px] md:text-sm font-semibold text-[#48021C] tracking-widest">{{ group.branch }}</span>
+              <span class="bg-[#48021C] text-white text-[11px] px-2.5 py-0.5 rounded-full font-semibold">
                 {{ group.items.length }}
               </span>
             </div>
-            <div class="h-[1px] flex-1 bg-slate-200"></div>
+            <div class="h-[1px] flex-1 bg-[#48021C]/25"></div>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-6 px-4 md:px-0">
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5 px-4 md:px-0">
             @for (inventory of group.items; track inventory.id) {
-              <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex h-32 md:h-44 transition-all hover:border-spiced-purple-palest hover:shadow-md">
-                <div class="w-28 md:w-40 relative overflow-hidden bg-slate-50 flex items-center justify-center flex-shrink-0 border-r border-slate-100">
-                  @if (inventory.product?.imageUrl) {
-                    <img [src]="getProductImageUrl(inventory.product?.imageUrl)" [alt]="inventory.product?.name"
-                      class="w-full h-full object-cover"/>
-                  } @else {
-                    <div class="w-full h-full flex items-center justify-center bg-slate-50">
-                      <i class="pi pi-image text-3xl md:text-5xl! text-slate-200"></i>
-                    </div>
-                  }
-                </div>
-                <div class="flex-1 p-3 md:p-5 flex flex-col justify-between min-w-0">
-                  <div class="min-w-0">
-                    <div class="flex flex-col mb-1 min-w-0">
-                      <span class="text-[9px] md:text-[11px] font-semibold text-spiced-purple uppercase tracking-widest leading-none mb-1 truncate">
-                        {{ inventory.product?.sku }}
+              <div class="bg-white rounded-2xl border border-[#48021C]/25 shadow-2xs overflow-hidden flex flex-col justify-between transition-all duration-200 hover:border-[#48021C]/40 hover:shadow-md group">
+                <!-- Zona Superior: Identificación del Producto e Imagen -->
+                <div class="p-3.5 sm:p-4 flex gap-3.5 items-start">
+                  <!-- Thumbnail con marco temático -->
+                  <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-xl relative overflow-hidden bg-rose-50/30 flex items-center justify-center flex-shrink-0 border border-[#48021C]/20 shadow-2xs">
+                    @if (inventory.product?.imageUrl) {
+                      <img 
+                        [src]="getProductImageUrl(inventory.product?.imageUrl)" 
+                        [alt]="inventory.product?.name"
+                        class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    } @else {
+                      <i class="pi pi-image text-2xl sm:text-3xl text-[#48021C]/25"></i>
+                    }
+                  </div>
+
+                  <!-- Datos Principales del Producto -->
+                  <div class="flex-1 min-w-0 flex flex-col">
+                    <!-- Fila Superior: SKU y Precio -->
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                      <span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-50/70 border border-[#48021C]/20 text-[#48021C] tracking-wide truncate max-w-[140px]">
+                        {{ inventory.product?.sku || 'SIN SKU' }}
                       </span>
-                      <h3 class="text-sm md:text-lg font-semibold text-congressional-navy leading-tight truncate">{{ inventory.product?.name }}</h3>
+                      <span class="text-xs sm:text-sm font-extrabold text-slate-800 tabular-nums">
+                        {{ inventory.product?.price | currency: 'Q' }}
+                      </span>
                     </div>
-                    <div class="flex flex-col gap-0.5 md:gap-1 mt-1">
-                      <div class="flex items-center text-[10px] md:text-xs font-semibold gap-1 text-slate-500">
-                        <span class="text-spiced-purple">Precio:</span>
-                        <span class="text-congressional-navy">{{ inventory.product?.price | currency: 'Q' }}</span>
-                      </div>
-                      <div class="flex items-center text-[10px] md:text-xs font-semibold gap-1 text-slate-500">
-                        <span class="text-spiced-purple">Últ. mov:</span>
-                        <span class="text-congressional-navy">{{ (inventory.lastMovementDate | date: 'dd/MM/yyyy') || 'Sin registros' }}</span>
+
+                    <!-- Nombre del Producto -->
+                    <h3 
+                      class="text-xs sm:text-sm font-bold text-slate-800 leading-snug line-clamp-2 hover:text-[#48021C] transition-colors mb-1.5" 
+                      [pTooltip]="inventory.product?.name" 
+                      tooltipPosition="top"
+                    >
+                      {{ inventory.product?.name }}
+                    </h3>
+
+                    <!-- Metadatos Secundarios: Código de Barras / Último Movimiento -->
+                    <div class="flex flex-col gap-0.5 text-[11px] text-slate-500">
+                      @if (inventory.product?.barcode) {
+                        <div class="flex items-center gap-1.5 truncate">
+                          <i class="pi pi-barcode text-[10px] text-[#48021C]/60"></i>
+                          <span class="font-medium text-slate-600 truncate">{{ inventory.product?.barcode }}</span>
+                        </div>
+                      }
+                      <div class="flex items-center gap-1.5">
+                        <i class="pi pi-calendar text-[10px] text-[#48021C]/60"></i>
+                        <span class="text-[10px] sm:text-[11px] text-slate-500">
+                          {{ (inventory.lastMovementDate | date: 'dd/MM/yyyy HH:mm') || 'Sin movimientos' }}
+                        </span>
                       </div>
                     </div>
                   </div>
-                  <div class="flex items-center justify-end pt-2 md:pt-3 border-t border-slate-50">
-                    <div class="flex items-center gap-2">
-                      <div class="w-7 h-7 md:w-8 md:h-8 rounded-full bg-spiced-purple-palest text-spiced-purple flex items-center justify-center border border-spiced-purple-pale">
-                        <i class="pi pi-box !text-[10px] md:!text-sm"></i>
+                </div>
+
+                <!-- Zona Inferior: Barra de Estado de Inventario y Disponibilidad -->
+                <div class="bg-slate-50/80 px-3.5 py-2 sm:py-2.5 border-t border-[#48021C]/15 flex items-center justify-between gap-2">
+                  <!-- Botón de Disponibilidad -->
+                  <button
+                    type="button"
+                    (click)="toggleInventoryAvailability(inventory, $event)"
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-semibold transition-all cursor-pointer border shadow-2xs"
+                    [ngClass]="inventory.isAvailable !== false ? 'bg-[#dcfce7] text-[#14532d] border-[#14532d]/35 hover:bg-[#bbf7d0]' : 'bg-[#ffe4e6] text-[#9f1239] border-[#9f1239]/35 hover:bg-[#fecdd3]'"
+                    [pTooltip]="inventory.isAvailable !== false ? 'Clic para cambiar a No Disponible' : 'Clic para activar Disponibilidad'"
+                    tooltipPosition="top"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full" [ngClass]="inventory.isAvailable !== false ? 'bg-[#14532d]' : 'bg-[#9f1239]'"></span>
+                    <span>{{ inventory.isAvailable !== false ? 'Disponible' : 'No disponible' }}</span>
+                  </button>
+
+                  <!-- Caja de Stock / Existencia Dinámica -->
+                  @let status = getStockStatus(inventory);
+                  <div class="flex items-center gap-2">
+                    @if (inventory.product?.manageStock !== false) {
+                      <div 
+                        [class]="'w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center border shadow-2xs shrink-0 transition-colors ' + status.iconClass"
+                      >
+                        <i [class]="status.icon + ' text-xs sm:text-sm'"></i>
                       </div>
-                      <div class="flex flex-col">
-                        <span class="text-sm md:text-base font-bold leading-none text-spiced-purple">
-                          {{ inventory.stock }} <span class="text-[9px] md:text-xs font-bold">{{ inventory.product?.unit?.abbreviation }}</span>
+                      <div class="flex flex-col text-right justify-center">
+                        <span [class]="'text-xs sm:text-sm font-bold leading-tight tabular-nums ' + status.textClass">
+                          {{ inventory.stock | number : '1.0-2' }} <span class="text-xs sm:text-sm">{{ inventory.product?.unit?.abbreviation || '' }}</span>
                         </span>
-                        <span class="text-[7px] md:text-[10px] text-spiced-purple font-semibold leading-none">En Existencia</span>
+                        <span [class]="'text-[9px] sm:text-[10px] font-medium leading-tight ' + status.textClass">
+                          {{ status.label }}
+                        </span>
                       </div>
-                    </div>
+                    } @else {
+                      <div 
+                        [class]="'w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center border shadow-2xs shrink-0 ' + status.iconClass" 
+                        [pTooltip]="'Este producto no gestiona control de existencias'" 
+                        tooltipPosition="top"
+                      >
+                        <i [class]="status.icon + ' text-xs sm:text-sm text-slate-400'"></i>
+                      </div>
+                      <div class="flex flex-col text-right justify-center">
+                        <span [class]="'text-xs sm:text-sm font-bold leading-tight ' + status.textClass">
+                          Sin Control
+                        </span>
+                        <span class="text-[9px] sm:text-[10px] text-slate-400 font-medium leading-tight">Ilimitado</span>
+                      </div>
+                    }
                   </div>
                 </div>
               </div>
@@ -164,34 +183,44 @@
   </div>
 </div>
 
-<!-- Modal: Movimientos de Inventario -->
-<p-dialog
+<!-- Modal: Movimientos de Inventario (Reutilizable Standard Modal) -->
+<app-standard-modal
   [(visible)]="showMovementsModal"
-  [modal]="true"
-  [showHeader]="false"
-  [closable]="false"
-  [style]="{ width: '92vw', maxWidth: '1400px', maxHeight: '90vh' }"
-  contentStyleClass="!p-0 !overflow-hidden flex flex-col max-h-[90vh]"
-  appendTo="body"
-  styleClass="rounded-2xl overflow-hidden shadow-2xl bg-white border border-slate-200"
+  title="Movimientos de Inventario"
+  [badge]="movementsComp.totalRecords + ' registros'"
+  maxWidth="1400px"
+  maxHeight="90vh"
+  (closed)="showMovementsModal = false"
 >
+  <!-- Slot de Acciones Superiores del Modal -->
+  <ng-container actions>
+    <app-refresh-button 
+      [loading]="movementsComp.loading" 
+      (refresh)="movementsComp.loadInventoryMovements()" 
+    />
+
+    <app-primary-button
+      label="Registrar Nuevo Movimiento"
+      (clicked)="movementsComp.recordMovement()"
+    />
+  </ng-container>
+
+  <!-- Contenido Interior: Tabla de Movimientos -->
   <app-inventory-movements 
+    #movementsComp
     [isModal]="true" 
     (onClose)="showMovementsModal = false"
     (onMovementChange)="loadInventories()"
-  ></app-inventory-movements>
-</p-dialog>
+  />
+</app-standard-modal>
 
-<!-- Modal: Generar Nuevo Inventario -->
-<p-dialog
+<!-- Modal: Generar Nuevo Inventario (Reutilizable Standard Modal) -->
+<app-standard-modal
   [(visible)]="showNewInventoryModal"
-  [modal]="true"
-  [showHeader]="false"
-  [closable]="false"
-  [style]="{ width: '90vw', maxWidth: '680px', maxHeight: '90vh' }"
-  contentStyleClass="!p-5 md:!p-6 !overflow-hidden flex flex-col"
-  appendTo="body"
-  styleClass="rounded-2xl overflow-hidden shadow-2xl bg-white"
+  title="Generar Nuevo Inventario"
+  maxWidth="850px"
+  maxHeight="92vh"
+  (closed)="showNewInventoryModal = false"
 >
   @if (showNewInventoryModal) {
     <app-inventory-form 
@@ -200,7 +229,7 @@
       (onSaved)="onInventorySaved()"
     ></app-inventory-form>
   }
-</p-dialog>
+</app-standard-modal>
 
 <!-- MODAL DE CONFIRMACIÓN: ELIMINAR INVENTARIO -->
 <app-confirmation-modal

@@ -1,0 +1,346 @@
+<div class="widget-card p-4 rounded-xl">
+  <div class="kpi-toolbar mb-4 flex items-center justify-between gap-3">
+    <h3 class="text-base font-semibold tracking-tight text-[#48021C] min-w-0 truncate">Consolidado semanal por cliente</h3>
+
+    <div class="flex items-center gap-1.5 shrink-0">
+      <button
+        type="button"
+        class="w-8 h-8 rounded-xl border border-[#9f6587]/35 bg-white text-[#48021C] hover:bg-[#9f6587]/15 flex items-center justify-center cursor-pointer"
+        (click)="shiftWeek(-1)"
+        pTooltip="Semana anterior"
+      >
+        <i class="pi pi-chevron-left text-xs"></i>
+      </button>
+      <div class="text-center min-w-[9.5rem]">
+        <p class="text-xs font-semibold text-[#6e3757] tabular-nums leading-tight">{{ weekRangeLabel() }}</p>
+        <p class="text-[10px] font-medium text-[#48021C]/70">Semana {{ weekNumber() }}</p>
+      </div>
+      <button
+        type="button"
+        class="w-8 h-8 rounded-xl border border-[#9f6587]/35 bg-white text-[#48021C] hover:bg-[#9f6587]/15 flex items-center justify-center cursor-pointer"
+        (click)="shiftWeek(1)"
+        pTooltip="Semana siguiente"
+      >
+        <i class="pi pi-chevron-right text-xs"></i>
+      </button>
+      <p-datepicker
+        [ngModel]="weekStart()"
+        (ngModelChange)="onPickDate($event)"
+        [showIcon]="true"
+        [readonlyInput]="true"
+        dateFormat="dd/mm/yy"
+        appendTo="body"
+        styleClass="customer-week-picker"
+        pTooltip="Elegir una fecha de la semana"
+      />
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="mb-4 flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-rose-800">
+      <i class="pi pi-exclamation-circle mt-0.5 text-sm"></i>
+      <p class="text-xs leading-relaxed">{{ errorMessage() }}</p>
+    </div>
+  }
+
+  <div class="kpi-toolbar mb-4">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+      <div class="rounded-lg border border-[#9ecad6] bg-[#e8f4f7] px-3 py-2.5">
+        <p class="text-[9px] font-bold text-[#1B768E]">Top cliente</p>
+        <p class="mt-0.5 text-xs font-semibold text-slate-800 truncate">{{ kpis().topName }}</p>
+        <p class="text-sm font-bold text-[#1B768E] tabular-nums">{{ kpis().topTotal | currency:'GTQ':'symbol':'1.2-2' }}</p>
+      </div>
+      <div class="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2.5">
+        <p class="text-[9px] font-bold text-sky-700">Ticket promedio</p>
+        <p class="mt-0.5 text-sm font-bold text-slate-800 tabular-nums">{{ kpis().averageTicket | currency:'GTQ':'symbol':'1.2-2' }}</p>
+        <p class="text-[10px] font-semibold text-sky-700/80">{{ kpis().customerCount }} cuentas activas</p>
+      </div>
+      <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5">
+        <p class="text-[9px] font-bold text-amber-700">Concentración top 5</p>
+        <p class="mt-0.5 text-sm font-bold text-slate-800 tabular-nums">{{ kpis().concentration | number:'1.0-0' }}%</p>
+        <p class="text-[10px] font-semibold text-amber-700/80">del gasto de la semana</p>
+      </div>
+      <div class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2.5">
+        <p class="text-[9px] font-bold text-rose-600">Saldo pendiente</p>
+        <p class="mt-0.5 text-sm font-bold text-rose-700 tabular-nums">{{ kpis().pending | currency:'GTQ':'symbol':'1.2-2' }}</p>
+        <p class="text-[10px] font-semibold text-rose-600/80">incluye preórdenes y crédito</p>
+      </div>
+    </div>
+
+    <div class="mt-2.5 flex items-center justify-between gap-2.5">
+      <app-search-input
+        placeholder="Buscar cliente, categoría o producto..."
+        widthClass="w-full sm:w-[28rem]"
+        (searchChange)="search.set($event)"
+      />
+      <div class="flex items-center bg-rose-50 p-1 rounded-xl border border-[#9f6587]/35 h-9 shrink-0">
+        <button
+          class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer"
+          [class.bg-white]="audience() === 'all'"
+          [class.shadow-sm]="audience() === 'all'"
+          [class.text-[#48021C]]="audience() === 'all'"
+          [class.text-slate-500]="audience() !== 'all'"
+          (click)="setAudience('all')"
+        >Todos</button>
+        <button
+          class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer"
+          [class.bg-white]="audience() === 'registered'"
+          [class.shadow-sm]="audience() === 'registered'"
+          [class.text-[#48021C]]="audience() === 'registered'"
+          [class.text-slate-500]="audience() !== 'registered'"
+          (click)="setAudience('registered')"
+        >Cuentas</button>
+        <button
+          class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer"
+          [class.bg-white]="audience() === 'guest'"
+          [class.shadow-sm]="audience() === 'guest'"
+          [class.text-[#48021C]]="audience() === 'guest'"
+          [class.text-slate-500]="audience() !== 'guest'"
+          (click)="setAudience('guest')"
+        >C/F</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="widget-span relative">
+    @if (isLoading()) {
+      <div class="absolute inset-0 z-10 flex items-center justify-center bg-white/70 rounded-xl">
+        <i class="pi pi-spin pi-spinner text-2xl text-[#48021C]"></i>
+      </div>
+    }
+
+    <div class="hidden lg:block overflow-hidden rounded-xl border border-[#9f6587]/35 bg-white/95">
+      <div class="customer-week-table-frame">
+        <table class="customer-week-table w-full text-left border-collapse">
+          <colgroup>
+            <col class="w-[26%]" />
+            <col class="w-[13%]" />
+            <col class="w-[8%]" />
+            <col class="w-[12%]" />
+            <col class="w-[9%]" />
+            <col class="w-[16%]" />
+            <col class="w-[16%]" />
+          </colgroup>
+          <thead>
+            <tr class="border-b border-[#e4c9d5]/70">
+              <th class="px-2.5 py-2 text-[10px] text-[#48021C] font-semibold">Cliente</th>
+              <th class="px-2 py-2 text-[10px] text-[#48021C] font-semibold text-right">Gastó</th>
+              <th class="px-1.5 py-2 text-[10px] text-[#48021C] font-semibold text-center">Ped.</th>
+              <th class="px-2 py-2 text-[10px] text-[#48021C] font-semibold text-right">Ticket</th>
+              <th class="px-1.5 py-2 text-[10px] text-[#48021C] font-semibold text-center">vs ant.</th>
+              <th class="px-2 py-2 text-[10px] text-[#48021C] font-semibold">Cobro</th>
+              <th class="px-2 py-2 text-[10px] text-[#48021C] font-semibold">Top</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of filtered(); track rowKey(c)) {
+              <tr
+                class="border-b border-slate-100 cursor-pointer transition-colors hover:bg-[#9f6587]/10"
+                [class.bg-[#fff0f2]]="selectedId() === rowKey(c)"
+                [class.opacity-50]="c.inactiveThisWeek"
+                (click)="selectCustomer(c)"
+              >
+                <td class="px-2.5 py-2">
+                  <p class="text-xs font-semibold text-[#374375] truncate">{{ c.name }}</p>
+                  <div class="mt-0.5 flex items-center gap-1 min-w-0">
+                    <app-status-badge [value]="c.category.name" [severity]="categorySeverity(c.category.name)" size="xs" />
+                    @if (c.preorderCommitted > 0) {
+                      <app-status-badge value="Preorden" severity="info" size="xs" />
+                    }
+                  </div>
+                </td>
+                <td class="px-2 py-2 text-right">
+                  <span class="text-xs font-bold tabular-nums text-slate-800">{{ c.total | currency:'GTQ':'symbol':'1.2-2' }}</span>
+                </td>
+                <td class="px-1.5 py-2 text-center text-xs font-semibold text-slate-600">{{ c.orderCount }}</td>
+                <td class="px-2 py-2 text-right text-xs tabular-nums text-slate-600">{{ c.averageTicket | currency:'GTQ':'symbol':'1.0-0' }}</td>
+                <td class="px-1.5 py-2 text-center">
+                  @if (c.trendPercent > 0) {
+                    <span class="inline-flex items-center gap-0.5 text-[11px] font-bold text-emerald-600">
+                      <i class="pi pi-arrow-up-right trend-icon"></i>{{ c.trendPercent }}%
+                    </span>
+                  } @else if (c.trendPercent < 0) {
+                    <span class="inline-flex items-center gap-0.5 text-[11px] font-bold text-rose-600">
+                      <i class="pi pi-arrow-down-left trend-icon"></i>{{ c.trendPercent }}%
+                    </span>
+                  } @else {
+                    <span class="text-[11px] font-bold text-slate-400">0%</span>
+                  }
+                </td>
+                <td class="px-2 py-2">
+                  <div class="h-1 rounded-full bg-slate-100 overflow-hidden mb-0.5">
+                    <div class="h-full bg-[#48021C]" [style.width.%]="paidPercent(c)"></div>
+                  </div>
+                  <p class="text-[10px] font-semibold text-slate-500 leading-tight truncate">
+                    <span class="font-semibold text-[#48021C]">{{ c.paidAmount | currency:'GTQ':'symbol':'1.0-0' }}</span>
+                    @if (c.pendingAmount > 0) {
+                      <span> · {{ c.pendingAmount | currency:'GTQ':'symbol':'1.0-0' }}</span>
+                    }
+                  </p>
+                </td>
+                <td class="px-2 py-2">
+                  <p class="text-xs font-medium text-slate-700 truncate">{{ c.topProduct?.name || '—' }}</p>
+                  @if (c.topProduct && c.topProduct.quantity > 0) {
+                    <p class="text-[10px] text-slate-400 font-semibold truncate">{{ c.topProduct.quantity }} {{ c.topProduct.unit }}</p>
+                  }
+                </td>
+              </tr>
+            }
+            @if (filtered().length === 0) {
+              <tr class="is-empty">
+                <td colspan="7" class="px-2.5 text-center text-sm text-slate-400">
+                  {{ isLoading() ? 'Cargando...' : 'No hay clientes con ese filtro.' }}
+                </td>
+              </tr>
+            }
+            @for (_ of emptySlots(); track $index) {
+              <tr class="is-empty border-b border-slate-50">
+                <td colspan="7"></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="lg:hidden space-y-3">
+      @for (c of filtered(); track rowKey(c)) {
+        <button
+          type="button"
+          class="w-full text-left bg-white border border-slate-200 rounded-xl p-4 shadow-sm"
+          [class.ring-2]="selectedId() === rowKey(c)"
+          [class.ring-[#48021C]]="selectedId() === rowKey(c)"
+          [class.opacity-60]="c.inactiveThisWeek"
+          (click)="selectCustomer(c)"
+        >
+          <div class="flex justify-between gap-3 mb-2">
+            <div class="min-w-0">
+              <p class="text-sm font-bold text-slate-800 truncate">{{ c.name }}</p>
+              <div class="mt-1">
+                <app-status-badge [value]="c.category.name" [severity]="categorySeverity(c.category.name)" size="xs" />
+              </div>
+            </div>
+            <p class="text-sm font-black text-[#48021C] tabular-nums shrink-0">{{ c.total | currency:'GTQ':'symbol':'1.0-0' }}</p>
+          </div>
+          <div class="flex items-center justify-between text-[11px] text-slate-500">
+            <span>{{ c.orderCount }} pedidos · ticket {{ c.averageTicket | currency:'GTQ':'symbol':'1.0-0' }}</span>
+            @if (c.trendPercent > 0) {
+              <span class="font-bold text-emerald-600">+{{ c.trendPercent }}%</span>
+            } @else if (c.trendPercent < 0) {
+              <span class="font-bold text-rose-600">{{ c.trendPercent }}%</span>
+            }
+          </div>
+          <p class="mt-2 text-[11px] text-slate-500">Top: <span class="font-semibold text-slate-700">{{ c.topProduct?.name || '—' }}</span></p>
+        </button>
+      }
+    </div>
+
+    @if (selected(); as c) {
+      <aside class="mt-3 rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
+        <div class="flex items-start justify-between gap-3 mb-4">
+          <div>
+            <p class="text-[10px] font-semibold text-slate-400">Ficha de la semana</p>
+            <h4 class="text-lg font-semibold text-slate-900 leading-tight">{{ c.name }}</h4>
+            <div class="mt-1.5 flex flex-wrap gap-1.5">
+              <app-status-badge [value]="c.category.name" [severity]="categorySeverity(c.category.name)" size="xs" />
+              @if (c.inactiveThisWeek) {
+                <app-status-badge value="No compró esta semana" severity="danger" size="xs" />
+              }
+            </div>
+          </div>
+          <button
+            pButton
+            icon="pi pi-times"
+            class="p-button-text p-button-rounded p-button-sm text-slate-400"
+            (click)="closeDetail(); $event.stopPropagation()"
+          ></button>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 mb-4">
+          <div class="rounded-lg bg-slate-50 p-2.5">
+            <p class="text-[9px] font-semibold text-slate-400">Gastó</p>
+            <p class="text-sm font-bold tabular-nums">{{ c.total | currency:'GTQ':'symbol':'1.0-0' }}</p>
+          </div>
+          <div class="rounded-lg bg-slate-50 p-2.5">
+            <p class="text-[9px] font-semibold text-slate-400">Pedidos</p>
+            <p class="text-sm font-bold">{{ c.orderCount }}</p>
+          </div>
+          <div class="rounded-lg bg-slate-50 p-2.5">
+            <p class="text-[9px] font-semibold text-slate-400">Ticket</p>
+            <p class="text-sm font-bold tabular-nums">{{ c.averageTicket | currency:'GTQ':'symbol':'1.0-0' }}</p>
+          </div>
+        </div>
+
+        <p class="text-[10px] font-semibold text-slate-400 mb-2">Comportamiento lun–dom</p>
+        <div class="flex items-end gap-1.5 h-20 mb-1">
+          @for (d of c.days; track d.date) {
+            <div class="flex-1 flex flex-col items-center justify-end h-full gap-1">
+              <div
+                class="spark-bar w-full"
+                [class.is-empty]="d.total === 0"
+                [style.height.%]="d.total === 0 ? 2 : barHeight(d.total)"
+                [pTooltip]="dayTooltip(d.total)"
+              ></div>
+            </div>
+          }
+        </div>
+        <div class="flex gap-1.5 mb-5">
+          @for (d of c.days; track d.date) {
+            <span class="flex-1 text-center text-[9px] font-medium text-slate-400">{{ d.day }}</span>
+          }
+        </div>
+
+        <p class="text-[10px] font-semibold text-slate-400 mb-2">Qué compró más</p>
+        @if (c.mix.length === 0) {
+          <p class="text-sm text-slate-400 mb-4">Sin compras en este periodo.</p>
+        } @else {
+          <ul class="space-y-2 mb-5">
+            @for (item of c.mix; track $index) {
+              <li>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="font-semibold text-slate-700">{{ item.productName }}</span>
+                  <span class="tabular-nums text-slate-500">{{ item.revenue | currency:'GTQ':'symbol':'1.0-0' }} · {{ item.share }}%</span>
+                </div>
+                <div class="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                  <div class="h-full bg-[#48021C]" [style.width.%]="item.share"></div>
+                </div>
+                @if (item.quantity > 0) {
+                  <p class="text-[10px] font-semibold text-slate-400 mt-0.5">{{ item.quantity }} {{ item.unit }}</p>
+                }
+              </li>
+            }
+          </ul>
+        }
+
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <div class="rounded-lg border border-slate-100 p-3">
+            <p class="text-[9px] font-semibold text-slate-400 mb-1">Cobrado / saldo</p>
+            <p class="text-sm font-bold text-emerald-700">{{ c.paidAmount | currency:'GTQ':'symbol':'1.2-2' }}</p>
+            <p class="text-xs text-rose-600">Pendiente {{ c.pendingAmount | currency:'GTQ':'symbol':'1.2-2' }}</p>
+          </div>
+          <div class="rounded-lg border border-slate-100 p-3">
+            <p class="text-[9px] font-semibold text-slate-400 mb-1">Crédito</p>
+            @if (c.creditLimit > 0) {
+              <p class="text-sm font-bold">{{ creditPercent(c) }}% usado</p>
+              <p class="text-[11px] text-slate-500">{{ c.creditUsed | currency:'GTQ':'symbol':'1.0-0' }} de {{ c.creditLimit | currency:'GTQ':'symbol':'1.0-0' }}</p>
+            } @else {
+              <p class="text-sm text-slate-400">Sin línea de crédito</p>
+            }
+          </div>
+        </div>
+
+        @if (c.preorderCommitted > 0) {
+          <div class="rounded-lg border border-[#9f6587]/30 bg-rose-50 px-3 py-2 mb-3 text-xs text-[#6e3757]">
+            Preorden comprometida: <span class="font-bold">{{ c.preorderCommitted | currency:'GTQ' }}</span> (no es venta confirmada).
+          </div>
+        }
+
+        <p class="text-[11px] text-slate-400">
+          Última compra:
+          {{ c.lastPurchaseDate ? formatIsoDate(c.lastPurchaseDate) : '—' }}
+        </p>
+      </aside>
+    }
+  </div>
+</div>
+

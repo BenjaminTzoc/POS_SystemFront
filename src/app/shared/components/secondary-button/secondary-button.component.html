@@ -1,0 +1,12 @@
+<p-button 
+  [styleClass]="buttonStyleClass"
+  [disabled]="disabled || loading"
+  (onClick)="onClick()"
+>
+  @if (loading) {
+    <i class="pi pi-spin pi-spinner text-xs" [ngClass]="iconClass"></i>
+  } @else if (icon) {
+    <i [class]="icon" class="text-xs font-semibold" [ngClass]="iconClass"></i>
+  }
+  <span>{{ label }}</span>
+</p-button>

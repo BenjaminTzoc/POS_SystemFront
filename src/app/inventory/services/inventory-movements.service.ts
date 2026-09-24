@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiResponse } from '../../core/models/api-response.model';
-import { InventoryMovement } from '../interfaces/inventory-movement.interface';
+import { InventoryMovement, PaginatedResponse } from '../interfaces/inventory-movement.interface';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 
@@ -12,8 +12,8 @@ export class InventoryMovementsService {
   private http = inject(HttpClient);
   private readonly API_URL = `${environment.apiUrl}/inventory-movements`;
 
-  getInventoryMovements(filters?: any): Observable<ApiResponse<InventoryMovement[]>> {
-    return this.http.get<ApiResponse<InventoryMovement[]>>(`${this.API_URL}`, { params: filters });
+  getInventoryMovements(filters?: any): Observable<ApiResponse<PaginatedResponse<InventoryMovement>>> {
+    return this.http.get<ApiResponse<PaginatedResponse<InventoryMovement>>>(`${this.API_URL}`, { params: filters });
   }
 
   getMovementById(id: string): Observable<ApiResponse<InventoryMovement>> {

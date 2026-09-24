@@ -1,0 +1,127 @@
+:host {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+
+.pay-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding: 1rem;
+  background: linear-gradient(180deg, #f8eef3 0%, #fdf7f9 48%, #ffffff 100%);
+  border: 1px solid #d9b8c8;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 0 rgb(72 2 28 / 0.08);
+}
+
+.pay-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.pay-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.kpi-chip {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background: rgb(248 250 252 / 0.7);
+}
+
+.kpi-chip.kpi-green {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+}
+
+.kpi-chip.kpi-teal {
+  border-color: #9ecad6;
+  background: #e8f4f7;
+}
+
+.kpi-chip.kpi-sky {
+  border-color: #bae6fd;
+  background: #f0f9ff;
+}
+
+.kpi-chip.kpi-amber {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.kpi-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #48021C;
+}
+
+.kpi-value {
+  margin-top: 0.1rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #6e3757;
+}
+
+.pay-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  border: 1px solid #d9b8c8;
+  border-radius: 0.5rem;
+}
+
+.pay-row {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.7rem;
+  text-align: left;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fff;
+  cursor: pointer;
+}
+
+.pay-row:last-child {
+  border-bottom: none;
+}
+
+.pay-row:hover {
+  background: #f8fafc;
+}
+
+.row-meta {
+  margin-top: 0.15rem;
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pay-empty {
+  padding: 1.5rem 1rem;
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .pay-kpis {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

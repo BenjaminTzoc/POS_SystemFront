@@ -161,7 +161,10 @@
     </div>
 
     <!-- Actions Footer Grid (Fijo Abajo) -->
-    <div class="actions-grid mt-2.5 pt-2.5 border-t border-slate-100 flex-shrink-0">
+    <div 
+      class="actions-grid mt-2.5 pt-2.5 border-t border-slate-100 flex-shrink-0"
+      [ngClass]="quotation.status === 'CANCELLED' ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-4'"
+    >
       <p-button
         label="Imprimir"
         icon="pi pi-print"
@@ -182,25 +185,27 @@
       >
       </p-button>
 
-      <p-button
-        label="Enviar Email"
-        icon="pi pi-envelope"
-        severity="info"
-        [loading]="isSendingEmail()"
-        (click)="onSendEmail()"
-        styleClass="w-full"
-      >
-      </p-button>
+      @if (quotation.status !== 'CANCELLED') {
+        <p-button
+          label="Enviar Email"
+          icon="pi pi-envelope"
+          severity="info"
+          [loading]="isSendingEmail()"
+          (click)="onSendEmail()"
+          styleClass="w-full"
+        >
+        </p-button>
 
-      <p-button
-        label="WhatsApp"
-        icon="pi pi-whatsapp"
-        severity="success"
-        [loading]="isSendingWhatsApp()"
-        (click)="onSendWhatsApp()"
-        styleClass="w-full"
-      >
-      </p-button>
+        <p-button
+          label="WhatsApp"
+          icon="pi pi-whatsapp"
+          severity="success"
+          [loading]="isSendingWhatsApp()"
+          (click)="onSendWhatsApp()"
+          styleClass="w-full"
+        >
+        </p-button>
+      }
     </div>
   </div>
 </p-dialog>

@@ -12,7 +12,7 @@ export class BranchesService {
   private http = inject(HttpClient);
   private readonly API_URL = `${environment.apiUrl}/branches`;
 
-  getBranches(filters: { isPlant?: boolean, includeDeleted?: boolean } | boolean = {}): Observable<ApiResponse<Branch[]>> {
+  getBranches(filters: { isPlant?: boolean; includeDeleted?: boolean; minimal?: boolean } | boolean = {}): Observable<ApiResponse<Branch[]>> {
     let params = new HttpParams();
     
     if (typeof filters === 'boolean') {
@@ -23,6 +23,9 @@ export class BranchesService {
       }
       if (filters.isPlant !== undefined) {
         params = params.set('isPlant', filters.isPlant.toString());
+      }
+      if (filters.minimal !== undefined) {
+        params = params.set('minimal', filters.minimal.toString());
       }
     }
     

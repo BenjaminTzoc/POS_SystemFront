@@ -1,15 +1,20 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, ElementRef, inject, OnInit, signal, ViewChild, computed } from '@angular/core';
+import { CommonModule, CurrencyPipe } from '@angular/common';
+import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
-import { Select, SelectModule } from 'primeng/select';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { DatePicker, DatePickerModule } from 'primeng/datepicker';
-import { ToastModule } from 'primeng/toast';
+import { DatePickerModule } from 'primeng/datepicker';
+import { TextareaModule } from 'primeng/textarea';
+import { TableModule } from 'primeng/table';
+import { DrawerModule } from 'primeng/drawer';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 import { TooltipModule } from 'primeng/tooltip';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 import { LogisticsService } from '../../../services/logistics.service';
 import { RouteDispatch } from '../../../interfaces/route-dispatch.interface';
@@ -17,6 +22,8 @@ import { BranchesService } from '../../../../inventory/services/branches.service
 import { ProductsService } from '../../../../inventory/services/products.service';
 import { Branch } from '../../../../inventory/interfaces/branch.interface';
 import { Product } from '../../../../inventory/interfaces/product.interface';
+import { QuickQuantityService } from '../../../../sales/services/quick-quantity.service';
+import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal.component';
 import { environment } from '../../../../../environments/environment';
 
 @Component({
@@ -25,14 +32,22 @@ import { environment } from '../../../../../environments/environment';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     SelectModule,
     ButtonModule,
     InputTextModule,
     InputNumberModule,
-    DatePicker,
     DatePickerModule,
-    TooltipModule
+    TextareaModule,
+    TableModule,
+    DrawerModule,
+    IconFieldModule,
+    InputIconModule,
+    TooltipModule,
+    ConfirmDialogModule,
+    ConfirmationModalComponent
   ],
+  providers: [ConfirmationService],
   templateUrl: './dispatch-form.component.html',
 })
 export class DispatchFormComponent implements OnInit {
@@ -42,12 +57,24 @@ export class DispatchFormComponent implements OnInit {
   private branchesService = inject(BranchesService);
   private productsService = inject(ProductsService);
   private messageService = inject(MessageService);
+  private confirmationService = inject(ConfirmationService);
+  private quickQuantityService = inject(QuickQuantityService);
+
+  @ViewChild('catalogContainer') catalogContainer!: ElementRef<HTMLDivElement>;
 
   dispatchForm: FormGroup;
   originBranches = signal<Branch[]>([]);
   branches = signal<Branch[]>([]);
   products = signal<Product[]>([]);
   saving = signal(false);
+  loadingProducts = signal(false);
+
+  previousOriginBranchId: string | null = null;
+  drawerVisible = false;
+  searchProductQuery = '';
+  showCancelConfirmModal = false;
+
+  private allRelevantProducts: Product[] = [];
 
   constructor() {
     this.dispatchForm = this.fb.group({
@@ -55,7 +82,7 @@ export class DispatchFormComponent implements OnInit {
       originBranchId: [null, [Validators.required]],
       branchId: [null, [Validators.required]],
       notes: [''],
-      items: this.fb.array([], [Validators.required])
+      items: this.fb.array([])
     });
   }
 
@@ -63,50 +90,125 @@ export class DispatchFormComponent implements OnInit {
     this.loadBranches();
   }
 
-  private createItemGroup(): FormGroup {
-    return this.fb.group({
-      productId: [null, [Validators.required]],
-      sentQuantity: [1, [Validators.required, Validators.min(0.01)]],
-      unitAbbreviation: [''],
-      stock: [0],
-      allowsDecimals: [true]
-    });
+  get items(): FormArray {
+    return this.dispatchForm.get('items') as FormArray;
   }
 
-  get items() {
-    return this.dispatchForm.get('items') as FormArray;
+  get isFormValid(): boolean {
+    const originBranchId = this.dispatchForm.get('originBranchId')?.value;
+    const branchId = this.dispatchForm.get('branchId')?.value;
+    const date = this.dispatchForm.get('date')?.value;
+
+    if (!originBranchId || !branchId || !date) return false;
+    if (originBranchId === branchId) return false;
+    if (!this.items || this.items.length === 0 || this.items.invalid) return false;
+
+    return true;
+  }
+
+  get totalQuantity(): number {
+    return this.items.controls.reduce((sum, control) => {
+      const qty = Number(control.get('sentQuantity')?.value) || 0;
+      return sum + qty;
+    }, 0);
+  }
+
+  get totalQuantitySummary(): string {
+    if (this.items.length === 0) return '0';
+    const unitTotals: Record<string, number> = {};
+    this.items.controls.forEach(control => {
+      const qty = Number(control.get('sentQuantity')?.value) || 0;
+      const unit = control.get('unitAbbreviation')?.value || 'un';
+      unitTotals[unit] = (unitTotals[unit] || 0) + qty;
+    });
+
+    const parts = Object.entries(unitTotals).map(([unit, total]) => {
+      const formatted = Number.isInteger(total) ? total.toString() : parseFloat(total.toFixed(2)).toString();
+      return `${formatted} ${unit}`;
+    });
+
+    return parts.join(' • ');
+  }
+
+  get filteredProducts(): Product[] {
+    const term = this.searchProductQuery?.toLowerCase().trim();
+    if (!term) return this.products();
+    return this.products().filter(p =>
+      p.name?.toLowerCase().includes(term) ||
+      p.sku?.toLowerCase().includes(term)
+    );
+  }
+
+  getOriginBranchName(): string {
+    const id = this.dispatchForm.get('originBranchId')?.value;
+    return this.originBranches().find(b => b.id === id)?.name || 'Sin seleccionar';
+  }
+
+  getDestinationBranchName(): string {
+    const id = this.dispatchForm.get('branchId')?.value;
+    return this.branches().find(b => b.id === id)?.name || 'Sin seleccionar';
   }
 
   loadBranches() {
     // Sucursal Origen (Plantas)
     this.branchesService.getBranches({ isPlant: true }).subscribe({
-      next: (res) => this.originBranches.set(res.data),
-      error: (err) => this.showError('Error', 'No se pudieron cargar las plantas de producción')
+      next: (res) => {
+        this.originBranches.set(res.data);
+        if (res.data && res.data.length > 0) {
+          const defaultOrigin = res.data[0].id;
+          this.dispatchForm.patchValue({ originBranchId: defaultOrigin });
+          this.previousOriginBranchId = defaultOrigin;
+          this.loadProducts(defaultOrigin);
+        }
+      },
+      error: () => this.showError('Error', 'No se pudieron cargar las plantas de producción')
     });
 
     // Sucursal Destino (No Plantas)
     this.branchesService.getBranches({ isPlant: false }).subscribe({
       next: (res) => this.branches.set(res.data),
-      error: (err) => this.showError('Error', 'No se pudieron cargar las sucursales destino')
+      error: () => this.showError('Error', 'No se pudieron cargar las sucursales destino')
     });
   }
 
-  onOriginBranchChange() {
-    const originBranchId = this.dispatchForm.get('originBranchId')?.value;
-    if (originBranchId) {
-      this.loadProducts(originBranchId);
+  onOriginBranchChange(event: any) {
+    const newBranchId = event.value;
+
+    if (this.items.length > 0) {
+      this.confirmationService.confirm({
+        message: 'Si cambia la planta origen, se limpiarán los productos agregados al despacho. ¿Desea continuar?',
+        header: 'Confirmar cambio de planta origen',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Sí, cambiar',
+        rejectLabel: 'Cancelar',
+        accept: () => {
+          this.items.clear();
+          this.previousOriginBranchId = newBranchId;
+          if (newBranchId) {
+            this.loadProducts(newBranchId);
+          } else {
+            this.products.set([]);
+          }
+        },
+        reject: () => {
+          this.dispatchForm.get('originBranchId')?.setValue(this.previousOriginBranchId, { emitEvent: false });
+        }
+      });
     } else {
-      this.products.set([]);
+      this.previousOriginBranchId = newBranchId;
+      if (newBranchId) {
+        this.loadProducts(newBranchId);
+      } else {
+        this.products.set([]);
+      }
     }
-    
-    // Al cambiar la planta, resetear los items por completo
-    this.items.clear();
   }
 
   loadProducts(branchId?: string) {
+    this.quickQuantityService.clearAll();
+    this.loadingProducts.set(true);
     this.productsService.getDispatchCatalog(branchId).subscribe({
       next: (res) => {
-        // Mapa para evitar duplicados y facilitar búsqueda por ID
         const productMap = new Map<string, Product>();
         res.data.forEach(p => {
           productMap.set(p.id, p);
@@ -117,61 +219,78 @@ export class DispatchFormComponent implements OnInit {
         
         this.allRelevantProducts = Array.from(productMap.values());
         this.products.set(res.data);
+        this.loadingProducts.set(false);
       },
-      error: (err) => this.showError('Error', 'No se pudieron cargar los productos')
+      error: () => {
+        this.loadingProducts.set(false);
+        this.showError('Error', 'No se pudieron cargar los productos');
+      }
     });
   }
 
-  private allRelevantProducts: Product[] = [];
-
-  addItem() {
-    this.items.push(this.createItemGroup());
-  }
-
-  removeItem(index: number) {
-    this.items.removeAt(index);
-  }
-
-  onProductChange(index: number, event: any) {
-    const productId = event.value;
-    const group = this.items.at(index) as FormGroup;
-
-    const product = this.allRelevantProducts.find(p => p.id === productId);
-    
-    if (product) {
-      const availableStock = product.inventories && product.inventories.length > 0 
-        ? product.inventories[0].stock 
-        : (product.stock || 0);
-
-      const patchData: any = {
-        productId: productId,
-        unitAbbreviation: product.unit?.abbreviation || '',
-        stock: availableStock,
-        allowsDecimals: product.unit?.allowsDecimals ?? true
-      };
-
-      // Si el campo está vacío, sugerimos 1. 
-      // Si ya tiene valor (1, 2, etc), NO enviamos sentQuantity en el patch para no pisarlo.
-      const currentQty = group.get('sentQuantity')?.value;
-      if (currentQty === null || currentQty === undefined) {
-        patchData.sentQuantity = 1;
-      } else if (product.unit?.allowsDecimals === false && currentQty % 1 !== 0) {
-        patchData.sentQuantity = Math.floor(currentQty);
+  scrollCatalog(direction: 'left' | 'right' | number): void {
+    if (this.catalogContainer?.nativeElement) {
+      const container = this.catalogContainer.nativeElement;
+      let amount = 0;
+      if (typeof direction === 'number') {
+        amount = direction;
+      } else {
+        const firstCard = container.firstElementChild as HTMLElement;
+        if (firstCard) {
+          const cardWidthWithGap = firstCard.offsetWidth + 12;
+          amount = (direction === 'left' ? -1 : 1) * (cardWidthWithGap * 3);
+        } else {
+          amount = (direction === 'left' ? -1 : 1) * container.clientWidth;
+        }
       }
-
-      group.patchValue(patchData);
+      container.scrollBy({ left: amount, behavior: 'smooth' });
     }
   }
 
-  getAvailableProducts(index: number): Product[] {
-    const selectedProductIds = this.items.controls
-      .map((control, i) => (i !== index ? control.get('productId')?.value : null))
-      .filter((id) => id !== null);
+  getQuickQuantity(productId: string): number {
+    return this.quickQuantityService.getQuantity(productId);
+  }
 
-    // Usamos allRelevantProducts para asegurar que incluimos variantes de la lista plana
-    return this.allRelevantProducts
-      .filter(p => !selectedProductIds.includes(p.id))
-      .sort((a, b) => a.name.localeCompare(b.name));
+  onQuickQuantityChange(productId: string, event: any): void {
+    const val = parseFloat(event.target.value);
+    if (!isNaN(val) && val > 0) {
+      this.quickQuantityService.setQuantity(productId, val);
+    }
+  }
+
+  addProductFromDrawer(product: Product): void {
+    const qtyToAdd = this.getQuickQuantity(product.id);
+    const existingIndex = this.items.controls.findIndex(c => c.get('productId')?.value === product.id);
+
+    const availableStock = product.inventories && product.inventories.length > 0 
+      ? product.inventories[0].stock 
+      : (product.stock || 0);
+
+    if (existingIndex >= 0) {
+      const group = this.items.at(existingIndex) as FormGroup;
+      const currentQty = Number(group.get('sentQuantity')?.value) || 0;
+      group.patchValue({ sentQuantity: currentQty + qtyToAdd });
+    } else {
+      this.items.push(this.fb.group({
+        productId: [product.id, Validators.required],
+        sentQuantity: [qtyToAdd, [Validators.required, Validators.min(0.01)]],
+        unitAbbreviation: [product.unit?.abbreviation || 'un'],
+        stock: [availableStock],
+        allowsDecimals: [product.unit?.allowsDecimals ?? true]
+      }));
+    }
+
+    this.quickQuantityService.resetQuantity(product.id);
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Producto agregado',
+      detail: `${product.name} añadido al despacho`,
+      life: 1500
+    });
+  }
+
+  getProductById(id: string): Product | undefined {
+    return this.allRelevantProducts.find(p => p.id === id);
   }
 
   getProductImageUrl(url?: string): string {
@@ -179,17 +298,33 @@ export class DispatchFormComponent implements OnInit {
     return url.startsWith('http') ? url : `${environment.baseUrl}${url}`;
   }
 
+  removeItem(index: number) {
+    this.items.removeAt(index);
+  }
+
+  asGroup(control: any): FormGroup {
+    return control as FormGroup;
+  }
+
   onCancel() {
+    if (this.items.length > 0 || this.dispatchForm.dirty) {
+      this.showCancelConfirmModal = true;
+    } else {
+      this.executeCancelExit();
+    }
+  }
+
+  executeCancelExit() {
     this.router.navigate(['/logistics/dispatches']);
   }
 
   onSave() {
-    if (this.dispatchForm.invalid) {
+    if (!this.isFormValid) {
       this.dispatchForm.markAllAsTouched();
       this.messageService.add({
         severity: 'warn',
         summary: 'Formulario incompleto',
-        detail: 'Por favor, completa todos los campos requeridos.'
+        detail: 'Por favor, selecciona origen, destino y añade al menos un producto.'
       });
       return;
     }
@@ -197,7 +332,6 @@ export class DispatchFormComponent implements OnInit {
     this.saving.set(true);
     const formValue = this.dispatchForm.value;
     
-    // Format date to YYYY-MM-DD
     const dateObj = formValue.date instanceof Date ? formValue.date : new Date(formValue.date);
     const formattedDate = dateObj.toISOString().split('T')[0];
 
@@ -208,7 +342,7 @@ export class DispatchFormComponent implements OnInit {
       notes: formValue.notes,
       items: this.items.controls.map(itemGroup => ({
         productId: itemGroup.get('productId')?.value,
-        sentQuantity: itemGroup.get('sentQuantity')?.value
+        sentQuantity: Number(itemGroup.get('sentQuantity')?.value)
       }))
     };
 
@@ -217,9 +351,9 @@ export class DispatchFormComponent implements OnInit {
         this.messageService.add({ 
           severity: 'success', 
           summary: 'Éxito', 
-          detail: 'Despacho creado correctamente' 
+          detail: 'Despacho de ruta creado correctamente' 
         });
-        setTimeout(() => this.router.navigate(['/logistics/dispatches']), 1500);
+        setTimeout(() => this.router.navigate(['/logistics/dispatches']), 1200);
       },
       error: (err) => {
         this.saving.set(false);

@@ -1,5 +1,5 @@
 //prettier-ignore
-import { Component, ElementRef, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 //prettier-ignore
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -44,23 +44,22 @@ import { BranchesService } from '../../../inventory/services/branches.service';
 import { CashRegisterService } from '../../../inventory/services/cash-register.service';
 import { CashSession } from '../../../inventory/interfaces/cash-register.interface';
 import { TicketPreviewComponent } from '../ticket-preview/ticket-preview.component';
-import { TicketTemplateComponent } from '../../../shared/components/ticket-template/ticket-template.component';
-import { PrintService } from '../../../shared/services/print.service';
 import { BankAccountsService } from '../../services/bank-accounts.service';
 import { IBankAccount } from '../../interfaces/bank-account.interface';
 import { BankAccountsComponent } from '../../bank-accounts/bank-accounts.component';
 import { ProductsService } from '../../../inventory/services/products.service';
 import { DrawerModule } from 'primeng/drawer';
-import { IconFieldModule } from 'primeng/iconfield';
-import { InputIconModule } from 'primeng/inputicon';
 import { CashSessionDialogComponent } from '../../../shared/components/cash-session-dialog/cash-session-dialog.component';
 
 import { ConfirmationModalComponent } from '../../../shared/components/confirmation-modal/confirmation-modal.component';
+import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
+import { ProductsTableComponent, QuotationItem } from '../../../shared/components/products-table/products-table.component';
+import { ProductRibbonComponent } from '../../../shared/components/product-ribbon/product-ribbon.component';
 
 @Component({
   selector: 'app-sale-order-form',
   //prettier-ignore
-  imports: [ReactiveFormsModule, FormsModule, RadioButtonModule, FloatLabelModule, InputTextModule, CurrencyPipe, ButtonModule, DatePickerModule, TableModule, DialogModule, SelectModule, ToggleSwitchModule, InputNumberModule, TextareaModule, CommonModule, AutoCompleteModule, SaleDiscountsComponent, SaleStatusPipe, PaymentStatusPipe, TooltipModule, ConfirmDialogModule, TagModule, TicketPreviewComponent, TicketTemplateComponent, DrawerModule, IconFieldModule, InputIconModule, CashSessionDialogComponent, BankAccountsComponent, ConfirmationModalComponent],
+  imports: [ReactiveFormsModule, FormsModule, RadioButtonModule, FloatLabelModule, InputTextModule, CurrencyPipe, ButtonModule, DatePickerModule, TableModule, DialogModule, SelectModule, ToggleSwitchModule, InputNumberModule, TextareaModule, CommonModule, AutoCompleteModule, SaleDiscountsComponent, SaleStatusPipe, PaymentStatusPipe, TooltipModule, ConfirmDialogModule, TagModule, TicketPreviewComponent, DrawerModule, CashSessionDialogComponent, BankAccountsComponent, ConfirmationModalComponent, PageHeaderComponent, ProductsTableComponent, ProductRibbonComponent],
   templateUrl: './sale-order-form.component.html',
   styleUrl: './sale-order-form.component.css',
   providers: [ConfirmationService],
@@ -78,16 +77,14 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   // Ticket Preview
   showTicketPreview = false;
   confirmedSaleData: ISaleOrderResponse | null = null;
-  isGeneratingTicket = false;
-  isSendingTicketEmail = false;
   showOpenCashDialog = false;
+  showPaymentsPanel = false;
 
   private saleCalculator = inject(SaleCalculatorService);
   private detailManager = inject(SaleDetailManagerService);
   private ordersService = inject(OrdersService);
   private customersService = inject(CustomersService);
   private customerCategoriesService = inject(CustomerCategoriesService);
-  private printService = inject(PrintService);
   private paymentMethodsService = inject(PaymentMethodsService);
   private salePaymentsService = inject(SalePaymentsService);
   private bankAccountsService = inject(BankAccountsService);
@@ -104,31 +101,9 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   private quickQuantityService = inject(QuickQuantityService);
   private destroy$ = new Subject<void>();
 
-  // Product Catalog Container & Drawer State
-  @ViewChild('catalogContainer') catalogContainer!: ElementRef<HTMLDivElement>;
+  // Product Catalog
   products: Product[] = [];
-  drawerVisible = false;
-  searchProductQuery = '';
   loadingProducts = false;
-
-  scrollCatalog(direction: 'left' | 'right' | number): void {
-    if (this.catalogContainer?.nativeElement) {
-      const container = this.catalogContainer.nativeElement;
-      let amount = 0;
-      if (typeof direction === 'number') {
-        amount = direction;
-      } else {
-        const firstCard = container.firstElementChild as HTMLElement;
-        if (firstCard) {
-          const cardWidthWithGap = firstCard.offsetWidth + 12; // ancho de 1 tarjeta + 12px gap
-          amount = (direction === 'left' ? -1 : 1) * (cardWidthWithGap * 3);
-        } else {
-          amount = (direction === 'left' ? -1 : 1) * container.clientWidth;
-        }
-      }
-      container.scrollBy({ left: amount, behavior: 'smooth' });
-    }
-  }
 
   // Cash status
   get currentCashSession(): CashSession | null {
@@ -203,9 +178,9 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
 
   onBillingRangeChange(dates: Date[] | null) {
     this.billingRange = dates;
-    if (dates && dates.length > 0) {
-      const start = dates[0] ? new Date(dates[0]) : null;
-      const end = dates[1] ? new Date(dates[1]) : (dates[0] ? new Date(dates[0]) : null);
+    if (dates && dates.length > 0 && dates[0]) {
+      const start = new Date(dates[0]);
+      const end = dates[1] ? new Date(dates[1]) : null;
       this.orderForm.get('billingStartDate')?.setValue(start);
       this.orderForm.get('dueDate')?.setValue(end);
     } else {
@@ -253,6 +228,42 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
     return this.isEditing;
   }
 
+  get canModifyProducts(): boolean {
+    return this.isCreateMode || this.orderForm?.get('status')?.value === 'pending';
+  }
+
+  get canGenerateOrder(): boolean {
+    if (this.isCashClosed || !this.orderForm) return false;
+    if (!this.details.length) return false;
+
+    const raw = this.orderForm.getRawValue();
+    if (!raw.branchId || !raw.invoiceNumber) return false;
+
+    const typeValue =
+      typeof this.selectedCustomerType === 'object'
+        ? this.selectedCustomerType?.value
+        : this.selectedCustomerType;
+
+    if (typeValue === 'R' && !raw.customerId) return false;
+    if (typeValue === 'Q') {
+      const name = raw.guestCustomer?.name?.trim();
+      const phone = raw.guestCustomer?.phone?.trim();
+      if (!name || !phone) return false;
+    }
+
+    if (raw.isPreorder && !raw.promisedDeliveryDate) return false;
+
+    return true;
+  }
+
+  get isPreorder(): boolean {
+    return !!this.orderForm?.get('isPreorder')?.value;
+  }
+
+  get ignoreStockLimits(): boolean {
+    return this.isPreorder;
+  }
+
   get filteredCustomers(): ICustomer[] {
     if (!this.searchCustomerQuery) return this.customers;
     const query = this.searchCustomerQuery.toLowerCase();
@@ -266,6 +277,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.detailManager.clear();
+    this.selectedCustomerType = this.customerTypes[0];
     this.initializeForm();
 
     this.route.queryParams.subscribe((params) => {
@@ -313,6 +325,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
 
   private initializeForNewOrder() {
     this.selectedCustomerType = this.customerTypes[0];
+    this.onCustomerTypeChange();
     this.setupWebSocketListeners();
     this.loadNextInvoiceNumber();
   }
@@ -343,6 +356,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
         rejectLabel: 'No, mantener',
         accept: () => {
           this.detailManager.clear();
+          this.tableItems = [];
           this.updateTotals();
           this.previousBranchId = newBranchId;
         },
@@ -418,9 +432,12 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
           date: res.data.date ? new Date(res.data.date) : null,
           billingStartDate: res.data.billingStartDate ? new Date(res.data.billingStartDate) : null,
           dueDate: res.data.dueDate ? new Date(res.data.dueDate) : null,
+          isPreorder: !!res.data.isPreorder,
+          promisedDeliveryDate: res.data.promisedDeliveryDate ? new Date(res.data.promisedDeliveryDate) : null,
           notes: res.data.notes,
           status: res.data.status,
         });
+        this.applyPreorderValidators(!!res.data.isPreorder);
 
         const start = res.data.billingStartDate ? new Date(res.data.billingStartDate) : null;
         const end = res.data.dueDate ? new Date(res.data.dueDate) : null;
@@ -460,6 +477,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
         });
 
         this.detailManager.setDetails(details);
+        this.syncTableItemsFromDetails();
         this.initialDetails = JSON.parse(JSON.stringify(this.detailManager.getDetails()));
 
         if (res.data.discounts) {
@@ -932,11 +950,11 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
 
   // -------------------- INICIO PAGOS -----------------------
   get showPaymentSection(): boolean {
-    return !!(this.isEditMode && this.sale?.status !== 'pending');
+    return !!(this.isEditMode && this.sale && this.sale.status !== 'cancelled');
   }
 
   get canRegisterPayments(): boolean {
-    const validStatuses = ['confirmed', 'delivered'];
+    const validStatuses = ['pending', 'confirmed', 'delivered'];
     const status = this.sale?.status || '';
     return !!(this.isEditMode && validStatuses.includes(status) && this.hasPendingBalance);
   }
@@ -979,8 +997,11 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
       referenceNumber: formValue.referenceNumber || undefined,
       bankAccountId: formValue.bankAccountId || undefined,
       notes: formValue.notes || undefined,
-      isDownPayment: formValue.isDownPayment,
     };
+
+    if (!this.isPreorder) {
+      paymentPayload.isDownPayment = formValue.isDownPayment;
+    }
 
     this.salePaymentsService.createSalePayment(paymentPayload).subscribe({
       next: (res) => {
@@ -1090,6 +1111,8 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
       date: [new Date(), [Validators.required]],
       billingStartDate: [null],
       dueDate: [null],
+      isPreorder: [false],
+      promisedDeliveryDate: [null],
       notes: [''],
       status: ['pending', [Validators.required]],
     });
@@ -1209,9 +1232,11 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   }
 
   onQuantityChanged(detail: any, event: any) {
-    const stock = detail.product?.stock ?? 0;
-    if (detail.quantity > stock) {
-      detail.quantity = stock;
+    if (!this.shouldIgnoreStock(detail.product)) {
+      const stock = detail.product?.stock ?? 0;
+      if (detail.quantity > stock) {
+        detail.quantity = stock;
+      }
     }
 
     this.detailManager.updateQuantity(detail, detail.quantity);
@@ -1231,11 +1256,8 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
     this.markAsChanged();
   }
 
-  scrollToPayments() {
-    const element = document.getElementById('payment-section');
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+  openPaymentsPanel() {
+    this.showPaymentsPanel = true;
   }
 
   // -------------------- FIN UTILIDADES ----------------------
@@ -1251,12 +1273,72 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   addProductToDetail(product: Product): void {
     console.log(product);
     this.detailManager.addProduct(product);
+    this.syncTableItemsFromDetails();
     this.updateTotals();
     this.markAsChanged();
   }
 
   removeDetail(index: number) {
     this.detailManager.removeDetail(index);
+    this.syncTableItemsFromDetails();
+    this.updateTotals();
+    this.markAsChanged();
+  }
+
+  tableItems: QuotationItem[] = [];
+
+  private mapDetailToTableItem(detail: ISaleDetailPayload): QuotationItem {
+    const product = detail.product;
+    return {
+      productId: product?.id || '',
+      sku: product?.sku || '',
+      name: product?.name || 'Producto',
+      imageUrl: product?.imageUrl,
+      price: Number(detail.unitPrice) || 0,
+      quantity: Number(detail.quantity) || 1,
+      discount: detail.discountType === 'fixed_amount'
+        ? Number(detail.discountAmount || 0)
+        : Number(detail.discount || 0),
+      discountType: detail.discountType || 'percentage',
+      maxStock: product?.stock ?? 0,
+      unitName: product?.unit?.name || '',
+      unitAbbreviation: product?.unit?.abbreviation || 'un',
+      allowsDecimals: product?.unit?.allowsDecimals ?? false,
+      isAvailable: product?.isAvailable,
+      isUnlimited: this.shouldIgnoreStock(product),
+    };
+  }
+
+  private syncTableItemsFromDetails(): void {
+    this.tableItems = this.details.map((detail) => this.mapDetailToTableItem(detail));
+  }
+
+  onTableItemChange(event: { index: number; item: QuotationItem }): void {
+    const detail = this.details[event.index];
+    if (!detail) return;
+
+    if (!this.shouldIgnoreStock(detail.product)) {
+      const stock = detail.product?.stock ?? 0;
+      if (!event.item.isUnlimited && stock > 0 && event.item.quantity > stock) {
+        event.item.quantity = stock;
+      }
+    }
+
+    this.detailManager.updateQuantity(detail, event.item.quantity);
+    this.detailManager.updateUnitPrice(detail, event.item.price);
+    this.detailManager.updateDetailAdjustment(
+      detail,
+      event.item.discountType || 'percentage',
+      event.item.discount || 0,
+      detail.notes || '',
+    );
+    this.updateTotals();
+    this.markAsChanged();
+  }
+
+  clearAllItems(): void {
+    this.detailManager.clear();
+    this.tableItems = [];
     this.updateTotals();
     this.markAsChanged();
   }
@@ -1307,8 +1389,52 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
     // El status nunca debe enviarse en la creación/edición general
     delete payload.status;
 
+    if (this.isEditMode) {
+      delete payload.date;
+    }
+
+    payload.isPreorder = !!payload.isPreorder;
+    if (payload.isPreorder) {
+      payload.promisedDeliveryDate = this.toIsoDate(payload.promisedDeliveryDate);
+    } else {
+      payload.promisedDeliveryDate = null;
+    }
+
     console.log('FINAL PAYLOAD TO SEND:', payload);
     return payload;
+  }
+
+  private toIsoDate(value: Date | string | null | undefined): string | null {
+    if (!value) return null;
+    const date = value instanceof Date ? value : new Date(value);
+    if (isNaN(date.getTime())) return null;
+    return date.toISOString();
+  }
+
+  onIsPreorderChange(checked: boolean): void {
+    this.applyPreorderValidators(checked);
+    if (!checked) {
+      this.orderForm.get('promisedDeliveryDate')?.setValue(null);
+    }
+    this.syncTableItemsFromDetails();
+    this.markAsChanged();
+  }
+
+  private applyPreorderValidators(isPreorder: boolean): void {
+    const control = this.orderForm.get('promisedDeliveryDate');
+    if (isPreorder) {
+      control?.setValidators([Validators.required]);
+    } else {
+      control?.clearValidators();
+    }
+    control?.updateValueAndValidity({ emitEvent: false });
+  }
+
+  shouldIgnoreStock(product?: Product | null): boolean {
+    if (this.isPreorder) return true;
+    if (!product) return false;
+    if (product.manageStock === false) return true;
+    return !!(product.isAvailable && (!product.stock || product.stock === 0));
   }
 
   onSaveOrder(): void {
@@ -1366,7 +1492,9 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
           this.messageService.add({
             severity: 'success',
             summary: 'Éxito',
-            detail: `La orden se ha generado correctamente.`,
+            detail: payload.isPreorder
+              ? 'Preorden generada. El inventario se descuenta al confirmar, cuando ya haya stock en la sucursal.'
+              : 'La orden se ha generado correctamente.',
           });
           this.isEditing = true;
           this.saleId = res.data.id;
@@ -1472,10 +1600,15 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
         this.loadSale(res.data.id);
       },
       error: (err) => {
+        const errors = err.error?.errors;
+        const detail = Array.isArray(errors) && errors.length
+          ? errors.join(' | ')
+          : (err.error?.message || 'Error al confirmar el pedido.');
         this.messageService.add({
           severity: 'error',
-          summary: 'Error',
-          detail: `Error al confirmar el pedido: ${err.error.message}`,
+          summary: 'No se puede confirmar',
+          detail,
+          life: 8000,
         });
         this.isConfirmingSale = false;
       },
@@ -1581,64 +1714,9 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   // -------------------- TICKETS --------------------
 
   onPreviewTicket() {
+    if (!this.sale) return;
     this.confirmedSaleData = this.sale;
     this.showTicketPreview = true;
-  }
-
-  onDownloadTicket() {
-    if (!this.sale?.id || this.isGeneratingTicket) return;
-    this.isGeneratingTicket = true;
-    const currentSale = this.sale;
-
-    this.ordersService.getSalePdf(currentSale.id).subscribe({
-      next: (blob) => {
-        const filename = `Factura_${currentSale.invoiceNumber || currentSale.id}.pdf`;
-        this.printService.downloadPDF(blob, filename);
-        this.isGeneratingTicket = false;
-      },
-      error: (error) => {
-        console.error(error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo descargar el documento',
-        });
-        this.isGeneratingTicket = false;
-      },
-    });
-  }
-
-  onSendTicketEmail() {
-    if (!this.sale?.id || this.isSendingTicketEmail) return;
-
-    if (!this.sale.customer?.email) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Sin Email',
-        detail: 'El cliente no tiene un correo electrónico registrado.',
-      });
-      return;
-    }
-
-    this.isSendingTicketEmail = true;
-    this.ordersService.sendTicketByEmail(this.sale.id).subscribe({
-      next: () => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Enviado',
-          detail: 'Ticket enviado exitosamente por correo.',
-        });
-        this.isSendingTicketEmail = false;
-      },
-      error: (err) => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Fallo al enviar el correo.',
-        });
-        this.isSendingTicketEmail = false;
-      },
-    });
   }
 
   // -------------------- ADJUSTMENTS --------------------
@@ -1710,6 +1788,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
     
     this.updateTotals();
     this.markAsChanged();
+    this.syncTableItemsFromDetails();
     this.showAdjustmentDialog = false;
   }
 
@@ -1737,6 +1816,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
 
     this.updateTotals();
     this.markAsChanged();
+    this.syncTableItemsFromDetails();
     this.showAdjustmentDialog = false;
   }
 
@@ -1766,37 +1846,25 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
     });
   }
 
-  get filteredProducts(): Product[] {
-    if (!this.searchProductQuery) return this.products;
-    const q = this.searchProductQuery.toLowerCase();
-    return this.products.filter(p => 
-      p.name.toLowerCase().includes(q) || 
-      (p.sku && p.sku.toLowerCase().includes(q))
-    );
-  }
+  isProductSelected = (productId: string): boolean => {
+    return this.details.some((d) => d.product?.id === productId);
+  };
 
-  getQuickQuantity(productId: string): number {
-    return this.quickQuantityService.getQuantity(productId);
-  }
+  getItemQuantity = (productId: string): number | undefined => {
+    const matching = this.details.filter((d) => d.product?.id === productId);
+    if (matching.length === 0) return undefined;
+    return matching.reduce((acc, d) => acc + (d.quantity || 0), 0);
+  };
 
-  onQuickQuantityChange(productId: string, event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (!input) return;
-    const value = parseFloat(input.value);
-    if (!isNaN(value) && value > 0) {
-      this.quickQuantityService.setQuantity(productId, value);
-    }
-  }
-
-  addProductFromDrawer(product: Product) {
-    const qty = this.getQuickQuantity(product.id);
-    this.detailManager.addProduct(product, qty);
-    this.quickQuantityService.resetQuantity(product.id);
-    const unitAbbr = product.unit?.abbreviation ? ` ${product.unit.abbreviation}` : '';
-    this.messageService.add({ 
-      severity: 'success', 
-      summary: 'Producto Añadido', 
-      detail: `${product.name} (+${qty}${unitAbbr}) agregado a la lista` 
+  onProductSelectFromRibbon(event: { product: Product; quantity: number }): void {
+    const qty = event.quantity || 1;
+    this.detailManager.addProduct(event.product, qty);
+    this.syncTableItemsFromDetails();
+    const unitAbbr = event.product.unit?.abbreviation ? ` ${event.product.unit.abbreviation}` : '';
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Producto Añadido',
+      detail: `${event.product.name} (+${qty}${unitAbbr}) agregado a la lista`,
     });
     this.updateTotals();
     this.markAsChanged();

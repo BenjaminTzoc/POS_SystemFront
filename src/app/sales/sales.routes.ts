@@ -62,15 +62,15 @@ export const SALES_ROUTES: Routes = [
   {
     path: 'new-quotation',
     loadComponent: () =>
-      import('./quotations/quotation-form/quotation-form.component').then(
-        (m) => m.QuotationFormComponent,
+      import('./quotations/quotation-edit/quotation-edit.component').then(
+        (m) => m.QuotationEditComponent,
       ),
   },
   {
     path: 'edit-quotation/:id',
     loadComponent: () =>
-      import('./quotations/quotation-form/quotation-form.component').then(
-        (m) => m.QuotationFormComponent,
+      import('./quotations/quotation-edit/quotation-edit.component').then(
+        (m) => m.QuotationEditComponent,
       ),
   },
   {

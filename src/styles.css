@@ -26,11 +26,11 @@
   --color-text-muted: #627CA7;         /* Slate-blue for labels and secondary text */
   
   --color-brand-deep: #0C8ABC;         /* Row 14, Col 3: Vibrant ocean blue for primary actions */
-  --color-brand-royal: #124E96;        /* Row 14, Col 3: Rich blue accent for hover and active items */
   --color-accent-rust: #C24D2C;        /* Row 15, Col 1: Vibrant rust orange for highlights and totals */
   --color-cancel-red: #F23456;         /* Row 14, Col 1: Coral red for Cancel buttons */
-  
   --color-border-elegant: #DAEAF7;     /* Row 14, Col 3: Bright elegant light blue for clean borders */
+  --color-brand-variant: #8d4068;      /* Variant action & SKU accent color */
+  --color-variant-berry: #8d4068;      /* Alias for variant color */
 }
 
 @import '@fontsource-variable/montserrat';
@@ -44,6 +44,15 @@ html, body {
   font-family: 'Montserrat Variable', sans-serif;
 }
 
+/* Force sharp black text I-beam cursor on all input fields regardless of OS theme */
+input:not([type='button']):not([type='submit']):not([type='reset']):not([type='checkbox']):not([type='radio']),
+textarea,
+[contenteditable='true'],
+.p-inputtext,
+.p-textarea {
+  cursor: url('/svg/cursor.svg') 9 9, text !important;
+}
+
 /* Fix PrimeNG p-toast horizontal overflow on mobile screens */
 @media screen and (max-width: 768px) {
   .p-toast {
@@ -54,3 +63,160 @@ html, body {
     transform: none !important;
   }
 }
+
+/* Global PrimeNG Dropdown & Select Overlay Styles (for body appended overlays) */
+.p-dropdown-panel,
+.p-select-overlay {
+  border-radius: 0.75rem !important;
+  border: 1px solid rgba(72, 2, 28, 0.25) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  background-color: #ffffff !important;
+}
+
+.p-dropdown-panel .p-dropdown-items,
+.p-select-overlay .p-select-list {
+  padding: 0.25rem !important;
+}
+
+.p-dropdown-panel .p-dropdown-item,
+.p-select-overlay .p-select-option {
+  border-radius: 0.5rem !important;
+  font-size: 0.875rem !important;
+  padding: 0.45rem 0.75rem !important;
+  color: #48021C !important;
+  transition: all 0.12s ease-in-out;
+}
+
+.p-dropdown-panel .p-dropdown-item:not(.p-highlight):hover,
+.p-select-overlay .p-select-option:not(.p-select-option-selected):not([data-p-selected="true"]):hover,
+.p-select-overlay .p-select-option:not(.p-select-option-selected):not([data-p-selected="true"]).p-focus {
+  background-color: rgba(72, 2, 28, 0.08) !important;
+  color: #48021C !important;
+}
+
+.p-dropdown-panel .p-dropdown-item.p-highlight,
+.p-select-overlay .p-select-option.p-select-option-selected,
+.p-select-overlay .p-select-option[data-p-selected="true"],
+.p-select-overlay .p-select-option[aria-selected="true"] {
+  background-color: rgba(72, 2, 28, 0.12) !important;
+  color: #48021C !important;
+  font-weight: 700 !important;
+}
+
+.p-dropdown-panel .p-dropdown-items-wrapper::-webkit-scrollbar,
+.p-select-overlay .p-select-list-container::-webkit-scrollbar {
+  width: 5px;
+}
+
+.p-dropdown-panel .p-dropdown-items-wrapper::-webkit-scrollbar-thumb,
+.p-select-overlay .p-select-list-container::-webkit-scrollbar-thumb {
+  background-color: rgba(72, 2, 28, 0.25);
+  border-radius: 4px;
+}
+
+/* Enhanced Tag Badges (Refined colors & contrast) */
+.p-tag.p-tag-success,
+.p-tag[data-p-severity="success"],
+.p-tag-success {
+  --p-tag-success-color: #14532d !important;
+  --p-tag-success-background: #dcfce7 !important;
+  background-color: #dcfce7 !important;
+  color: #14532d !important;
+  border: 1px solid rgba(20, 83, 45, 0.35) !important;
+}
+
+.p-tag.p-tag-success .p-tag-label,
+.p-tag.p-tag-success .p-tag-icon,
+.p-tag[data-p-severity="success"] .p-tag-label,
+.p-tag[data-p-severity="success"] .p-tag-icon {
+  color: #14532d !important;
+}
+
+.p-tag.p-tag-danger,
+.p-tag[data-p-severity="danger"],
+.p-tag-danger {
+  --p-tag-danger-color: #9f1239 !important;
+  --p-tag-danger-background: #ffe4e6 !important;
+  background-color: #ffe4e6 !important;
+  color: #9f1239 !important;
+  border: 1px solid rgba(159, 18, 57, 0.35) !important;
+}
+
+.p-tag.p-tag-danger .p-tag-label,
+.p-tag.p-tag-danger .p-tag-icon,
+.p-tag[data-p-severity="danger"] .p-tag-label,
+.p-tag[data-p-severity="danger"] .p-tag-icon {
+  color: #9f1239 !important;
+}
+
+.p-tag.p-tag-warn,
+.p-tag[data-p-severity="warn"],
+.p-tag.p-tag-warning,
+.p-tag-warn {
+  --p-tag-warn-color: #92400e !important;
+  --p-tag-warn-background: #fef3c7 !important;
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+  border: 1px solid rgba(146, 64, 14, 0.35) !important;
+}
+
+.p-tag.p-tag-warn .p-tag-label,
+.p-tag.p-tag-warn .p-tag-icon,
+.p-tag[data-p-severity="warn"] .p-tag-label,
+.p-tag[data-p-severity="warn"] .p-tag-icon {
+  color: #92400e !important;
+}
+
+.p-tag.p-tag-info,
+.p-tag[data-p-severity="info"],
+.p-tag-info {
+  --p-tag-info-color: #075985 !important;
+  --p-tag-info-background: #e0f2fe !important;
+  background-color: #e0f2fe !important;
+  color: #075985 !important;
+  border: 1px solid rgba(7, 89, 133, 0.35) !important;
+}
+
+.p-tag.p-tag-info .p-tag-label,
+.p-tag.p-tag-info .p-tag-icon,
+.p-tag[data-p-severity="info"] .p-tag-label,
+.p-tag[data-p-severity="info"] .p-tag-icon {
+  color: #075985 !important;
+}
+
+/* Burgundy Toggle Switch Theme */
+.burgundy-switch.p-toggleswitch-checked .p-toggleswitch-slider,
+.burgundy-switch.p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider {
+  background: #48021C !important;
+}
+
+.burgundy-switch.p-toggleswitch:not(.p-disabled):has(.p-toggleswitch-input:focus-visible) .p-toggleswitch-slider {
+  outline: 2px solid rgba(72, 2, 28, 0.25) !important;
+}
+
+/* Forest / Dark Green Toggle Switch Theme */
+.forest-switch.p-toggleswitch-checked .p-toggleswitch-slider,
+.forest-switch.p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider {
+  background: #047857 !important;
+}
+
+.forest-switch.p-toggleswitch:not(.p-disabled):has(.p-toggleswitch-input:focus-visible) .p-toggleswitch-slider {
+  outline: 2px solid rgba(4, 120, 87, 0.25) !important;
+}
+
+/* Forest / Dark Green RadioButton Theme */
+.forest-radio.p-radiobutton-checked .p-radiobutton-box,
+.forest-radio.p-radiobutton.p-radiobutton-checked .p-radiobutton-box,
+.p-radiobutton.forest-radio.p-radiobutton-checked .p-radiobutton-box,
+.forest-radio .p-radiobutton-box[data-p-checked="true"] {
+  background: #047857 !important;
+  border-color: #047857 !important;
+}
+
+.forest-radio.p-radiobutton:not(.p-disabled):has(.p-radiobutton-input:focus-visible) .p-radiobutton-box {
+  outline: 2px solid rgba(4, 120, 87, 0.25) !important;
+  border-color: #047857 !important;
+}
+
+
+

@@ -6,6 +6,7 @@ import {
   InventoryTransfer,
   InventoryTransferResponse,
   CreateInventoryTransferDto,
+  UpdateInventoryTransferDto,
   TransferStatus,
   UpdateTransferStatusDto,
 } from '../interfaces/inventory-transfer.interface';
@@ -41,6 +42,10 @@ export class InventoryTransfersService {
 
   createTransfer(dto: CreateInventoryTransferDto): Observable<InventoryTransfer> {
     return this.http.post<InventoryTransfer>(this.apiUrl, dto);
+  }
+
+  updateTransfer(id: string, dto: UpdateInventoryTransferDto): Observable<{ statusCode: number; message: string; data: InventoryTransfer }> {
+    return this.http.put<{ statusCode: number; message: string; data: InventoryTransfer }>(`${this.apiUrl}/${id}`, dto);
   }
 
   updateStatus(id: string, status: TransferStatus): Observable<InventoryTransfer> {

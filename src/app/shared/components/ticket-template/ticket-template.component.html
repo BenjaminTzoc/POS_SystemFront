@@ -29,6 +29,8 @@
       <p><strong>Fecha de Emisión:</strong> {{ sale.date | date: 'dd/MM/yyyy HH:mm' }}</p>
       <p *ngIf="sale.branch"><strong>Sucursal:</strong> {{ sale.branch.name }}</p>
       <p><strong>Estado:</strong> {{ sale.status | saleStatus }}</p>
+      <p *ngIf="sale.isPreorder"><strong>Tipo:</strong> Preorden</p>
+      <p *ngIf="sale.promisedDeliveryDate"><strong>Fecha de entrega:</strong> {{ sale.promisedDeliveryDate | date: 'dd/MM/yyyy' }}</p>
     </div>
   </div>
 
