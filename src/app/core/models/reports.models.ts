@@ -177,11 +177,33 @@ export interface OrderSummaryReportDto {
 }
 
 export interface CalendarOrderDto {
+  saleId: string;
+  id?: string;
   invoiceNumber: string;
   customerName: string;
+  customerId?: string | null;
+  phone: string | null;
   pendingAmount: number;
+  paidAmount: number;
   total: number;
+  billingStartDate: string | null;
+  dueDate: string;
   isOverdue: boolean;
+  lastPaymentDate: string | null;
+  lastPaymentAmount: number | null;
+  lastRemindedAt: string | null;
+  branchName: string;
+  isPreorder: boolean;
+  delivered: boolean;
+  notes: string | null;
+}
+
+export interface CollectionReminderResultDto {
+  saleId: string;
+  channel: 'whatsapp';
+  to: string;
+  sentAt: string;
+  lastRemindedAt: string;
 }
 
 export interface CalendarEventDto {
@@ -265,4 +287,157 @@ export interface ProductMonthlyTrendDto {
   categories: string[];
   series: ProductMonthlyTrendSeriesDto[];
   pagination: ProductMonthlyTrendPaginationDto;
+}
+
+export interface CustomerWeeklyKpisDto {
+  topCustomer: { id: string | null; name: string; total: number } | null;
+  averageTicket: number;
+  top5Concentration: number;
+  pendingAmount: number;
+  activeCustomerCount: number;
+}
+
+export interface CustomerWeeklyMixItemDto {
+  productId: string | null;
+  productName: string;
+  quantity: number;
+  unit: string;
+  revenue: number;
+  share: number;
+}
+
+export interface CustomerWeeklyDayDto {
+  date: string;
+  day: 'Lun' | 'Mar' | 'Mié' | 'Jue' | 'Vie' | 'Sáb' | 'Dom' | string;
+  total: number;
+  orderCount: number;
+}
+
+export interface CustomerWeeklyItemDto {
+  id: string | null;
+  name: string;
+  isGuest: boolean;
+  category: {
+    id: string | null;
+    name: string;
+  };
+  total: number;
+  orderCount: number;
+  averageTicket: number;
+  trendPercent: number;
+  paidAmount: number;
+  pendingAmount: number;
+  creditLimit: number;
+  creditUsed: number;
+  lastPurchaseDate: string | null;
+  inactiveThisWeek: boolean;
+  preorderCommitted: number;
+  topProduct: {
+    productId: string | null;
+    name: string;
+    quantity: number;
+    unit: string;
+  } | null;
+  mix: CustomerWeeklyMixItemDto[];
+  days: CustomerWeeklyDayDto[];
+}
+
+export interface CustomerWeeklySummaryDto {
+  period: {
+    start: string;
+    end: string;
+  };
+  kpis: CustomerWeeklyKpisDto;
+  customers: CustomerWeeklyItemDto[];
+}
+
+export interface TodayPulsePeakHourDto {
+  hour: number | null;
+  label: string | null;
+}
+
+export interface TodayPulseSalesDto {
+  total: number;
+  previousTotal: number;
+  changePercent: number;
+  ticketCount: number;
+  averageTicket: number;
+  cashToday: number;
+  creditToday: number;
+  otherToday: number;
+  peakHour: TodayPulsePeakHourDto;
+}
+
+export interface TodayPulsePendingDto {
+  total: number;
+  preparing: number;
+  delivery: number;
+  preorder: number;
+  oldestMinutes: number | null;
+  nextCustomer: { saleId: string; name: string } | null;
+}
+
+export interface TodayPulseReceivableDto {
+  total: number;
+  overdue: number;
+  dueToday: number;
+  invoiceCount: number;
+  topDebtor: { customerId: string | null; name: string; amount: number } | null;
+}
+
+export interface TodayPulseLowStockDto {
+  productId: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  branchName?: string;
+}
+
+export interface TodayPulseAttentionDto {
+  lowStockCount: number;
+  preordersForToday: number;
+  lowStock: TodayPulseLowStockDto[];
+}
+
+export interface TodayPulseDto {
+  date: string;
+  currency: 'GTQ' | string;
+  sales: TodayPulseSalesDto;
+  pending: TodayPulsePendingDto;
+  receivable: TodayPulseReceivableDto;
+  attention: TodayPulseAttentionDto;
+}
+
+export interface TodayPaymentsSummaryDto {
+  total: number;
+  count: number;
+  cash: number;
+  transfer: number;
+  other: number;
+  settled: number;
+}
+
+export interface TodayPaymentItemDto {
+  id: string;
+  saleId: string;
+  invoiceNumber: string;
+  customerName: string;
+  customerId: string | null;
+  amount: number;
+  remainingBalance: number;
+  methodCode: 'cash' | 'transfer' | 'card' | 'other';
+  methodName: string;
+  paidAt: string;
+  time: string;
+  reference: string | null;
+  isDownPayment: boolean;
+  branchName: string;
+  branchId: string;
+}
+
+export interface TodayPaymentsDto {
+  date: string;
+  currency: 'GTQ' | string;
+  summary: TodayPaymentsSummaryDto;
+  payments: TodayPaymentItemDto[];
 }

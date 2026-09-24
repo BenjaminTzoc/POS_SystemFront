@@ -1,0 +1,51 @@
+<div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-6">
+  <div class="bg-white rounded-2xl border-2 shadow-sm overflow-hidden" [ngClass]="borderClass">
+    <!-- Top Header Bar -->
+    <div class="py-2.5 px-4 md:px-6 flex flex-col md:flex-row md:items-center justify-between gap-3 border-b rounded-t-2xl" [ngClass]="headerBgClass">
+      <!-- Title, Back Button, Icon & Badge -->
+      <div class="flex items-center gap-2.5 min-w-0">
+        @if (showBackButton) {
+          <p-button 
+            icon="pi pi-arrow-left" 
+            [outlined]="true" 
+            severity="secondary" 
+            size="small" 
+            (onClick)="onBack.emit()" 
+            [pTooltip]="backTooltip"
+            tooltipPosition="bottom"
+            class="inline-block shrink-0"
+            styleClass="!w-7 !h-7 !p-0 text-[#6e3757] hover:text-[#48021C] bg-white hover:bg-[#9f6587]/15 border border-[#9f6587]/35! !rounded-md shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer [&_.p-button-icon]:!text-xs"
+          />
+        }
+        @if (icon) {
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center border shadow-xs shrink-0" [ngClass]="iconBoxClass">
+            <i [class]="icon" class="text-sm"></i>
+          </div>
+        }
+        <div class="min-w-0 flex items-center gap-2 flex-wrap">
+          <h1 class="text-lg md:text-xl font-semibold text-gray-900 tracking-tight leading-none truncate">
+            {{ title }}
+          </h1>
+          @if (badge) {
+            <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full shadow-2xs" [ngClass]="badgeClass">
+              {{ badge }}
+            </span>
+          }
+          @if (subtitle) {
+            <p class="text-xs text-slate-500 mt-1 truncate w-full">{{ subtitle }}</p>
+          }
+        </div>
+      </div>
+
+      <!-- Action Buttons Slot (Superior) -->
+      <div class="flex items-center gap-2 flex-wrap shrink-0">
+        <ng-content select="[actions]"></ng-content>
+      </div>
+    </div>
+
+    <!-- Filters Slot (Inferior) -->
+    <div class="p-4 md:px-6 flex flex-col md:flex-row items-stretch md:items-end gap-3 empty:hidden">
+      <ng-content select="[filters]"></ng-content>
+    </div>
+  </div>
+</div>

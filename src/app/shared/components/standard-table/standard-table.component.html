@@ -1,0 +1,70 @@
+<div
+  [class]="'rounded-xl border overflow-hidden shadow-xs flex flex-col flex-1 ' + containerClass + ' ' + customClass"
+  [style.--table-content-height]="scrollHeight"
+>
+  <p-table
+    #dataTable
+    [value]="value"
+    [loading]="loading"
+    [paginator]="paginator"
+    [rows]="rows"
+    [first]="first"
+    [totalRecords]="totalRecords"
+    [lazy]="lazy"
+    (onLazyLoad)="onLazyLoad.emit($event)"
+    (onRowExpand)="onRowExpand.emit($event)"
+    (onRowCollapse)="onRowCollapse.emit($event)"
+    [rowsPerPageOptions]="showRowsPerPageDropdown && rowsPerPageOptions && rowsPerPageOptions.length ? rowsPerPageOptions : undefined"
+    [paginatorDropdownAppendTo]="'body'"
+    [globalFilterFields]="globalFilterFields"
+    [dataKey]="dataKey"
+    [scrollable]="scrollable"
+    [scrollHeight]="scrollHeight"
+    styleClass="p-datatable-striped p-datatable-sm rounded-xl flex-1 overflow-hidden"
+  >
+    <!-- Header Template -->
+    <ng-template pTemplate="header">
+      <ng-container *ngTemplateOutlet="headerTemplate"></ng-container>
+    </ng-template>
+
+    <!-- Body Template -->
+    <ng-template pTemplate="body" let-item let-expanded="expanded" let-rowIndex="rowIndex">
+      <ng-container
+        *ngTemplateOutlet="bodyTemplate; context: { $implicit: item, expanded: expanded, rowIndex: rowIndex }"
+      ></ng-container>
+    </ng-template>
+
+    <!-- Expanded Row Template -->
+    @if (expandedRowTemplate) {
+      <ng-template pTemplate="rowexpansion" let-item>
+        <ng-container *ngTemplateOutlet="expandedRowTemplate; context: { $implicit: item }"></ng-container>
+      </ng-template>
+      <ng-template pTemplate="expandedrow" let-item>
+        <ng-container *ngTemplateOutlet="expandedRowTemplate; context: { $implicit: item }"></ng-container>
+      </ng-template>
+    }
+
+    <!-- Footer Template (optional) -->
+    @if (footerTemplate) {
+      <ng-template pTemplate="footer">
+        <ng-container *ngTemplateOutlet="footerTemplate"></ng-container>
+      </ng-template>
+    }
+
+    <!-- Empty Message Template -->
+    <ng-template pTemplate="emptymessage">
+      @if (emptyMessageTemplate) {
+        <ng-container *ngTemplateOutlet="emptyMessageTemplate"></ng-container>
+      } @else {
+        <tr>
+          <td colspan="100" class="text-center py-12">
+            <div class="flex flex-col items-center justify-center gap-2 text-slate-400">
+              <i [class]="emptyIcon + ' text-3xl'"></i>
+              <span class="text-xs font-medium">{{ emptyMessage }}</span>
+            </div>
+          </td>
+        </tr>
+      }
+    </ng-template>
+  </p-table>
+</div>

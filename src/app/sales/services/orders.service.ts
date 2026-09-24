@@ -4,6 +4,7 @@ import { environment } from '../../../environments/environment';
 import { Observable } from 'rxjs';
 import { ApiResponse } from '../../core/models/api-response.model';
 import { ISaleOrderResponse, ISaleDetailResponse, ISaleGroupedByStatus, ISaleGroupedByPreparation } from '../interfaces/sale-order.interface';
+import { CollectionReminderResultDto } from '../../core/models/reports.models';
 
 export interface SaleFilterDto {
   groupBy?: 'status' | 'preparationStatus';
@@ -16,6 +17,10 @@ export interface SaleFilterDto {
   search?: string;
   page?: number;
   limit?: number;
+  isPreorder?: boolean;
+  promisedDeliveryStart?: string;
+  promisedDeliveryEnd?: string;
+  folderId?: string;
 }
 
 export interface PaginatedResponse<T> {
@@ -60,6 +65,10 @@ export class OrdersService {
     if (filters.search) params = params.set('search', filters.search);
     if (filters.page) params = params.set('page', filters.page.toString());
     if (filters.limit) params = params.set('limit', filters.limit.toString());
+    if (filters.isPreorder !== undefined) params = params.set('isPreorder', String(filters.isPreorder));
+    if (filters.promisedDeliveryStart) params = params.set('promisedDeliveryStart', filters.promisedDeliveryStart);
+    if (filters.promisedDeliveryEnd) params = params.set('promisedDeliveryEnd', filters.promisedDeliveryEnd);
+    if (filters.folderId) params = params.set('folderId', filters.folderId);
     return params;
   }
 
@@ -115,6 +124,13 @@ export class OrdersService {
 
   sendTicketByWhatsApp(saleId: string, pdfBase64?: string): Observable<ApiResponse<void>> {
     return this.http.post<ApiResponse<void>>(`${this.API_URL}/${saleId}/send-whatsapp`, { pdfBase64 });
+  }
+
+  sendCollectionReminder(saleId: string): Observable<ApiResponse<CollectionReminderResultDto>> {
+    return this.http.post<ApiResponse<CollectionReminderResultDto>>(
+      `${this.API_URL}/${saleId}/collection-reminder`,
+      {},
+    );
   }
 
   updateDetailStatus(detailId: string, status: 'preparing' | 'completed'): Observable<ApiResponse<ISaleDetailResponse>> {

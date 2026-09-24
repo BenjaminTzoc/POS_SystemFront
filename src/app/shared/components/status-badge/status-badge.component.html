@@ -1,0 +1,11 @@
+<span [class]="badgeClasses">
+  @if (icon) {
+    <i [class]="icon + ' text-[0.72em] leading-none flex-shrink-0'"></i>
+  } @else if (showDot) {
+    <span [class]="dotClass"></span>
+  }
+  @if (value !== undefined && value !== null) {
+    <span>{{ value }}</span>
+  }
+  <ng-content></ng-content>
+</span>

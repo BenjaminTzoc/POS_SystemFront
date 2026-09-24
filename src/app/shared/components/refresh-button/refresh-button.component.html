@@ -1,0 +1,8 @@
+<p-button 
+  [styleClass]="buttonStyleClass"
+  [disabled]="loading"
+  (onClick)="onClick()"
+>
+  <i class="pi pi-refresh text-xs" [ngClass]="iconClass" [class.pi-spin]="loading"></i>
+  <span>{{ label }}</span>
+</p-button>

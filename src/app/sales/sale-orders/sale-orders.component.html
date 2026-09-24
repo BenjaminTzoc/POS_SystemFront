@@ -1,108 +1,215 @@
 <div class="py-4 px-0 md:px-6 bg-slate-50/50 min-h-screen">
-  <!-- Top Card: Header & Filters -->
-  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-6">
-    <div class="bg-white rounded-2xl border border-slate-300 shadow-sm">
-      <div class="py-2.5 px-4 md:px-6 flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/50 rounded-t-2xl">
-        <h1 class="text-lg md:text-xl font-semibold text-gray-900 tracking-tight leading-none">
-          Órdenes de Venta
-        </h1>
+  <!-- Top Card: Reusable Page Header -->
+  <app-page-header
+    title="Órdenes de Venta"
+    icon="pi pi-shopping-cart"
+    colorScheme="burgundy"
+  >
+    <!-- Botones Superiores de Acción -->
+    <ng-container actions>
+      <app-refresh-button [loading]="loading()" (refresh)="refreshAll()" />
 
-        <div class="flex items-center gap-2">
-          <p-button 
-            [outlined]="true"
-            styleClass="!rounded-lg text-sm! font-semibold !border-[1.5px] !border-[#1e3a5f] !text-[#1e3a5f] !bg-white hover:!bg-[#1e3a5f] hover:!text-white inline-flex items-center gap-1.5 shadow-sm transition-all"
-            [loading]="loading()"
-            (onClick)="loadOrders()"
-            pTooltip="Actualizar lista de órdenes"
-            tooltipPosition="bottom"
-          >
-            <svg lucideRefreshCw class="w-4 h-4 stroke-[2.2]" [class.animate-spin]="loading()"></svg>
-            <span>Actualizar</span>
-          </p-button>
-        </div>
-      </div>
+      <app-primary-button 
+        label="Nueva Orden" 
+        icon="pi pi-plus"
+        (clicked)="createSaleOrder()" 
+      />
+    </ng-container>
 
-      <!-- Card Body: Date and Branch Filters -->
-      <div class="p-4 md:px-6 flex flex-col md:flex-row items-stretch md:items-center gap-3">
-        <div class="flex flex-col gap-1 w-full md:w-auto">
-          <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Rango de Fechas</label>
+    <!-- Filtros Inferiores -->
+    <ng-container filters>
+      <!-- Date Range Filter -->
+      <div class="flex flex-col gap-1 w-full md:w-auto">
+        <label class="text-xs font-semibold text-[#48021C]">
+          {{ preorderFilter() === 'preorder' ? 'Rango de entrega' : 'Rango de Fechas' }}
+        </label>
+        @if (preorderFilter() === 'preorder') {
+          <p-datePicker
+            [ngModel]="promisedDeliveryRange()"
+            (ngModelChange)="promisedDeliveryRange.set($event); loadOrders()"
+            selectionMode="range"
+            [showIcon]="true"
+            [readonlyInput]="true"
+            placeholder="Fecha de entrega..."
+            appendTo="body"
+            size="small"
+            class="w-full md:w-auto"
+            styleClass="!rounded-lg !border-[#9f6587]/35 focus-within:!border-[#9f6587] focus-within:!ring-2 focus-within:!ring-[#9f6587]/20 w-full md:w-64 text-xs font-medium"
+          />
+        } @else {
           <p-datePicker
             [(ngModel)]="dateRange"
             selectionMode="range"
             [showIcon]="true"
             [readonlyInput]="true"
             (onSelect)="loadOrders()"
-            placeholder="Hoy"
+            placeholder="Rango de fechas..."
             appendTo="body"
-            class="!rounded-xl shadow-none w-full md:w-auto"
-            styleClass="!rounded-xl border-slate-200 w-full md:w-64 text-xs h-9!"
+            size="small"
+            class="w-full md:w-auto"
+            styleClass="!rounded-lg !border-[#9f6587]/35 focus-within:!border-[#9f6587] focus-within:!ring-2 focus-within:!ring-[#9f6587]/20 w-full md:w-64 text-xs font-medium"
           />
-        </div>
-
-        @if (isSuperAdmin()) {
-          <div class="flex flex-col gap-1 w-full md:w-auto">
-            <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Sucursal</label>
-            <p-select
-              [options]="branches()"
-              [(ngModel)]="selectedBranch"
-              optionLabel="name"
-              optionValue="id"
-              [showClear]="true"
-              (onChange)="loadOrders()"
-              placeholder="Todas las sucursales"
-              appendTo="body"
-              class="!rounded-xl shadow-none w-full md:w-auto"
-              styleClass="!rounded-xl border-slate-200 w-full md:w-[16rem] text-xs h-9!"
-            />
-          </div>
         }
       </div>
-    </div>
-  </div>
+
+      <div class="flex flex-col gap-1 w-full md:w-auto">
+        <label class="text-xs font-semibold text-[#48021C]">Tipo</label>
+        <p-select
+          [options]="preorderFilterOptions"
+          [ngModel]="preorderFilter()"
+          (ngModelChange)="preorderFilter.set($event); first.set(0); loadOrders()"
+          optionLabel="label"
+          optionValue="value"
+          appendTo="body"
+          size="small"
+          class="w-full md:w-auto"
+          styleClass="!rounded-lg !border-[#9f6587]/35 focus-within:!border-[#9f6587] focus-within:!ring-2 focus-within:!ring-[#9f6587]/20 w-full md:w-48 text-xs font-medium"
+        />
+      </div>
+
+      <div class="flex flex-col gap-1 w-full md:w-auto">
+        <label class="text-xs font-semibold text-[#48021C]">Estado</label>
+        <p-select
+          [options]="statusFilterOptions"
+          [ngModel]="selectedStatus()"
+          (ngModelChange)="selectedStatus.set($event); first.set(0); loadOrders()"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Todos los estados"
+          [showClear]="true"
+          appendTo="body"
+          size="small"
+          class="w-full md:w-auto"
+          styleClass="!rounded-lg !border-[#9f6587]/35 focus-within:!border-[#9f6587] focus-within:!ring-2 focus-within:!ring-[#9f6587]/20 w-full md:w-48 text-xs font-medium"
+        />
+      </div>
+
+      <!-- Branch Filter -->
+      @if (isSuperAdmin()) {
+        <div class="flex flex-col gap-1 w-full md:w-auto">
+          <label class="text-xs font-semibold text-[#48021C]">Sucursal</label>
+          <p-select
+            [options]="branches()"
+            [(ngModel)]="selectedBranch"
+            optionLabel="name"
+            optionValue="id"
+            [showClear]="true"
+            (onChange)="onBranchChange()"
+            placeholder="Todas las sucursales"
+            appendTo="body"
+            size="small"
+            class="w-full md:w-auto"
+            styleClass="!rounded-lg !border-[#9f6587]/35 focus-within:!border-[#9f6587] focus-within:!ring-2 focus-within:!ring-[#9f6587]/20 w-full md:w-60 text-xs font-medium"
+          />
+        </div>
+      }
+
+      <!-- Search Input -->
+      <div class="flex flex-col gap-1 w-full md:w-80">
+        <label class="text-xs font-semibold text-[#48021C]">Búsqueda rápida</label>
+        <p-iconfield class="w-full">
+          <p-inputicon class="pi pi-search text-xs text-[#9f6587]" />
+          <input 
+            [ngModel]="searchTerm()"
+            (input)="applySearch($event)"
+            type="text" 
+            pInputText 
+            pSize="small"
+            placeholder="Buscar orden o cliente..."
+            autocomplete="off"
+            class="w-full !rounded-lg font-medium p-inputtext-sm !border-[#9f6587]/35 focus:!border-[#9f6587] focus:!ring-2 focus:!ring-[#9f6587]/20 text-xs"
+          />
+        </p-iconfield>
+      </div>
+
+      <!-- Reset Filters Button -->
+      @if (selectedBranch() || searchTerm() || preorderFilter() !== 'all' || selectedStatus() || selectedFolderId()) {
+        <div class="flex items-end">
+          <p-button
+            icon="pi pi-filter-slash"
+            [outlined]="true"
+            severity="secondary"
+            size="small"
+            (onClick)="resetFilters()"
+            pTooltip="Limpiar filtros"
+            tooltipPosition="top"
+            styleClass="!h-8 !px-2.5 text-xs text-slate-600 hover:text-[#48021C] border-[#9f6587]/35 hover:bg-[#9f6587]/15 !rounded-lg"
+          />
+        </div>
+      }
+    </ng-container>
+  </app-page-header>
 
   <!-- Table Card: List of Orders -->
   <div class="max-w-[1700px] mx-auto px-4 md:px-0">
-    
-    <!-- DESKTOP VIEW CARD -->
-    <div class="hidden lg:block bg-white rounded-2xl border border-slate-300 overflow-hidden shadow-sm">
-      <!-- Card Header: Title & Actions (Buscador y Botón Nueva Orden alineados a la derecha) -->
-      <div class="py-3 px-4 md:px-6 flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-200 bg-slate-50/50">
-        <div class="flex items-center gap-2.5">
-          <h2 class="text-base font-semibold text-gray-900 tracking-tight leading-none m-0">
-            Listado de Órdenes
-          </h2>
-          <span class="px-2.5 py-0.5 bg-slate-200/80 text-slate-700 text-xs font-semibold rounded-full">
-            {{ totalRecords() }}
-          </span>
-        </div>
+    <div class="folder-bar mb-4">
+      <span class="folder-bar-label">Carpetas</span>
+      <div class="folder-strip hide-scrollbar">
+        <button
+          type="button"
+          class="folder-item"
+          [class.is-active]="!selectedFolderId()"
+          (click)="selectFolder(null)"
+        >
+          <span class="folder-dot bg-slate-400"></span>
+          <span>Todas</span>
+        </button>
 
-        <div class="flex items-center gap-2 w-full md:w-auto justify-end">
-          <div class="flex-1 md:w-72">
-            <p-iconfield>
-              <p-inputicon class="pi pi-search" />
-              <input 
-                [ngModel]="searchTerm()"
-                (input)="applySearch($event)"
-                type="text" 
-                pInputText 
-                placeholder="Buscar orden o cliente..."
-                autocomplete="off"
-                class="!rounded-xl border-slate-200 text-xs h-9!"
-                fluid
-              />
-            </p-iconfield>
-          </div>
-
-          <p-button 
-            styleClass="!rounded-lg text-sm! !bg-[#48021C] !border-[#48021C] !text-white hover:!bg-[#350114] inline-flex items-center gap-1.5 shadow-sm"
-            (onClick)="createSaleOrder()"
+        @for (folder of folders(); track folder.id) {
+          <div
+            class="folder-item-wrap"
+            cdkDropList
+            [id]="'folder-drop-' + folder.id"
+            [cdkDropListData]="folder"
+            [cdkDropListConnectedTo]="['orders-table-drop']"
+            [cdkDropListSortingDisabled]="true"
+            (cdkDropListDropped)="onDropOnFolder($event, folder)"
           >
-            <svg lucideCirclePlus class="w-4 h-4"></svg>
-            <span>Nueva Orden</span>
-          </p-button>
-        </div>
+            <button
+              type="button"
+              class="folder-item"
+              [class.is-active]="selectedFolderId() === folder.id"
+              (click)="selectFolder(folder.id)"
+            >
+              <span class="folder-dot" [style.background]="folder.color || '#48021C'"></span>
+              <span class="truncate max-w-[10rem]">{{ folder.name }}</span>
+              <span class="tabular-nums text-[10px] font-bold text-slate-500">{{ folder.saleCount }}</span>
+              @if (canManageFolders()) {
+                <span class="folder-actions" (click)="$event.stopPropagation()">
+                  <i class="pi pi-pencil cursor-pointer" (click)="openEditFolder(folder, $event)"></i>
+                  <i class="pi pi-trash cursor-pointer" (click)="askDeleteFolder(folder, $event)"></i>
+                </span>
+              }
+            </button>
+          </div>
+        } @empty {
+          <p class="text-[11px] text-slate-400 px-1 self-center whitespace-nowrap">Aún no hay carpetas en esta sucursal.</p>
+        }
       </div>
-      <p-table
+      @if (canManageFolders()) {
+        <button
+          type="button"
+          class="folder-add"
+          (click)="openCreateFolder()"
+        >
+          <i class="pi pi-plus text-[10px]"></i>
+          Nueva carpeta
+        </button>
+      }
+    </div>
+
+    <!-- DESKTOP VIEW (Tabla Estándar) -->
+    <div
+      class="hidden lg:block"
+      cdkDropList
+      id="orders-table-drop"
+      [cdkDropListData]="saleOrders()"
+      [cdkDropListConnectedTo]="folderDropIds()"
+      [cdkDropListSortingDisabled]="!selectedFolderId()"
+      (cdkDropListDropped)="onOrdersListDrop($event)"
+    >
+      <app-standard-table
+        #ordersDesktopTable
         [value]="saleOrders()"
         [loading]="loading()"
         [paginator]="true"
@@ -112,83 +219,126 @@
         (onLazyLoad)="onPageChange($event)"
         [rowsPerPageOptions]="[10, 20, 50, 100]"
         dataKey="id"
-        [expandedRowKeys]="expandedRows()"
-        (expandedRowKeysChange)="expandedRows.set($event)"
-        [rowExpandMode]="'single'"
-        [stripedRows]="true"
-        [rowHover]="true"
-        styleClass="p-datatable-modern"
+        colorScheme="navy"
+        emptyIcon="pi pi-shopping-cart"
+        emptyMessage="No se encontraron órdenes. Prueba ajustando los filtros de búsqueda o crea una nueva."
       >
-        <ng-template pTemplate="header">
-          <tr class="h-10! text-xs! bg-slate-50 border-b border-slate-200">
-            <th style="width: 3.5rem" class="!px-3 !py-2 text-center text-slate-500 font-semibold border-r border-slate-200"></th>
-            <th class="tracking-wider text-slate-500 font-semibold !px-4 !py-2 w-[180px] border-r border-slate-200">Pedido</th>
-            <th class="tracking-wider text-slate-500 font-semibold !px-4 !py-2 border-r border-slate-200">Cliente</th>
-            <th class="tracking-wider text-slate-500 font-semibold !px-4 !py-2 w-[150px] border-r border-slate-200">Entrega</th>
-            <th class="tracking-wider text-slate-500 font-semibold !px-4 !py-2 text-right! w-[130px] border-r border-slate-200">Total</th>
-            <th class="tracking-wider text-slate-500 font-semibold !px-4 !py-2 w-[170px] border-r border-slate-200">Pago</th>
-            <th class="tracking-wider text-slate-500 font-semibold !px-4 !py-2 w-[140px] border-r border-slate-200">Estado</th>
-            <th class="tracking-wider text-slate-500 font-semibold !px-4 !py-2 text-right w-[190px]">Acciones</th>
+        <ng-template #header>
+          <tr class="h-11 text-xs bg-[#eddde1] border-b border-[#762f41]/40 text-[#3b141e] font-bold sticky top-0 z-10">
+            <th class="!text-center border-r border-[#762f41]/35 w-10 !px-0.5"></th>
+            <th class="!text-left !pl-3 border-r border-[#762f41]/35 w-[130px] text-[#3b141e]">Estado</th>
+            <th class="!text-left !pl-3 border-r border-[#762f41]/35 w-[160px] text-[#3b141e]">Pedido</th>
+            <th class="!text-left !pl-3 border-r border-[#762f41]/35 min-w-[200px] text-[#3b141e]">Cliente / Sucursal</th>
+            <th class="!text-left !pl-3 border-r border-[#762f41]/35 w-[140px] text-[#3b141e]">Entrega</th>
+            <th class="!text-right !pr-4 border-r border-[#762f41]/35 w-[130px] text-[#3b141e]">Total</th>
+            <th class="!text-left !pl-3 border-r border-[#762f41]/35 w-[160px] text-[#3b141e]">Pago</th>
+            <th class="!text-right !pr-4 border-r border-[#762f41]/35 w-[250px] text-[#3b141e]">Acciones</th>
+            <th class="!text-center !px-1 w-8"></th>
           </tr>
         </ng-template>
 
-        <ng-template pTemplate="body" let-order let-expanded="expanded" let-rowIndex="rowIndex">
+        <ng-template #body let-order let-expanded="expanded">
           <tr 
+            cdkDrag
+            [cdkDragData]="order"
+            [cdkDragDisabled]="!canManageFolders()"
             [ngClass]="{ 
-              'bg-slate-100/60': expanded,
-              'bg-slate-50/60': !expanded && rowIndex % 2 === 1,
-              'bg-white': !expanded && rowIndex % 2 === 0
+              'bg-[#eddde1]/25': expanded,
+              'odd:bg-[#a65a6b]/[0.05]': !expanded
             }" 
-            class="hover:bg-slate-100/80 transition-colors border-b border-slate-200 text-sm cursor-pointer"
+            (click)="toggleRowExpansion(order, ordersDesktopTable, $event)"
+            class="hover:!bg-[#eddde1]/45 transition-colors duration-150 border-b border-[#762f41]/18 last:border-0 text-xs cursor-pointer"
           >
-            <td class="!px-3 !py-2.5 text-center border-r border-slate-200">
-              <p-button
+            <ng-template cdkDragPreview>
+              <div class="drag-preview">
+                #{{ order.invoiceNumber }} · {{ order.customer?.name || order.guestCustomer?.name || 'Venta al Público' }}
+              </div>
+            </ng-template>
+            <!-- 0. Expander Button -->
+            <td class="!text-center !py-2.5 border-r border-[#762f41]/18 w-10 !px-0.5">
+              <button
                 type="button"
-                pRipple
-                [pRowToggler]="order"
-                [text]="true"
-                severity="secondary"
-                [rounded]="true"
+                pButton
                 [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
-                styleClass="!w-7 !h-7 !p-0"
-              />
+                class="p-button-text p-button-rounded !w-7 !h-7 !p-0 hover:!bg-[#eddde1]/60 !text-[#762f41] inline-flex items-center justify-center cursor-pointer"
+                (click)="toggleRowExpansion(order, ordersDesktopTable, $event)"
+                [pTooltip]="expanded ? 'Ocultar detalles' : 'Ver productos'"
+              ></button>
             </td>
-            <td class="!px-4 !py-2.5 border-r border-slate-200">
-              <div class="flex flex-col gap-1 items-start">
-                <span class="px-2 py-0.5 bg-[#93c5fd]/50 text-[#172554] rounded-md text-[12px] font-semibold border border-[#2563eb]/60">
+
+            <!-- 1. Estado con StatusBadgeComponent -->
+            <td class="!py-2.5 !pl-3 border-r border-[#762f41]/18 w-[130px]">
+              <div class="flex flex-col items-start gap-1">
+                <app-status-badge
+                  [severity]="getStatusSeverity(order.status)"
+                  [value]="order.status | saleStatus"
+                  size="xs"
+                />
+                @if (order.isPreorder) {
+                  <app-status-badge
+                    severity="purple"
+                    value="Preorden"
+                    size="xs"
+                  />
+                }
+              </div>
+            </td>
+
+            <!-- 2. Pedido -->
+            <td class="!py-2.5 !pl-3 border-r border-[#762f41]/18 w-[160px]">
+              <div class="flex flex-col gap-0.5 items-start">
+                <span class="px-1.5 py-0.5 bg-[#93c5fd]/50 text-[#172554] rounded-md text-[11px] font-bold border border-[#2563eb]/60">
                   #{{ order.invoiceNumber }}
                 </span>
-                <span class="text-[11px] font-medium text-slate-500 leading-tight">
+                <span class="text-[10.5px] font-medium text-slate-500 leading-tight">
                   {{ order.date | date: 'dd/MM/yyyy':'-0600' }} • {{ order.date | date: 'hh:mm a':'-0600' }}
                 </span>
               </div>
             </td>
-            <td class="!px-4 !py-2.5 text-left border-r border-slate-200">
-              <div class="flex flex-col">
-                <span class="font-normal capitalize text-slate-800 leading-tight">
+
+            <!-- 3. Cliente / Sucursal -->
+            <td class="!py-2.5 !pl-3 text-left border-r border-[#762f41]/18 min-w-[200px]">
+              <div class="flex flex-col min-w-0">
+                <span class="font-semibold capitalize text-slate-800 leading-tight truncate" [pTooltip]="order.customer?.name || order.guestCustomer?.name || 'Venta al Público'" tooltipPosition="top">
                   {{ order.customer?.name || order.guestCustomer?.name || 'Venta al Público' }}
                 </span>
-                @if (order.customer?.phone || order.guestCustomer?.phone) {
-                  <span class="text-xs font-semibold text-slate-700 mt-0.5">
-                    {{ order.customer?.phone || order.guestCustomer?.phone }}
-                  </span>
-                } @else {
-                  <span class="text-[11px] text-slate-400 mt-0.5 italic">Sin teléfono</span>
-                }
+                <span class="text-[11px] font-medium text-slate-500 mt-0.5 truncate">
+                  {{ order.branch?.name || 'Sin sucursal' }} • {{ (order.customer?.phone || order.guestCustomer?.phone) || 'Sin teléfono' }}
+                </span>
               </div>
             </td>
-            <td class="!px-4 !py-2.5 text-left border-r border-slate-200">
-              <span 
-                class="text-xs font-semibold"
-                [ngClass]="order.deliveredAt ? 'text-slate-800' : 'text-slate-400 font-normal'"
-              >
-                {{ order.deliveredAt | deliveryDate }}
+
+            <!-- 4. Entrega -->
+            <td class="!py-2.5 !pl-3 text-left border-r border-[#762f41]/18 w-[140px]">
+              @if (order.deliveredAt) {
+                <div class="flex flex-col gap-0.5">
+                  <span class="text-xs font-semibold text-slate-800">{{ order.deliveredAt | date:'dd/MM/yyyy':'-0600' }}</span>
+                  <span class="text-[10px] text-slate-500 font-medium">Entregado</span>
+                </div>
+              } @else if (order.promisedDeliveryDate) {
+                <div class="flex flex-col gap-0.5">
+                  <span class="text-xs font-semibold text-violet-800">{{ order.promisedDeliveryDate | date:'dd/MM/yyyy':'-0600' }}</span>
+                  <span class="text-[10px] text-violet-600 font-medium">Fecha de entrega</span>
+                </div>
+              } @else {
+                <span class="text-xs text-slate-400 font-normal">Sin fecha</span>
+              }
+              @if (order.dueDate) {
+                <span class="block text-[10px] text-slate-500 mt-0.5">
+                  Pago: {{ order.dueDate | date:'dd/MM/yyyy':'-0600' }}
+                </span>
+              }
+            </td>
+
+            <!-- 5. Total -->
+            <td class="!py-2.5 !pr-4 text-right border-r border-[#762f41]/18 w-[130px]">
+              <span class="font-bold text-slate-900 leading-tight text-xs tabular-nums">
+                {{ order.total | currency: 'Q ' }}
               </span>
             </td>
-            <td class="!px-4 !py-2.5 text-right! font-[600] border-r border-slate-200">
-              {{ order.total | currency: 'Q ' }}
-            </td>
-            <td class="!px-4 !py-2.5 text-left border-r border-slate-200">
+
+            <!-- 6. Pago -->
+            <td class="!py-2.5 !pl-3 text-left border-r border-[#762f41]/18 w-[160px]">
               @if (order.status === 'cancelled') {
                 <span class="text-xs font-semibold text-slate-400 italic">No Aplica</span>
               } @else if (+order.paidAmount === 0) {
@@ -208,242 +358,156 @@
                 </span>
               }
             </td>
-            <td class="!px-4 !py-2.5 border-r border-slate-200">
-              <span
-                class="inline-flex items-center px-2.5 py-1 text-[11px] font-semibold rounded-md border"
-                [ngClass]="{
-                  'bg-amber-50/70 text-amber-800 border-amber-300/60': ['pending', 'on_hold'].includes(order.status),
-                  'bg-blue-50/70 text-blue-800 border-blue-300/60': order.status === 'confirmed',
-                  'bg-indigo-50/70 text-indigo-800 border-indigo-300/60': order.status === 'preparing',
-                  'bg-emerald-50/70 text-emerald-800 border-emerald-300/60': ['ready_for_pickup', 'out_for_delivery', 'delivered'].includes(order.status),
-                  'bg-rose-50/70 text-rose-800 border-rose-300/60': order.status === 'cancelled'
-                }"
-              >
-                <span class="w-1.5 h-1.5 rounded-full mr-2"
-                  [ngClass]="{
-                    'bg-amber-600': ['pending', 'on_hold'].includes(order.status),
-                    'bg-blue-600': order.status === 'confirmed',
-                    'bg-indigo-600': order.status === 'preparing',
-                    'bg-emerald-600': ['ready_for_pickup', 'out_for_delivery', 'delivered'].includes(order.status),
-                    'bg-rose-600': order.status === 'cancelled'
-                  }"
-                ></span>
-                {{ order.status | saleStatus }}
-              </span>
-            </td>
-            <td class="!px-4 !py-2.5 text-right">
-              <div class="flex justify-end items-center gap-1.5">
-                <p-button 
-                  [outlined]="true" 
-                  (onClick)="editOrder(order.id)" 
-                  styleClass="!text-[13px] !py-1 !px-2.5 !rounded-lg font-semibold shadow-none !border-[1.5px] !border-[#1e3a5f] !text-[#1e3a5f] hover:!bg-[#1e3a5f] hover:!text-white hover:!border-[#1e3a5f] transition-all inline-flex items-center gap-1.5" 
-                >
-                  @if (['delivered', 'cancelled'].includes(order.status)) {
-                    <svg lucideEye class="w-3.5 h-3.5 stroke-[2.2]"></svg>
+
+            <!-- 7. Acciones -->
+            <td class="!pr-4 !text-right !py-2.5 w-[250px] border-r border-[#762f41]/18">
+              <div class="flex items-center justify-end gap-1.5" (click)="$event.stopPropagation()">
+                @if (canManageFolders() && selectedFolderId()) {
+                  <button
+                    type="button"
+                    (click)="removeFromActiveFolder(order, $event)"
+                    class="px-2 py-1 rounded-md text-[11px] font-semibold inline-flex items-center gap-1 border border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100 transition-all cursor-pointer shadow-2xs"
+                    pTooltip="Quitar de esta carpeta"
+                  >
+                    <i class="pi pi-times text-[9px]"></i>
+                  </button>
+                }
+                @if (['delivered', 'cancelled'].includes(order.status)) {
+                  <button
+                    type="button"
+                    (click)="editOrder(order.id)"
+                    class="px-2 py-1 rounded-md text-[11px] font-semibold inline-flex items-center gap-1 border border-slate-400/50 bg-slate-100 text-slate-700 hover:bg-slate-200 hover:border-slate-500 hover:text-slate-900 transition-all cursor-pointer shadow-2xs active:scale-95"
+                  >
+                    <i class="pi pi-eye text-[9px]"></i>
                     <span>Ver</span>
-                  } @else {
-                    <svg lucideSquarePen class="w-3.5 h-3.5 stroke-[2.2]"></svg>
+                  </button>
+                } @else {
+                  <button
+                    type="button"
+                    (click)="editOrder(order.id)"
+                    class="px-2 py-1 rounded-md text-[11px] font-semibold inline-flex items-center gap-1 border border-amber-600/45 bg-amber-500/[0.08] text-amber-700 hover:bg-amber-500/[0.18] hover:border-amber-600/85 hover:text-amber-800 transition-all cursor-pointer shadow-2xs active:scale-95"
+                  >
+                    <i class="pi pi-pencil text-[9px]"></i>
                     <span>Editar</span>
-                  }
-                </p-button>
-                <p-button 
-                  [outlined]="true" 
-                  (onClick)="previewOrder(order)" 
-                  styleClass="!text-[13px] !py-1 !px-2.5 !rounded-lg font-semibold shadow-none !border-[1.5px] !border-[#1e3a5f] !text-[#1e3a5f] hover:!bg-[#1e3a5f] hover:!text-white hover:!border-[#1e3a5f] transition-all inline-flex items-center gap-1.5" 
+                  </button>
+                }
+
+                <!-- Ticket -->
+                <button
+                  type="button"
+                  (click)="previewOrder(order)"
+                  class="px-2 py-1 rounded-md text-[11px] font-semibold inline-flex items-center gap-1 border border-[#48021C]/45 bg-[#48021C]/[0.08] text-[#48021C] hover:bg-[#48021C]/[0.18] hover:border-[#48021C]/85 hover:text-[#350114] transition-all cursor-pointer shadow-2xs active:scale-95"
                 >
-                  <svg lucideReceipt class="w-3.5 h-3.5 stroke-[2.2]"></svg>
+                  <i class="pi pi-receipt text-[9px]"></i>
                   <span>Ticket</span>
-                </p-button>
+                </button>
               </div>
+            </td>
+            <td class="!px-1 !py-2.5 w-8" (click)="$event.stopPropagation()">
+              @if (canManageFolders()) {
+                <button
+                  type="button"
+                  cdkDragHandle
+                  class="row-drag-handle"
+                  aria-label="Arrastrar a una carpeta"
+                >
+                  <span></span><span></span>
+                  <span></span><span></span>
+                  <span></span><span></span>
+                </button>
+              }
             </td>
           </tr>
         </ng-template>
 
         <ng-template #expandedrow let-order>
           <tr>
-            <td colspan="8" class="!p-0 border-none bg-transparent">
-              <div class="p-6 bg-slate-50/50 border-t border-slate-100">
+            <td colspan="9" class="!p-0 border-none bg-transparent">
+              <div class="p-6 bg-[#eddde1]/15 border-t border-[#762f41]/15">
                 <ng-container *ngTemplateOutlet="expandedDetails; context: { $implicit: order }"></ng-container>
               </div>
             </td>
           </tr>
         </ng-template>
-
-        <ng-template pTemplate="emptymessage">
-          <tr>
-            <td colspan="8" class="text-center !py-32">
-              <div class="flex flex-col items-center justify-center gap-3 w-full h-full">
-                <i class="pi pi-shopping-cart text-[#95abce]" style="font-size: 5rem"></i>
-                <div class="flex flex-col items-center gap-1">
-                  <p class="text-[#627ca7] font-bold text-xl">No se encontraron órdenes.</p>
-                  <p class="text-[#627ca7] text-sm font-medium">Prueba ajustando los filtros de búsqueda o crea una nueva.</p>
-                </div>
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
+      </app-standard-table>
     </div>
 
-    <!-- MOBILE VIEW -->
-    <div class="lg:hidden block bg-white rounded-2xl border border-slate-300 overflow-hidden shadow-sm">
-      <!-- Mobile Card Header -->
-      <div class="p-4 flex flex-col gap-2.5 border-b border-slate-200 bg-slate-50/50">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <h2 class="text-base font-semibold text-gray-900 tracking-tight leading-none m-0">
-              Listado de Órdenes
-            </h2>
-            <span class="px-2 py-0.5 bg-slate-200 text-slate-700 text-xs font-semibold rounded-full">
-              {{ totalRecords() }}
-            </span>
+    <!-- MOBILE VIEW (Tarjetas móviles) -->
+    <div class="lg:hidden block space-y-3">
+      @for (order of saleOrders(); track order.id) {
+        <div class="bg-white rounded-2xl shadow-xs border border-[#48021C]/20 p-4 flex flex-col gap-3" [ngClass]="{ 'opacity-60 grayscale-[0.5]': order.status === 'cancelled' }">
+          <div class="flex justify-between items-start gap-2">
+            <div class="flex flex-col min-w-0">
+              <span class="inline-flex text-[11px] bg-[#93c5fd]/50 text-[#172554] font-bold px-2 py-0.5 rounded border border-[#2563eb]/60 w-fit">
+                #{{ order.invoiceNumber }}
+              </span>
+              <h3 class="font-bold text-slate-800 text-sm leading-tight truncate mt-1.5">
+                {{ order.customer?.name || order.guestCustomer?.name || 'Venta al Público' }}
+              </h3>
+              <span class="text-[11px] text-slate-500 mt-0.5">
+                {{ order.branch?.name }} • {{ order.date | date: 'dd/MM/yyyy':'-0600' }}
+              </span>
+            </div>
+            
+            <div class="flex flex-col items-end gap-1">
+            <app-status-badge
+              [severity]="getStatusSeverity(order.status)"
+              [value]="order.status | saleStatus"
+              size="xs"
+            />
+            @if (order.isPreorder) {
+              <app-status-badge severity="purple" value="Preorden" size="xs" />
+            }
+            </div>
           </div>
-          <p-button 
-            styleClass="!rounded-lg text-xs! !bg-[#48021C] !border-[#48021C] !text-white hover:!bg-[#350114] inline-flex items-center gap-1 shadow-sm !py-1.5 !px-3"
-            (onClick)="createSaleOrder()"
-          >
-            <svg lucideCirclePlus class="w-3.5 h-3.5"></svg>
-            <span>Nueva Orden</span>
-          </p-button>
+
+          <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+            <div class="flex flex-col">
+              <span class="text-[10.5px] text-slate-400">Total:</span>
+              <span class="font-bold text-slate-900 text-sm tabular-nums">{{ order.total | currency: 'Q ' }}</span>
+            </div>
+            
+            <div class="flex items-center gap-1.5">
+              <button
+                type="button"
+                (click)="showDetails(order)"
+                class="px-2.5 py-1 rounded-lg text-xs font-semibold border border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100"
+              >
+                Detalles
+              </button>
+              <button
+                type="button"
+                (click)="editOrder(order.id)"
+                class="px-2.5 py-1 rounded-lg text-xs font-semibold border border-amber-500/40 bg-amber-50 text-amber-700 hover:bg-amber-100"
+              >
+                {{ ['delivered', 'cancelled'].includes(order.status) ? 'Ver' : 'Editar' }}
+              </button>
+              <button
+                type="button"
+                (click)="previewOrder(order)"
+                class="px-2.5 py-1 rounded-lg text-xs font-semibold border border-[#48021C]/30 bg-[#48021C]/10 text-[#48021C] hover:bg-[#48021C]/20"
+              >
+                Ticket
+              </button>
+              @if (canManageFolders() && selectedFolderId()) {
+                <button
+                  type="button"
+                  (click)="removeFromActiveFolder(order, $event)"
+                  class="px-2.5 py-1 rounded-lg text-xs font-semibold border border-rose-300 bg-rose-50 text-rose-700"
+                >
+                  Quitar
+                </button>
+              }
+            </div>
+          </div>
         </div>
-        <p-iconfield class="w-full">
-          <p-inputicon class="pi pi-search" />
-          <input 
-            [ngModel]="searchTerm()"
-            (input)="applySearch($event)"
-            type="text" 
-            pInputText 
-            placeholder="Buscar orden o cliente..."
-            autocomplete="off"
-            class="!rounded-xl border-slate-200 text-xs h-9! w-full"
-            fluid
-          />
-        </p-iconfield>
-      </div>
-
-      <p-table
-        [value]="saleOrders()"
-        [loading]="loading()"
-        [paginator]="true"
-        [rows]="rows()"
-        [totalRecords]="totalRecords()"
-        [lazy]="true"
-        (onLazyLoad)="onPageChange($event)"
-        [rowsPerPageOptions]="[10, 20, 50, 100]"
-        dataKey="id"
-        styleClass="bg-transparent w-full border-none"
-        [breakpoint]="'0px'"
-      >
-        <ng-template pTemplate="body" let-order>
-          <tr class="bg-transparent border-none block" [ngClass]="{ 'opacity-60 grayscale-[0.5]': order.status === 'cancelled' }">
-            <td class="block !p-0 border-none bg-transparent w-full">
-              <div class="bg-white rounded-2xl shadow-sm border border-slate-200 mx-4 my-2.5 flex flex-col overflow-hidden relative">
-                <div class="flex p-4 items-center gap-3">
-                  <div class="w-12 h-12 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden border border-[#4A7FA7] bg-[#D0E2F2] shadow-sm text-[#3B5B8A]">
-                    <i class="pi pi-shopping-bag text-lg!"></i>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex justify-between items-start gap-1">
-                      <div class="flex flex-col min-w-0">
-                        <span class="inline-flex text-[11px] bg-[#93c5fd]/50 text-[#172554] font-semibold px-2 py-0.5 rounded border border-[#2563eb]/60 w-fit">#{{ order.invoiceNumber }}</span>
-                        <h3 class="font-semibold text-slate-800 text-base leading-tight truncate mt-1.5">
-                          {{ order.customer?.name || order.guestCustomer?.name || 'Venta al Público' }}
-                        </h3>
-                      </div>
-                      <span
-                        class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-md border shadow-sm"
-                        [ngClass]="{
-                          'bg-amber-50 text-amber-600 border-amber-200': ['pending', 'on_hold'].includes(order.status),
-                          'bg-blue-50 text-blue-600 border-blue-200': order.status === 'confirmed',
-                          'bg-indigo-50 text-indigo-600 border-indigo-200': order.status === 'preparing',
-                          'bg-emerald-50 text-emerald-600 border-emerald-200': ['ready_for_pickup', 'out_for_delivery', 'delivered'].includes(order.status),
-                          'bg-rose-50 text-rose-600 border-rose-200': order.status === 'cancelled'
-                        }"
-                      >
-                        <span class="w-1.5 h-1.5 rounded-full mr-1.5"
-                          [ngClass]="{
-                            'bg-amber-500': ['pending', 'on_hold'].includes(order.status),
-                            'bg-blue-500': order.status === 'confirmed',
-                            'bg-indigo-500': order.status === 'preparing',
-                            'bg-emerald-500': ['ready_for_pickup', 'out_for_delivery', 'delivered'].includes(order.status),
-                            'bg-rose-500': order.status === 'cancelled'
-                          }"
-                        ></span>
-                        {{ order.status | saleStatus }}
-                      </span>
-                    </div>
-                    <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-100">
-                      <div class="flex flex-col">
-                        <span class="text-[11px] text-slate-400 font-medium">Fecha y Hora</span>
-                        <span class="text-xs font-semibold text-slate-600">
-                          {{ order.date | date: 'dd/MM/yyyy':'-0600' }} • {{ order.date | date: 'hh:mm a':'-0600' }}
-                        </span>
-                      </div>
-                      <div class="flex flex-col items-end">
-                        <span class="text-[11px] text-slate-400 font-medium">Total</span>
-                        <span class="text-sm font-bold text-slate-800">
-                          {{ order.total | currency: 'Q ' }}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="px-4 pb-4 flex items-center gap-2 overflow-x-auto no-scrollbar">
-                  <span class="inline-flex items-center text-[11px] bg-slate-100 text-slate-500 font-semibold px-2 py-0.5 rounded border border-slate-200">
-                    <i class="pi pi-building text-[10px] mr-1"></i> {{ order.branch?.name }}
-                  </span>
-                  <span class="inline-flex items-center text-[11px] bg-[#D0E2F2] text-[#3B5B8A] font-semibold px-2 py-0.5 rounded border border-[#4A7FA7]">
-                    {{ order.details?.length || 0 }} Items
-                  </span>
-                  @if (isAbonada(order)) {
-                    <span class="inline-flex items-center text-[11px] bg-blue-50 text-blue-600 font-semibold px-2 py-0.5 rounded border border-blue-200">
-                      Abonada
-                    </span>
-                  }
-                </div>
-
-                <div class="bg-slate-50/50 border-t border-slate-100 p-2 px-3 flex items-center justify-between">
-                  <div class="flex items-center gap-1">
-                    <p-button 
-                      label="Detalles" 
-                      icon="pi pi-external-link" 
-                      (onClick)="showDetails(order)"
-                      styleClass="p-button-text p-button-sm !text-[#3B5B8A] font-semibold text-xs !py-1 !px-2.5 rounded-lg border border-[#4A7FA7] bg-[#D0E2F2] shadow-sm"
-                    />
-                  </div>
-                  <div class="flex items-center gap-1">
-                    <p-button [text]="true" [rounded]="true" (onClick)="editOrder(order.id)" styleClass="!w-9 !h-9 !p-0 !text-[#1e3a5f] hover:!bg-[#1e3a5f] hover:!text-white transition-all flex items-center justify-center">
-                      @if (['delivered', 'cancelled'].includes(order.status)) {
-                        <svg lucideEye class="w-4 h-4"></svg>
-                      } @else {
-                        <svg lucideSquarePen class="w-4 h-4"></svg>
-                      }
-                    </p-button>
-                    <p-button [text]="true" [rounded]="true" (onClick)="previewOrder(order)" styleClass="!w-9 !h-9 !p-0 !text-[#1e3a5f] hover:!bg-[#1e3a5f] hover:!text-white transition-all flex items-center justify-center">
-                      <svg lucideReceipt class="w-4 h-4"></svg>
-                    </p-button>
-                  </div>
-                </div>
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-
-        <ng-template pTemplate="emptymessage">
-           <tr>
-             <td class="block !p-0 border-none bg-transparent w-full">
-               <div class="bg-white rounded-lg border border-slate-200 mx-4 my-8 p-10 flex flex-col items-center gap-4 text-center">
-                 <i class="pi pi-shopping-cart text-[#95abce]" style="font-size: 4rem"></i>
-                 <div class="flex flex-col gap-1">
-                   <p class="text-[#627ca7] font-bold text-lg">No se encontraron órdenes</p>
-                   <p class="text-[#627ca7] text-xs font-medium">Prueba ajustando los filtros de búsqueda o crea una nueva.</p>
-                 </div>
-               </div>
-             </td>
-           </tr>
-        </ng-template>
-      </p-table>
+      } @empty {
+        <div class="bg-white rounded-2xl border border-slate-200 p-8 flex flex-col items-center gap-2 text-center">
+          <i class="pi pi-shopping-cart text-slate-300 text-4xl"></i>
+          <p class="font-bold text-slate-700 text-sm">No se encontraron órdenes</p>
+          <p class="text-xs text-slate-400">Prueba ajustando los filtros de búsqueda o crea una nueva orden.</p>
+        </div>
+      }
     </div>
 
     <!-- DETAILS MODAL -->
@@ -582,8 +646,16 @@
                 </div>
 
                 <!-- Periodo de Cobro & Vencimiento -->
-                @if (order.billingStartDate || order.dueDate) {
+                @if (order.billingStartDate || order.dueDate || order.promisedDeliveryDate) {
                   <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex flex-col gap-1 text-[11px]">
+                    @if (order.promisedDeliveryDate) {
+                      <div class="flex items-center justify-between">
+                        <span class="text-slate-500 font-medium">Fecha de entrega:</span>
+                        <span class="font-semibold text-violet-800">
+                          {{ order.promisedDeliveryDate | date:'dd/MM/yyyy':'-0600' }}
+                        </span>
+                      </div>
+                    }
                     <div class="flex items-center justify-between">
                       <span class="text-slate-500 font-medium">Inicio de Cobro:</span>
                       <span class="font-semibold text-slate-700">
@@ -591,7 +663,7 @@
                       </span>
                     </div>
                     <div class="flex items-center justify-between">
-                      <span class="text-slate-500 font-medium">Fecha de Vencimiento:</span>
+                      <span class="text-slate-500 font-medium">Límite de pago:</span>
                       <span class="font-semibold" [ngClass]="order.dueDate ? 'text-[#be123c]' : 'text-slate-700'">
                         {{ (order.dueDate | date:'dd/MM/yyyy':'-0600') || '---' }}
                       </span>
@@ -615,6 +687,98 @@
 
   </div>
 </div>
+
+<app-standard-modal
+  [visible]="folderModalVisible()"
+  (visibleChange)="folderModalVisible.set($event)"
+  [title]="editingFolder() ? 'Editar carpeta' : 'Nueva carpeta'"
+  width="92vw"
+  maxWidth="420px"
+>
+  <div class="flex flex-col gap-3">
+    @if (!editingFolder()) {
+      <label class="text-xs font-semibold text-[#48021C]">Sucursal</label>
+      <app-branch-select
+        [branches]="branches()"
+        [ngModel]="folderBranchId()"
+        (ngModelChange)="folderBranchId.set($event)"
+        placeholder="Elige sucursal"
+        [showClear]="false"
+        widthClass="w-full"
+        size="small"
+      />
+    }
+    <label class="text-xs font-semibold text-[#48021C]">Nombre</label>
+    <input
+      pInputText
+      class="w-full !rounded-lg text-sm !border-[#9f6587]/35"
+      [ngModel]="folderName()"
+      (ngModelChange)="folderName.set($event)"
+      placeholder="Ej. Navidad 2026"
+    />
+    <label class="text-xs font-semibold text-[#48021C]">Color</label>
+    <div class="flex flex-wrap gap-2">
+      @for (color of folderColors; track color) {
+        <button
+          type="button"
+          class="w-7 h-7 rounded-full border-2 cursor-pointer"
+          [style.background]="color"
+          [class.border-slate-900]="folderColor() === color"
+          [class.border-white]="folderColor() !== color"
+          (click)="folderColor.set(color)"
+        ></button>
+      }
+    </div>
+  </div>
+  <ng-container footer>
+    <p-button label="Cancelar" [outlined]="true" severity="secondary" (onClick)="folderModalVisible.set(false)" />
+    <p-button
+      [label]="editingFolder() ? 'Guardar' : 'Crear'"
+      [loading]="folderSaving()"
+      (onClick)="saveFolder()"
+      styleClass="!bg-[#48021C] !border-[#48021C]"
+    />
+  </ng-container>
+</app-standard-modal>
+
+<app-standard-modal
+  [visible]="addToFolderVisible()"
+  (visibleChange)="addToFolderVisible.set($event)"
+  title="Añadir a carpeta"
+  width="92vw"
+  maxWidth="420px"
+>
+  <p class="text-xs text-slate-500 mb-3">
+    #{{ addToFolderOrder()?.invoiceNumber }}
+  </p>
+  <div class="flex flex-col gap-1 max-h-64 overflow-y-auto">
+    @for (folder of folders(); track folder.id) {
+      <button
+        type="button"
+        class="folder-item w-full"
+        [disabled]="addToFolderSaving()"
+        (click)="addOrderToFolder(folder)"
+      >
+        <span class="folder-dot" [style.background]="folder.color || '#48021C'"></span>
+        <span class="truncate">{{ folder.name }}</span>
+      </button>
+    } @empty {
+      <p class="text-xs text-slate-400">No hay carpetas. Crea una en el riel izquierdo.</p>
+    }
+  </div>
+</app-standard-modal>
+
+<app-confirmation-modal
+  [visible]="deleteFolderVisible()"
+  (visibleChange)="deleteFolderVisible.set($event)"
+  type="danger"
+  header="Eliminar carpeta"
+  title="¿Eliminar esta carpeta?"
+  [message]="'Las órdenes no se borran; solo se quitan de ' + (folderToDelete()?.name || 'esta carpeta') + '.'"
+  confirmLabel="Eliminar"
+  [loading]="folderDeleting()"
+  (onConfirm)="confirmDeleteFolder()"
+/>
 
 <app-ticket-preview
   *ngIf="showTicketPreview()"

@@ -7,6 +7,150 @@
   display: none;
 }
 
+.folder-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.75rem;
+  background: #fff;
+  border: 1px solid rgb(72 2 28 / 0.2);
+  border-radius: 0.75rem;
+}
+
+.folder-bar-label {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #48021C;
+}
+
+.folder-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  flex: 1;
+  overflow-x: auto;
+  padding: 0.1rem 0;
+}
+
+.folder-add {
+  flex-shrink: 0;
+  height: 1.85rem;
+  padding: 0 0.65rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgb(159 101 135 / 0.35);
+  background: #fff;
+  color: #48021C;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.folder-add:hover {
+  background: rgb(159 101 135 / 0.15);
+}
+
+.folder-item-wrap {
+  flex-shrink: 0;
+}
+
+.folder-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgb(72 2 28 / 0.12);
+  font-size: 12px;
+  font-weight: 600;
+  color: #3b141e;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.folder-item:hover,
+.folder-item-wrap.cdk-drop-list-dragging .folder-item,
+.folder-item-wrap.cdk-drop-list-receiving .folder-item {
+  background: #f8eef3;
+}
+
+.folder-item.is-active {
+  background: rgb(72 2 28 / 0.08);
+  border-color: rgb(72 2 28 / 0.2);
+  color: #48021C;
+}
+
+.folder-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.folder-actions {
+  display: none;
+  align-items: center;
+  gap: 0.35rem;
+  color: #9f6587;
+  font-size: 10px;
+}
+
+.folder-item:hover .folder-actions {
+  display: inline-flex;
+}
+
+.row-drag-handle {
+  display: grid;
+  grid-template-columns: 3px 3px;
+  grid-template-rows: 3px 3px 3px;
+  gap: 2px 3px;
+  width: 1.25rem;
+  height: 1.5rem;
+  padding: 0;
+  margin: 0 auto;
+  border: 0;
+  background: transparent;
+  cursor: grab;
+  align-content: center;
+  justify-content: center;
+}
+
+.row-drag-handle:active {
+  cursor: grabbing;
+}
+
+.row-drag-handle span {
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background: #94a3b8;
+}
+
+.row-drag-handle:hover span {
+  background: #64748b;
+}
+
+.drag-preview {
+  padding: 0.4rem 0.7rem;
+  border-radius: 0.5rem;
+  background: #fff;
+  border: 1px solid rgb(72 2 28 / 0.25);
+  font-size: 12px;
+  font-weight: 700;
+  color: #48021C;
+  box-shadow: 0 8px 20px rgb(15 23 42 / 0.12);
+}
+
 :host ::ng-deep .p-datatable-modern .p-datatable-thead > tr > th {
     padding: 0.5rem 1rem;
     font-size: 0.75rem;

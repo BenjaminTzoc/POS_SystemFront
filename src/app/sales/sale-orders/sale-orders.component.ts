@@ -4,6 +4,8 @@ import { TableModule } from 'primeng/table';
 import { OrdersService, SaleFilterDto } from '../services/orders.service';
 import { MessageService } from 'primeng/api';
 import { ISaleOrderResponse } from '../interfaces/sale-order.interface';
+import { SaleFolderDto } from '../interfaces/sale-folder.interface';
+import { SaleFoldersService } from '../services/sale-folders.service';
 import { CurrencyPipe, DatePipe, DecimalPipe, NgClass } from '@angular/common';
 import { Router } from '@angular/router';
 import { TooltipModule } from 'primeng/tooltip';
@@ -23,18 +25,33 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TagModule } from 'primeng/tag';
 import { Subscription } from 'rxjs';
 import { SaleStatusPipe } from '../../shared/pipes/sale-status.pipe';
-import { DeliveryDatePipe } from '../../shared/pipes/delivery-date.pipe';
 import { TicketPreviewComponent } from './ticket-preview/ticket-preview.component';
 import { CommonModule } from '@angular/common';
+import { DialogModule } from 'primeng/dialog';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
-import { DialogModule } from 'primeng/dialog';
 import { LucideCirclePlus, LucideRefreshCw, LucideSquarePen, LucideReceipt, LucideEye } from '@lucide/angular';
+import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { RefreshButtonComponent } from '../../shared/components/refresh-button/refresh-button.component';
+import { PrimaryButtonComponent } from '../../shared/components/primary-button/primary-button.component';
+import { StandardTableComponent } from '../../shared/components/standard-table/standard-table.component';
+import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
+import { StandardModalComponent } from '../../shared/components/standard-modal/standard-modal.component';
+import { ConfirmationModalComponent } from '../../shared/components/confirmation-modal/confirmation-modal.component';
+import { BranchSelectComponent } from '../../shared/components/branch-select/branch-select.component';
+import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDragPreview, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
+
+const FOLDER_COLORS = ['#48021C', '#c2410c', '#1B768E', '#15803d', '#7c3aed', '#d97706', '#be123c', '#0f766e'];
 
 @Component({
   selector: 'app-sale-orders',
   standalone: true,
   imports: [
+    PageHeaderComponent,
+    RefreshButtonComponent,
+    PrimaryButtonComponent,
+    StandardTableComponent,
+    StatusBadgeComponent,
     ButtonModule, 
     TableModule, 
     DatePipe, 
@@ -49,30 +66,53 @@ import { LucideCirclePlus, LucideRefreshCw, LucideSquarePen, LucideReceipt, Luci
     ToggleSwitchModule,
     TagModule,
     SaleStatusPipe,
-    DeliveryDatePipe,
     TicketPreviewComponent,
     CommonModule,
     RippleModule,
     IconFieldModule,
     InputIconModule,
     DialogModule,
-    LucideCirclePlus,
-    LucideRefreshCw,
-    LucideSquarePen,
-    LucideReceipt,
-    LucideEye
+    StandardModalComponent,
+    ConfirmationModalComponent,
+    BranchSelectComponent,
+    CdkDropList,
+    CdkDrag,
+    CdkDragHandle,
+    CdkDragPreview,
   ],
   templateUrl: './sale-orders.component.html',
   styleUrl: './sale-orders.component.css',
 })
-export class SaleOrdersComponent implements OnInit {
+export class SaleOrdersComponent implements OnInit, OnDestroy {
   private ordersService = inject(OrdersService);
+  private foldersService = inject(SaleFoldersService);
   private messageService = inject(MessageService);
   private router = inject(Router);
   private authService = inject(AuthService);
   private branchesService = inject(BranchesService);
   private areasService = inject(AreasService);
   private saleWsService = inject(SaleOrderWsService);
+
+  readonly folderColors = FOLDER_COLORS;
+  canManageFolders = computed(() => this.authService.hasPermission('orders.update'));
+  folders = signal<SaleFolderDto[]>([]);
+  selectedFolderId = signal<string | null>(null);
+  folderDropIds = computed(() => this.folders().map((f) => `folder-drop-${f.id}`));
+
+  folderModalVisible = signal(false);
+  folderSaving = signal(false);
+  editingFolder = signal<SaleFolderDto | null>(null);
+  folderName = signal('');
+  folderColor = signal(FOLDER_COLORS[0]);
+  folderBranchId = signal<string | null>(null);
+
+  deleteFolderVisible = signal(false);
+  folderToDelete = signal<SaleFolderDto | null>(null);
+  folderDeleting = signal(false);
+
+  addToFolderVisible = signal(false);
+  addToFolderOrder = signal<ISaleOrderResponse | null>(null);
+  addToFolderSaving = signal(false);
 
   private allOrders = signal<ISaleOrderResponse[]>([]);
 
@@ -86,6 +126,25 @@ export class SaleOrdersComponent implements OnInit {
 
   selectedBranch = signal<string | null>(null);
   selectedArea = signal<string | null>(null);
+  preorderFilter = signal<'all' | 'preorder' | 'regular'>('all');
+  promisedDeliveryRange = signal<Date[] | null>(null);
+  preorderFilterOptions = [
+    { label: 'Todas las órdenes', value: 'all' },
+    { label: 'Solo preórdenes', value: 'preorder' },
+    { label: 'Sin preórdenes', value: 'regular' },
+  ];
+  selectedStatus = signal<string | null>(null);
+  statusFilterOptions = [
+    { label: 'Pendiente', value: 'pending' },
+    { label: 'Confirmado', value: 'confirmed' },
+    { label: 'En Preparación', value: 'preparing' },
+    { label: 'Listo para recoger', value: 'ready_for_pickup' },
+    { label: 'En camino', value: 'out_for_delivery' },
+    { label: 'Entregado', value: 'delivered' },
+    { label: 'Parcialmente entregado', value: 'partially_delivered' },
+    { label: 'En espera', value: 'on_hold' },
+    { label: 'Cancelado', value: 'cancelled' },
+  ];
   onlyAreaDetails = signal<boolean>(false);
   expandedOrders = signal<Set<string>>(new Set());
   showTicketPreview = signal<boolean>(false);
@@ -126,10 +185,9 @@ export class SaleOrdersComponent implements OnInit {
   loading = signal<boolean>(false);
 
   ngOnInit(): void {
-    if (this.isSuperAdmin()) {
-      this.loadBranches();
-    }
+    this.loadBranches();
     this.loadAreas();
+    this.loadFolders();
     this.setupWebSockets();
   }
 
@@ -172,9 +230,29 @@ export class SaleOrdersComponent implements OnInit {
     this.loadOrders();
   }
 
+  resetFilters(): void {
+    const start = new Date();
+    start.setMonth(start.getMonth() - 6);
+    this.dateRange.set([start, new Date()]);
+    this.selectedBranch.set(null);
+    this.selectedArea.set(null);
+    this.preorderFilter.set('all');
+    this.promisedDeliveryRange.set(null);
+    this.selectedStatus.set(null);
+    this.searchTerm.set('');
+    this.selectedFolderId.set(null);
+    this.first.set(0);
+    this.loadOrders();
+  }
+
   onPageChange(event: any): void {
     this.first.set(event.first);
     this.rows.set(event.rows);
+    this.loadOrders();
+  }
+
+  refreshAll(): void {
+    this.loadFolders();
     this.loadOrders();
   }
 
@@ -184,17 +262,35 @@ export class SaleOrdersComponent implements OnInit {
     const dates = this.dateRange();
     const currentAreaId = this.selectedArea();
     const currentOnlyAreaDetails = !!currentAreaId || this.onlyAreaDetails();
+    const preorderFilter = this.preorderFilter();
+    const deliveryRange = this.promisedDeliveryRange();
     
     const filters: SaleFilterDto = {
       branchId: this.selectedBranch(),
       areaId: currentAreaId ?? undefined,
       onlyAreaDetails: currentOnlyAreaDetails,
-      startDate: dates[0]?.toISOString().split('T')[0],
-      endDate: (dates[1] || dates[0])?.toISOString().split('T')[0],
+      status: this.selectedStatus() ?? undefined,
       search: this.searchTerm(),
       page: (this.first() / this.rows()) + 1,
-      limit: this.rows()
+      limit: this.rows(),
+      folderId: this.selectedFolderId() ?? undefined,
     };
+
+    if (preorderFilter === 'preorder') {
+      filters.isPreorder = true;
+      if (deliveryRange?.[0]) {
+        filters.promisedDeliveryStart = deliveryRange[0].toISOString().split('T')[0];
+        filters.promisedDeliveryEnd = (deliveryRange[1] || deliveryRange[0]).toISOString().split('T')[0];
+      }
+    } else {
+      if (preorderFilter === 'regular') {
+        filters.isPreorder = false;
+      }
+      if (!this.selectedFolderId()) {
+        filters.startDate = dates[0]?.toISOString().split('T')[0];
+        filters.endDate = (dates[1] || dates[0])?.toISOString().split('T')[0];
+      }
+    }
 
     this.ordersService.getSalesTable(filters).subscribe({
       next: (res) => {
@@ -208,6 +304,204 @@ export class SaleOrdersComponent implements OnInit {
     });
   }
 
+  onBranchChange(): void {
+    this.selectedFolderId.set(null);
+    this.first.set(0);
+    this.loadFolders();
+    this.loadOrders();
+  }
+
+  loadFolders(): void {
+    const branchId = this.isSuperAdmin() ? this.selectedBranch() : null;
+    this.foldersService.list(branchId).subscribe({
+      next: (res) => {
+        if (res.statusCode === 200) {
+          this.folders.set(res.data ?? []);
+        }
+      },
+      error: (err) => this.handleFolderError(err, 'No se pudieron cargar las carpetas'),
+    });
+  }
+
+  selectFolder(id: string | null): void {
+    this.selectedFolderId.set(id);
+    this.first.set(0);
+    this.loadOrders();
+  }
+
+  openCreateFolder(): void {
+    this.editingFolder.set(null);
+    this.folderName.set('');
+    this.folderColor.set(FOLDER_COLORS[0]);
+    this.folderBranchId.set(null);
+    this.folderModalVisible.set(true);
+  }
+
+  openEditFolder(folder: SaleFolderDto, event?: Event): void {
+    event?.stopPropagation();
+    this.editingFolder.set(folder);
+    this.folderName.set(folder.name);
+    this.folderColor.set(folder.color || FOLDER_COLORS[0]);
+    this.folderModalVisible.set(true);
+  }
+
+  saveFolder(): void {
+    const name = this.folderName().trim();
+    if (!name) {
+      this.messageService.add({ severity: 'warn', summary: 'Nombre', detail: 'Escribe un nombre para la carpeta.' });
+      return;
+    }
+    const editing = this.editingFolder();
+    if (!editing && this.isSuperAdmin() && !this.folderBranchId()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sucursal',
+        detail: 'Elige una sucursal para la carpeta.',
+      });
+      return;
+    }
+    this.folderSaving.set(true);
+    const req = editing
+      ? this.foldersService.update(editing.id, { name, color: this.folderColor() })
+      : this.foldersService.create({
+          name,
+          color: this.folderColor(),
+          branchId: this.isSuperAdmin() ? this.folderBranchId() ?? undefined : undefined,
+        });
+
+    req.subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: editing ? 'Carpeta actualizada' : 'Carpeta creada',
+          detail: name,
+        });
+        this.folderModalVisible.set(false);
+        this.folderSaving.set(false);
+        this.loadFolders();
+      },
+      error: (err) => {
+        this.folderSaving.set(false);
+        this.handleFolderError(err, 'No se pudo guardar la carpeta');
+      },
+    });
+  }
+
+  askDeleteFolder(folder: SaleFolderDto, event?: Event): void {
+    event?.stopPropagation();
+    this.folderToDelete.set(folder);
+    this.deleteFolderVisible.set(true);
+  }
+
+  confirmDeleteFolder(): void {
+    const folder = this.folderToDelete();
+    if (!folder) return;
+    this.folderDeleting.set(true);
+    this.foldersService.delete(folder.id).subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'Carpeta eliminada', detail: folder.name });
+        if (this.selectedFolderId() === folder.id) this.selectedFolderId.set(null);
+        this.folderDeleting.set(false);
+        this.deleteFolderVisible.set(false);
+        this.folderToDelete.set(null);
+        this.loadFolders();
+        this.loadOrders();
+      },
+      error: (err) => {
+        this.folderDeleting.set(false);
+        this.handleFolderError(err, 'No se pudo eliminar la carpeta');
+      },
+    });
+  }
+
+  openAddToFolder(order: ISaleOrderResponse, event?: Event): void {
+    event?.stopPropagation();
+    this.addToFolderOrder.set(order);
+    this.addToFolderVisible.set(true);
+  }
+
+  addOrderToFolder(folder: SaleFolderDto): void {
+    const order = this.addToFolderOrder();
+    if (!order) return;
+    this.addToFolderSaving.set(true);
+    this.foldersService.addSales(folder.id, { saleIds: [order.id] }).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Añadida',
+          detail: `#${order.invoiceNumber} en ${folder.name}`,
+        });
+        this.addToFolderSaving.set(false);
+        this.addToFolderVisible.set(false);
+        this.addToFolderOrder.set(null);
+        this.loadFolders();
+      },
+      error: (err) => {
+        this.addToFolderSaving.set(false);
+        this.handleFolderError(err, 'No se pudo añadir a la carpeta');
+      },
+    });
+  }
+
+  removeFromActiveFolder(order: ISaleOrderResponse, event?: Event): void {
+    event?.stopPropagation();
+    const folderId = this.selectedFolderId();
+    if (!folderId) return;
+    this.foldersService.removeSale(folderId, order.id).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Quitada',
+          detail: `#${order.invoiceNumber} salió de la carpeta`,
+        });
+        this.loadFolders();
+        this.loadOrders();
+      },
+      error: (err) => this.handleFolderError(err, 'No se pudo quitar de la carpeta'),
+    });
+  }
+
+  onDropOnFolder(event: CdkDragDrop<SaleFolderDto>, folder: SaleFolderDto): void {
+    const order = event.item.data as ISaleOrderResponse | undefined;
+    if (!order?.id) return;
+    this.foldersService.addSales(folder.id, { saleIds: [order.id] }).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Añadida',
+          detail: `#${order.invoiceNumber} en ${folder.name}`,
+        });
+        this.loadFolders();
+        if (this.selectedFolderId() === folder.id) this.loadOrders();
+      },
+      error: (err) => this.handleFolderError(err, 'No se pudo añadir a la carpeta'),
+    });
+  }
+
+  onOrdersListDrop(event: CdkDragDrop<ISaleOrderResponse[]>): void {
+    if (event.previousContainer !== event.container) return;
+    const folderId = this.selectedFolderId();
+    if (!folderId || event.previousIndex === event.currentIndex) return;
+
+    const list = [...this.allOrders()];
+    moveItemInArray(list, event.previousIndex, event.currentIndex);
+    this.allOrders.set(list);
+    const offset = this.first();
+    this.foldersService
+      .reorder(folderId, {
+        items: list.map((order, index) => ({ saleId: order.id, sortOrder: offset + index })),
+      })
+      .subscribe({
+        error: (err) => this.handleFolderError(err, 'No se pudo reordenar la carpeta'),
+      });
+  }
+
+  private handleFolderError(err: any, fallback: string): void {
+    const raw = err?.error?.message;
+    const detail = Array.isArray(raw) ? raw.join('. ') : (typeof raw === 'string' ? raw : fallback);
+    this.messageService.add({ severity: 'error', summary: 'Carpetas', detail });
+  }
+
   private handleError(err: any): void {
     this.messageService.add({
       severity: 'error',
@@ -216,7 +510,7 @@ export class SaleOrdersComponent implements OnInit {
     });
   }
 
-  getStatusSeverity(status: string): "success" | "secondary" | "info" | "warn" | "danger" | "contrast" | undefined {
+  getStatusSeverity(status?: string): 'success' | 'secondary' | 'info' | 'warn' | 'danger' {
     switch (status) {
       case 'confirmed': return 'info';
       case 'delivered': return 'success';
@@ -232,7 +526,27 @@ export class SaleOrdersComponent implements OnInit {
     this.router.navigate(['/sales/new-order']);
   }
 
-  editOrder(orderId: string) {
+  toggleRowExpansion(order: ISaleOrderResponse, standardTable: any, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    const dt = standardTable?.dataTable;
+    if (dt) {
+      dt.toggleRow(order);
+    }
+  }
+
+  previewOrder(order: ISaleOrderResponse): void {
+    this.selectedOrderForPreview.set(order);
+    this.showTicketPreview.set(true);
+  }
+
+  showDetails(order: ISaleOrderResponse): void {
+    this.selectedOrder = order;
+    this.displayDetails = true;
+  }
+
+  editOrder(orderId: string): void {
     this.router.navigate(['/sales/new-order'], {
       queryParams: { id: orderId },
     });
@@ -282,16 +596,6 @@ export class SaleOrdersComponent implements OnInit {
     // Si estamos en modo "Pantalla de Área" con filtrado estricto, expandir por defecto
     if (this.selectedArea() && this.onlyAreaDetails()) return true;
     return this.expandedOrders().has(orderId);
-  }
-
-  showDetails(order: ISaleOrderResponse): void {
-    this.selectedOrder = order;
-    this.displayDetails = true;
-  }
-
-  previewOrder(order: ISaleOrderResponse) {
-    this.selectedOrderForPreview.set(order);
-    this.showTicketPreview.set(true);
   }
 
   getProductImageUrl(imageUrl: string | null): string {

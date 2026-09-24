@@ -1,0 +1,11 @@
+:host {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+:host i,
+span i {
+  font-size: 0.75rem !important;
+  line-height: 1 !important;
+  display: inline-block !important;
+}

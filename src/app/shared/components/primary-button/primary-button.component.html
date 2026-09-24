@@ -1,0 +1,12 @@
+<p-button 
+  styleClass="!rounded-lg text-sm! font-semibold !bg-[#48021C] !text-white !border-[#48021C] hover:!bg-[#350114] hover:!border-[#350114] hover:!shadow-md hover:!shadow-rose-950/20 active:scale-[0.98] inline-flex items-center gap-1.5 shadow-sm transition-all duration-200 cursor-pointer disabled:!opacity-50"
+  [disabled]="disabled || loading"
+  (onClick)="onClick()"
+>
+  @if (loading) {
+    <i class="pi pi-spin pi-spinner text-xs"></i>
+  } @else if (icon) {
+    <i [class]="icon" class="text-xs"></i>
+  }
+  <span>{{ label }}</span>
+</p-button>
