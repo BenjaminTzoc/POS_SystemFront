@@ -87,7 +87,7 @@ export class TripFormComponent implements OnInit {
 
   loadCatalogData(): void {
     // 1. Plantas de origen
-    this.branchesService.getBranches({ isPlant: true }).subscribe({
+    this.branchesService.getBranches().subscribe({
       next: (res) => {
         const plants = res.data || [];
         this.branches.set(plants);
