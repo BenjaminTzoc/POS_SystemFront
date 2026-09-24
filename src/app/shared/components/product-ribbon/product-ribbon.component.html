@@ -66,7 +66,7 @@
           >
             <!-- Fila Superior: Info + Precio (Clicable) -->
             <div 
-              (click)="onProductClick(p)"
+              (click)="onProductClick(p, qtyInput)"
               pTooltip="Clic para agregar a la lista"
               tooltipPosition="top"
               class="flex items-center justify-between gap-2 cursor-pointer hover:opacity-85 transition-all"
@@ -114,14 +114,13 @@
               <div class="flex items-center w-28" (click)="$event.stopPropagation()">
                 <p-inputgroup class="w-full !h-6.5">
                   <input 
+                    #qtyInput
                     type="number" 
                     [min]="p.unit.allowsDecimals ? 0.01 : 1" 
                     [step]="p.unit.allowsDecimals ? 0.5 : 1" 
-                    [value]="getQuickQuantity(p.id)" 
+                    [value]="getQuickQuantity(p.id) ?? ''" 
                     (input)="onQuickQuantityChange(p.id, $event)"
-                    (focus)="$any($event.target).select()"
-                    (click)="$any($event.target).select()"
-                    (keyup.enter)="onProductClick(p)"
+                    (keyup.enter)="onProductClick(p, qtyInput)"
                     class="w-full h-6.5! pl-1.5 pr-1 text-right font-semibold text-slate-800 bg-white border border-[#48021C]/25 rounded-l-lg focus:border-[#48021C] focus:outline-none text-[14px] leading-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     pTooltip="Atajo de cantidad rápida (Enter)"
                     tooltipPosition="top"

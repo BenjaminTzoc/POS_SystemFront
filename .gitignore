@@ -41,4 +41,11 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Local notes / backend drafts
+FRONTEND_INSTRUCTIONS.md
+/docs/
+
+# Local API host (LAN IP, etc.)
+src/environments/environment.development.ts
 

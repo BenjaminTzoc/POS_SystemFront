@@ -1,13 +1,13 @@
 <div class="py-4 px-0 md:px-6 bg-slate-50/50 min-h-screen">
   <app-page-header
-    title="Camiones"
+    title="Vehículos"
     icon="pi pi-truck"
     colorScheme="burgundy"
   >
     <div actions class="flex items-center gap-2 flex-wrap">
       <app-refresh-button [loading]="loading()" (refresh)="loadTrucks()" />
       <app-primary-button
-        label="Nuevo Camión"
+        label="Nuevo Vehículo"
         icon="pi pi-plus"
         (clicked)="openCreateModal()"
       />
@@ -51,7 +51,7 @@
         dataKey="id"
         colorScheme="navy"
         emptyIcon="pi pi-truck"
-        emptyMessage="No se encontraron camiones. Prueba ajustando los filtros o registra uno nuevo."
+        emptyMessage="No se encontraron vehículos. Prueba ajustando los filtros o registra uno nuevo."
       >
         <ng-template #header>
           <tr class="h-11 text-xs bg-[#eddde1] border-b border-[#762f41]/40 text-[#3b141e] font-bold sticky top-0 z-10">
@@ -186,7 +186,7 @@
       } @empty {
         <div class="bg-white rounded-2xl border border-slate-200 p-8 flex flex-col items-center gap-2 text-center">
           <i class="pi pi-truck text-slate-300 text-4xl"></i>
-          <p class="font-bold text-slate-700 text-sm">No se encontraron camiones</p>
+          <p class="font-bold text-slate-700 text-sm">No se encontraron vehículos</p>
           <p class="text-xs text-slate-400">Prueba ajustando los filtros o registra uno nuevo.</p>
         </div>
       }
@@ -203,7 +203,7 @@
 <app-confirmation-modal
   [(visible)]="showDeleteModal"
   header="Confirmar eliminación"
-  title="¿Eliminar este camión?"
+  title="¿Eliminar este vehículo?"
   [message]="'Se eliminará el vehículo ' + (truckToDelete?.name || '') + ' (' + (truckToDelete?.licensePlate || '') + ').'"
   note="Esta acción no se puede deshacer."
   type="danger"

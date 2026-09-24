@@ -32,7 +32,7 @@
           type="text"
           pInputText
           formControlName="name"
-          placeholder="Ej. Camión Isuzu 5 Toneladas"
+          placeholder="Ej. Vehículo Isuzu 5 Toneladas"
           class="w-full p-inputtext-sm !rounded-lg !border-[#9f6587]/35 focus:!border-[#9f6587] focus:!ring-2 focus:!ring-[#9f6587]/20 text-xs font-medium h-9!"
         />
         @if (form.get('name')?.invalid && form.get('name')?.touched) {
@@ -139,7 +139,7 @@
       (clicked)="onClose()"
     />
     <app-primary-button
-      [label]="truck ? 'Guardar cambios' : 'Registrar camión'"
+      [label]="truck ? 'Guardar cambios' : 'Registrar vehículo'"
       icon="pi pi-check"
       [loading]="saving"
       (clicked)="onSave()"

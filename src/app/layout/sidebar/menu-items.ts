@@ -182,7 +182,7 @@ export const MENU_ITEMS: MenuItem[] = [
         permission: '',
       },
       {
-        label: 'Camiones',
+        label: 'Vehículos',
         icon: 'pi pi-truck',
         route: '/logistics/trucks',
         permission: '',

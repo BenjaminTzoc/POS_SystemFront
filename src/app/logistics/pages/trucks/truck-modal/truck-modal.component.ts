@@ -50,7 +50,7 @@ export class TruckModalComponent implements OnInit, OnChanges {
   ];
 
   get modalTitle(): string {
-    return this.truck ? 'Editar camión' : 'Registrar camión';
+    return this.truck ? 'Editar vehículo' : 'Registrar vehículo';
   }
 
   constructor() {
@@ -170,8 +170,8 @@ export class TruckModalComponent implements OnInit, OnChanges {
           this.saving = false;
           this.messageService.add({
             severity: 'success',
-            summary: 'Camión actualizado',
-            detail: `El camión ${res.data.name} se actualizó correctamente.`,
+            summary: 'Vehículo actualizado',
+            detail: `El vehículo ${res.data.name} se actualizó correctamente.`,
           });
           this.saved.emit(res.data);
           this.onClose();
@@ -181,7 +181,7 @@ export class TruckModalComponent implements OnInit, OnChanges {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: err.error?.message || 'No se pudo actualizar el camión.',
+            detail: err.error?.message || 'No se pudo actualizar el vehículo.',
           });
         },
       });
@@ -203,8 +203,8 @@ export class TruckModalComponent implements OnInit, OnChanges {
           this.saving = false;
           this.messageService.add({
             severity: 'success',
-            summary: 'Camión registrado',
-            detail: `El camión ${res.data.name} fue registrado con éxito.`,
+            summary: 'Vehículo registrado',
+            detail: `El vehículo ${res.data.name} fue registrado con éxito.`,
           });
           this.saved.emit(res.data);
           this.onClose();
@@ -214,7 +214,7 @@ export class TruckModalComponent implements OnInit, OnChanges {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: err.error?.message || 'No se pudo crear el camión.',
+            detail: err.error?.message || 'No se pudo crear el vehículo.',
           });
         },
       });

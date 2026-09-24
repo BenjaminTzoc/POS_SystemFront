@@ -78,14 +78,14 @@
 
         <div class="flex flex-col gap-1">
           <label class="text-xs font-semibold text-[#48021C]">
-            Camión / vehículo <span class="text-rose-500">*</span>
+            Vehículo <span class="text-rose-500">*</span>
           </label>
           <p-select
             [options]="trucks()"
             formControlName="truckId"
             optionLabel="name"
             optionValue="id"
-            placeholder="Seleccionar camión..."
+            placeholder="Seleccionar vehículo..."
             (onChange)="onTruckChange()"
             appendTo="body"
             size="small"

@@ -93,23 +93,33 @@ export class ProductRibbonComponent {
     }
   }
 
-  getQuickQuantity(productId: string): number {
-    return this.quickQuantityService.getQuantity(productId);
+  getQuickQuantity(productId: string): number | undefined {
+    return this.quickQuantityService.peekQuantity(productId);
   }
 
   onQuickQuantityChange(productId: string, event: Event): void {
     const input = event.target as HTMLInputElement;
     if (!input) return;
-    const value = parseFloat(input.value);
+    const raw = input.value.trim();
+    if (raw === '') {
+      this.quickQuantityService.resetQuantity(productId);
+      return;
+    }
+    const value = parseFloat(raw);
     if (!isNaN(value) && value > 0) {
       this.quickQuantityService.setQuantity(productId, value);
     }
   }
 
-  onProductClick(product: Product): void {
+  onProductClick(product: Product, qtyInput?: HTMLInputElement): void {
     const qty = this.getQuickQuantity(product.id) || 1;
     this.quickQuantityService.resetQuantity(product.id);
     this.productSelect.emit({ product, quantity: qty });
+    queueMicrotask(() => {
+      if (!qtyInput) return;
+      qtyInput.value = '';
+      qtyInput.focus();
+    });
   }
 
   isProductSelected(productId: string): boolean {

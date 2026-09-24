@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Component, computed, effect, ElementRef, HostListener, inject, signal, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TooltipModule } from 'primeng/tooltip';
@@ -36,8 +36,10 @@ const GUEST_KEY = '__guest__';
 export class CustomerWeekWidgetComponent {
   private reportsService = inject(ReportsService);
   private dashboardFilter = inject(DashboardFilterService);
+  private host = inject(ElementRef<HTMLElement>);
 
   weekStart = signal<Date>(this.toMonday(new Date()));
+  calOpen = signal(false);
   search = signal('');
   audience = signal<AudienceFilter>('all');
   selectedId = signal<string | null>(null);
@@ -143,9 +145,23 @@ export class CustomerWeekWidgetComponent {
     this.loadSummary();
   }
 
+  toggleCal(event: Event): void {
+    event.stopPropagation();
+    this.calOpen.update((open) => !open);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.calOpen()) return;
+    const anchor = this.host.nativeElement.querySelector('.week-cal-anchor');
+    if (anchor?.contains(event.target as Node)) return;
+    this.calOpen.set(false);
+  }
+
   onPickDate(date: Date | null) {
     if (!(date instanceof Date) || Number.isNaN(date.getTime())) return;
     this.weekStart.set(this.toMonday(date));
+    this.calOpen.set(false);
     this.loadSummary();
   }
 

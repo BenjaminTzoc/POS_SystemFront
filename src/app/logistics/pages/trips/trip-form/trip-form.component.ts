@@ -99,7 +99,7 @@ export class TripFormComponent implements OnInit {
       error: () => this.branches.set([]),
     });
 
-    // 2. Camiones activos
+    // 2. Vehículos activos
     this.trucksService.getTrucks('active').subscribe({
       next: (res) => this.trucks.set(res.data || []),
       error: () => this.trucks.set([]),

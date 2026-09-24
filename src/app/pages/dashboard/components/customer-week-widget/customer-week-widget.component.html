@@ -23,16 +23,25 @@
       >
         <i class="pi pi-chevron-right text-xs"></i>
       </button>
-      <p-datepicker
-        [ngModel]="weekStart()"
-        (ngModelChange)="onPickDate($event)"
-        [showIcon]="true"
-        [readonlyInput]="true"
-        dateFormat="dd/mm/yy"
-        appendTo="body"
-        styleClass="customer-week-picker"
-        pTooltip="Elegir una fecha de la semana"
-      />
+      <div class="week-cal-anchor">
+        <button
+          type="button"
+          class="week-cal-btn"
+          (click)="toggleCal($event)"
+          pTooltip="Elegir una fecha de la semana"
+        >
+          <i class="pi pi-calendar text-xs"></i>
+        </button>
+        @if (calOpen()) {
+          <div class="week-cal-panel" (click)="$event.stopPropagation()">
+            <p-datepicker
+              [ngModel]="weekStart()"
+              (ngModelChange)="onPickDate($event)"
+              [inline]="true"
+            />
+          </div>
+        }
+      </div>
     </div>
   </div>
 

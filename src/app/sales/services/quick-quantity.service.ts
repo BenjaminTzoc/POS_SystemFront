@@ -13,8 +13,12 @@ export class QuickQuantityService {
   }
 
   getQuantity(productId: string): number {
+    return this.peekQuantity(productId) ?? 1;
+  }
+
+  peekQuantity(productId: string): number | undefined {
     const qty = this.quantitiesMap()[productId];
-    return qty !== undefined && qty > 0 ? qty : 1;
+    return qty !== undefined && qty > 0 ? qty : undefined;
   }
 
   setQuantity(productId: string, quantity: number): void {

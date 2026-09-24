@@ -97,7 +97,7 @@ export class TrucksComponent implements OnInit {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: err.error?.message || 'No se pudieron cargar los camiones.',
+          detail: err.error?.message || 'No se pudieron cargar los vehículos.',
         });
       },
     });
@@ -138,7 +138,7 @@ export class TrucksComponent implements OnInit {
         this.truckToDelete = null;
         this.messageService.add({
           severity: 'success',
-          summary: 'Camión eliminado',
+          summary: 'Vehículo eliminado',
           detail: 'El vehículo ha sido eliminado exitosamente.',
         });
         this.loadTrucks();
@@ -148,7 +148,7 @@ export class TrucksComponent implements OnInit {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: err.error?.message || 'No se pudo eliminar el camión.',
+          detail: err.error?.message || 'No se pudo eliminar el vehículo.',
         });
       },
     });
