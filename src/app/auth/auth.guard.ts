@@ -35,5 +35,10 @@ export const authGuard: CanActivateFn = (route, state) => {
     return false;
   }
 
+  if (authService.isPilot && !state.url.startsWith('/piloto')) {
+    router.navigateByUrl('/piloto');
+    return false;
+  }
+
   return true;
 };

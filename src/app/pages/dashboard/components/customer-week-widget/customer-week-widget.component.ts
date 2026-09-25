@@ -2,7 +2,6 @@ import { Component, computed, effect, ElementRef, HostListener, inject, signal, 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TooltipModule } from 'primeng/tooltip';
-import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
 import { SearchInputComponent } from '../../../../shared/components/search-input/search-input.component';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
@@ -25,7 +24,6 @@ const GUEST_KEY = '__guest__';
     CommonModule,
     FormsModule,
     TooltipModule,
-    ButtonModule,
     DatePickerModule,
     SearchInputComponent,
     StatusBadgeComponent,
@@ -206,8 +204,7 @@ export class CustomerWeekWidgetComponent {
   }
 
   selectCustomer(c: CustomerWeeklyItemDto) {
-    const key = this.rowKey(c);
-    this.selectedId.set(this.selectedId() === key ? null : key);
+    this.selectedId.set(this.rowKey(c));
   }
 
   closeDetail() {

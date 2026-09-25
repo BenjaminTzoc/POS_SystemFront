@@ -81,14 +81,12 @@ export class AuthService {
     if (!user) return false;
 
     // Si es superadmin, tiene todos los permisos
-    if (user.roles?.some((r) => r.isSuperAdmin)) return true;
+    if (user.roles?.some((r) => typeof r !== 'string' && r.isSuperAdmin)) return true;
 
-    // Buscar permiso en los permisos directos del usuario
     const hasDirectPermission = user.permissions?.some((perm) => perm.name === permissionName);
 
-    // Buscar permiso en los permisos del rol
-    const hasRolePermission = user.roles?.some((role) =>
-      role.permissions?.some((perm) => perm.name === permissionName)
+    const hasRolePermission = user.roles?.some(
+      (role) => typeof role !== 'string' && role.permissions?.some((perm) => perm.name === permissionName)
     );
 
     return hasDirectPermission || hasRolePermission;
@@ -157,20 +155,61 @@ export class AuthService {
   }
 
   get isSuperAdmin(): boolean {
-    return this.currentUser?.roles?.some((role) => role.isSuperAdmin) ?? false;
+    return this.currentUser?.roles?.some((role) => typeof role !== 'string' && role.isSuperAdmin) ?? false;
   }
 
   get isPilot(): boolean {
     const user = this.currentUser;
     if (!user || this.isSuperAdmin) return false;
-    if (user.email?.toLowerCase() === 'piloto@pos.com') return true;
-    return (user.roles ?? []).some((role) => {
-      const name = (role.name ?? '').toLowerCase().trim();
-      return name === 'piloto' || name === 'pilot' || name === 'driver' || name === 'chofer';
-    });
+
+    const labels = this.collectRoleLabels(user);
+    if (labels.some((name) => this.looksLikePilotRole(name))) return true;
+
+    const email = user.email?.toLowerCase() ?? '';
+    return email === 'piloto@pos.com' || email.startsWith('piloto@');
   }
 
   get postLoginRoute(): string {
     return this.isPilot ? '/piloto' : '/dashboard';
+  }
+
+  resolvePostLoginRoute(returnUrl?: string | null): string {
+    if (this.isPilot) {
+      return returnUrl?.startsWith('/piloto') ? returnUrl : '/piloto';
+    }
+    if (returnUrl?.startsWith('/piloto')) return '/dashboard';
+    return returnUrl || '/dashboard';
+  }
+
+  private collectRoleLabels(user: User): string[] {
+    const labels: string[] = [];
+    const push = (value: unknown) => {
+      if (typeof value === 'string' && value.trim()) {
+        labels.push(value);
+        return;
+      }
+      if (value && typeof value === 'object') {
+        const role = value as { name?: string; code?: string; slug?: string };
+        for (const key of [role.name, role.code, role.slug]) {
+          if (typeof key === 'string' && key.trim()) labels.push(key);
+        }
+      }
+    };
+
+    (user.roles ?? []).forEach(push);
+
+    const token = this.getTokenData();
+    if (Array.isArray(token?.roles)) token.roles.forEach(push);
+    else push(token?.roles);
+    push(token?.role);
+
+    return labels;
+  }
+
+  private looksLikePilotRole(name: string): boolean {
+    const normalized = name.toLowerCase().trim();
+    return ['piloto', 'pilot', 'chofer', 'conductor', 'driver'].some(
+      (keyword) => normalized === keyword || normalized.includes(keyword)
+    );
   }
 }

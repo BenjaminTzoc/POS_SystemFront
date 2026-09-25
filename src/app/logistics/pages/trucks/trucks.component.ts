@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { CommonModule, NgClass } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
 import { TooltipModule } from 'primeng/tooltip';
@@ -20,7 +20,6 @@ import { ConfirmationModalComponent } from '../../../shared/components/confirmat
   standalone: true,
   imports: [
     CommonModule,
-    NgClass,
     FormsModule,
     SelectModule,
     TooltipModule,

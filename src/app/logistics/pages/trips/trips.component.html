@@ -211,10 +211,10 @@
                   {{ trip.tripNumber }}
                 </span>
                 <h3 class="font-bold text-slate-800 text-sm leading-tight truncate mt-1.5">
-                  {{ trip.originBranch?.name }}
+                  {{ trip.originBranch.name }}
                 </h3>
                 <span class="text-[11px] text-slate-500 mt-0.5">
-                  {{ trip.truck?.licensePlate }} • {{ trip.driver?.name }}
+                  {{ trip.truck.licensePlate }} • {{ trip.driver.name }}
                 </span>
               </div>
             </div>
@@ -232,7 +232,7 @@
             </div>
             <div class="flex flex-col text-right">
               <span class="text-[10.5px] text-slate-400">Paradas</span>
-              <span class="font-bold text-slate-900">{{ trip.items?.length || 0 }}</span>
+              <span class="font-bold text-slate-900">{{ trip.items.length }}</span>
             </div>
           </div>
 

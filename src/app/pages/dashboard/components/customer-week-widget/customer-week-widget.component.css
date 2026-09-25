@@ -13,13 +13,14 @@
 }
 
 :host {
-  display: block;
+  display: flex;
   position: relative;
-  width: fit-content;
+  width: calc(4 * 13.5rem + 3 * 0.625rem + 2rem);
   max-width: 100%;
   height: 100%;
   overflow: visible;
   z-index: 2;
+  flex-shrink: 0;
 }
 
 .week-cal-anchor {
@@ -65,13 +66,21 @@
 }
 
 .widget-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  max-width: calc(4 * 13.5rem + 3 * 0.625rem + 2rem);
+  min-width: 0;
   height: 100%;
   overflow: visible;
   background: linear-gradient(180deg, #f8eef3 0%, #fdf7f9 48%, #ffffff 100%);
   border: 1px solid #d9b8c8;
   box-shadow: 0 1px 0 rgb(72 2 28 / 0.08);
+}
+
+.list-layer.is-covered {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .kpi-toolbar,
@@ -106,6 +115,37 @@
 
 .customer-week-table tbody tr.is-empty {
   pointer-events: none;
+}
+
+.customer-week-detail {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  min-width: 0;
+  background: linear-gradient(180deg, #f8eef3 0%, #fdf7f9 48%, #ffffff 100%);
+  border-radius: inherit;
+}
+
+.customer-week-detail-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  overflow: auto;
+}
+
+.customer-week-detail-col {
+  min-width: 0;
+}
+
+@media (max-width: 1023px) {
+  .customer-week-detail-body {
+    grid-template-columns: 1fr;
+  }
 }
 
 .trend-icon {
