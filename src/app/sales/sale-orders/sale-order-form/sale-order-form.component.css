@@ -95,3 +95,16 @@
 .billing-range-labels {
     padding-inline: 0.5rem 2.25rem;
 }
+
+.payments-table-frame {
+    height: calc(2.75rem + 20rem);
+    min-height: calc(2.75rem + 20rem);
+    display: flex;
+    flex-direction: column;
+}
+
+.payments-table-frame ::ng-deep app-standard-table,
+.payments-table-frame ::ng-deep .p-datatable,
+.payments-table-frame ::ng-deep .p-datatable-table-container {
+    height: 100%;
+}

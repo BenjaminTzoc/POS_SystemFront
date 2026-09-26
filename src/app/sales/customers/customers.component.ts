@@ -1,45 +1,42 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { ButtonModule } from 'primeng/button';
-import { TableModule } from 'primeng/table';
+import { Component, inject, OnInit } from '@angular/core';
+import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { MessageService } from 'primeng/api';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ICustomer } from '../interfaces/customer.interface';
 import { CustomersService } from '../services/customers.service';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { Router } from '@angular/router';
-import { DatePipe, CommonModule } from '@angular/common';
-import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { FormsModule } from '@angular/forms';
-import { InputTextModule } from 'primeng/inputtext';
-import { SelectModule } from 'primeng/select';
-import { TooltipModule } from 'primeng/tooltip';
-import { IconFieldModule } from 'primeng/iconfield';
-import { InputIconModule } from 'primeng/inputicon';
 import { AuthService } from '../../auth/auth.service';
-import { TagModule } from 'primeng/tag';
+import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { PrimaryButtonComponent } from '../../shared/components/primary-button/primary-button.component';
+import { RefreshButtonComponent } from '../../shared/components/refresh-button/refresh-button.component';
+import { SearchInputComponent } from '../../shared/components/search-input/search-input.component';
+import { StandardTableComponent } from '../../shared/components/standard-table/standard-table.component';
+import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
+import { ConfirmationModalComponent } from '../../shared/components/confirmation-modal/confirmation-modal.component';
 
 @Component({
   selector: 'app-customers',
   standalone: true,
   imports: [
-    ButtonModule,
-    TableModule,
-    DatePipe,
     CommonModule,
-    ToggleSwitchModule,
     FormsModule,
-    InputTextModule,
-    SelectModule,
-    TooltipModule,
-    IconFieldModule,
-    InputIconModule,
-    TagModule,
+    CurrencyPipe,
+    DatePipe,
+    ToggleSwitchModule,
+    PageHeaderComponent,
+    PrimaryButtonComponent,
+    RefreshButtonComponent,
+    SearchInputComponent,
+    StandardTableComponent,
+    StatusBadgeComponent,
+    ConfirmationModalComponent,
   ],
   templateUrl: './customers.component.html',
-  styleUrl: './customers.component.css',
 })
 export class CustomersComponent implements OnInit {
   private customersService = inject(CustomersService);
   private messageService = inject(MessageService);
-  private confirmationService = inject(ConfirmationService);
   private router = inject(Router);
   private authService = inject(AuthService);
 
@@ -48,6 +45,12 @@ export class CustomersComponent implements OnInit {
   loading = false;
   showDeleted = false;
   searchTerm = '';
+
+  pendingDelete: ICustomer | null = null;
+  pendingRestore: ICustomer | null = null;
+  showDeleteModal = false;
+  showRestoreModal = false;
+  actionLoading = false;
 
   get canViewDeleted(): boolean {
     const user = this.authService.currentUser;
@@ -64,7 +67,8 @@ export class CustomersComponent implements OnInit {
     this.customersService.getCustomers(this.showDeleted).subscribe({
       next: (res) => {
         if (res.statusCode === 200) {
-          this.filteredCustomers = res.data;
+          this.allCustomers = res.data ?? [];
+          this.applySearch();
         }
       },
       error: (err) => {
@@ -80,6 +84,11 @@ export class CustomersComponent implements OnInit {
     });
   }
 
+  onSearch(term: string): void {
+    this.searchTerm = term;
+    this.applySearch();
+  }
+
   createCustomer(): void {
     this.router.navigate(['sales/new-customer']);
   }
@@ -89,72 +98,93 @@ export class CustomersComponent implements OnInit {
   }
 
   isDeleted(customer: ICustomer): boolean {
-    return (customer as any).deletedAt != null;
+    return customer.deletedAt != null;
   }
 
-  deleteCustomer(customer: ICustomer): void {
-    const isActuallyDeleted = this.isDeleted(customer);
-    this.confirmationService.confirm({
-      message: `¿Estás seguro de eliminar al cliente: '${customer.name}'?`,
-      header: 'Confirmar eliminación',
-      icon: 'pi pi-info-circle',
-      acceptLabel: 'Eliminar',
-      rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-danger !rounded-2xl',
-      rejectButtonStyleClass: 'p-button-secondary p-button-text !rounded-2xl',
+  askDelete(customer: ICustomer): void {
+    this.pendingDelete = customer;
+    this.showDeleteModal = true;
+  }
 
-      accept: () => {
-        this.customersService.deleteCustomer(customer.id).subscribe({
-          next: (res) => {
-            if (res.statusCode === 200) {
-              this.messageService.add({
-                severity: 'success',
-                summary: 'Éxito',
-                detail: `El cliente se ha eliminado correctamente.`,
-              });
-              this.loadCustomers();
-            }
-          },
-          error: (error) => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: `Error eliminando al cliente: ${error.error.message}`,
-            });
-          },
+  confirmDelete(): void {
+    const customer = this.pendingDelete;
+    if (!customer) return;
+    this.actionLoading = true;
+    this.customersService.deleteCustomer(customer.id).subscribe({
+      next: (res) => {
+        if (res.statusCode === 200) {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'El cliente se ha eliminado correctamente.',
+          });
+          this.closeDelete();
+          this.loadCustomers();
+        }
+      },
+      error: (error) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error eliminando al cliente: ${error.error.message}`,
         });
+        this.actionLoading = false;
       },
     });
   }
 
-  onRestoreCustomer(customer: ICustomer): void {
-    this.confirmationService.confirm({
-      message: `¿Está seguro de restaurar al cliente: ${customer.name}?`,
-      header: 'Confirmar restauración',
-      icon: 'pi pi-refresh',
-      acceptLabel: 'Restaurar',
-      rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-success !rounded-2xl',
-      rejectButtonStyleClass: 'p-button-secondary p-button-text !rounded-2xl',
-      accept: () => {
-        this.customersService.restoreCustomer(customer.id).subscribe({
-          next: () => {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Éxito',
-              detail: 'Cliente restaurado correctamente',
-            });
-            this.loadCustomers();
-          },
-          error: (err) => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'No se pudo restaurar el cliente',
-            });
-          },
+  askRestore(customer: ICustomer): void {
+    this.pendingRestore = customer;
+    this.showRestoreModal = true;
+  }
+
+  confirmRestore(): void {
+    const customer = this.pendingRestore;
+    if (!customer) return;
+    this.actionLoading = true;
+    this.customersService.restoreCustomer(customer.id).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'Cliente restaurado correctamente',
         });
+        this.closeRestore();
+        this.loadCustomers();
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo restaurar el cliente',
+        });
+        this.actionLoading = false;
       },
     });
+  }
+
+  closeDelete(): void {
+    this.showDeleteModal = false;
+    this.pendingDelete = null;
+    this.actionLoading = false;
+  }
+
+  closeRestore(): void {
+    this.showRestoreModal = false;
+    this.pendingRestore = null;
+    this.actionLoading = false;
+  }
+
+  private applySearch(): void {
+    const q = this.searchTerm.trim().toLowerCase();
+    if (!q) {
+      this.filteredCustomers = [...this.allCustomers];
+      return;
+    }
+    this.filteredCustomers = this.allCustomers.filter((c) =>
+      [c.name, c.nit, c.phone, c.email, c.contactName, c.category?.name]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(q)),
+    );
   }
 }

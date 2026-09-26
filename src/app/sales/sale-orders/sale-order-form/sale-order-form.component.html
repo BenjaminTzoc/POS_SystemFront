@@ -126,7 +126,7 @@
                     [fluid]="true"
                     class="flex-1 min-w-0"
                     styleClass="w-full !rounded-lg !border-[#9f6587]/35 focus-within:!border-[#9f6587] focus-within:!ring-2 focus-within:!ring-[#9f6587]/20 text-xs font-medium"
-                    (onChange)="onCustomerChange($event)"
+                    (onClear)="onCustomerChange({ value: null })"
                   />
                   <button
                     pButton
@@ -344,6 +344,7 @@
                 </label>
                 <p-datepicker
                   formControlName="promisedDeliveryDate"
+                  dateFormat="dd/mm/yy"
                   [iconDisplay]="'input'"
                   [showIcon]="true"
                   [readonlyInput]="true"
@@ -371,6 +372,7 @@
             [ngModel]="billingRange"
             (ngModelChange)="onBillingRangeChange($event)"
             [ngModelOptions]="{ standalone: true }"
+            dateFormat="dd/mm/yy"
             selectionMode="range"
             [iconDisplay]="'input'"
             [showIcon]="true"
@@ -456,121 +458,112 @@
     </div>
   </div>
 
-  <p-drawer
+  @if (showPaymentsPanel) {
+  <app-standard-modal
     [(visible)]="showPaymentsPanel"
-    position="right"
-    [modal]="true"
-    header="Historial de pagos"
-    styleClass="w-full sm:w-[42rem] border-l border-[#48021C]/20! bg-white shadow-xl"
+    title="Historial de pagos"
+    [badge]="payments.length === 1 ? '1 pago' : payments.length + ' pagos'"
+    width="92vw"
+    maxWidth="960px"
+    maxHeight="90vh"
   >
-    <div class="flex flex-col h-full gap-3">
-      <div class="flex items-center justify-between gap-2 pb-2 border-b border-[#48021C]/15">
-        <span class="text-xs text-slate-500">Abonos y transacciones de esta orden</span>
-        @if (canRegisterPayments) {
-          <p-button
-            label="Registrar pago"
-            (onClick)="addPayment()"
-            icon="pi pi-plus"
-            size="small"
-            styleClass="!rounded-lg !px-3 font-semibold h-8! text-xs !bg-[#48021C] !border-[#48021C] !text-white hover:!bg-[#350114]"
-          />
-        }
+    <ng-container actions>
+      @if (canRegisterPayments) {
+        <app-primary-button label="Registrar pago" (clicked)="addPayment()" />
+      }
+    </ng-container>
+
+    @if (sale?.status === 'cancelled') {
+      <div class="mb-3 p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-rose-700 text-xs">
+        <i class="pi pi-times-circle"></i>
+        <span class="font-semibold">Venta cancelada — no se admiten más pagos</span>
       </div>
+    }
 
-      @if (sale?.status === 'cancelled') {
-        <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-rose-700 text-xs">
-          <i class="pi pi-times-circle"></i>
-          <span class="font-semibold">Venta cancelada — no se admiten más pagos</span>
-        </div>
-      }
-
-      @if (payments.length === 0) {
-        <div class="flex flex-col items-center py-16 gap-3 text-center">
-          <div class="w-12 h-12 rounded-full bg-rose-50 border border-[#48021C]/20 flex items-center justify-center">
-            <i class="pi pi-receipt text-[#48021C] text-lg"></i>
-          </div>
-          <div class="flex flex-col gap-1 max-w-[280px]">
-            <span class="text-xs font-bold text-[#48021C]">Sin pagos registrados</span>
-            <span class="text-[11px] text-slate-500 leading-relaxed">
-              Aún no hay abonos o transacciones para esta orden de venta.
-            </span>
-          </div>
-        </div>
-      } @else {
-        <div class="overflow-x-auto w-full">
-          <p-table [value]="payments" styleClass="p-datatable-striped p-datatable-sm p-datatable-gridless">
-            <ng-template pTemplate="header">
-              <tr class="h-10 bg-rose-50 text-[#48021C] text-[11px] font-bold border-b border-[#48021C]/20">
-                <th class="!pl-3 text-left">Método</th>
-                <th class="w-24 text-right">Monto</th>
-                <th class="w-24 text-left">Fecha</th>
-                <th class="text-left">Referencia</th>
-                <th class="w-24 text-center">Estado</th>
-                <th class="w-12"></th>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="body" let-payment>
-              <tr class="hover:bg-rose-50/40 transition-colors border-b border-[#48021C]/10 text-xs">
-                <td class="py-2 !pl-3 align-middle font-semibold text-slate-700">
-                  <div class="flex items-center gap-1.5">
-                    <span>{{ payment.paymentMethod.name }}</span>
-                    @if (payment.isDownPayment) {
-                      <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600 border border-indigo-200 text-[9px] font-bold">
-                        Anticipo
-                      </span>
-                    }
-                  </div>
-                </td>
-                <td class="py-2 text-right align-middle font-bold text-[#48021C] tabular-nums">
-                  {{ payment.amount | currency: 'Q ' }}
-                </td>
-                <td class="py-2 align-middle text-slate-500 font-medium">
-                  {{ payment.date | date: 'dd/MM/yyyy' }}
-                </td>
-                <td class="py-2 align-middle text-slate-600">
-                  <div class="flex flex-col gap-0.5 max-w-[180px]">
-                    @if (payment.referenceNumber) {
-                      <div class="text-xs"><span class="font-semibold text-[#48021C]">Ref:</span> {{ payment.referenceNumber }}</div>
-                    }
-                    @if (payment.bankAccount) {
-                      <div class="text-[10px] text-slate-500">
-                        {{ payment.bankAccount.alias }} ({{ payment.bankAccount.bankName }})
-                      </div>
-                    } @else if (payment.manualBankAccount) {
-                      <div class="text-[10px] text-slate-500">{{ payment.manualBankAccount }}</div>
-                    }
-                    @if (payment.notes) {
-                      <div class="text-[10px] italic text-slate-400 truncate">"{{ payment.notes }}"</div>
-                    }
-                  </div>
-                </td>
-                <td class="py-2 align-middle text-center">
-                  <span
-                    class="inline-flex items-center px-2 py-0.5 text-[9px] font-semibold rounded border"
-                    [ngClass]="{
-                      'bg-emerald-50 text-emerald-600 border-emerald-200': payment.status === 'completed',
-                      'bg-amber-50 text-amber-600 border-amber-200': payment.status === 'pending',
-                      'bg-rose-50 text-rose-600 border-rose-200': payment.status === 'cancelled'
-                    }"
-                  >
-                    {{ payment.status | paymentStatus }}
-                  </span>
-                </td>
-                <td class="py-2 text-center align-middle">
-                  <div class="flex justify-center gap-1" *ngIf="['confirmed', 'delivered'].includes(sale?.status || '')">
-                    @if (payment.status === 'pending') {
-                      <p-button icon="pi pi-check" [text]="true" severity="success" size="small" pTooltip="Completar pago" tooltipPosition="top" styleClass="hover:bg-emerald-50 !w-7 !h-7" />
-                    }
-                    <p-button icon="pi pi-trash" [text]="true" severity="danger" size="small" pTooltip="Eliminar pago" tooltipPosition="left" styleClass="hover:bg-rose-50 !w-7 !h-7" />
-                  </div>
-                </td>
-              </tr>
-            </ng-template>
-          </p-table>
-        </div>
-      }
+    <div class="payments-table-frame">
+    <app-standard-table
+      [value]="payments"
+      [paginator]="false"
+      [scrollable]="true"
+      scrollHeight="20rem"
+      emptyIcon="pi pi-receipt"
+      emptyMessage="Aún no hay abonos o transacciones para esta orden."
+      colorScheme="burgundy"
+    >
+      <ng-template #header>
+        <tr class="h-11 text-xs bg-[#eddde1] border-b border-[#762f41]/40 text-[#3b141e] font-bold sticky top-0 z-10">
+          <th class="!text-left !pl-3 border-r border-[#762f41]/35">Método</th>
+          <th class="!text-right !pr-3 border-r border-[#762f41]/35 w-28">Monto</th>
+          <th class="!text-left !pl-3 border-r border-[#762f41]/35 w-28">Fecha</th>
+          <th class="!text-left !pl-3 border-r border-[#762f41]/35">Referencia</th>
+          <th class="!text-center border-r border-[#762f41]/35 w-28">Estado</th>
+          <th class="!text-center w-16"></th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-payment>
+        <tr class="hover:!bg-[#eddde1]/45 transition-colors duration-150 border-b border-[#762f41]/18 last:border-0 text-xs">
+          <td class="!py-2.5 !pl-3 border-r border-[#762f41]/18 font-semibold text-slate-700">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span>{{ payment.paymentMethod.name }}</span>
+              @if (payment.isDownPayment) {
+                <app-status-badge value="Anticipo" severity="purple" size="xs" />
+              }
+            </div>
+          </td>
+          <td class="!py-2.5 !pr-3 border-r border-[#762f41]/18 text-right font-bold text-[#48021C] tabular-nums">
+            {{ payment.amount | currency: 'Q ' }}
+          </td>
+          <td class="!py-2.5 !pl-3 border-r border-[#762f41]/18 text-slate-500 font-medium">
+            {{ payment.date | date: 'dd/MM/yyyy' }}
+          </td>
+          <td class="!py-2.5 !pl-3 border-r border-[#762f41]/18 text-slate-600">
+            <div class="flex flex-col gap-0.5 min-w-0">
+              @if (payment.referenceNumber) {
+                <div><span class="font-semibold text-[#48021C]">Ref:</span> {{ payment.referenceNumber }}</div>
+              }
+              @if (payment.bankAccount) {
+                <div class="text-[10px] text-slate-500">
+                  {{ payment.bankAccount.alias }} ({{ payment.bankAccount.bankName }})
+                </div>
+              } @else if (payment.manualBankAccount) {
+                <div class="text-[10px] text-slate-500">{{ payment.manualBankAccount }}</div>
+              }
+              @if (payment.notes) {
+                <div class="text-[10px] italic text-slate-400 truncate">"{{ payment.notes }}"</div>
+              }
+              @if (!payment.referenceNumber && !payment.bankAccount && !payment.manualBankAccount && !payment.notes) {
+                <span class="text-slate-400">—</span>
+              }
+            </div>
+          </td>
+          <td class="!py-2.5 border-r border-[#762f41]/18 text-center">
+            <app-status-badge
+              [value]="payment.status | paymentStatus"
+              [severity]="paymentStatusSeverity(payment.status)"
+              size="xs"
+            />
+          </td>
+          <td class="!py-2.5 text-center">
+            <div class="flex justify-center gap-1" *ngIf="canRegisterPayments || ['confirmed', 'delivered', 'out_for_delivery', 'partially_delivered', 'preparing', 'ready_for_pickup'].includes(sale?.status || '')">
+              @if (payment.status === 'pending') {
+                <p-button icon="pi pi-check" [text]="true" severity="success" size="small" pTooltip="Completar pago" tooltipPosition="top" styleClass="hover:bg-emerald-50 !w-7 !h-7" />
+              }
+              <p-button icon="pi pi-trash" [text]="true" severity="danger" size="small" pTooltip="Eliminar pago" tooltipPosition="left" styleClass="hover:bg-rose-50 !w-7 !h-7" />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </app-standard-table>
     </div>
-  </p-drawer>
+
+    <ng-container footer>
+      <div class="flex items-center gap-4 mr-auto text-xs font-semibold">
+        <span class="text-slate-500">Cobrado <span class="text-emerald-700 tabular-nums">{{ sale?.paidAmount | currency: 'Q ' }}</span></span>
+        <span class="text-slate-500">Pendiente <span class="text-amber-700 tabular-nums">{{ sale?.pendingAmount | currency: 'Q ' }}</span></span>
+      </div>
+    </ng-container>
+  </app-standard-modal>
+  }
 
   <!-- FLOATING BOTTOM-RIGHT ACTION BAR -->
   <div class="fixed bottom-6 right-6 z-40 animate-in fade-in slide-in-from-bottom-3 duration-200">
@@ -817,21 +810,18 @@
 </app-sale-discounts>
 
 <!-- REGISTER PAYMENT DIALOG -->
-<p-dialog
+@if (isAddingPayment) {
+<app-standard-modal
   [(visible)]="isAddingPayment"
-  header="Registrar Nuevo Pago"
-  [modal]="true"
-  [draggable]="false"
-  [resizable]="false"
-  [style]="{ width: '700px' }"
-  [breakpoints]="{ '768px': '90vw' }"
-  appendTo="body"
-  styleClass="p-dialog-modern custom-dialog payment-dialog"
+  title="Registrar pago"
+  width="92vw"
+  maxWidth="640px"
+  maxHeight="90vh"
+  (closed)="cancelPayment()"
 >
-  <form [formGroup]="paymentForm" class="grid grid-cols-12 gap-4 pt-2 text-left">
-    <!-- Método de pago -->
-    <div class="col-span-12 md:col-span-6 flex flex-col gap-2">
-      <label for="PaymentMethod" class="text-xs font-semibold text-text-body">Método de pago</label>
+  <form [formGroup]="paymentForm" class="grid grid-cols-12 gap-3.5 text-left overflow-y-auto min-h-0 pr-0.5">
+    <div class="col-span-12 md:col-span-6 flex flex-col gap-1">
+      <label for="PaymentMethod" class="text-xs font-semibold text-[#48021C]">Método de pago</label>
       <p-select
         id="PaymentMethod"
         [options]="paymentMethods"
@@ -839,17 +829,17 @@
         optionLabel="name"
         optionValue="id"
         class="w-full"
-        styleClass="border-slate-300! h-8! text-xs! py-0!"
+        styleClass="w-full !rounded-lg !border-[#9f6587]/35 text-xs! h-9!"
         size="small"
         appendTo="body"
       />
     </div>
 
-    <!-- Monto a pagar -->
-    <div class="col-span-12 md:col-span-6 flex flex-col gap-2">
-      <label for="Amount" class="text-xs font-semibold text-text-body">Monto a pagar</label>
+    <div class="col-span-12 md:col-span-6 flex flex-col gap-1">
+      <label for="Amount" class="text-xs font-semibold text-[#48021C]">Monto a pagar</label>
       <p-inputnumber
         id="Amount"
+        inputId="Amount"
         formControlName="amount"
         mode="decimal"
         [min]="0"
@@ -857,39 +847,48 @@
         [maxFractionDigits]="2"
         [showButtons]="false"
         [prefix]="'Q  '"
-        styleClass="w-full border-slate-300! h-8!"
-        inputStyleClass="text-xs h-8! py-1! px-2.5! border-slate-300! focus:border-brand-deep!"
+        styleClass="w-full"
+        [inputStyleClass]="'text-xs h-9! py-1! px-2.5! !rounded-lg ' + (amountExceedsPending ? '!border-rose-500' : '!border-[#9f6587]/35')"
         size="small"
         fluid
+        (onFocus)="selectPaymentAmount($event)"
       />
+      @if (amountExceedsPending) {
+        <small class="text-rose-500 text-[10px] font-medium">
+          El monto excede el saldo pendiente ({{ maxPayable | currency: 'Q ' }}).
+        </small>
+      } @else {
+        <small class="text-slate-400 text-[10px] font-medium">
+          Pendiente: {{ maxPayable | currency: 'Q ' }}
+        </small>
+      }
     </div>
 
-    <!-- Anticipo Toggle: no aplica en preorden (el backend trata el cobro como anticipo) -->
-    @if (!isPreorder) {
-    <div class="col-span-12 flex items-center justify-between p-3 bg-brand-royal/5 rounded-lg border border-brand-royal/20 border-dashed">
-      <div class="flex flex-col gap-0.5">
-        <label class="text-xs font-semibold text-text-body flex items-center gap-1.5">
-          ¿Es un anticipo?
-          <i class="pi pi-info-circle text-[10px] text-brand-royal" pTooltip="Un anticipo no descuenta stock automáticamente"></i>
-        </label>
-        <span class="text-[10px] text-text-muted leading-tight max-w-[450px]">
-          Si se activa, la orden seguirá pendiente y no se descontará inventario todavía.
-        </span>
+    @if (showDownPaymentToggle) {
+      <div class="col-span-12 flex items-center justify-between p-3 bg-rose-50/60 rounded-xl border border-[#48021C]/20 border-dashed">
+        <div class="flex flex-col gap-0.5 pr-3">
+          <label class="text-xs font-semibold text-[#48021C] flex items-center gap-1.5">
+            ¿Es un anticipo?
+            <i class="pi pi-info-circle text-[10px] text-[#9f6587]" pTooltip="Un anticipo no descuenta stock automáticamente"></i>
+          </label>
+          <span class="text-[10px] text-slate-500 leading-tight max-w-[450px]">
+            Si se activa, la orden seguirá pendiente y no se descontará inventario todavía.
+          </span>
+        </div>
+        <p-toggleSwitch formControlName="isDownPayment" />
       </div>
-      <p-toggleSwitch formControlName="isDownPayment" />
-    </div>
     }
 
-    <!-- Fecha de pago -->
     <div class="col-span-12" [ngClass]="requiresBankAccount ? 'md:col-span-6' : ''">
-      <div class="flex flex-col gap-2">
-        <label for="PaymentDate" class="text-xs font-semibold text-text-body">Fecha de pago</label>
+      <div class="flex flex-col gap-1">
+        <label for="PaymentDate" class="text-xs font-semibold text-[#48021C]">Fecha de pago</label>
         <p-datepicker
           formControlName="date"
+          dateFormat="dd/mm/yy"
           [iconDisplay]="'input'"
           [showIcon]="true"
           inputId="PaymentDate"
-          styleClass="w-full border-slate-300 h-8!"
+          styleClass="w-full !border-[#9f6587]/35 h-9!"
           appendTo="body"
           size="small"
           fluid
@@ -898,10 +897,9 @@
     </div>
 
     @if (requiresBankAccount) {
-      <!-- No. Referencia -->
-      <div class="col-span-12 md:col-span-6 flex flex-col gap-2">
-        <label for="ReferenceNumber" class="text-xs font-semibold text-text-body">
-          No. Referencia <span class="text-red-500">*</span>
+      <div class="col-span-12 md:col-span-6 flex flex-col gap-1">
+        <label for="ReferenceNumber" class="text-xs font-semibold text-[#48021C]">
+          No. Referencia <span class="text-rose-500">*</span>
         </label>
         <input
           pInputText
@@ -909,15 +907,14 @@
           formControlName="referenceNumber"
           autocomplete="off"
           placeholder="Ej. No. Boleta o Transacción"
-          class="w-full h-8! py-1! px-2.5! text-xs! border-slate-300! focus:border-brand-deep!"
+          class="w-full h-9! py-1! px-2.5! text-xs! !rounded-lg !border-[#9f6587]/35"
           size="small"
         />
       </div>
 
-      <!-- Cuenta Bancaria -->
       <div class="col-span-12 flex flex-col gap-1">
-        <label for="BankAccount" class="text-xs font-semibold text-text-body">
-          Cuenta Bancaria <span class="text-red-500">*</span>
+        <label for="BankAccount" class="text-xs font-semibold text-[#48021C]">
+          Cuenta bancaria <span class="text-rose-500">*</span>
         </label>
         <div class="flex gap-2 w-full">
           <p-select
@@ -928,7 +925,7 @@
             optionValue="id"
             placeholder="Seleccione cuenta"
             class="flex-1 min-w-0"
-            styleClass="!rounded-lg border-slate-300 w-full text-xs! h-8! py-0!"
+            styleClass="!rounded-lg !border-[#9f6587]/35 w-full text-xs! h-9!"
             size="small"
             appendTo="body"
           >
@@ -949,7 +946,7 @@
             type="button"
             icon="pi pi-book"
             (click)="showBankAccountsCatalog()"
-            class="p-button-outlined !border-indigo-300 !text-indigo-600 !rounded-lg hover:!bg-indigo-50 !h-8 !w-8 flex items-center justify-center shrink-0"
+            class="p-button-outlined !border-[#48021C]/25 !text-[#48021C] !rounded-lg hover:!bg-rose-50 !h-9 !w-9 flex items-center justify-center shrink-0"
             pTooltip="Gestionar cuentas bancarias"
             tooltipPosition="top"
           ></button>
@@ -957,9 +954,8 @@
       </div>
     }
 
-    <!-- Agregar nota -->
-    <div class="col-span-12 flex flex-col gap-2">
-      <label for="PaymentNotes" class="text-xs font-semibold text-text-body">Agregar nota</label>
+    <div class="col-span-12 flex flex-col gap-1">
+      <label for="PaymentNotes" class="text-xs font-semibold text-[#48021C]">Nota</label>
       <textarea
         pTextarea
         id="PaymentNotes"
@@ -967,39 +963,36 @@
         placeholder="Escribe detalles adicionales aquí..."
         formControlName="notes"
         [autoResize]="true"
-        class="w-full text-xs border-slate-300! focus:border-brand-deep! p-2 rounded-lg"
+        class="w-full text-xs font-medium !bg-rose-50/40 !border-[#48021C]/25 hover:!border-[#48021C]/60 focus:!border-[#48021C] !rounded-xl p-2.5 resize-none"
       ></textarea>
     </div>
-
-    <!-- Botones de Acción -->
-    <div class="col-span-12 flex justify-end gap-3 pt-6 border-t border-slate-100">
-      <p-button
-        label="Cancelar"
-        (onClick)="cancelPayment()"
-        severity="danger"
-        variant="outlined"
-        size="small"
-        styleClass="!rounded-lg !px-4 font-semibold h-8! hover:bg-cancel-red/5 transition-all text-xs border-cancel-red! text-cancel-red! w-32 justify-center"
-      ></p-button>
-      <p-button
-        label="Registrar"
-        (onClick)="registerPayment()"
-        icon="pi pi-check"
-        severity="success"
-        size="small"
-        [disabled]="paymentForm.invalid"
-        styleClass="!rounded-lg !px-5 shadow-sm transition-all font-semibold h-8! text-xs bg-brand-deep! text-white border-brand-deep! hover:bg-brand-royal! w-40 justify-center"
-      ></p-button>
-    </div>
   </form>
-</p-dialog>
+
+  <ng-container footer>
+    <app-secondary-button
+      label="Cancelar"
+      icon="pi pi-times"
+      (clicked)="cancelPayment()"
+    />
+    <app-primary-button
+      label="Registrar"
+      icon="pi pi-check"
+      [disabled]="paymentForm.invalid"
+      (clicked)="registerPayment()"
+    />
+  </ng-container>
+</app-standard-modal>
+}
 
 <p-confirmDialog />
 
 <app-ticket-preview
-  *ngIf="confirmedSaleData"
+  *ngIf="confirmedSaleData && showTicketPreview"
   [sale]="confirmedSaleData"
-  [(visible)]="showTicketPreview"
+  [initialTab]="ticketPreviewTab"
+  [focusPaymentId]="ticketFocusPaymentId"
+  [visible]="true"
+  (visibleChange)="onTicketPreviewVisibleChange($event)"
 >
 </app-ticket-preview>
 

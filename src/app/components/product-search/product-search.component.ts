@@ -13,6 +13,7 @@ import {
 } from '@angular/core';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { InputTextModule } from 'primeng/inputtext';
 import { Product } from '../../inventory/interfaces/product.interface';
@@ -21,20 +22,21 @@ import { catchError, debounceTime, distinctUntilChanged, map, Observable, of, Su
 import { ProductsService } from '../../inventory/services/products.service';
 import { ButtonModule } from 'primeng/button';
 import { ApiResponse } from '../../core/models/api-response.model';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-product-search',
-  imports: [ReactiveFormsModule, FormsModule, FloatLabelModule, InputTextModule, ButtonModule],
+  imports: [CommonModule, CurrencyPipe, ReactiveFormsModule, FormsModule, FloatLabelModule, InputTextModule, ButtonModule],
   templateUrl: './product-search.component.html',
   styleUrl: './product-search.component.css',
   animations: [
     trigger('fadeInOut', [
       transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(-10px)' }),
+        style({ opacity: 0, transform: 'translateY(var(--search-enter-y, -10px))' }),
         animate('200ms ease-out', style({ opacity: 1, transform: 'translateY(0)' })),
       ]),
       transition(':leave', [
-        animate('150ms ease-in', style({ opacity: 0, transform: 'translateY(-10px)' })),
+        animate('150ms ease-in', style({ opacity: 0, transform: 'translateY(var(--search-enter-y, -10px))' })),
       ]),
     ]),
   ],
@@ -53,6 +55,10 @@ export class ProductSearchComponent implements OnInit, OnDestroy, OnChanges {
   @Input() branchId?: string;
   @Input() excludedProductIds: string[] = [];
   @Input() disabled: boolean = false;
+  /** Muestra los resultados encima del campo en lugar de debajo. */
+  @Input() openUpward: boolean = false;
+  /** Catálogo completo (sin sucursal ni más vendidos). */
+  @Input() catalogMode: boolean = false;
 
   constructor(private readonly productsService: ProductsService) {}
 
@@ -117,17 +123,14 @@ export class ProductSearchComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   searchProductsApi(query: string): Observable<Product[]> {
-    return this.productsService.searchProducts(query, this.branchId).pipe(
+    const request = this.catalogMode
+      ? this.productsService.searchProducts(query, undefined, false, undefined, undefined, undefined, undefined, true)
+      : this.productsService.searchProducts(query, this.branchId);
+
+    return request.pipe(
       map((response) => {
         if (response.statusCode === 200) {
-          const products = response.data;
-          // Filter out already added products
-          if (this.excludedProductIds.length > 0) {
-            return products.filter(
-              (product: Product) => !this.excludedProductIds.includes(product.id),
-            );
-          }
-          return products;
+          return this.applyExclusions(response.data);
         }
         return [];
       }),
@@ -142,7 +145,7 @@ export class ProductSearchComponent implements OnInit, OnDestroy, OnChanges {
     const query = this.searchQuery.trim();
 
     if (query.length < 2) {
-      this.loadTopSelling();
+      this.loadInitialResults();
       return;
     }
 
@@ -153,10 +156,35 @@ export class ProductSearchComponent implements OnInit, OnDestroy, OnChanges {
   onFocus() {
     const query = this.searchQuery.trim();
     if (query.length < 2) {
-      this.loadTopSelling();
+      this.loadInitialResults();
     } else {
       this.onSearchProduct();
     }
+  }
+
+  loadInitialResults() {
+    if (this.catalogMode) {
+      this.loadCatalog();
+      return;
+    }
+    this.loadTopSelling();
+  }
+
+  loadCatalog() {
+    this.searchLoading = true;
+    this.showProductResults = true;
+    this.isTopSelling = false;
+    this.productsService.getProducts(undefined, false, undefined, undefined, undefined, undefined, undefined, true).subscribe({
+      next: (res: ApiResponse<Product[]>) => {
+        this.filteredProducts = res.statusCode === 200 ? this.applyExclusions(res.data) : [];
+        this.searchLoading = false;
+      },
+      error: (err) => {
+        console.error('Error loading catalog products', err);
+        this.filteredProducts = [];
+        this.searchLoading = false;
+      },
+    });
   }
 
   loadTopSelling() {
@@ -165,17 +193,7 @@ export class ProductSearchComponent implements OnInit, OnDestroy, OnChanges {
     this.isTopSelling = true;
     this.productsService.getTopSelling(this.branchId).subscribe({
       next: (res: ApiResponse<Product[]>) => {
-        if (res.statusCode === 200) {
-          let products = res.data;
-          if (this.excludedProductIds.length > 0) {
-            products = products.filter(
-              (product: Product) => !this.excludedProductIds.includes(product.id),
-            );
-          }
-          this.filteredProducts = products;
-        } else {
-          this.filteredProducts = [];
-        }
+        this.filteredProducts = res.statusCode === 200 ? this.applyExclusions(res.data) : [];
         this.searchLoading = false;
       },
       error: (err) => {
@@ -194,5 +212,17 @@ export class ProductSearchComponent implements OnInit, OnDestroy, OnChanges {
     this.productSelected.emit(product);
     this.showProductResults = false;
     this.searchQuery = '';
+  }
+
+  getProductImageUrl(imageUrl?: string | null): string {
+    if (!imageUrl) return `${environment.baseUrl}/uploads/products/default-product.png`;
+    if (imageUrl.startsWith('http')) return imageUrl;
+    return `${environment.baseUrl}${imageUrl}`;
+  }
+
+  private applyExclusions(products: Product[]): Product[] {
+    const list = products ?? [];
+    if (this.excludedProductIds.length === 0) return list;
+    return list.filter((product) => !this.excludedProductIds.includes(product.id));
   }
 }

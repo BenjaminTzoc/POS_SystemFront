@@ -35,13 +35,13 @@ export class SaleDetailManagerService {
     this.details = [];
   }
 
-  addProduct(product: Product, quantity: number = 1): void {
+  addProduct(product: Product, quantity: number = 1, unitPrice?: number): void {
     const qtyToAdd = Number(quantity) > 0 ? Number(quantity) : 1;
 
     const newDetail: ISaleDetailPayload = {
       product,
       quantity: qtyToAdd,
-      unitPrice: Number(product.price || 0),
+      unitPrice: unitPrice != null ? Number(unitPrice) : Number(product.price || 0),
       lineSubtotal: 0,
       lineTotal: 0,
     };

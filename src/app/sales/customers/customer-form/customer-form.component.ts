@@ -1,42 +1,47 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ICustomer, ICustomerCategory } from '../../interfaces/customer.interface';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { CustomerCategoriesService } from '../../services/customer-categories.service';
 import { CustomersService } from '../../services/customers.service';
-
 import { CurrencyPipe, DecimalPipe, CommonModule } from '@angular/common';
 import { TooltipModule } from 'primeng/tooltip';
-import { TagModule } from 'primeng/tag';
 import { InputMaskModule } from 'primeng/inputmask';
+import { ButtonModule } from 'primeng/button';
+import { of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { CustomerProductPricesComponent } from '../customer-product-prices/customer-product-prices.component';
+import { ConfirmationModalComponent } from '../../../shared/components/confirmation-modal/confirmation-modal.component';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 
 @Component({
   selector: 'app-customer-form',
   standalone: true,
   imports: [
-    ReactiveFormsModule, 
-    InputTextModule, 
-    SelectModule, 
-    ButtonModule, 
-    CurrencyPipe, 
-    InputNumberModule, 
-    DecimalPipe, 
+    ReactiveFormsModule,
+    InputTextModule,
+    SelectModule,
+    CurrencyPipe,
+    InputNumberModule,
+    DecimalPipe,
     CommonModule,
     TooltipModule,
-    TagModule,
-    InputMaskModule
+    InputMaskModule,
+    ButtonModule,
+    CustomerProductPricesComponent,
+    ConfirmationModalComponent,
+    StatusBadgeComponent,
   ],
   templateUrl: './customer-form.component.html',
-  styleUrl: './customer-form.component.css',
 })
 export class CustomerFormComponent implements OnInit {
+  @ViewChild(CustomerProductPricesComponent) pricesComponent?: CustomerProductPricesComponent;
+
   private fb = inject(FormBuilder);
-  private confirmationService = inject(ConfirmationService);
   private router = inject(Router);
   private messageService = inject(MessageService);
   private customerService = inject(CustomersService);
@@ -44,12 +49,13 @@ export class CustomerFormComponent implements OnInit {
   private route = inject(ActivatedRoute);
 
   customerId: string | null = null;
-  selectedCustomer: ICustomer | null = null; //SOLO PARA EDICION
-  isEditMode: boolean = false;
-  isSaving: boolean = false;
+  selectedCustomer: ICustomer | null = null;
+  isEditMode = false;
+  isSaving = false;
   customerForm!: FormGroup;
   categories: ICustomerCategory[] = [];
   selectedCategory: ICustomerCategory | undefined;
+  showCancelModal = false;
 
   ngOnInit(): void {
     this.customerId = this.route.snapshot.paramMap.get('id');
@@ -70,7 +76,7 @@ export class CustomerFormComponent implements OnInit {
           this.customerForm.get('name')?.setValue(this.selectedCustomer.name);
           this.customerForm.get('nit')?.setValue(this.selectedCustomer.nit);
           this.customerForm.get('email')?.setValue(this.selectedCustomer.email);
-          this.customerForm.get('categoryId')?.setValue(this.selectedCustomer.category.id);
+          this.customerForm.get('categoryId')?.setValue(this.selectedCustomer.category?.id);
           this.customerForm.get('address')?.setValue(this.selectedCustomer.address);
           this.customerForm.get('contactName')?.setValue(this.selectedCustomer.contactName);
           this.customerForm.get('phone')?.setValue(this.selectedCustomer.phone);
@@ -129,8 +135,7 @@ export class CustomerFormComponent implements OnInit {
 
     this.customerForm.get('categoryId')?.valueChanges.subscribe((id) => {
       this.selectedCategory = this.categories.find((c) => c.id === id);
-      
-      // Si estamos creando y se selecciona categoría, sugerir el límite por defecto
+
       if (!this.isEditMode && this.selectedCategory) {
         this.customerForm.get('creditLimit')?.setValue(Number(this.selectedCategory.defaultCreditLimit));
       }
@@ -140,7 +145,6 @@ export class CustomerFormComponent implements OnInit {
   loadCategories(): void {
     this.customerCatService.getCategories().subscribe({
       next: (res) => {
-        console.log(res);
         if (res.statusCode === 200) {
           this.categories = res.data;
         }
@@ -149,7 +153,7 @@ export class CustomerFormComponent implements OnInit {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: `Error ${this.isEditMode ? 'modificando' : 'creando'} el proveedor: ${err.error.message}`,
+          detail: `Error cargando categorías: ${err.error.message}`,
         });
       },
     });
@@ -172,49 +176,49 @@ export class CustomerFormComponent implements OnInit {
       ? this.customerService.createCustomer(body)
       : this.customerService.editCustomer(this.selectedCustomer!.id, body);
 
-    request.subscribe({
-      next: (res) => {
-        if (this.isEditMode ? res.statusCode === 200 : res.statusCode === 201) {
+    request
+      .pipe(
+        switchMap((res) => {
+          const ok = this.isEditMode ? res.statusCode === 200 : res.statusCode === 201;
+          if (!ok) {
+            throw new Error(res.message || 'No se pudo guardar el cliente');
+          }
+          const savedId = this.isEditMode ? this.selectedCustomer!.id : res.data.id;
+          const persist$ = this.pricesComponent?.persist(savedId) ?? of(undefined);
+          return persist$;
+        }),
+      )
+      .subscribe({
+        next: () => {
           this.messageService.add({
             severity: 'success',
             summary: 'Éxito',
             detail: `El cliente se ha ${this.isEditMode ? 'modificado' : 'creado'} correctamente.`,
           });
           this.router.navigate(['/sales/customers']);
-        }
-      },
-      error: (err) => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: `Error ${this.isEditMode ? 'modificando' : 'creando'} el cliente: ${err.error.message}`,
-        });
-        this.isSaving = false;
-      },
-      complete: () => (this.isSaving = false),
-    });
+        },
+        error: (err) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail:
+              err?.error?.message ||
+              err?.message ||
+              `Error ${this.isEditMode ? 'modificando' : 'creando'} el cliente`,
+          });
+          this.isSaving = false;
+        },
+        complete: () => (this.isSaving = false),
+      });
   }
 
   onCancelProccess(): void {
-    this.confirmationService.confirm({
-      message: '¿Estás seguro de cancelar este proceso?',
-      header: 'Confirmar cancelación',
-      icon: 'pi pi-info-circle',
-      rejectLabel: 'Regresar',
-      rejectButtonProps: {
-        label: 'Regresar',
-        severity: 'secondary',
-        outlined: true,
-      },
-      acceptButtonProps: {
-        label: 'Cancelar proceso',
-        severity: 'danger',
-      },
+    this.showCancelModal = true;
+  }
 
-      accept: () => {
-        this.router.navigate(['sales/customers']);
-      },
-    });
+  confirmCancel(): void {
+    this.showCancelModal = false;
+    this.router.navigate(['sales/customers']);
   }
 
   get isPersonalizedLimit(): boolean {

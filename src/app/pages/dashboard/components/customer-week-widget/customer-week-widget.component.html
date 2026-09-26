@@ -136,7 +136,7 @@
                 <th class="px-2.5 py-2 text-[10px] text-[#48021C] font-semibold">Cliente</th>
                 <th class="px-2 py-2 text-[10px] text-[#48021C] font-semibold text-right">Gastó</th>
                 <th class="px-1.5 py-2 text-[10px] text-[#48021C] font-semibold text-center">Ped.</th>
-                <th class="px-2 py-2 text-[10px] text-[#48021C] font-semibold text-right">Por pedido</th>
+                <th class="px-2 py-2 text-[10px] text-[#48021C] font-semibold text-right">Prom. x pedido</th>
                 <th class="px-1.5 py-2 text-[10px] text-[#48021C] font-semibold text-center">vs ant.</th>
                 <th class="px-2 py-2 text-[10px] text-[#48021C] font-semibold">Cobro</th>
                 <th class="px-2 py-2 text-[10px] text-[#48021C] font-semibold">Top</th>
@@ -248,8 +248,8 @@
     <aside class="customer-week-detail">
       <div class="flex items-start justify-between gap-3 mb-3 shrink-0">
         <div class="min-w-0">
-          <p class="text-[10px] font-semibold text-[#6e3757]">Ficha de la semana · {{ weekRangeLabel() }}</p>
-          <h4 class="text-lg font-semibold text-[#48021C] leading-tight truncate">{{ c.name }}</h4>
+          <p class="text-[10px] font-bold text-black">Ficha de la semana · {{ weekRangeLabel() }}</p>
+          <h4 class="text-lg font-bold text-black leading-tight truncate">{{ c.name }}</h4>
           <div class="mt-1.5 flex flex-wrap gap-1.5">
             <app-status-badge [value]="c.category.name" [severity]="categorySeverity(c.category.name)" size="xs" />
             @if (c.inactiveThisWeek) {
@@ -271,51 +271,53 @@
         <div class="customer-week-detail-col">
           <div class="grid grid-cols-3 gap-2">
             <div class="rounded-lg border border-[#9f6587]/20 bg-white/80 p-2.5">
-              <p class="text-[9px] font-semibold text-slate-400">Gastó</p>
-              <p class="text-sm font-bold tabular-nums">{{ c.total | currency:'GTQ':'symbol':'1.0-0' }}</p>
+              <p class="text-[9px] font-bold text-black">Gastó</p>
+              <p class="text-sm font-bold tabular-nums text-black">{{ c.total | currency:'GTQ':'symbol':'1.0-0' }}</p>
             </div>
             <div class="rounded-lg border border-[#9f6587]/20 bg-white/80 p-2.5">
-              <p class="text-[9px] font-semibold text-slate-400">Pedidos</p>
-              <p class="text-sm font-bold">{{ c.orderCount }}</p>
+              <p class="text-[9px] font-bold text-black">Pedidos</p>
+              <p class="text-sm font-bold text-black">{{ c.orderCount }}</p>
             </div>
             <div class="rounded-lg border border-[#9f6587]/20 bg-white/80 p-2.5">
-              <p class="text-[9px] font-semibold text-slate-400">Por pedido</p>
-              <p class="text-sm font-bold tabular-nums">{{ c.averageTicket | currency:'GTQ':'symbol':'1.0-0' }}</p>
+              <p class="text-[9px] font-bold text-black">Prom. x pedido</p>
+              <p class="text-sm font-bold tabular-nums text-black">{{ c.averageTicket | currency:'GTQ':'symbol':'1.0-0' }}</p>
             </div>
           </div>
 
-          <p class="text-[10px] font-semibold text-slate-400 mb-2 mt-4">Comportamiento lun–dom</p>
-          <div class="flex items-end gap-1.5 h-24 mb-1">
+          <p class="text-[10px] font-bold text-black mb-2 mt-4">Gastos por día</p>
+          <div class="flex items-end gap-1 mb-4">
             @for (d of c.days; track d.date) {
-              <div class="flex-1 flex flex-col items-center justify-end h-full gap-1">
-                <div
-                  class="spark-bar w-full"
-                  [class.is-empty]="d.total === 0"
-                  [style.height.%]="d.total === 0 ? 2 : barHeight(d.total)"
-                  [pTooltip]="dayTooltip(d.total)"
-                ></div>
+              <div class="flex-1 min-w-0 flex flex-col items-center">
+                <div class="flex items-end w-full h-28 mb-1.5">
+                  <div
+                    class="spark-bar w-full"
+                    [class.is-empty]="d.total === 0"
+                    [style.height.%]="d.total === 0 ? 2 : barHeight(d.total)"
+                    [pTooltip]="dayTooltip(d.total)"
+                  ></div>
+                </div>
+                <span
+                  class="w-full text-center text-[11px] font-bold tabular-nums leading-tight text-black"
+                  [class.text-slate-400]="d.total === 0"
+                >{{ dayAmountLabel(d.total) }}</span>
+                <span class="text-[11px] font-bold text-black leading-none mt-1">{{ d.day }}</span>
               </div>
-            }
-          </div>
-          <div class="flex gap-1.5 mb-4">
-            @for (d of c.days; track d.date) {
-              <span class="flex-1 text-center text-[9px] font-medium text-slate-400">{{ d.day }}</span>
             }
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div class="rounded-lg border border-slate-100 bg-white/80 p-3">
-              <p class="text-[9px] font-semibold text-slate-400 mb-1">Cobrado / saldo</p>
+              <p class="text-[9px] font-bold text-black mb-1">Cobrado / saldo</p>
               <p class="text-sm font-bold text-emerald-700">{{ c.paidAmount | currency:'GTQ':'symbol':'1.2-2' }}</p>
-              <p class="text-xs text-rose-600">Pendiente {{ c.pendingAmount | currency:'GTQ':'symbol':'1.2-2' }}</p>
+              <p class="text-xs font-semibold text-rose-600">Pendiente {{ c.pendingAmount | currency:'GTQ':'symbol':'1.2-2' }}</p>
             </div>
             <div class="rounded-lg border border-slate-100 bg-white/80 p-3">
-              <p class="text-[9px] font-semibold text-slate-400 mb-1">Crédito</p>
+              <p class="text-[9px] font-bold text-black mb-1">Crédito</p>
               @if (c.creditLimit > 0) {
-                <p class="text-sm font-bold">{{ creditPercent(c) }}% usado</p>
-                <p class="text-[11px] text-slate-500">{{ c.creditUsed | currency:'GTQ':'symbol':'1.0-0' }} de {{ c.creditLimit | currency:'GTQ':'symbol':'1.0-0' }}</p>
+                <p class="text-sm font-bold text-black">{{ creditPercent(c) }}% usado</p>
+                <p class="text-[11px] font-semibold text-black">{{ c.creditUsed | currency:'GTQ':'symbol':'1.0-0' }} de {{ c.creditLimit | currency:'GTQ':'symbol':'1.0-0' }}</p>
               } @else {
-                <p class="text-sm text-slate-400">Sin línea de crédito</p>
+                <p class="text-sm font-semibold text-black">Sin línea de crédito</p>
               }
             </div>
           </div>
@@ -326,29 +328,29 @@
             </div>
           }
 
-          <p class="text-[11px] text-slate-400 mt-3">
+          <p class="text-[11px] font-semibold text-black mt-3">
             Última compra:
             {{ c.lastPurchaseDate ? formatIsoDate(c.lastPurchaseDate) : '—' }}
           </p>
         </div>
 
         <div class="customer-week-detail-col">
-          <p class="text-[10px] font-semibold text-slate-400 mb-2">Qué compró más</p>
+          <p class="text-[10px] font-bold text-black mb-2">Qué compró más</p>
           @if (c.mix.length === 0) {
-            <p class="text-sm text-slate-400">Sin compras en este periodo.</p>
+            <p class="text-sm font-semibold text-black">Sin compras en este periodo.</p>
           } @else {
             <ul class="space-y-2.5">
               @for (item of c.mix; track $index) {
                 <li>
                   <div class="flex justify-between text-xs mb-1 gap-2">
-                    <span class="font-semibold text-slate-700 truncate">{{ item.productName }}</span>
-                    <span class="tabular-nums text-slate-500 shrink-0">{{ item.revenue | currency:'GTQ':'symbol':'1.0-0' }} · {{ item.share }}%</span>
+                    <span class="font-bold text-black truncate">{{ item.productName }}</span>
+                    <span class="tabular-nums font-semibold text-black shrink-0">{{ item.revenue | currency:'GTQ':'symbol':'1.0-0' }} · {{ item.share }}%</span>
                   </div>
                   <div class="h-1.5 rounded-full bg-slate-100 overflow-hidden">
                     <div class="h-full bg-[#48021C]" [style.width.%]="item.share"></div>
                   </div>
                   @if (item.quantity > 0) {
-                    <p class="text-[10px] font-semibold text-slate-400 mt-0.5">{{ item.quantity }} {{ item.unit }}</p>
+                    <p class="text-[10px] font-bold text-black mt-0.5">{{ item.quantity }} {{ item.unit }}</p>
                   }
                 </li>
               }

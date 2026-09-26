@@ -1,288 +1,187 @@
 <div class="py-4 px-0 md:px-6 bg-slate-50/50 min-h-screen">
-  <!-- Header Section -->
-  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-2 md:mb-8">
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
-      <div class="w-full md:max-w-[50%]">
-        <h1 class="text-2xl md:text-4xl font-semibold text-gray-900 tracking-tight">Clientes</h1>
-        <p class="hidden md:block text-[#627ca7] mt-1 md:mt-2 text-sm md:text-md font-medium">
-           Gestione su base de datos de clientes, contactos y crédito.
-        </p>
-      </div>
+  <app-page-header title="Clientes" icon="pi pi-users" colorScheme="burgundy">
+    <ng-container actions>
+      <app-refresh-button [loading]="loading" (refresh)="loadCustomers()" />
+      <app-primary-button label="Nuevo Cliente" (clicked)="createCustomer()" />
+    </ng-container>
 
-      <div class="flex items-center gap-2 w-full md:w-auto">
-        <div class="flex-1">
-          <p-iconfield>
-            <p-inputicon class="pi pi-search" />
-            <input 
-              (input)="customersDesktopTable.filterGlobal($event.target.value, 'contains'); customersMobileTable.filterGlobal($event.target.value, 'contains')"
-              type="text" 
-              pInputText 
-              placeholder="Buscar cliente..."
-              autocomplete="off"
-              fluid
-            />
-          </p-iconfield>
-        </div>
-        <p-button 
-          label="Nuevo Cliente"
-          severity="info"
-          icon="pi pi-plus"
-          class="hidden md:block font-bold"
-          (onClick)="createCustomer()"
-        />
-        <p-button 
-          severity="info"
-          icon="pi pi-plus"
-          class="block md:hidden! font-bold"
-          (onClick)="createCustomer()"
-        />
-      </div>
-    </div>
-  </div>
+    <ng-container filters>
+      <app-search-input
+        [(ngModel)]="searchTerm"
+        (searchChange)="onSearch($event)"
+        placeholder="Buscar por nombre, NIT, teléfono o correo..."
+      />
 
-  <div class="max-w-[1700px] mx-auto">
-    <div class="flex mb-4 px-4 md:px-0">
       @if (canViewDeleted) {
-        <div class="group bg-white border border-slate-300 rounded-lg py-2 px-4 shadow-sm flex items-center gap-3 transition-all hover:border-indigo-200">
-          <div class="flex flex-col">
-            <label for="showDeleted" class="text-sm font-semibold text-[#3B5B8A]">Mostrar Eliminados</label>
-          </div>
+        <div class="flex items-center gap-3 bg-white border border-[#48021C]/20 rounded-xl px-4 py-2 shadow-xs transition-all hover:border-[#48021C]/40 hover:bg-rose-50/20">
+          <label for="showDeleted" class="text-xs md:text-sm font-semibold text-slate-700 cursor-pointer select-none">
+            Mostrar Eliminados
+          </label>
           <p-toggleSwitch
             [(ngModel)]="showDeleted"
             (onChange)="loadCustomers()"
             inputId="showDeleted"
-          ></p-toggleSwitch>
+            styleClass="burgundy-switch"
+          />
         </div>
       }
-    </div>
+    </ng-container>
+  </app-page-header>
 
-    <!-- VISTA ESCRITORIO -->
-    <div class="hidden lg:block bg-white rounded-xl border border-slate-300 overflow-hidden shadow-sm">
-      <p-table
-        #customersDesktopTable
+  <div class="max-w-[1700px] mx-auto">
+    <div class="hidden lg:block">
+      <app-standard-table
         [value]="filteredCustomers"
         [loading]="loading"
         [paginator]="true"
         [rows]="10"
-        [showCurrentPageReport]="true"
-        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
-        [rowsPerPageOptions]="[10, 20, 50]"
-        [globalFilterFields]="['name', 'nit', 'phone', 'email']"
+        [rowsPerPageOptions]="[10, 20, 30]"
         dataKey="id"
-        styleClass="p-datatable-modern"
+        emptyIcon="pi pi-users"
+        emptyMessage="No se encontraron clientes."
+        colorScheme="burgundy"
       >
-        <ng-template pTemplate="header">
-          <tr class="h-18! text-sm! bg-slate-50">
-            <th class="!pl-10 tracking-widest text-slate-400 w-[110px]">Estado</th>
-            <th class="tracking-widest text-slate-400" pSortableColumn="name">Cliente <p-sortIcon class="w-3! h-3!" field="name" /></th>
-            <th class="tracking-widest text-slate-400">NIT / Identificación</th>
-            <th class="tracking-widest text-slate-400">Contacto</th>
-            <th class="tracking-widest text-slate-400">Límite / Crédito</th>
-            <th class="tracking-widest text-slate-400 text-center">Registro</th>
-            <th class="!pr-10 tracking-widest text-slate-400 text-right">Acciones</th>
+        <ng-template #header>
+          <tr class="h-11 text-xs bg-[#eddde1] border-b border-[#762f41]/40 text-[#3b141e] font-bold sticky top-0 z-10">
+            <th class="!text-left !pl-4 border-r border-[#762f41]/35 w-[110px]">Estado</th>
+            <th class="!text-left !pl-3 border-r border-[#762f41]/35">Cliente</th>
+            <th class="!text-left !pl-3 border-r border-[#762f41]/35 w-[150px]">NIT</th>
+            <th class="!text-left !pl-3 border-r border-[#762f41]/35 w-[190px]">Contacto</th>
+            <th class="!text-right !pr-3 border-r border-[#762f41]/35 w-[130px]">Crédito</th>
+            <th class="!text-center border-r border-[#762f41]/35 w-[120px]">Registro</th>
+            <th class="!text-right !pr-4 w-[180px]">Acciones</th>
           </tr>
         </ng-template>
 
-        <ng-template pTemplate="body" let-customer>
-          <tr class="group hover:bg-slate-50 transition-all border-b border-slate-100 last:border-0"
-              [ngClass]="{ 'opacity-60 grayscale-[0.5]': isDeleted(customer) }">
-            <td class="!pl-10 py-4">
-              @if (isDeleted(customer)) {
-                <span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-lg bg-rose-50 text-rose-600 border border-rose-300">
-                  <span class="w-1.5 h-1.5 rounded-full bg-rose-500 mr-2"></span> Eliminado
-                </span>
-              } @else {
-                <span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-300">
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span> Activo
-                </span>
+        <ng-template #body let-customer>
+          <tr
+            class="hover:!bg-[#eddde1]/45 transition-colors duration-150 border-b border-[#762f41]/18 last:border-0 text-xs"
+            [class.opacity-60]="isDeleted(customer)"
+            [class.grayscale]="isDeleted(customer)"
+          >
+            <td class="!py-2.5 !pl-4 border-r border-[#762f41]/18">
+              <app-status-badge
+                [value]="isDeleted(customer) ? 'Eliminado' : 'Activo'"
+                [severity]="isDeleted(customer) ? 'danger' : 'success'"
+                size="xs"
+              />
+            </td>
+            <td class="!py-2.5 !pl-3 border-r border-[#762f41]/18">
+              <p class="font-semibold text-slate-800 truncate">{{ customer.name }}</p>
+              <p class="text-[10px] text-slate-500 truncate">{{ customer.email || 'Sin correo' }}</p>
+              @if (customer.category?.name) {
+                <app-status-badge [value]="customer.category.name" severity="burgundy" size="xs" />
               }
             </td>
-            <td>
-              <div class="flex flex-col">
-                <span class="font-bold text-slate-700 text-base leading-tight">{{ customer.name }}</span>
-                <span class="text-[11px] text-[#627ca7] font-medium mt-0.5">{{ customer.email || 'Sin correo registrado' }}</span>
-              </div>
+            <td class="!py-2.5 !pl-3 border-r border-[#762f41]/18 font-semibold text-slate-700">
+              {{ customer.nit || 'C/F' }}
             </td>
-            <td>
-              <span class="text-sm font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded border border-slate-200">
-                {{ customer.nit || 'Consumidor Final' }}
-              </span>
+            <td class="!py-2.5 !pl-3 border-r border-[#762f41]/18">
+              <p class="font-semibold text-slate-700">{{ customer.phone || '—' }}</p>
+              <p class="text-[10px] text-slate-500 truncate">{{ customer.contactName || '—' }}</p>
             </td>
-            <td>
-              <div class="flex flex-col gap-0.5">
-                <span class="text-sm font-semibold text-slate-700 inline-flex items-center gap-1.5">
-                  <i class="pi pi-phone text-[#4A7FA7] text-[12px]!"></i> {{ customer.phone || 'N/A' }}
-                </span>
-                <span class="text-[11px] text-slate-500 font-medium line-clamp-1 max-w-[150px]">{{ customer.contactName || '---' }}</span>
-              </div>
+            <td class="!py-2.5 !pr-3 border-r border-[#762f41]/18 text-right tabular-nums font-semibold">
+              {{ customer.creditLimit > 0 ? (customer.creditLimit | currency: 'Q ') : 'Ilimitado' }}
             </td>
-            <td>
-              <div class="flex flex-col">
-                 @if (customer.creditLimit > 0) {
-                    <span class="text-xs font-bold text-indigo-600 tracking-tight">{{ customer.creditLimit | currency:'Q ' }}</span>
-                    <span class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Saldo Autorizado</span>
-                 } @else {
-                    <span class="text-xs font-bold text-slate-400 italic">Ilimitado</span>
-                 }
-              </div>
+            <td class="!py-2.5 text-center border-r border-[#762f41]/18 text-slate-600">
+              {{ customer.createdAt | date: 'dd/MM/yyyy' }}
             </td>
-            <td class="text-center">
-              <span class="text-xs font-bold text-slate-600">{{ customer.createdAt | date: 'dd/MM/yyyy' }}</span>
-              <p class="text-[10px] text-slate-400 leading-tight">{{ customer.createdAt | date: 'hh:mm a' }}</p>
-            </td>
-            <td class="!pr-10 text-right">
-              <div class="flex justify-end gap-1">
+            <td class="!pr-4 !text-right !py-2.5">
+              <div class="flex justify-end items-center gap-1.5">
                 @if (!isDeleted(customer)) {
                   <button
-                    pButton
-                    icon="pi pi-pencil"
-                    class="p-button-rounded p-button-text !text-amber-500 hover:!bg-amber-50"
+                    type="button"
                     (click)="editCustomer(customer.id)"
-                    pTooltip="Editar"
-                    tooltipPosition="bottom"
-                  ></button>
+                    class="px-2 py-1 rounded-md text-[11px] font-semibold inline-flex items-center gap-1 border border-amber-600/45 bg-amber-500/[0.08] text-amber-700 hover:bg-amber-500/[0.18] cursor-pointer"
+                  >
+                    <i class="pi pi-pencil text-[9px]"></i>
+                    Editar
+                  </button>
                   <button
-                    pButton
-                    icon="pi pi-trash"
-                    class="p-button-rounded p-button-text !text-rose-500 hover:!bg-rose-50"
-                    (click)="deleteCustomer(customer)"
-                    pTooltip="Eliminar"
-                    tooltipPosition="bottom"
-                  ></button>
+                    type="button"
+                    (click)="askDelete(customer)"
+                    class="px-2 py-1 rounded-md text-[11px] font-semibold inline-flex items-center gap-1 border border-rose-500/45 bg-rose-500/[0.08] text-rose-600 hover:bg-rose-500/[0.18] cursor-pointer"
+                  >
+                    <i class="pi pi-trash text-[9px]"></i>
+                    Eliminar
+                  </button>
                 } @else {
                   <button
-                    pButton
-                    icon="pi pi-refresh"
-                    class="p-button-rounded p-button-text !text-emerald-500 hover:!bg-emerald-50"
-                    (click)="onRestoreCustomer(customer)"
-                    pTooltip="Restaurar"
-                    tooltipPosition="bottom"
-                  ></button>
+                    type="button"
+                    (click)="askRestore(customer)"
+                    class="px-2 py-1 rounded-md text-[11px] font-semibold inline-flex items-center gap-1 border border-emerald-500/45 bg-emerald-500/[0.08] text-emerald-600 hover:bg-emerald-500/[0.18] cursor-pointer"
+                  >
+                    <i class="pi pi-refresh text-[9px]"></i>
+                    Restaurar
+                  </button>
                 }
               </div>
             </td>
           </tr>
         </ng-template>
-
-        <ng-template #emptymessage>
-          <tr>
-            <td colspan="7" class="text-center !py-32">
-              <div class="flex flex-col items-center justify-center gap-3 w-full h-full">
-                <i class="pi pi-users text-[#95abce]" style="font-size: 5rem"></i>
-                <div class="flex flex-col items-center gap-1">
-                  <p class="text-[#627ca7] font-bold text-xl">No se encontraron clientes asociados.</p>
-                  <p class="text-[#627ca7] text-sm font-medium">Prueba ajustando los filtros de búsqueda.</p>
-                </div>
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
+      </app-standard-table>
     </div>
 
-    <!-- VISTA MÓVIL (Tarjetas) -->
-    <div class="lg:hidden block">
-      <p-table
-        #customersMobileTable
-        [value]="filteredCustomers"
-        [loading]="loading"
-        [paginator]="true"
-        [rows]="10"
-        [globalFilterFields]="['name', 'nit', 'phone', 'email']"
-        styleClass="p-datatable-modern bg-transparent w-full"
-        [showCurrentPageReport]="false"
-        [tableStyle]="{'table-layout': 'fixed', 'width': '100%'}"
-        [breakpoint]="'0px'"
-      >
-        <ng-template pTemplate="body" let-customer>
-          <tr class="bg-transparent border-none block" [ngClass]="{ 'opacity-60 grayscale-[0.5]': isDeleted(customer) }">
-            <td class="block !p-0 border-none bg-transparent">
-              <div class="bg-white rounded-2xl shadow-sm border border-slate-200 mx-4 my-2.5 flex flex-col overflow-hidden relative">
-                <div class="flex p-4 items-center gap-2">
-                  <div class="flex items-center justify-center shrink-0">
-                    <span class="w-10 h-10 rounded-xl bg-[#D0E2F2] text-[#3B5B8A] flex items-center justify-center border border-[#4A7FA7] shadow-sm">
-                        <i class="pi pi-users text-lg!"></i>
-                    </span>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex justify-between items-start gap-1">
-                      <div class="flex flex-col min-w-0">
-                        <span class="text-[10px] text-[#3B5B8A] font-bold leading-none mb-1 capitalize">NIT: {{ customer.nit || 'C/F' }}</span>
-                        <h3 class="font-bold text-slate-800 text-lg leading-tight truncate">{{ customer.name }}</h3>
-                      </div>
-                      @if (isDeleted(customer)) {
-                        <p-tag severity="danger" value="Eliminado" styleClass="!text-[10px] !font-bold px-1.5 py-0.5 rounded-md" />
-                      } @else {
-                        <p-tag value="Activo" severity="success" styleClass="!text-[10px] !font-bold px-1.5 py-0.5 rounded-md" />
-                      }
-                    </div>
-                  </div>
-                </div>
-
-                <div class="px-4 pb-4 flex flex-col gap-2.5">
-                  <div class="flex items-center gap-3">
-                     <div class="flex items-center gap-1.5 bg-slate-100 px-2 py-1 rounded-md border border-slate-300">
-                        <i class="pi pi-phone text-[#4A7FA7] font-black!" style="font-size: 0.75rem"></i>
-                        <span class="text-[10px] text-[#3B5B8A] font-bold tracking-tight">{{ customer.phone || 'N/A' }}</span>
-                     </div>
-                     <p class="text-[11px] font-medium text-[#627ca7] line-clamp-1 flex-1 truncate">{{ customer.email || 'Sin correo' }}</p>
-                  </div>
-                  <div class="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                    <div class="flex flex-col">
-                       <span class="text-[10px] text-slate-400 font-semibold tracking-widest">Máx. Crédito</span>
-                       <span class="text-[12px] font-bold text-[#3B5B8A]">
-                          {{ customer.creditLimit > 0 ? (customer.creditLimit | currency:'Q ') : 'Ilimitado' }}
-                       </span>
-                    </div>
-                    <div class="flex flex-col text-right">
-                       <span class="text-[10px] text-slate-400 font-semibold tracking-widest">Registro</span>
-                       <span class="text-[10px] text-slate-600 font-semibold">{{ customer.createdAt | date: 'dd/MM/yyyy' }}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="bg-slate-50/50 border-t border-slate-100 p-2 px-4 flex items-center justify-end">
-                  <div class="flex items-center gap-1">
-                    @if (!isDeleted(customer)) {
-                      <p-button
-                        icon="pi pi-pencil"
-                        styleClass="p-button-text !text-amber-600 hover:!bg-amber-50 !w-9 !h-9 !rounded-lg !p-0"
-                        (onClick)="editCustomer(customer.id)"
-                      />
-                      <p-button
-                        icon="pi pi-trash"
-                        styleClass="p-button-text !text-rose-600 hover:!bg-rose-50 !w-9 !h-9 !rounded-lg !p-0"
-                        (onClick)="deleteCustomer(customer)"
-                      />
-                    } @else {
-                      <p-button
-                        label="Restaurar"
-                        icon="pi pi-refresh"
-                        styleClass="p-button-text !text-emerald-500 hover:!bg-emerald-50 text-[10px] font-bold !py-1.5 !px-3 rounded-lg border border-emerald-100 bg-white shadow-sm"
-                        (onClick)="onRestoreCustomer(customer)"
-                      />
-                    }
-                  </div>
-                </div>
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-
-        <ng-template #emptymessage>
-          <tr>
-            <td class="block !p-0 border-none bg-transparent">
-              <div class="bg-white rounded-lg border border-slate-300 mx-4 my-8 p-10 flex flex-col items-center gap-4 text-center">
-                <i class="pi pi-users text-[#95abce]" style="font-size: 4rem"></i>
-                <div class="flex flex-col gap-1">
-                  <p class="text-[#627ca7] font-semibold">No se encontraron clientes.</p>
-                  <p class="text-[#627ca7] text-xs">Prueba ajustando los filtros.</p>
-                </div>
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
+    <div class="lg:hidden space-y-3 px-4">
+      @for (customer of filteredCustomers; track customer.id) {
+        <div
+          class="bg-white rounded-2xl border border-[#48021C]/20 shadow-xs overflow-hidden"
+          [class.opacity-60]="isDeleted(customer)"
+        >
+          <div class="p-4 flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-[10px] font-bold text-[#48021C]">{{ customer.nit || 'C/F' }}</p>
+              <h3 class="font-bold text-slate-800 truncate">{{ customer.name }}</h3>
+              <p class="text-[11px] text-slate-500">{{ customer.phone || 'Sin teléfono' }}</p>
+            </div>
+            <app-status-badge
+              [value]="isDeleted(customer) ? 'Eliminado' : 'Activo'"
+              [severity]="isDeleted(customer) ? 'danger' : 'success'"
+              size="xs"
+            />
+          </div>
+          <div class="px-4 pb-3 flex items-center justify-between text-[11px] text-slate-500">
+            <span>{{ customer.creditLimit > 0 ? (customer.creditLimit | currency: 'Q ') : 'Crédito ilimitado' }}</span>
+            <span>{{ customer.createdAt | date: 'dd/MM/yyyy' }}</span>
+          </div>
+          <div class="border-t border-[#48021C]/10 px-4 py-2 flex justify-end gap-1.5">
+            @if (!isDeleted(customer)) {
+              <button type="button" (click)="editCustomer(customer.id)" class="px-2 py-1 rounded-md text-[11px] font-semibold border border-amber-600/45 text-amber-700">Editar</button>
+              <button type="button" (click)="askDelete(customer)" class="px-2 py-1 rounded-md text-[11px] font-semibold border border-rose-500/45 text-rose-600">Eliminar</button>
+            } @else {
+              <button type="button" (click)="askRestore(customer)" class="px-2 py-1 rounded-md text-[11px] font-semibold border border-emerald-500/45 text-emerald-600">Restaurar</button>
+            }
+          </div>
+        </div>
+      } @empty {
+        <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-sm text-slate-400">
+          No se encontraron clientes.
+        </div>
+      }
     </div>
   </div>
 </div>
+
+<app-confirmation-modal
+  [(visible)]="showDeleteModal"
+  type="danger"
+  header="Eliminar cliente"
+  title="¿Eliminar este cliente?"
+  [message]="pendingDelete ? ('Se dará de baja a ' + pendingDelete.name + '.') : ''"
+  confirmLabel="Eliminar"
+  [loading]="actionLoading"
+  (onConfirm)="confirmDelete()"
+  (onCancel)="closeDelete()"
+/>
+
+<app-confirmation-modal
+  [(visible)]="showRestoreModal"
+  type="success"
+  header="Restaurar cliente"
+  title="¿Restaurar este cliente?"
+  [message]="pendingRestore ? ('Se reactivará a ' + pendingRestore.name + '.') : ''"
+  confirmLabel="Restaurar"
+  [loading]="actionLoading"
+  (onConfirm)="confirmRestore()"
+  (onCancel)="closeRestore()"
+/>

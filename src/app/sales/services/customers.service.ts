@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { Observable } from 'rxjs';
-import { ICustomer } from '../interfaces/customer.interface';
+import { IAppliedProductPrice, ICustomer, ICustomerProductPrice } from '../interfaces/customer.interface';
 import { ApiResponse } from '../../core/models/api-response.model';
 
 @Injectable({
@@ -35,5 +35,44 @@ export class CustomersService {
 
   restoreCustomer(customerId: string): Observable<ApiResponse<ICustomer>> {
     return this.http.patch<ApiResponse<ICustomer>>(`${this.API_URL}/${customerId}/restore`, {});
+  }
+
+  getProductPrices(customerId: string): Observable<ApiResponse<ICustomerProductPrice[]>> {
+    return this.http.get<ApiResponse<ICustomerProductPrice[]>>(
+      `${this.API_URL}/${customerId}/product-prices`,
+    );
+  }
+
+  upsertProductPrice(
+    customerId: string,
+    body: { productId: string; price: number; isActive?: boolean; validFrom?: string | null; validUntil?: string | null },
+  ): Observable<ApiResponse<ICustomerProductPrice>> {
+    return this.http.put<ApiResponse<ICustomerProductPrice>>(
+      `${this.API_URL}/${customerId}/product-prices`,
+      body,
+    );
+  }
+
+  updateProductPrice(
+    customerId: string,
+    productId: string,
+    body: { price: number; isActive?: boolean; validFrom?: string | null; validUntil?: string | null },
+  ): Observable<ApiResponse<ICustomerProductPrice>> {
+    return this.http.put<ApiResponse<ICustomerProductPrice>>(
+      `${this.API_URL}/${customerId}/product-prices/${productId}`,
+      body,
+    );
+  }
+
+  deleteProductPrice(customerId: string, productId: string): Observable<ApiResponse<null>> {
+    return this.http.delete<ApiResponse<null>>(
+      `${this.API_URL}/${customerId}/product-prices/${productId}`,
+    );
+  }
+
+  getAppliedPrice(customerId: string, productId: string): Observable<ApiResponse<IAppliedProductPrice>> {
+    return this.http.get<ApiResponse<IAppliedProductPrice>>(
+      `${this.API_URL}/${customerId}/applied-price/${productId}`,
+    );
   }
 }

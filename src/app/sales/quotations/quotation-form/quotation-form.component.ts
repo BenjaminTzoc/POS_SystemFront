@@ -23,6 +23,7 @@ import { QuotationsService } from '../../services/quotations.service';
 import { BranchesService } from '../../../inventory/services/branches.service';
 import { ProductsService } from '../../../inventory/services/products.service';
 import { CustomersService } from '../../services/customers.service';
+import { CustomerAppliedPricesService } from '../../services/customer-applied-prices.service';
 import { Branch } from '../../../inventory/interfaces/branch.interface';
 import { Product } from '../../../inventory/interfaces/product.interface';
 import { ICustomer } from '../../interfaces/customer.interface';
@@ -68,6 +69,7 @@ export class QuotationFormComponent implements OnInit {
   private branchesService = inject(BranchesService);
   private productsService = inject(ProductsService);
   private customersService = inject(CustomersService);
+  private appliedPrices = inject(CustomerAppliedPricesService);
   private saleCalculator = inject(SaleCalculatorService);
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
@@ -140,6 +142,7 @@ export class QuotationFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.appliedPrices.clear();
     this.loadInitialData();
     
     // Subscribe to branch selection changes
@@ -149,6 +152,10 @@ export class QuotationFormComponent implements OnInit {
       } else {
         this.products = [];
       }
+    });
+
+    this.quotationForm.get('customerId')?.valueChanges.subscribe((customerId) => {
+      void this.appliedPrices.loadForCustomer(customerId || null).then(() => this.repriceItemsFromApplied());
     });
 
     const id = this.route.snapshot.params['id'];
@@ -184,6 +191,13 @@ export class QuotationFormComponent implements OnInit {
     if (!this.items || this.items.length === 0 || this.items.invalid) return false;
 
     return true;
+  }
+
+  setCustomerType(type: 'registered' | 'guest'): void {
+    this.customerType = type;
+    if (type === 'guest') {
+      this.quotationForm.get('customerId')?.setValue(null);
+    }
   }
 
   loadInitialData(): void {
@@ -332,7 +346,7 @@ export class QuotationFormComponent implements OnInit {
     itemGroup.get('productId')?.valueChanges.subscribe(id => {
       const prod = this.products.find(p => p.id === id);
       if (prod) {
-        itemGroup.patchValue({ unitPrice: Number(prod.price) }, { emitEvent: false });
+        itemGroup.patchValue({ unitPrice: this.appliedPrices.unitPriceFor(prod) }, { emitEvent: false });
         this.calculateTotals();
       }
     });
@@ -394,15 +408,16 @@ export class QuotationFormComponent implements OnInit {
 
   addProductFromDrawer(product: Product) {
     const qty = this.getQuickQuantity(product.id);
+    const unitPrice = this.appliedPrices.unitPriceFor(product);
     const itemGroup = this.fb.group({
       productId: [product.id, Validators.required],
       quantity: [qty, [Validators.required, Validators.min(0.001)]],
-      unitPrice: [Number(product.price), [Validators.required, Validators.min(0)]],
+      unitPrice: [unitPrice, [Validators.required, Validators.min(0)]],
       discount: [0],
       discountType: ['percentage'],
       taxPercentage: [12],
       notes: [''],
-      lineTotal: [Number(product.price) * qty]
+      lineTotal: [unitPrice * qty]
     });
     this.items.push(itemGroup);
     
@@ -564,6 +579,16 @@ export class QuotationFormComponent implements OnInit {
 
   asGroup(control: any): FormGroup {
     return control as FormGroup;
+  }
+
+  private repriceItemsFromApplied(): void {
+    this.items.controls.forEach((group) => {
+      const productId = group.get('productId')?.value;
+      const prod = this.products.find((p) => p.id === productId);
+      if (!prod) return;
+      group.patchValue({ unitPrice: this.appliedPrices.unitPriceFor(prod) }, { emitEvent: false });
+    });
+    this.calculateTotals();
   }
 
   getCustomerById(id: string): ICustomer | undefined {

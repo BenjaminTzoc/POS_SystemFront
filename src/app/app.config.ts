@@ -67,6 +67,8 @@ export const appConfig: ApplicationConfig = {
           'Dic',
         ],
         today: 'Hoy',
+        dateFormat: 'dd/mm/yy',
+        firstDayOfWeek: 1,
       },
     }),
     provideHttpClient(withInterceptors([authInterceptor])),

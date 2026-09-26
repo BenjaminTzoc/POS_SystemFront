@@ -42,7 +42,7 @@
             <div class="inline-flex p-0.5 bg-[#9f6587]/10 rounded-lg border border-[#9f6587]/25 text-xs">
               <button 
                 type="button" 
-                (click)="customerType = 'registered'" 
+                (click)="setCustomerType('registered')" 
                 [class]="customerType === 'registered' ? 'bg-[#48021C] text-white font-medium shadow-xs' : 'text-[#48021C]/80 hover:text-[#48021C] hover:bg-[#9f6587]/15'" 
                 class="px-2.5 py-1 rounded-md text-xs transition-all cursor-pointer"
               >
@@ -50,7 +50,7 @@
               </button>
               <button 
                 type="button" 
-                (click)="customerType = 'guest'" 
+                (click)="setCustomerType('guest')" 
                 [class]="customerType === 'guest' ? 'bg-[#48021C] text-white font-medium shadow-xs' : 'text-[#48021C]/80 hover:text-[#48021C] hover:bg-[#9f6587]/15'" 
                 class="px-2.5 py-1 rounded-md text-xs transition-all cursor-pointer"
               >

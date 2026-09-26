@@ -1,205 +1,175 @@
-<div class="py-4 px-0 md:px-6 bg-slate-50/50 min-h-screen">
-  <!-- Header Section -->
-  <div class="max-w-[1700px] mx-auto px-4 md:px-0 mb-6 md:mb-8">
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
-      <div class="w-full md:max-w-[60%]">
-        <h1 class="text-2xl md:text-4xl font-semibold text-gray-900 tracking-tight">
-          {{ isEditMode ? 'Editar Cliente' : 'Nuevo Cliente' }}
-        </h1>
-        <p class="hidden md:block text-[#627ca7] mt-1 md:mt-2 text-sm md:text-md font-medium">
-           {{ isEditMode ? 'Actualice la información del cliente registrado.' : 'Registre un nuevo cliente en su base de datos.' }}
-        </p>
-      </div>
-
-      <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto">
-        <div class="flex-1">
-          <p-button 
-            label="Cancelar" 
-            (onClick)="onCancelProccess()" 
-            variant="outlined" 
-            severity="danger" 
-            icon="pi pi-times"
-            styleClass="border-rose-400! h-[44px] justify-center"
-            fluid
-          />
-        </div>
-        <div class="flex-1">
-          <p-button
-            (onClick)="onSaveCustomer()"
-            [label]="isEditMode ? 'Guardar' : 'Crear'"
-            severity="success"
-            [raised]="true"
-            styleClass="shadow-lg h-[44px] justify-center font-bold"
-            [loading]="isSaving"
-            icon="pi pi-check"
-            [disabled]="customerForm.invalid"
-            fluid
-          />
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <form class="grid grid-cols-12 gap-4 md:gap-8 max-w-[1400px] mx-auto pb-40 px-4 md:px-0" [formGroup]="customerForm">
-    <!-- Columna Izquierda: Información General -->
-    <div class="col-span-12 lg:col-span-7 flex flex-col gap-6">
-      <div class="p-5 md:p-8 rounded-none md:rounded-lg bg-white border-y md:border border-slate-300 shadow-sm relative overflow-hidden">
-        <!-- Background Decorative Icon -->
-        <div class="absolute top-0 right-0 p-4 opacity-[0.03]">
-          <i class="pi pi-users" style="font-size: 8rem"></i>
-        </div>
-
-        <div class="flex flex-col gap-6 relative">
-          <!-- Name Field -->
-          <div class="flex flex-col gap-1.5 md:gap-1">
-            <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="name">
-              <i class="pi pi-user mr-1 text-xs! text-blue-500"></i>
-              Nombre o Razón Social <span class="text-red-700">*</span>
-            </label>
-            <input
-              pInputText
-              id="name"
-              formControlName="name"
-              class="w-full !rounded-lg h-[44px] md:h-auto font-medium"
-              [ngClass]="{'ng-invalid ng-dirty': customerForm.get('name')?.invalid && customerForm.get('name')?.touched}"
-              placeholder="Ej. Juan Pérez o Distribuidora S.A."
-              autocomplete="off"
-            />
-            @if (customerForm.get('name')?.invalid && customerForm.get('name')?.touched) {
-              <small class="text-rose-500 text-[10px] font-medium flex items-center mt-1">
-                <i class="pi pi-exclamation-circle mr-1 text-[10px]!"></i>Requerido (Ingrese nombre completo)
-              </small>
-            }
-          </div>
-
-          <!-- NIT and Address -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="flex flex-col gap-1.5 md:gap-1">
-              <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="nit">
-                <i class="pi pi-id-card mr-1 text-xs! text-blue-500"></i> NIT / Identificación
-              </label>
-              <input
-                pInputText
-                id="nit"
-                formControlName="nit"
-                class="w-full !rounded-lg h-[44px] md:h-auto font-medium capitalize"
-                placeholder="C/F o número de NIT"
+<div class="pt-2.5 md:pt-3 pb-28 px-0 md:px-6 bg-[#9f6587]/[0.06] min-h-screen">
+  <div class="grid grid-cols-12 gap-4 md:gap-6 max-w-[1700px] mx-auto px-4 md:px-0">
+    <form class="contents" [formGroup]="customerForm">
+      <div class="col-span-12 lg:col-span-7 flex flex-col gap-4">
+        <div class="relative rounded-xl md:rounded-2xl bg-white border-2 border-[#48021C]/25 overflow-hidden shadow-xs">
+          <div class="py-2.5 px-4 md:px-5 flex items-center justify-between border-b border-[#48021C]/15 bg-gradient-to-r from-[#9f6587]/18 via-[#9f6587]/10 to-[#9f6587]/18">
+            <div class="flex items-center gap-2.5 flex-wrap min-w-0">
+              <p-button
+                icon="pi pi-arrow-left"
+                [outlined]="true"
+                severity="secondary"
+                size="small"
+                (onClick)="onCancelProccess()"
+                pTooltip="Volver a clientes"
+                tooltipPosition="bottom"
+                styleClass="!w-6.5 !h-6.5 !p-0 text-[#6e3757] hover:text-[#4d203a] bg-white hover:bg-[#9f6587]/14 hover:border-[#9f6587]/60! border border-[#9f6587]/35! !rounded-md shadow-2xs hover:shadow-xs hover:scale-105 active:scale-95 transition-all duration-150 cursor-pointer [&_.p-button-icon]:!text-xs"
               />
-            </div>
-            <div class="flex flex-col gap-1.5 md:gap-1">
-              <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="address">
-                <i class="pi pi-map-marker mr-1 text-xs! text-blue-500"></i> Dirección Comercial
-              </label>
-              <input
-                pInputText
-                id="address"
-                formControlName="address"
-                class="w-full !rounded-lg h-[44px] md:h-auto font-medium"
-                placeholder="Calle, Avenida, Zona..."
-              />
-            </div>
-          </div>
-          <!-- Contact Section -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="flex flex-col gap-1.5 md:gap-1">
-              <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="contactName">
-                <i class="pi pi-user-plus mr-1 text-xs! text-blue-500"></i> Persona de Contacto <span class="text-red-700">*</span>
-              </label>
-              <input
-                pInputText
-                id="contactName"
-                formControlName="contactName"
-                class="w-full !rounded-lg h-[44px] md:h-auto font-medium"
-                [ngClass]="{'ng-invalid ng-dirty': customerForm.get('contactName')?.invalid && customerForm.get('contactName')?.touched}"
-                placeholder="Nombre del encargado"
-              />
-            </div>
-            <div class="flex flex-col gap-1.5 md:gap-1">
-              <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="phone">
-                <i class="pi pi-phone mr-1 text-xs! text-blue-500"></i> Teléfono Principal <span class="text-red-700">*</span>
-              </label>
-              <p-inputMask
-                id="phone"
-                formControlName="phone"
-                mask="+502 9999 9999"
-                styleClass="w-full !rounded-lg h-[44px] md:h-auto font-medium"
-                placeholder="+502 0000 0000"
-                [ngClass]="{'ng-invalid ng-dirty': customerForm.get('phone')?.invalid && customerForm.get('phone')?.touched}"
-              />
+              <h1 class="text-base md:text-lg font-semibold text-[#5c2a47] tracking-tight leading-none truncate">
+                {{ isEditMode ? 'Editar Cliente' : 'Nuevo Cliente' }}
+              </h1>
+              <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-full border shadow-2xs bg-[#9f6587]/15 text-[#48021C] border-[#9f6587]/30">
+                {{ isEditMode ? 'Edición' : 'Nuevo' }}
+              </span>
             </div>
           </div>
 
-          <div class="flex flex-col gap-1.5 md:gap-1">
-            <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="email">
-              <i class="pi pi-envelope mr-1 text-xs! text-blue-500"></i> Correo Electrónico
-            </label>
-            <input
-              pInputText
-              id="email"
-              formControlName="email"
-              class="w-full !rounded-lg h-[44px] md:h-auto font-medium"
-              placeholder="ejemplo@correo.com"
-            />
-          </div>
-
-          <div class="p-4 md:p-5 rounded-xl bg-[#D0E2F2] border border-[#4A7FA7] flex gap-4 mt-2">
-            <i class="pi pi-info-circle text-[#3B5B8A] text-xl! mt-0.5"></i>
-            <div class="flex flex-col gap-0.5">
-              <p class="text-sm text-[#3B5B8A] font-bold leading-tight">Datos de Facturación</p>
-              <p class="text-xs text-[#3B5B8A] font-medium leading-relaxed opacity-90">
-                La información de contacto es vital para la emisión de documentos tributarios y la logística de entrega de pedidos.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Columna Derecha: Categoría y Crédito -->
-    <div class="col-span-12 lg:col-span-5 flex flex-col gap-6">
-      <div class="p-5 md:p-8 rounded-none md:rounded-lg bg-white border-y md:border border-slate-300 shadow-sm flex flex-col gap-6">
-        <div class="flex flex-col gap-1.5 md:gap-1">
-          <label class="text-xs md:text-sm font-semibold text-[#3B5B8A]" for="categoryId">
-            <i class="pi pi-list mr-1 text-xs! text-blue-500"></i> Categoría de Cliente
-          </label>
-          <p-select
-            [options]="categories"
-            formControlName="categoryId"
-            optionLabel="name"
-            optionValue="id"
-            [showClear]="true"
-            placeholder="Seleccionar nivel"
-            styleClass="w-full !rounded-lg h-[44px] md:h-auto font-medium border-slate-300"
-            fluid
-          />
-        </div>
-
-        @if (selectedCategory) {
-          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col gap-4 animate-fadein">
-            <p class="text-xs text-slate-500 leading-relaxed italic">"{{ selectedCategory.description }}"</p>
-            <div class="grid grid-cols-2 gap-4">
-              <div class="flex flex-col">
-                <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Descuento</span>
-                <span class="text-sm font-bold text-slate-700">{{ selectedCategory.discountPercentage | number:'1.2-2' }}%</span>
+          <div class="p-5 md:p-6">
+            <div class="flex flex-col gap-5">
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-semibold text-[#48021C]" for="name">
+                  Nombre o Razón Social <span class="text-red-700">*</span>
+                </label>
+                <input
+                  pInputText
+                  id="name"
+                  formControlName="name"
+                  class="w-full !rounded-lg h-[44px] font-medium"
+                  [ngClass]="{'ng-invalid ng-dirty': customerForm.get('name')?.invalid && customerForm.get('name')?.touched}"
+                  placeholder="Ej. Juan Pérez o Distribuidora S.A."
+                  autocomplete="off"
+                />
+                @if (customerForm.get('name')?.invalid && customerForm.get('name')?.touched) {
+                  <small class="text-rose-500 text-[10px] font-medium flex items-center">
+                    <i class="pi pi-exclamation-circle mr-1 text-[10px]!"></i>Requerido (Ingrese nombre completo)
+                  </small>
+                }
               </div>
-              <div class="flex flex-col border-l border-slate-200 pl-4">
-                <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Venta Mínima</span>
-                <span class="text-sm font-bold text-slate-700">{{ selectedCategory.minPurchaseAmount | currency:'Q ' }}</span>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-xs font-semibold text-[#48021C]" for="nit">NIT / Identificación</label>
+                  <input
+                    pInputText
+                    id="nit"
+                    formControlName="nit"
+                    class="w-full !rounded-lg h-[44px] font-medium capitalize"
+                    placeholder="C/F o número de NIT"
+                  />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-xs font-semibold text-[#48021C]" for="address">Dirección Comercial</label>
+                  <input
+                    pInputText
+                    id="address"
+                    formControlName="address"
+                    class="w-full !rounded-lg h-[44px] font-medium"
+                    placeholder="Calle, Avenida, Zona..."
+                  />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-xs font-semibold text-[#48021C]" for="contactName">
+                    Persona de Contacto <span class="text-red-700">*</span>
+                  </label>
+                  <input
+                    pInputText
+                    id="contactName"
+                    formControlName="contactName"
+                    class="w-full !rounded-lg h-[44px] font-medium"
+                    [ngClass]="{'ng-invalid ng-dirty': customerForm.get('contactName')?.invalid && customerForm.get('contactName')?.touched}"
+                    placeholder="Nombre del encargado"
+                  />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-xs font-semibold text-[#48021C]" for="phone">
+                    Teléfono Principal <span class="text-red-700">*</span>
+                  </label>
+                  <p-inputMask
+                    id="phone"
+                    formControlName="phone"
+                    mask="+502 9999 9999"
+                    styleClass="w-full !rounded-lg h-[44px] font-medium"
+                    placeholder="+502 0000 0000"
+                    [ngClass]="{'ng-invalid ng-dirty': customerForm.get('phone')?.invalid && customerForm.get('phone')?.touched}"
+                  />
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-semibold text-[#48021C]" for="email">Correo Electrónico</label>
+                <input
+                  pInputText
+                  id="email"
+                  formControlName="email"
+                  class="w-full !rounded-lg h-[44px] font-medium"
+                  placeholder="ejemplo@correo.com"
+                />
+              </div>
+
+              <div class="p-4 rounded-xl bg-[#48021C]/[0.06] border border-[#48021C]/20 flex gap-3">
+                <i class="pi pi-info-circle text-[#48021C] text-base mt-0.5"></i>
+                <div>
+                  <p class="text-sm text-[#48021C] font-bold leading-tight">Datos de Facturación</p>
+                  <p class="text-xs text-[#48021C]/80 font-medium leading-relaxed mt-0.5">
+                    La información de contacto se usa para documentos tributarios y la entrega de pedidos.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        }
+        </div>
+      </div>
 
-        <!-- Credit Section -->
-        <div class="flex flex-col gap-4">
-          <div class="flex flex-col gap-3 p-4 md:p-5 rounded-xl bg-[#D0E2F2] border border-[#4A7FA7]">
+      <div class="col-span-12 lg:col-span-5 flex flex-col gap-4">
+        <div class="bg-white rounded-2xl border-2 border-[#48021C]/25 p-5 md:p-6 shadow-xs flex flex-col gap-5">
+          <div class="flex items-center gap-2 pb-3 border-b border-[#48021C]/15">
+            <div class="w-7 h-7 rounded-lg bg-[#48021C]/10 text-[#48021C] flex items-center justify-center border border-[#48021C]/20 shrink-0">
+              <i class="pi pi-sliders-h text-xs"></i>
+            </div>
+            <h3 class="font-bold text-[#48021C] text-sm leading-none m-0">Categoría y crédito</h3>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold text-[#48021C]" for="categoryId">Categoría de Cliente</label>
+            <p-select
+              [options]="categories"
+              formControlName="categoryId"
+              optionLabel="name"
+              optionValue="id"
+              [showClear]="true"
+              placeholder="Seleccionar nivel"
+              styleClass="w-full !rounded-lg h-[44px] font-medium"
+              fluid
+            />
+          </div>
+
+          @if (selectedCategory) {
+            <div class="p-4 rounded-xl bg-rose-50/40 border border-[#48021C]/15 flex flex-col gap-3">
+              <p class="text-xs text-slate-600 leading-relaxed italic">"{{ selectedCategory.description }}"</p>
+              <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col">
+                  <span class="text-[9px] text-[#9f6587] font-bold uppercase tracking-widest">Descuento</span>
+                  <span class="text-sm font-bold text-slate-800">{{ selectedCategory.discountPercentage | number:'1.2-2' }}%</span>
+                </div>
+                <div class="flex flex-col border-l border-[#48021C]/15 pl-4">
+                  <span class="text-[9px] text-[#9f6587] font-bold uppercase tracking-widest">Venta Mínima</span>
+                  <span class="text-sm font-bold text-slate-800">{{ selectedCategory.minPurchaseAmount | currency:'Q ' }}</span>
+                </div>
+              </div>
+            </div>
+          }
+
+          <div class="flex flex-col gap-3 p-4 rounded-xl bg-[#48021C]/[0.06] border border-[#48021C]/20">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
-                <i class="pi pi-credit-card text-[#3B5B8A] font-bold"></i>
-                <span class="text-sm font-bold text-[#3B5B8A]">Límite de Crédito</span>
+                <i class="pi pi-credit-card text-[#48021C]"></i>
+                <span class="text-sm font-bold text-[#48021C]">Límite de Crédito</span>
               </div>
               @if (isPersonalizedLimit) {
-                <p-tag severity="info" value="Manual" styleClass="!text-[9px] !bg-white !text-[#3B5B8A] !border-[#4A7FA7]/20" />
+                <app-status-badge value="Manual" severity="burgundy" size="xs" />
               }
             </div>
 
@@ -212,27 +182,61 @@
                 locale="es-GT"
                 [min]="0"
                 styleClass="w-full"
-                inputStyleClass="!rounded-lg border-slate-300 w-full h-[44px] font-bold text-[#3B5B8A] pr-10!"
+                inputStyleClass="!rounded-lg w-full h-[44px] font-bold text-[#48021C] pr-10!"
                 placeholder="0.00"
               />
               @if (isPersonalizedLimit && selectedCategory) {
-                <button 
+                <button
                   type="button"
                   (click)="customerForm.get('creditLimit')?.setValue(selectedCategory.defaultCreditLimit)"
-                  class="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-full text-[#3B5B8A]/40 hover:text-[#3B5B8A] hover:bg-white transition-all shadow-sm"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-full text-[#48021C]/40 hover:text-[#48021C] hover:bg-white transition-all cursor-pointer"
                   pTooltip="Restablecer"
                 >
-                   <i class="pi pi-refresh text-[10px]!"></i>
+                  <i class="pi pi-refresh text-[10px]!"></i>
                 </button>
               }
             </div>
 
-            <p class="text-[10px] text-[#3B5B8A] font-medium leading-relaxed opacity-70">
+            <p class="text-[10px] text-[#48021C] font-medium leading-relaxed opacity-80">
               Valor <strong>0 = Crédito Ilimitado</strong>. Se hereda el límite de la categoría por defecto.
             </p>
           </div>
         </div>
       </div>
+    </form>
+
+    <div class="col-span-12">
+      <app-customer-product-prices [customerId]="customerId" />
     </div>
-  </form>
+  </div>
+
+  <div class="fixed bottom-6 right-6 z-40">
+    <div class="bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-[#9f6587]/35 shadow-xl flex items-center gap-3">
+      <p-button
+        label="Cancelar"
+        [outlined]="true"
+        (onClick)="onCancelProccess()"
+        icon="pi pi-times"
+        styleClass="!rounded-lg !px-3.5 font-semibold h-9! !bg-red-50 hover:!bg-red-100/80 !border !border-red-600 hover:!border-red-700 !text-red-700 hover:!text-red-800 shadow-2xs hover:shadow-xs active:scale-95 transition-all text-xs cursor-pointer"
+      />
+      <p-button
+        [label]="isEditMode ? 'Guardar cambios' : 'Crear cliente'"
+        (onClick)="onSaveCustomer()"
+        [loading]="isSaving"
+        icon="pi pi-check"
+        styleClass="!rounded-lg !px-5 shadow-sm transition-all font-semibold h-9! justify-center text-xs !bg-[#48021C] !text-white !border-[#48021C] hover:!bg-[#350114] disabled:!opacity-40 disabled:!cursor-not-allowed"
+      />
+    </div>
+  </div>
 </div>
+
+<app-confirmation-modal
+  [(visible)]="showCancelModal"
+  type="warning"
+  header="Confirmar cancelación"
+  title="¿Cancelar este proceso?"
+  message="Los cambios no guardados se perderán."
+  confirmLabel="Cancelar proceso"
+  cancelLabel="Regresar"
+  (onConfirm)="confirmCancel()"
+/>

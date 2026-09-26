@@ -1,0 +1,148 @@
+@if (canView) {
+  <div class="flex flex-col gap-4">
+    @if (canManage) {
+      <app-product-ribbon
+        [products]="ribbonProducts"
+        [loading]="loadingCatalog()"
+        title="Catálogo de productos"
+        subtitle="Haz clic para agregarlo a la lista. El precio se pacta abajo y se guarda con el cliente."
+        emptyMessage="No hay más productos disponibles para pactar."
+        [showPrice]="true"
+        [showStock]="false"
+        [showQuickQuantity]="false"
+        selectTooltip="Clic para agregar a la lista"
+        [isSelectedFn]="isRowSelected"
+        (productSelect)="onRibbonSelect($event)"
+      />
+    }
+
+    <section class="bg-white rounded-2xl border-2 border-[#48021C]/25 p-4 md:p-5 shadow-xs">
+      <div class="flex items-center gap-2 pb-3 mb-3 border-b border-[#48021C]/15">
+        <div class="w-7 h-7 rounded-lg bg-[#48021C]/10 text-[#48021C] flex items-center justify-center border border-[#48021C]/20 shrink-0">
+          <i class="pi pi-list text-xs"></i>
+        </div>
+        <div>
+          <h3 class="font-bold text-[#48021C] text-sm leading-none m-0">Precios pactados</h3>
+          <span class="text-[10px] text-[#9f6587] font-medium mt-1 block">Edita aquí. Los cambios se envían al guardar el cliente.</span>
+        </div>
+      </div>
+
+      <app-standard-table
+        [value]="rows()"
+        [loading]="loadingPrices()"
+        [paginator]="false"
+        dataKey="productId"
+        emptyIcon="pi pi-tag"
+        emptyMessage="Este cliente usa el precio de lista en todos los productos."
+        colorScheme="burgundy"
+        customClass="!flex-none"
+      >
+        <ng-template #header>
+          <tr class="h-11 text-xs bg-[#eddde1] border-b border-[#762f41]/40 text-[#3b141e] font-bold">
+            <th class="!text-left !pl-4 border-r border-[#762f41]/35">Producto</th>
+            <th class="!text-center border-r border-[#762f41]/35 w-[130px]">Precio original</th>
+            <th class="!text-center border-r border-[#762f41]/35 w-[130px]">Precio pactado</th>
+            <th class="!text-center border-r border-[#762f41]/35 w-[140px]">Desde</th>
+            <th class="!text-center border-r border-[#762f41]/35 w-[140px]">Hasta</th>
+            <th class="!text-right !pr-4 w-[80px]">Acciones</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-row>
+          <tr class="hover:!bg-[#eddde1]/45 transition-colors duration-150 border-b border-[#762f41]/18 last:border-0 text-xs">
+            <td class="!py-2 !pl-4 !pr-3 border-r border-[#762f41]/18 align-middle">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-9 h-9 rounded-lg border border-slate-200 bg-white overflow-hidden shrink-0 flex items-center justify-center">
+                  @if (row.product?.imageUrl) {
+                    <img [src]="productImageUrl(row.product.imageUrl)" [alt]="row.product?.name" class="w-full h-full object-cover" />
+                  } @else {
+                    <i class="pi pi-image text-slate-300 text-sm"></i>
+                  }
+                </div>
+                <div class="min-w-0">
+                  <p class="font-semibold text-slate-800 leading-tight truncate">{{ row.product?.name || row.productId }}</p>
+                  @if (row.product?.sku) {
+                    <p class="text-[10px] text-slate-500 leading-tight mt-0.5">SKU {{ row.product?.sku }}</p>
+                  }
+                </div>
+              </div>
+            </td>
+            <td class="!py-2 !px-3 border-r border-[#762f41]/18 align-middle">
+              <div class="w-full text-center tabular-nums font-semibold text-slate-600">
+                {{ listPrice(row) | currency:'Q ' }}
+              </div>
+            </td>
+            <td class="!py-2 !px-2 border-r border-[#762f41]/18 align-middle">
+              @if (canManage) {
+                <div class="mx-auto flex items-center h-9 w-[6.5rem] rounded-lg border border-[#762f41]/35 bg-white overflow-hidden focus-within:border-[#48021C] focus-within:ring-1 focus-within:ring-[#48021C]/20">
+                  <span class="pl-1.5 pr-0.5 text-[10px] font-semibold text-slate-500 select-none">Q</span>
+                  <input
+                    type="text"
+                    inputmode="decimal"
+                    [(ngModel)]="row.priceLabel"
+                    (focus)="selectPrice($event)"
+                    (click)="selectPrice($event)"
+                    (blur)="commitPrice(row)"
+                    class="h-9 min-w-0 w-full border-0 bg-transparent pr-2 text-right text-xs font-bold tabular-nums text-slate-800 focus:outline-none"
+                  />
+                </div>
+              } @else {
+                <span class="block text-center font-bold tabular-nums">{{ row.price | currency:'Q ' }}</span>
+              }
+            </td>
+            <td class="!py-2 !px-2 border-r border-[#762f41]/18 align-middle">
+              @if (canManage) {
+                <input
+                  type="date"
+                  lang="es-GT"
+                  [ngModel]="row.validFrom || ''"
+                  (ngModelChange)="row.validFrom = $event || null"
+                  class="block h-9 w-full min-w-0 box-border rounded-lg border border-[#762f41]/35 bg-white px-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#48021C] focus:ring-1 focus:ring-[#48021C]/20"
+                />
+              } @else {
+                <span>{{ row.validFrom | date:'dd/MM/yyyy' }}</span>
+              }
+            </td>
+            <td class="!py-2 !px-2 border-r border-[#762f41]/18 align-middle">
+              @if (canManage) {
+                <input
+                  type="date"
+                  lang="es-GT"
+                  [ngModel]="row.validUntil || ''"
+                  (ngModelChange)="row.validUntil = $event || null"
+                  class="block h-9 w-full min-w-0 box-border rounded-lg border border-[#762f41]/35 bg-white px-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#48021C] focus:ring-1 focus:ring-[#48021C]/20"
+                />
+              } @else {
+                <span>{{ row.validUntil | date:'dd/MM/yyyy' }}</span>
+              }
+            </td>
+            <td class="!py-2 !pr-4 !pl-2 align-middle text-right">
+              @if (canManage) {
+                <div class="flex items-center justify-end h-9">
+                  <button
+                    type="button"
+                    class="w-9 h-9 rounded-md text-rose-600 border border-rose-500/45 bg-rose-500/[0.08] hover:bg-rose-500/[0.18] cursor-pointer inline-flex items-center justify-center"
+                    pTooltip="Quitar de la lista"
+                    (click)="confirmDelete(row)"
+                  >
+                    <i class="pi pi-trash text-[11px]"></i>
+                  </button>
+                </div>
+              }
+            </td>
+          </tr>
+        </ng-template>
+      </app-standard-table>
+    </section>
+  </div>
+}
+
+<app-confirmation-modal
+  [(visible)]="showDeleteModal"
+  type="danger"
+  header="Quitar de la lista"
+  title="¿Quitar este precio especial?"
+  [message]="pendingDelete ? ('Se quitará ' + (pendingDelete.product?.name || 'este producto') + ' de la lista. Se aplicará al guardar el cliente.') : ''"
+  confirmLabel="Quitar"
+  (onConfirm)="deletePending()"
+  (onCancel)="pendingDelete = null; showDeleteModal = false"
+/>

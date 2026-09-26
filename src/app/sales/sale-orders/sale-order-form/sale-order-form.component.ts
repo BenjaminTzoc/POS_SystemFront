@@ -1,10 +1,10 @@
 //prettier-ignore
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 //prettier-ignore
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { WebsocketService } from '../../services/websocket.service';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, distinctUntilChanged, takeUntil } from 'rxjs';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { OrdersService } from '../../services/orders.service';
@@ -21,6 +21,7 @@ import { CommonModule, CurrencyPipe } from '@angular/common';
 import { ICustomer, ICustomerCategory } from '../../interfaces/customer.interface';
 import { CustomerCategoriesService } from '../../services/customer-categories.service';
 import { CustomersService } from '../../services/customers.service';
+import { CustomerAppliedPricesService } from '../../services/customer-applied-prices.service';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { InputTextModule } from 'primeng/inputtext';
@@ -48,18 +49,22 @@ import { BankAccountsService } from '../../services/bank-accounts.service';
 import { IBankAccount } from '../../interfaces/bank-account.interface';
 import { BankAccountsComponent } from '../../bank-accounts/bank-accounts.component';
 import { ProductsService } from '../../../inventory/services/products.service';
-import { DrawerModule } from 'primeng/drawer';
 import { CashSessionDialogComponent } from '../../../shared/components/cash-session-dialog/cash-session-dialog.component';
 
 import { ConfirmationModalComponent } from '../../../shared/components/confirmation-modal/confirmation-modal.component';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { ProductsTableComponent, QuotationItem } from '../../../shared/components/products-table/products-table.component';
 import { ProductRibbonComponent } from '../../../shared/components/product-ribbon/product-ribbon.component';
+import { StandardModalComponent } from '../../../shared/components/standard-modal/standard-modal.component';
+import { StandardTableComponent } from '../../../shared/components/standard-table/standard-table.component';
+import { PrimaryButtonComponent } from '../../../shared/components/primary-button/primary-button.component';
+import { SecondaryButtonComponent } from '../../../shared/components/secondary-button/secondary-button.component';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 
 @Component({
   selector: 'app-sale-order-form',
   //prettier-ignore
-  imports: [ReactiveFormsModule, FormsModule, RadioButtonModule, FloatLabelModule, InputTextModule, CurrencyPipe, ButtonModule, DatePickerModule, TableModule, DialogModule, SelectModule, ToggleSwitchModule, InputNumberModule, TextareaModule, CommonModule, AutoCompleteModule, SaleDiscountsComponent, SaleStatusPipe, PaymentStatusPipe, TooltipModule, ConfirmDialogModule, TagModule, TicketPreviewComponent, DrawerModule, CashSessionDialogComponent, BankAccountsComponent, ConfirmationModalComponent, PageHeaderComponent, ProductsTableComponent, ProductRibbonComponent],
+  imports: [ReactiveFormsModule, FormsModule, RadioButtonModule, FloatLabelModule, InputTextModule, CurrencyPipe, ButtonModule, DatePickerModule, TableModule, DialogModule, SelectModule, ToggleSwitchModule, InputNumberModule, TextareaModule, CommonModule, AutoCompleteModule, SaleDiscountsComponent, SaleStatusPipe, PaymentStatusPipe, TooltipModule, ConfirmDialogModule, TagModule, TicketPreviewComponent, CashSessionDialogComponent, BankAccountsComponent, ConfirmationModalComponent, PageHeaderComponent, ProductsTableComponent, ProductRibbonComponent, StandardModalComponent, StandardTableComponent, PrimaryButtonComponent, SecondaryButtonComponent, StatusBadgeComponent],
   templateUrl: './sale-order-form.component.html',
   styleUrl: './sale-order-form.component.css',
   providers: [ConfirmationService],
@@ -77,13 +82,17 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   // Ticket Preview
   showTicketPreview = false;
   confirmedSaleData: ISaleOrderResponse | null = null;
+  ticketPreviewTab: 'invoice' | 'receipts' = 'invoice';
+  ticketFocusPaymentId: string | null = null;
   showOpenCashDialog = false;
   showPaymentsPanel = false;
+  private reopenPaymentsAfterRegister = false;
 
   private saleCalculator = inject(SaleCalculatorService);
   private detailManager = inject(SaleDetailManagerService);
   private ordersService = inject(OrdersService);
   private customersService = inject(CustomersService);
+  private appliedPrices = inject(CustomerAppliedPricesService);
   private customerCategoriesService = inject(CustomerCategoriesService);
   private paymentMethodsService = inject(PaymentMethodsService);
   private salePaymentsService = inject(SalePaymentsService);
@@ -201,6 +210,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   private initialFormValues: any = {};
   private initialDiscounts: any[] = [];
   private initialApplyTax: boolean = true;
+  private skipCustomerPriceSync = false;
   
   get selectedPaymentMethod(): IPaymentMethod | undefined {
     const id = this.paymentForm?.get('paymentMethodId')?.value;
@@ -260,6 +270,12 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
     return !!this.orderForm?.get('isPreorder')?.value;
   }
 
+  get showDownPaymentToggle(): boolean {
+    if (this.isPreorder) return false;
+    const status = this.sale?.status || this.orderForm?.get('status')?.value;
+    return status !== 'delivered';
+  }
+
   get ignoreStockLimits(): boolean {
     return this.isPreorder;
   }
@@ -277,6 +293,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.detailManager.clear();
+    this.appliedPrices.clear();
     this.selectedCustomerType = this.customerTypes[0];
     this.initializeForm();
 
@@ -326,6 +343,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   private initializeForNewOrder() {
     this.selectedCustomerType = this.customerTypes[0];
     this.onCustomerTypeChange();
+    void this.appliedPrices.loadForCustomer(null).then(() => this.repriceDetailsFromApplied(false));
     this.setupWebSocketListeners();
     this.loadNextInvoiceNumber();
   }
@@ -424,6 +442,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
     this.ordersService.getSale(id).subscribe({
       next: (res) => {
         console.log(res);
+        this.skipCustomerPriceSync = true;
         this.orderForm.patchValue({
           branchId: res.data.branch?.id,
           invoiceNumber: res.data.invoiceNumber,
@@ -461,7 +480,9 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
           this.selectedCustomerType = this.customerTypes.find((t) => t.value === 'Q');
         }
 
+        this.skipCustomerPriceSync = true;
         this.onCustomerTypeChange();
+        this.skipCustomerPriceSync = false;
 
         const details: ISaleDetailPayload[] = [];
         res.data.details?.map((detail) => {
@@ -479,7 +500,10 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
 
         this.detailManager.setDetails(details);
         this.syncTableItemsFromDetails();
-        this.initialDetails = JSON.parse(JSON.stringify(this.detailManager.getDetails()));
+        void this.appliedPrices.loadForCustomer(res.data.customer?.id).then(() => {
+          this.repriceDetailsFromApplied(false);
+          this.initialDetails = JSON.parse(JSON.stringify(this.detailManager.getDetails()));
+        });
 
         if (res.data.discounts) {
           console.log(res.data.discounts);
@@ -648,7 +672,11 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
       this.orderForm.get('guestCustomer')!.reset({ nit: 'CF' });
     } else {
       this.orderForm.get('customerId')!.clearValidators();
+      const wasSkipping = this.skipCustomerPriceSync;
+      this.skipCustomerPriceSync = true;
       this.orderForm.get('customerId')!.setValue(null);
+      this.skipCustomerPriceSync = wasSkipping;
+      this.selectedCustomer = null;
 
       this.orderForm.get('guestCustomer')!.get('name')!.setValidators([Validators.required]);
       this.orderForm.get('guestCustomer')!.get('phone')!.setValidators([Validators.required]);
@@ -657,6 +685,15 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
     this.orderForm.get('customerId')!.updateValueAndValidity();
     this.orderForm.get('guestCustomer')!.get('name')!.updateValueAndValidity();
     this.orderForm.get('guestCustomer')!.get('phone')!.updateValueAndValidity();
+
+    if (this.skipCustomerPriceSync) return;
+
+    const customerId =
+      this.selectedCustomerType?.value === 'R' ? this.orderForm.get('customerId')?.value : null;
+    if (!customerId) {
+      this.selectedCustomer = null;
+      void this.appliedPrices.loadForCustomer(null).then(() => this.repriceDetailsFromApplied());
+    }
   }
 
   getCustomerById(id: string): ICustomer | undefined {
@@ -686,6 +723,8 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
 
     if (!selectedCustomerId) {
       this.selectedCustomer = null;
+      void this.appliedPrices.loadForCustomer(null);
+      this.repriceDetailsFromApplied();
       if (!this.isEditMode) {
         this.orderForm.get('deliveryAddress')?.setValue('');
       }
@@ -696,6 +735,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
       next: (res) => {
         if (res.statusCode === 200) {
           this.selectedCustomer = res.data;
+          void this.appliedPrices.loadForCustomer(res.data.id).then(() => this.repriceDetailsFromApplied());
           if (!this.isEditMode) {
             this.orderForm.get('deliveryAddress')?.setValue(res.data.address?.trim() || '');
           }
@@ -768,7 +808,6 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
               if (cRes.statusCode === 200) {
                 this.customers = cRes.data;
                 this.orderForm.get('customerId')?.setValue(res.data.id);
-                this.onCustomerChange({ value: res.data.id });
               }
             }
           });
@@ -824,6 +863,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
               if (this.orderForm.get('customerId')?.value === customerId) {
                 this.orderForm.get('customerId')?.setValue(null);
                 this.selectedCustomer = null;
+                void this.appliedPrices.loadForCustomer(null).then(() => this.repriceDetailsFromApplied());
               }
             }
           },
@@ -961,7 +1001,15 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   }
 
   get canRegisterPayments(): boolean {
-    const validStatuses = ['pending', 'confirmed', 'delivered'];
+    const validStatuses = [
+      'pending',
+      'confirmed',
+      'preparing',
+      'ready_for_pickup',
+      'out_for_delivery',
+      'partially_delivered',
+      'delivered',
+    ];
     const status = this.sale?.status || '';
     return !!(this.isEditMode && validStatuses.includes(status) && this.hasPendingBalance);
   }
@@ -969,6 +1017,38 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   get hasPendingBalance(): boolean {
     if (!this.sale) return false;
     return Number(this.sale.pendingAmount) > 0;
+  }
+
+  get maxPayable(): number {
+    const pending = Number(this.sale?.pendingAmount);
+    if (!Number.isNaN(pending) && pending >= 0) return pending;
+    return Number(this.totals?.total ?? 0);
+  }
+
+  get amountExceedsPending(): boolean {
+    return !!this.paymentForm?.get('amount')?.errors?.['exceedsPending'];
+  }
+
+  private amountNotOverPending = (control: AbstractControl): ValidationErrors | null => {
+    const amount = Number(control.value ?? 0);
+    if (!Number.isFinite(amount) || amount <= 0) return null;
+    if (amount > this.maxPayable + 0.009) {
+      return { exceedsPending: true };
+    }
+    return null;
+  };
+
+  paymentStatusSeverity(status: string): string {
+    switch (status) {
+      case 'completed':
+        return 'success';
+      case 'pending':
+        return 'warn';
+      case 'cancelled':
+        return 'danger';
+      default:
+        return 'secondary';
+    }
   }
 
   cancelPayment() {
@@ -982,6 +1062,19 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
       isDownPayment: false,
     });
     this.isAddingPayment = false;
+    this.reopenPaymentsHistory();
+  }
+
+  selectPaymentAmount(event: Event): void {
+    const fromEvent = event.target as HTMLInputElement | null;
+    const input = fromEvent?.select ? fromEvent : (document.getElementById('Amount') as HTMLInputElement | null);
+    if (!input?.select) return;
+    const blockMouseUp = (e: Event) => {
+      e.preventDefault();
+      input.removeEventListener('mouseup', blockMouseUp);
+    };
+    input.addEventListener('mouseup', blockMouseUp);
+    setTimeout(() => input.select(), 0);
   }
 
   registerPayment() {
@@ -995,6 +1088,16 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
     }
 
     const formValue = this.paymentForm.value;
+    const amount = Number(formValue.amount);
+
+    if (amount > this.maxPayable + 0.009) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Monto excedido',
+        detail: `El monto no puede ser mayor al saldo pendiente (${this.maxPayable.toLocaleString('es-GT', { style: 'currency', currency: 'GTQ' })}).`,
+      });
+      return;
+    }
 
     const paymentPayload: any = {
       saleId: this.saleId,
@@ -1006,18 +1109,24 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
       notes: formValue.notes || undefined,
     };
 
-    if (!this.isPreorder) {
+    if (this.showDownPaymentToggle) {
       paymentPayload.isDownPayment = formValue.isDownPayment;
     }
 
     this.salePaymentsService.createSalePayment(paymentPayload).subscribe({
       next: (res) => {
-        if (res.statusCode === 201) {
+        if (res.statusCode === 201 || res.statusCode === 200) {
           this.messageService.add({
             severity: 'success',
             summary: 'Éxito',
             detail: 'Pago registrado correctamente',
           });
+
+          const paymentId =
+            res.data?.id ??
+            res.data?.payment?.id ??
+            res.data?.salePayment?.id ??
+            null;
 
           this.loadSale(this.saleId!);
 
@@ -1030,6 +1139,9 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
             isDownPayment: false,
           });
           this.isAddingPayment = false;
+          this.reopenPaymentsAfterRegister = false;
+          this.showPaymentsPanel = false;
+          this.openPaymentReceipt(paymentId);
         }
       },
       error: (err) => {
@@ -1069,36 +1181,45 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
       bankAccountId: null,
       isDownPayment: false,
     });
-    this.isAddingPayment = true;
+    this.reopenPaymentsAfterRegister = this.showPaymentsPanel;
+    this.showPaymentsPanel = false;
 
-    // Load bank accounts
-    this.loadBankAccounts();
-
-    this.paymentMethodsService.getPaymentMethods().subscribe({
-      next: (res) => {
-        if (res.statusCode === 200) {
-          this.paymentMethods = res.data.map((method: IPaymentMethod) => ({
-            id: method.id,
-            name: method.name,
-            code: method.code,
-            description: method.description,
-            requiresBankAccount: method.requiresBankAccount,
-            isActive: method.isActive,
-            createdAt: new Date(method.createdAt) ?? null,
-            updatedAt: new Date(method.updatedAt) ?? null,
-          }));
-          this.paymentForm.get('paymentMethodId')?.setValue(this.paymentMethods[0].id);
-        }
-      },
-      error: (err) => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: `Error al obtener metodos de pago: ${err.error.message}`,
-        });
-        this.isAddingPayment = false;
-      },
+    setTimeout(() => {
+      this.isAddingPayment = true;
+      this.loadBankAccounts();
+      this.paymentMethodsService.getPaymentMethods().subscribe({
+        next: (res) => {
+          if (res.statusCode === 200) {
+            this.paymentMethods = res.data.map((method: IPaymentMethod) => ({
+              id: method.id,
+              name: method.name,
+              code: method.code,
+              description: method.description,
+              requiresBankAccount: method.requiresBankAccount,
+              isActive: method.isActive,
+              createdAt: new Date(method.createdAt) ?? null,
+              updatedAt: new Date(method.updatedAt) ?? null,
+            }));
+            this.paymentForm.get('paymentMethodId')?.setValue(this.paymentMethods[0].id);
+          }
+        },
+        error: (err) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: `Error al obtener metodos de pago: ${err.error.message}`,
+          });
+          this.isAddingPayment = false;
+          this.reopenPaymentsHistory();
+        },
+      });
     });
+  }
+
+  private reopenPaymentsHistory(): void {
+    if (!this.reopenPaymentsAfterRegister) return;
+    this.reopenPaymentsAfterRegister = false;
+    this.showPaymentsPanel = true;
   }
   // -------------------- FIN PAGOS -----------------------
 
@@ -1125,6 +1246,14 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
       status: ['pending', [Validators.required]],
     });
 
+    this.orderForm
+      .get('customerId')
+      ?.valueChanges.pipe(distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((customerId) => {
+        if (this.skipCustomerPriceSync) return;
+        this.onCustomerChange({ value: customerId ?? null });
+      });
+
     this.onCustomerTypeChange();
 
     this.orderForm.get('branchId')?.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(branchId => {
@@ -1137,7 +1266,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
 
     this.paymentForm = this.fb.group({
       paymentMethodId: ['', Validators.required],
-      amount: [0, Validators.required],
+      amount: [0, [Validators.required, this.amountNotOverPending]],
       date: [new Date(), Validators.required],
       notes: [''],
       referenceNumber: [''],
@@ -1161,14 +1290,15 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
 
     // Listener para el monto para activar/desactivar isDownPayment por defecto
     this.paymentForm.get('amount')?.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(value => {
-      if (this.sale) {
+      if (this.showDownPaymentToggle && this.sale) {
         const pending = Number(this.sale.pendingAmount);
-        // Si el monto es menor al saldo pendiente, es probablemente un anticipo
         if (value > 0 && value < pending) {
           this.paymentForm.get('isDownPayment')?.setValue(true, { emitEvent: false });
         } else {
           this.paymentForm.get('isDownPayment')?.setValue(false, { emitEvent: false });
         }
+      } else {
+        this.paymentForm.get('isDownPayment')?.setValue(false, { emitEvent: false });
       }
     });
 
@@ -1279,8 +1409,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
   }
 
   addProductToDetail(product: Product): void {
-    console.log(product);
-    this.detailManager.addProduct(product);
+    this.detailManager.addProduct(product, 1, this.appliedPrices.unitPriceFor(product));
     this.syncTableItemsFromDetails();
     this.updateTotals();
     this.markAsChanged();
@@ -1314,6 +1443,8 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
       allowsDecimals: product?.unit?.allowsDecimals ?? false,
       isAvailable: product?.isAvailable,
       isUnlimited: this.shouldIgnoreStock(product),
+      listPrice: Number(product?.price || 0),
+      isCustomPrice: !!(product?.id && this.appliedPrices.isCustom(product.id)),
     };
   }
 
@@ -1610,6 +1741,8 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
           summary: 'Éxito',
           detail: 'Venta confirmada correctamente.',
         });
+        this.ticketPreviewTab = 'invoice';
+        this.ticketFocusPaymentId = null;
         this.confirmedSaleData = res.data;
         this.showTicketPreview = true;
         this.showConfirmSaleModal = false;
@@ -1732,6 +1865,24 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
 
   onPreviewTicket() {
     if (!this.sale) return;
+    this.ticketPreviewTab = 'invoice';
+    this.ticketFocusPaymentId = null;
+    this.confirmedSaleData = this.sale;
+    this.showTicketPreview = true;
+  }
+
+  onTicketPreviewVisibleChange(visible: boolean): void {
+    this.showTicketPreview = visible;
+    if (!visible) {
+      this.ticketPreviewTab = 'invoice';
+      this.ticketFocusPaymentId = null;
+    }
+  }
+
+  private openPaymentReceipt(paymentId: string | null): void {
+    if (!this.sale) return;
+    this.ticketPreviewTab = 'receipts';
+    this.ticketFocusPaymentId = paymentId;
     this.confirmedSaleData = this.sale;
     this.showTicketPreview = true;
   }
@@ -1875,7 +2026,7 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
 
   onProductSelectFromRibbon(event: { product: Product; quantity: number }): void {
     const qty = event.quantity || 1;
-    this.detailManager.addProduct(event.product, qty);
+    this.detailManager.addProduct(event.product, qty, this.appliedPrices.unitPriceFor(event.product));
     this.syncTableItemsFromDetails();
     const unitAbbr = event.product.unit?.abbreviation ? ` ${event.product.unit.abbreviation}` : '';
     this.messageService.add({
@@ -1885,6 +2036,16 @@ export class SaleOrderFormComponent implements OnInit, OnDestroy {
     });
     this.updateTotals();
     this.markAsChanged();
+  }
+
+  private repriceDetailsFromApplied(markDirty = true): void {
+    for (const detail of this.details) {
+      if (!detail.product?.id) continue;
+      this.detailManager.updateUnitPrice(detail, this.appliedPrices.unitPriceFor(detail.product));
+    }
+    this.syncTableItemsFromDetails();
+    this.updateTotals();
+    if (markDirty) this.markAsChanged();
   }
 
   ngOnDestroy(): void {

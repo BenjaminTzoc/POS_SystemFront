@@ -25,6 +25,10 @@ export interface QuotationItem {
   allowsDecimals?: boolean;
   isAvailable?: boolean;
   isUnlimited?: boolean;
+  /** Precio de lista del catálogo (si el actual es pactado). */
+  listPrice?: number;
+  /** True cuando el unitario proviene de un precio pactado con el cliente. */
+  isCustomPrice?: boolean;
 }
 
 @Component({
@@ -112,6 +116,23 @@ export class ProductsTableComponent {
 
   get totalEstimatedValue(): number {
     return this.items.reduce((acc, i) => acc + this.getItemSubtotal(i), 0);
+  }
+
+  get customPriceCount(): number {
+    return this.items.filter((i) => i.isCustomPrice).length;
+  }
+
+  customPriceTooltip(item: QuotationItem): string {
+    const list = Number(item.listPrice);
+    if (!Number.isFinite(list) || list <= 0) {
+      return 'Precio pactado con este cliente';
+    }
+    return `Precio pactado con este cliente. Precio original: Q ${list.toFixed(2)}`;
+  }
+
+  showListStrike(item: QuotationItem): boolean {
+    if (!item.isCustomPrice || item.listPrice == null) return false;
+    return Math.abs(Number(item.listPrice) - Number(item.price)) > 0.009;
   }
 
   removeItem(index: number): void {

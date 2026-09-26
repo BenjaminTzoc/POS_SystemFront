@@ -14,6 +14,28 @@ export interface ICustomer {
     lastPurchaseDate: Date;
     category: ICustomerCategory;
     creditLimit: number;
+    deletedAt?: string | null;
+}
+
+export interface ICustomerProductPrice {
+  id?: string;
+  productId: string;
+  price: number;
+  isActive?: boolean;
+  validFrom?: string | null;
+  validUntil?: string | null;
+  product?: {
+    id: string;
+    name: string;
+    sku?: string;
+    price?: number | string;
+  };
+}
+
+export interface IAppliedProductPrice {
+  listPrice: number;
+  price: number;
+  source: 'custom' | 'list';
 }
 
 export interface ICustomerCategory {

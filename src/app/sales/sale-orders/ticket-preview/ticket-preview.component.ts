@@ -38,6 +38,8 @@ export class TicketPreviewComponent implements OnInit, OnChanges {
 
   @Input() sale!: ISaleOrderResponse;
   @Input() visible = false;
+  @Input() initialTab: 'invoice' | 'receipts' = 'invoice';
+  @Input() focusPaymentId: string | null = null;
   @Output() visibleChange = new EventEmitter<boolean>();
 
   companyInfo = {
@@ -90,7 +92,7 @@ export class TicketPreviewComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['visible'] && this.visible && this.sale) {
-      this.activeTab = 'invoice';
+      this.activeTab = this.initialTab || 'invoice';
       this.selectedReceipt.set(null);
       this.loadReceipts();
     }
@@ -125,6 +127,10 @@ export class TicketPreviewComponent implements OnInit, OnChanges {
   }
 
   onPrint() {
+    if (this.selectedReceipt() && this.activeTab === 'receipts') {
+      this.printReceipt();
+      return;
+    }
     if (this.isPrinting()) return;
     this.isPrinting.set(true);
 

@@ -2,6 +2,7 @@ import { Component, inject, computed, Output, EventEmitter } from '@angular/core
 import { CommonModule } from '@angular/common';
 import { PosService } from '../../services/pos.service';
 import { CurrencyPipe } from '@angular/common';
+import { CustomerAppliedPricesService } from '../../../services/customer-applied-prices.service';
 
 @Component({
   selector: 'app-cart-panel',
@@ -37,11 +38,14 @@ import { CurrencyPipe } from '@angular/common';
       <div class="flex-1 overflow-y-auto p-4 space-y-3">
         <div
           *ngFor="let item of cartItems()"
-          class="group flex items-start justify-between p-3 rounded-lg border border-transparent hover:border-gray-200 hover:bg-gray-50 transition-colors"
+          class="group flex items-start justify-between p-3 rounded-lg border transition-colors"
+          [class]="isCustomPrice(item.product.id)
+            ? 'border-teal-200 bg-teal-50/70'
+            : 'border-transparent hover:border-gray-200 hover:bg-gray-50'"
         >
           <div class="flex-1 min-w-0 pr-3">
             <h4 class="font-medium text-gray-800 text-sm truncate">{{ item.product.name }}</h4>
-            <div class="text-xs text-gray-500 mt-0.5">
+            <div class="text-xs mt-0.5" [class]="isCustomPrice(item.product.id) ? 'text-teal-700 font-semibold' : 'text-gray-500'">
               {{ item.unitPrice | currency: 'Q ' }} x {{ item.quantity }}
             </div>
           </div>
@@ -116,6 +120,7 @@ import { CurrencyPipe } from '@angular/common';
 })
 export class CartPanelComponent {
   private posService = inject(PosService);
+  private appliedPrices = inject(CustomerAppliedPricesService);
 
   @Output() checkout = new EventEmitter<void>();
 
@@ -123,6 +128,10 @@ export class CartPanelComponent {
   subtotal = this.posService.subtotal;
   total = this.posService.total;
   itemCount = this.posService.itemCount;
+
+  isCustomPrice(productId: string): boolean {
+    return this.appliedPrices.isCustom(productId);
+  }
 
   updateQty(id: string, qty: number) {
     this.posService.updateQuantity(id, qty);

@@ -22,20 +22,18 @@ export class PosService {
   total = computed(() => this.subtotal() + this.tax());
   itemCount = computed(() => this.cart().reduce((acc, item) => acc + item.quantity, 0));
 
-  addToCart(product: Product) {
+  addToCart(product: Product, unitPrice?: number) {
     this.cart.update((currentCart) => {
       const existingItem = currentCart.find((item) => item.product.id === product.id);
 
       if (existingItem) {
-        // Update existing item
         return currentCart.map((item) =>
           item.product.id === product.id
             ? { ...item, quantity: item.quantity + 1, total: (item.quantity + 1) * item.unitPrice }
             : item,
         );
       } else {
-        // Add new item
-        const price = parseFloat(product.price);
+        const price = unitPrice != null ? Number(unitPrice) : parseFloat(product.price);
         return [
           ...currentCart,
           {
@@ -47,6 +45,15 @@ export class PosService {
         ];
       }
     });
+  }
+
+  repriceCart(unitPriceFor: (product: Product) => number) {
+    this.cart.update((currentCart) =>
+      currentCart.map((item) => {
+        const unitPrice = unitPriceFor(item.product);
+        return { ...item, unitPrice, total: item.quantity * unitPrice };
+      }),
+    );
   }
 
   updateQuantity(productId: string, quantity: number) {

@@ -24,6 +24,10 @@ import { CategorySelectorComponent } from '../components/category-selector/categ
 import { CheckoutDialogComponent } from '../components/checkout-dialog/checkout-dialog.component';
 
 // Interfaces
+import { CustomerSelectComponent } from '../../../shared/components/customer-select/customer-select.component';
+import { CustomersService } from '../../services/customers.service';
+import { CustomerAppliedPricesService } from '../../services/customer-applied-prices.service';
+import { ICustomer } from '../../interfaces/customer.interface';
 import { Product } from '../../../inventory/interfaces/product.interface';
 
 @Component({
@@ -37,6 +41,7 @@ import { Product } from '../../../inventory/interfaces/product.interface';
     CartPanelComponent,
     CategorySelectorComponent,
     CheckoutDialogComponent,
+    CustomerSelectComponent,
   ],
   providers: [MessageService],
   templateUrl: './pos-layout.component.html',
@@ -48,6 +53,8 @@ export class PosLayoutComponent implements OnInit {
   private categoriesService = inject(ProductCategoriesService);
   private ordersService = inject(OrdersService);
   private salePaymentsService = inject(SalePaymentsService);
+  private customersService = inject(CustomersService);
+  private appliedPrices = inject(CustomerAppliedPricesService);
   private authService = inject(AuthService);
   private messageService = inject(MessageService);
   private router = inject(Router);
@@ -59,9 +66,19 @@ export class PosLayoutComponent implements OnInit {
   searchTerm: string = '';
   isLoading = false;
   isCheckoutVisible = false;
+  customers: ICustomer[] = [];
+  selectedCustomerId: string | null = null;
+
+  priceFor = (product: Product) => this.appliedPrices.unitPriceFor(product);
 
   ngOnInit() {
+    this.appliedPrices.clear();
     this.loadData();
+    this.customersService.getCustomers().subscribe({
+      next: (res) => {
+        this.customers = res.data ?? [];
+      },
+    });
   }
 
   loadData() {
@@ -104,24 +121,29 @@ export class PosLayoutComponent implements OnInit {
       }
 
       // 1. Create Sale Order
-      const salePayload = {
+      const salePayload: any = {
         branchId: branchId,
         date: new Date(),
         dueDate: new Date(),
         notes: 'Venta Rápida (POS)',
-        guestCustomer: {
-          name: 'Consumidor Final',
-          phone: '00000000',
-          nit: 'CF',
-        },
         details: this.posService.cart().map((item) => ({
           product: item.product,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           lineTotal: item.total,
         })),
-        applyTax: true, // Default to true
+        applyTax: true,
       };
+
+      if (this.selectedCustomerId) {
+        salePayload.customerId = this.selectedCustomerId;
+      } else {
+        salePayload.guestCustomer = {
+          name: 'Consumidor Final',
+          phone: '00000000',
+          nit: 'CF',
+        };
+      }
 
       const createRes = await firstValueFrom(this.ordersService.createSale(salePayload));
       if (!createRes || createRes.statusCode !== 201) throw new Error('Error al crear la orden');
@@ -179,6 +201,17 @@ export class PosLayoutComponent implements OnInit {
   onSearch(term: string) {
     this.searchTerm = term;
     this.filterProducts();
+  }
+
+  onPosCustomerChange(customerId: string | null): void {
+    this.selectedCustomerId = customerId;
+    void this.appliedPrices.loadForCustomer(customerId).then(() => {
+      this.posService.repriceCart((product) => this.appliedPrices.unitPriceFor(product));
+    });
+  }
+
+  onPosProductSelected(product: Product): void {
+    this.posService.addToCart(product, this.appliedPrices.unitPriceFor(product));
   }
 
   filterProducts() {

@@ -11,6 +11,7 @@ import { ProductsTableComponent, QuotationItem } from '../../../shared/component
 import { ConfirmationModalComponent } from '../../../shared/components/confirmation-modal/confirmation-modal.component';
 import { BranchesService } from '../../../inventory/services/branches.service';
 import { CustomersService } from '../../services/customers.service';
+import { CustomerAppliedPricesService } from '../../services/customer-applied-prices.service';
 import { ProductsService } from '../../../inventory/services/products.service';
 import { QuotationsService } from '../../services/quotations.service';
 import { Branch } from '../../../inventory/interfaces/branch.interface';
@@ -67,6 +68,7 @@ export class QuotationEditComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private branchesService = inject(BranchesService);
   private customersService = inject(CustomersService);
+  private appliedPrices = inject(CustomerAppliedPricesService);
   private productsService = inject(ProductsService);
   private quotationsService = inject(QuotationsService);
   private messageService = inject(MessageService);
@@ -142,6 +144,7 @@ export class QuotationEditComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.appliedPrices.clear();
     const id = this.route.snapshot.params['id'];
     if (id) {
       this.isEditMode = true;
@@ -223,6 +226,8 @@ export class QuotationEditComponent implements OnInit {
 
         if (q.guestCustomer) {
           this.customerType = 'guest';
+          this.selectedCustomerId = null;
+          void this.appliedPrices.loadForCustomer(null);
           this.guestCustomer = {
             name: q.guestCustomer.name || '',
             nit: q.guestCustomer.nit || '',
@@ -232,6 +237,7 @@ export class QuotationEditComponent implements OnInit {
         } else {
           this.customerType = 'registered';
           this.selectedCustomerId = q.customerId || null;
+          void this.appliedPrices.loadForCustomer(this.selectedCustomerId).then(() => this.refreshCustomPriceFlags());
         }
 
         if (q.branchId) {
@@ -252,7 +258,9 @@ export class QuotationEditComponent implements OnInit {
           unitAbbreviation: item.product?.unit?.abbreviation || 'un',
           allowsDecimals: item.product?.unit?.allowsDecimals ?? false,
           isAvailable: item.product?.isAvailable,
-          isUnlimited: !!(item.product?.isAvailable && (!item.product?.stock || item.product?.stock === 0))
+          isUnlimited: !!(item.product?.isAvailable && (!item.product?.stock || item.product?.stock === 0)),
+          listPrice: Number(item.product?.price || item.unitPrice || 0),
+          isCustomPrice: this.appliedPrices.isCustom(item.productId),
         }));
       },
       error: () => {
@@ -268,6 +276,13 @@ export class QuotationEditComponent implements OnInit {
   getCustomerById(id: string | null): ICustomer | undefined {
     if (!id) return undefined;
     return this.customers.find(c => c.id === id);
+  }
+
+  private refreshCustomPriceFlags(): void {
+    this.items = this.items.map((item) => ({
+      ...item,
+      isCustomPrice: this.appliedPrices.isCustom(item.productId),
+    }));
   }
 
   onBranchChange(branchId: string | null): void {
@@ -307,6 +322,18 @@ export class QuotationEditComponent implements OnInit {
 
   onCustomerChange(customerId: string | null): void {
     this.selectedCustomerId = customerId;
+    void this.appliedPrices.loadForCustomer(customerId || null).then(() => {
+      this.items = this.items.map((item) => {
+        const product = this.products.find((p) => p.id === item.productId);
+        if (!product) return item;
+        return {
+          ...item,
+          price: this.appliedPrices.unitPriceFor(product),
+          listPrice: Number(product.price || 0),
+          isCustomPrice: this.appliedPrices.isCustom(product.id),
+        };
+      });
+    });
   }
 
   onProductSelectFromRibbon(event: { product: Product; quantity: number }): void {
@@ -314,13 +341,12 @@ export class QuotationEditComponent implements OnInit {
     const qty = quantity || 1;
     const isUnlimited = !!(product.isAvailable && (!product.stock || product.stock === 0));
     
-    // Siempre agrega como un registro independiente en la tabla
     this.items.push({
       productId: product.id,
       sku: product.sku || '',
       name: product.name,
       imageUrl: product.imageUrl,
-      price: Number(product.price) || 0,
+      price: this.appliedPrices.unitPriceFor(product),
       quantity: qty,
       discount: 0,
       discountType: 'percentage',
@@ -329,7 +355,9 @@ export class QuotationEditComponent implements OnInit {
       unitAbbreviation: product.unit?.abbreviation || 'un',
       allowsDecimals: product.unit?.allowsDecimals ?? false,
       isAvailable: product.isAvailable,
-      isUnlimited
+      isUnlimited,
+      listPrice: Number(product.price || 0),
+      isCustomPrice: this.appliedPrices.isCustom(product.id),
     });
   }
 
@@ -371,6 +399,13 @@ export class QuotationEditComponent implements OnInit {
     if (!imageUrl) return `${environment.baseUrl}/uploads/products/default-product.png`;
     if (imageUrl.startsWith('http')) return imageUrl;
     return `${environment.baseUrl}${imageUrl}`;
+  }
+
+  setCustomerType(type: 'registered' | 'guest'): void {
+    this.customerType = type;
+    if (type === 'guest') {
+      this.onCustomerChange(null);
+    }
   }
 
   onSave(): void {

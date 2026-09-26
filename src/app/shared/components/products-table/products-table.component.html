@@ -41,7 +41,7 @@
         <thead class="sticky top-0 bg-rose-100/70 text-[#48021C] border-b border-[#48021C]/20 z-10">
           <tr class="h-9 text-[11.5px] font-bold">
             <th class="px-4 py-2 text-left border-r border-[#48021C]/15 min-w-[170px]">Producto</th>
-            <th *ngIf="showPrice" class="px-3 py-2 text-center border-r border-[#48021C]/15 w-[110px]">Precio Unit.</th>
+            <th *ngIf="showPrice" class="px-3 py-2 text-center border-r border-[#48021C]/15 w-[128px]">Precio Unit.</th>
             <th class="px-3 py-2 text-center border-r border-[#48021C]/15 w-[125px]">Cantidad</th>
             <th *ngIf="showDiscount" class="px-3 py-2 text-center border-r border-[#48021C]/15 w-[105px]">Descuento</th>
             <th class="px-4 py-2 text-right border-r border-[#48021C]/15 w-[120px]">Subtotal</th>
@@ -50,9 +50,15 @@
         </thead>
         <tbody class="divide-y divide-[#48021C]/10 bg-white">
           @for (item of items; track $index; let i = $index) {
-            <tr class="hover:bg-rose-50/40 transition-colors border-b border-[#48021C]/10 text-xs">
+            <tr
+              class="hover:bg-rose-50/40 transition-colors border-b border-[#48021C]/10 text-xs"
+              [class.bg-teal-50/55]="item.isCustomPrice"
+              [class.hover:bg-teal-50/80]="item.isCustomPrice"
+            >
               <!-- Producto Info con SKU debajo del nombre -->
-              <td class="px-4 py-2.5 border-r border-[#48021C]/10 font-semibold text-slate-800 align-middle">
+              <td class="px-4 py-2.5 border-r border-[#48021C]/10 font-semibold text-slate-800 align-middle"
+                  [class.border-l-4]="item.isCustomPrice"
+                  [class.border-l-teal-500]="item.isCustomPrice">
                 <div class="flex items-center gap-2.5">
                   <div class="w-9 h-9 rounded-lg border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0 bg-white shadow-2xs">
                     <img *ngIf="item.imageUrl" [src]="getProductImageUrl(item.imageUrl)" class="w-full h-full object-cover" />
@@ -70,9 +76,21 @@
               <!-- Precio Unitario -->
               <td *ngIf="showPrice" class="px-2.5 py-2.5 align-middle border-r border-[#48021C]/10 text-center">
                 @if (disabled) {
-                  <span class="text-xs font-bold text-slate-800 tabular-nums">{{ item.price | currency:'Q ' }}</span>
+                  <div class="flex flex-col items-center gap-0.5">
+                    <span
+                      class="text-xs font-bold tabular-nums"
+                      [class]="item.isCustomPrice ? 'text-teal-800' : 'text-slate-800'"
+                    >{{ item.price | currency:'Q ' }}</span>
+                    @if (showListStrike(item)) {
+                      <span class="text-[10px] font-semibold text-slate-400 line-through tabular-nums">{{ item.listPrice | currency:'Q ' }}</span>
+                    }
+                  </div>
                 } @else {
-                  <div class="w-[96px] mx-auto">
+                  <div
+                    class="w-[104px] mx-auto flex flex-col items-center gap-0.5"
+                    [pTooltip]="item.isCustomPrice ? customPriceTooltip(item) : ''"
+                    tooltipPosition="top"
+                  >
                     <p-inputnumber 
                       [(ngModel)]="item.price"
                       (ngModelChange)="emitItemChange(i, item)"
@@ -82,11 +100,18 @@
                       [min]="0"
                       [minFractionDigits]="2"
                       [maxFractionDigits]="2"
-                      styleClass="border-[#48021C]/20! h-7! w-full" 
+                      [styleClass]="item.isCustomPrice
+                        ? 'border-teal-400! h-7! w-full bg-teal-50!'
+                        : 'border-[#48021C]/20! h-7! w-full'"
                       size="small" 
                       [fluid]="true" 
-                      inputStyleClass="text-[11px] h-7! py-1! px-1.5! text-right font-bold text-slate-800 border-[#48021C]/20! focus:border-[#48021C]! rounded-lg" 
+                      [inputStyleClass]="item.isCustomPrice
+                        ? 'text-[11px] h-7! py-1! px-1.5! text-right font-bold text-teal-800 border-teal-400! focus:border-teal-600! rounded-lg bg-teal-50!'
+                        : 'text-[11px] h-7! py-1! px-1.5! text-right font-bold text-slate-800 border-[#48021C]/20! focus:border-[#48021C]! rounded-lg'"
                     />
+                    @if (showListStrike(item)) {
+                      <span class="text-[10px] font-semibold text-slate-400 line-through tabular-nums leading-none">{{ item.listPrice | currency:'Q ' }}</span>
+                    }
                   </div>
                 }
               </td>
@@ -205,6 +230,13 @@
         @if (showDiscount && totalDiscount > 0) {
           <span>•</span>
           <span>Desc. Total: <strong class="text-rose-600 font-bold">{{ totalDiscount | currency:'Q ' }}</strong></span>
+        }
+        @if (customPriceCount > 0) {
+          <span>•</span>
+          <span class="inline-flex items-center gap-1 text-teal-800">
+            <span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
+            Pactados: <strong class="font-bold">{{ customPriceCount }}</strong>
+          </span>
         }
       </div>
       <div class="flex items-center justify-between sm:justify-end gap-2.5">

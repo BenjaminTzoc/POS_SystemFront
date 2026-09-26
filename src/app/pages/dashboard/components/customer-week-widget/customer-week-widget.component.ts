@@ -199,6 +199,11 @@ export class CustomerWeekWidgetComponent {
     return `Q ${total.toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
 
+  dayAmountLabel(total: number): string {
+    if (!total) return '—';
+    return `Q${total.toLocaleString('es-GT', { maximumFractionDigits: 0 })}`;
+  }
+
   rowKey(c: CustomerWeeklyItemDto): string {
     return c.id ?? GUEST_KEY;
   }

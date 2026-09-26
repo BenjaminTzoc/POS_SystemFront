@@ -1,7 +1,6 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Product } from '../../../../inventory/interfaces/product.interface';
-import { PosService } from '../../services/pos.service';
 
 @Component({
   selector: 'app-product-grid',
@@ -45,7 +44,7 @@ import { PosService } from '../../services/pos.service';
         <div
           class="mt-2 pt-2 border-t border-dashed border-gray-100 flex items-end justify-between"
         >
-          <span class="text-indigo-600 font-bold">Q{{ product.price }}</span>
+          <span class="text-indigo-600 font-bold">{{ displayPrice(product) | currency: 'Q ' }}</span>
           <button
             class="w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-colors"
           >
@@ -82,10 +81,15 @@ import { PosService } from '../../services/pos.service';
 export class ProductGridComponent {
   @Input() products: Product[] = [];
   @Input() isLoading = false;
+  @Input() priceFor?: (product: Product) => number;
+  @Output() productSelected = new EventEmitter<Product>();
 
-  private posService = inject(PosService);
+  displayPrice(product: Product): number {
+    if (this.priceFor) return this.priceFor(product);
+    return Number(product.price || 0);
+  }
 
   onProductClick(product: Product) {
-    this.posService.addToCart(product);
+    this.productSelected.emit(product);
   }
 }

@@ -27,6 +27,7 @@
           <p-datePicker
             [ngModel]="promisedDeliveryRange()"
             (ngModelChange)="promisedDeliveryRange.set($event); loadOrders()"
+            dateFormat="dd/mm/yy"
             selectionMode="range"
             [showIcon]="true"
             [readonlyInput]="true"
@@ -39,6 +40,7 @@
         } @else {
           <p-datePicker
             [(ngModel)]="dateRange"
+            dateFormat="dd/mm/yy"
             selectionMode="range"
             [showIcon]="true"
             [readonlyInput]="true"
@@ -320,8 +322,13 @@
                   <span class="text-xs font-semibold text-violet-800">{{ order.promisedDeliveryDate | date:'dd/MM/yyyy':'-0600' }}</span>
                   <span class="text-[10px] text-violet-600 font-medium">Fecha de entrega</span>
                 </div>
+              } @else if (['out_for_delivery', 'preparing', 'ready_for_pickup', 'partially_delivered'].includes(order.status)) {
+                <div class="flex flex-col gap-0.5">
+                  <span class="text-xs font-semibold text-slate-800">{{ order.date | date:'dd/MM/yyyy':'-0600' }}</span>
+                  <span class="text-[10px] text-slate-500 font-medium">{{ order.status | saleStatus }} · sin fecha pactada</span>
+                </div>
               } @else {
-                <span class="text-xs text-slate-400 font-normal">Sin fecha</span>
+                <span class="text-xs text-slate-400 font-normal">Sin fecha pactada</span>
               }
               @if (order.dueDate) {
                 <span class="block text-[10px] text-slate-500 mt-0.5">

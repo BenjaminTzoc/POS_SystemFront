@@ -54,6 +54,15 @@ export class ProductRibbonComponent {
   /** Mostrar precios en las tarjetas (por defecto true) */
   @Input() showPrice = true;
 
+  /** Mostrar stock por sucursal (ocultar en catálogo global) */
+  @Input() showStock = true;
+
+  /** Mostrar atajo de cantidad (solo aplica en ventas/cotizaciones) */
+  @Input() showQuickQuantity = true;
+
+  /** Tooltip del clic en la tarjeta */
+  @Input() selectTooltip = 'Clic para agregar a la lista';
+
   /** Función opcional para saber si un producto está seleccionado */
   @Input() isSelectedFn?: (productId: string) => boolean;
 
